@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="WindowTitle" xml:space="preserve">
+    <value>ControlDeFinanzasIA</value>
+  </data>
+  <data name="SidebarDashboard" xml:space="preserve">
+    <value>Panel</value>
+  </data>
+  <data name="SidebarExpenses" xml:space="preserve">
+    <value>Gastos</value>
+  </data>
+  <data name="GoBackButton" xml:space="preserve">
+    <value>Atrás</value>
+  </data>
+  <data name="DashboardPlaceholder" xml:space="preserve">
+    <value>Bienvenido al panel.</value>
+  </data>
+  <data name="StatusbarPlaceholder" xml:space="preserve">
+    <value>Barra de estado</value>
+  </data>
+  <data name="ExpensesTitle" xml:space="preserve">
+    <value>Gastos</value>
+  </data>
+  <data name="RegisterButton" xml:space="preserve">
+    <value>Registrar</value>
+  </data>
+  <data name="DateLabel" xml:space="preserve">
+    <value>Fecha</value>
+  </data>
+  <data name="AmountLabel" xml:space="preserve">
+    <value>Monto</value>
+  </data>
+  <data name="CurrencyLabel" xml:space="preserve">
+    <value>Moneda</value>
+  </data>
+  <data name="CategoryLabel" xml:space="preserve">
+    <value>Categoría</value>
+  </data>
+  <data name="DescriptionLabel" xml:space="preserve">
+    <value>Descripción</value>
+  </data>
+  <data name="NoteLabel" xml:space="preserve">
+    <value>Nota</value>
+  </data>
+  <data name="PreviousPageButton" xml:space="preserve">
+    <value>Anterior</value>
+  </data>
+  <data name="NextPageButton" xml:space="preserve">
+    <value>Siguiente</value>
+  </data>
+  <data name="PageOfPagesFormat" xml:space="preserve">
+    <value>Página {0} de {1}</value>
+  </data>
+  <data name="EmptyExpensesMessage" xml:space="preserve">
+    <value>No hay gastos registrados todavía.</value>
+  </data>
+  <data name="RegistrationSuccessMessage" xml:space="preserve">
+    <value>Gasto registrado correctamente.</value>
+  </data>
+  <data name="FormErrorMessage" xml:space="preserve">
+    <value>Ha ocurrido un error al guardar el gasto.</value>
+  </data>
+  <data name="CurrencyDOP" xml:space="preserve">
+    <value>DOP</value>
+  </data>
+  <data name="CurrencyUSD" xml:space="preserve">
+    <value>USD</value>
+  </data>
+  <data name="FiltersSectionTitle" xml:space="preserve">
+    <value>Filtros</value>
+  </data>
+  <data name="FilterTagsLabel" xml:space="preserve">
+    <value>Etiquetas</value>
+  </data>
+  <data name="FilterDateFromLabel" xml:space="preserve">
+    <value>Desde</value>
+  </data>
+  <data name="FilterDateToLabel" xml:space="preserve">
+    <value>Hasta</value>
+  </data>
+  <data name="ApplyFilterButton" xml:space="preserve">
+    <value>Aplicar filtros</value>
+  </data>
+  <data name="ClearFilterButton" xml:space="preserve">
+    <value>Limpiar filtros</value>
+  </data>
+  <data name="SavedViewsSectionTitle" xml:space="preserve">
+    <value>Vistas guardadas</value>
+  </data>
+  <data name="SavedViewsPlaceholder" xml:space="preserve">
+    <value>Seleccione una vista…</value>
+  </data>
+  <data name="NewViewNameWatermark" xml:space="preserve">
+    <value>Nombre de la vista</value>
+  </data>
+  <data name="SaveViewButton" xml:space="preserve">
+    <value>Guardar vista</value>
+  </data>
+  <data name="DeleteViewButton" xml:space="preserve">
+    <value>Eliminar vista</value>
+  </data>
+  <data name="CreateTagSectionTitle" xml:space="preserve">
+    <value>Nueva etiqueta</value>
+  </data>
+  <data name="TagNameWatermark" xml:space="preserve">
+    <value>Nombre de la etiqueta</value>
+  </data>
+  <data name="TagColorWatermark" xml:space="preserve">
+    <value>Color (opcional)</value>
+  </data>
+  <data name="CreateTagButton" xml:space="preserve">
+    <value>Crear etiqueta</value>
+  </data>
+  <data name="NoTagsMessage" xml:space="preserve">
+    <value>Sin etiquetas todavía — crea una abajo.</value>
+  </data>
+  <data name="SelectCategoryWatermark" xml:space="preserve">
+    <value>Seleccione…</value>
+  </data>
+  <data name="DescriptionWatermark" xml:space="preserve">
+    <value>Descripción</value>
+  </data>
+  <data name="NoteWatermark" xml:space="preserve">
+    <value>Nota opcional</value>
+  </data>
+  <data name="EditButton" xml:space="preserve">
+    <value>Editar</value>
+  </data>
+  <data name="DeleteButton" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
+  <data name="ConfirmDeleteButton" xml:space="preserve">
+    <value>Confirmar</value>
+  </data>
+  <data name="UpdateButton" xml:space="preserve">
+    <value>Guardar cambios</value>
+  </data>
+  <data name="CancelEditButton" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="EditFormTitle" xml:space="preserve">
+    <value>Editar asiento</value>
+  </data>
+  <data name="ExpenseUpdatedMessage" xml:space="preserve">
+    <value>Gasto actualizado correctamente.</value>
+  </data>
+  <data name="TransactionDeletedMessage" xml:space="preserve">
+    <value>Transacción eliminada.</value>
+  </data>
+  <data name="ViewSavedMessage" xml:space="preserve">
+    <value>Vista guardada.</value>
+  </data>
+  <data name="ViewDeletedMessage" xml:space="preserve">
+    <value>Vista eliminada.</value>
+  </data>
+  <data name="ViewNameRequiredMessage" xml:space="preserve">
+    <value>El nombre de la vista es obligatorio.</value>
+  </data>
+  <data name="TagNameRequiredMessage" xml:space="preserve">
+    <value>El nombre de la etiqueta es obligatorio.</value>
+  </data>
+  <data name="DuplicateTagMessage" xml:space="preserve">
+    <value>Ya existe una etiqueta con ese nombre.</value>
+  </data>
+  <data name="SidebarIncomes" xml:space="preserve">
+    <value>Ingresos</value>
+  </data>
+  <data name="IncomesTitle" xml:space="preserve">
+    <value>Ingresos</value>
+  </data>
+  <data name="EmptyIncomesMessage" xml:space="preserve">
+    <value>No hay ingresos registrados todavía.</value>
+  </data>
+  <data name="IncomeRegisteredMessage" xml:space="preserve">
+    <value>Ingreso registrado correctamente.</value>
+  </data>
+  <data name="IncomeUpdatedMessage" xml:space="preserve">
+    <value>Ingreso actualizado correctamente.</value>
+  </data>
+  <data name="OperationCancelledMessage" xml:space="preserve">
+    <value>Operación cancelada.</value>
+  </data>
+</root>

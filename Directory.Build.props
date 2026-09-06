@@ -1,0 +1,63 @@
+<Project>
+
+  <!--
+    Centralized MSBuild properties for all projects in this solution.
+    See: spec/features/phase-01/F-001-skeleton-solution.md §7.1
+
+    This file is auto-imported by every .csproj under the directory tree,
+    so anything declared here applies to all projects unless explicitly
+    overridden in the individual .csproj.
+  -->
+
+  <PropertyGroup>
+
+    <!-- Target framework (.NET 8 LTS) -->
+    <TargetFramework>net8.0</TargetFramework>
+
+    <!-- C# language version: resolves to C# 12 with .NET 8 SDK. -->
+    <LangVersion>latest</LangVersion>
+
+    <!-- Nullable reference types enabled across the whole solution. -->
+    <Nullable>enable</Nullable>
+
+    <!-- Implicit usings enabled across the whole solution. -->
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Treat all compiler/analysis warnings as build errors. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!--
+      Enforce .editorconfig code style rules during build.
+      See .editorconfig (T-005) for the actual rules.
+    -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- Use the latest compiler analysis rules. -->
+    <AnalysisLevel>latest</AnalysisLevel>
+
+    <!--
+      Package metadata. Placeholders, can be adjusted in a later feature.
+      These only matter for `dotnet pack`; the app does not require them.
+    -->
+    <Authors>Diego</Authors>
+    <Product>ControlDeFinanzasIA</Product>
+    <Company>Personal</Company>
+    <Copyright>Copyright (c) 2026</Copyright>
+
+    <!--
+      NoWarn is intentionally omitted.
+      Per-project suppressions must be added in the consuming .csproj
+      with a justifying comment next to the suppression. Do NOT relax
+      the global TreatWarningsAsErrors policy here.
+    -->
+
+  </PropertyGroup>
+
+  <!--
+    Per-project overrides are NOT defined here. They live in the
+    individual .csproj of the project that needs them:
+      - UI:  OutputType=Exe, UseAvaloniaApp=true
+      - Tests.Unit / Tests.Integration:  IsPackable=false, IsTestProject=true
+  -->
+
+</Project>

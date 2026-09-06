@@ -1,0 +1,32 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+        xmlns:nav="using:ControlDeFinanzasIA.UI.Navigation"
+        xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
+        x:Class="ControlDeFinanzasIA.UI.Views.MainWindow"
+        x:DataType="vm:ShellViewModel"
+        Title="{x:Static resources:Strings.WindowTitle}"
+        MinWidth="800"
+        MinHeight="600">
+    <DockPanel>
+        <ListBox DockPanel.Dock="Left"
+                 ItemsSource="{Binding MenuItems}"
+                 MinWidth="180">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="nav:RouteMenuItem">
+                    <TextBlock Text="{Binding DisplayName}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <Border DockPanel.Dock="Bottom"
+                Padding="12,6">
+            <TextBlock Text="{x:Static resources:Strings.StatusbarPlaceholder}"
+                       HorizontalAlignment="Center" />
+        </Border>
+
+        <ContentControl Content="{Binding Current}"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch" />
+    </DockPanel>
+</Window>

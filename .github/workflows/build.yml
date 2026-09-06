@@ -1,0 +1,53 @@
+# GitHub Actions workflow for ControlDeFinanzasIA.
+#
+# See: tasks/phase-01/F-001-skeleton-solution.tasks.md (T-010a)
+# See: docs/architecture.md
+#
+# Triggers on push to main and on every pull request.
+# Runs on ubuntu-latest only for F-001. Cross-OS validation
+# (windows-latest, macos-latest) is deferred to a later phase,
+# once there are platform-specific artifacts to validate.
+
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: build, test, and style check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build (Release)
+        run: dotnet build -c Release --no-restore
+
+      - name: Test
+        # Step is included from F-001 onward. Once Tests.Unit and
+        # Tests.Integration exist (T-011 / T-012) and have placeholder
+        # tests (T-013), this command will actually execute them.
+        # Until then, `dotnet test` exits 0 because there are no
+        # test projects yet.
+        run: dotnet test -c Release --no-build --verbosity normal
+
+      - name: Style check (.editorconfig enforcement)
+        # This is the check that catches violations the build misses.
+        # `dotnet build` does NOT enforce IDE* style rules even with
+        # <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>.
+        # `dotnet format style --verify-no-changes` does, because it
+        # runs the formatter, not the compiler. The check exits non-
+        # zero on any deviation from the .editorconfig rules.
+        run: dotnet format style --verify-no-changes

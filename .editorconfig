@@ -1,0 +1,158 @@
+# EditorConfig is awesome: https://EditorConfig.org
+#
+# See: spec/features/phase-01/F-001-skeleton-solution.md section 7.3
+# See: docs/architecture.md section 5 (Conventions)
+#
+# Rules here are enforced at build time via Directory.Build.props:
+#   <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+# Combined with <TreatWarningsAsErrors>true</TreatWarningsAsBuild>, every
+# style violation is a build error.
+
+root = true
+
+# ============================================================
+# Default rules: every file in the tree
+# ============================================================
+[*]
+charset                  = utf-8
+end_of_line              = lf
+insert_final_newline     = true
+trim_trailing_whitespace = true
+indent_style             = space
+indent_size              = 4
+
+# ============================================================
+# MSBuild files (.csproj, .props, .targets): 2-space indent
+# ============================================================
+[*.{csproj,props,targets}]
+indent_size = 2
+
+# ============================================================
+# Data files (json, yml, yaml, xml): 2-space indent
+# ============================================================
+[*.{json,yml,yaml,xml}]
+indent_size = 2
+
+# ============================================================
+# C# source files
+# ============================================================
+[*.cs]
+
+# --- Indent and formatting -----------------------------------
+indent_size = 4
+tab_width   = 4
+
+# Brace style: open brace on a new line for all constructs
+# (types, methods, control blocks, properties) EXCEPT for
+# accessors, object/collection initializers, and lambdas
+# (which stay on the same line as their parent).
+# Note: the spec section 7.3 prose says "K&R" but then sets
+# `all` explicitly. We follow the explicit value (Allman with
+# the standard exceptions). The team can revisit if a true
+# K&R style is preferred; in that case set this to `none`.
+csharp_new_line_before_open_brace = all
+
+# --- Namespace declarations ----------------------------------
+# Prefer file-scoped namespaces (C# 10+). One namespace per
+# file, no nested blocks.
+csharp_style_namespace_declarations = file_scoped:warning
+
+# --- using directives ----------------------------------------
+# Place `using` directives outside the namespace declaration.
+csharp_using_directive_placement = outside_namespace:warning
+
+# Sort usings alphabetically and place System.* first.
+dotnet_sort_system_directives_first           = true
+dotnet_separate_import_directive_groups        = false
+
+# --- Namespace / folder correspondence -----------------------
+# The namespace of a file should match its folder path
+# (relative to the project root). Encourages consistent layout.
+dotnet_style_namespace_match_folder = true:warning
+
+# --- Braces and parentheses ----------------------------------
+csharp_prefer_braces = true:warning
+
+# --- var / explicit type -------------------------------------
+csharp_style_var_for_built_in_types           = false:warning
+csharp_style_var_when_type_is_apparent        = true:warning
+csharp_style_var_elsewhere                    = false:warning
+
+# --- Pattern matching ----------------------------------------
+csharp_style_pattern_matching_over_is_with_cast_check = true:warning
+csharp_style_pattern_matching_over_as_with_null_check = true:warning
+
+# --- Expression-bodied members -------------------------------
+# Single-line expressions OK for methods, operators, properties,
+# indexers, accessors, lambdas. Block-bodied preferred for
+# constructors and local functions (typically multi-line).
+csharp_style_expression_bodied_methods        = when_on_single_line:warning
+csharp_style_expression_bodied_constructors   = false:warning
+csharp_style_expression_bodied_operators      = when_on_single_line:warning
+csharp_style_expression_bodied_properties     = true:warning
+csharp_style_expression_bodied_indexers       = true:warning
+csharp_style_expression_bodied_accessors      = true:warning
+csharp_style_expression_bodied_lambdas        = true:warning
+csharp_style_expression_bodied_local_functions = when_on_single_line:warning
+
+# --- Naming rules --------------------------------------------
+# Severity: warning (combined with TreatWarningsAsErrors this
+# becomes a build error).
+
+# Rule 1: private fields must start with underscore, camelCase body.
+dotnet_naming_rule.private_fields_underscore.severity  = warning
+dotnet_naming_rule.private_fields_underscore.symbols   = private_fields
+dotnet_naming_rule.private_fields_underscore.style     = underscore_camel_case
+
+dotnet_naming_symbols.private_fields.applicable_kinds           = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+
+dotnet_naming_style.underscore_camel_case.required_prefix = _
+dotnet_naming_style.underscore_camel_case.capitalization  = camel_case
+
+# Rule 2: interfaces must start with I, PascalCase body.
+dotnet_naming_rule.interfaces_i_prefix.severity  = warning
+dotnet_naming_rule.interfaces_i_prefix.symbols   = interfaces
+dotnet_naming_rule.interfaces_i_prefix.style     = i_prefix_pascal_case
+
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+
+dotnet_naming_style.i_prefix_pascal_case.required_prefix = I
+dotnet_naming_style.i_prefix_pascal_case.capitalization  = pascal_case
+
+# Rule 3: public members of types must be PascalCase.
+# Covers types themselves (class, struct, interface, enum,
+# delegate) and their public/protected/internal members
+# (method, property, event).
+dotnet_naming_rule.public_members_pascal.severity  = warning
+dotnet_naming_rule.public_members_pascal.symbols   = public_members
+dotnet_naming_rule.public_members_pascal.style     = pascal_case
+
+dotnet_naming_symbols.public_members.applicable_kinds           = class, struct, interface, enum, delegate, method, property, event, namespace
+dotnet_naming_symbols.public_members.applicable_accessibilities = public, protected, internal
+
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+# Rule 4: parameters and local variables must be camelCase.
+dotnet_naming_rule.locals_and_parameters_camel.severity  = warning
+dotnet_naming_rule.locals_and_parameters_camel.symbols   = locals_and_parameters
+dotnet_naming_rule.locals_and_parameters_camel.style     = camel_case
+
+dotnet_naming_symbols.locals_and_parameters.applicable_kinds = local, parameter
+
+dotnet_naming_style.camel_case.capitalization = camel_case
+
+# Rule 5: constants must be PascalCase.
+dotnet_naming_rule.constants_pascal.severity  = warning
+dotnet_naming_rule.constants_pascal.symbols   = constants
+dotnet_naming_rule.constants_pascal.style     = pascal_case
+
+dotnet_naming_symbols.constants.applicable_kinds    = field
+dotnet_naming_symbols.constants.applicable_modifiers = const
+
+# ============================================================
+# Avalonia XAML files
+# ============================================================
+[*.axaml]
+indent_size = 2
+tab_width   = 2

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="NetArchTest.Rules" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ControlDeFinanzasIA.Domain\ControlDeFinanzasIA.Domain.csproj" />
+    <ProjectReference Include="..\..\src\ControlDeFinanzasIA.Application\ControlDeFinanzasIA.Application.csproj" />
+    <ProjectReference Include="..\..\src\ControlDeFinanzasIA.UI\ControlDeFinanzasIA.UI.csproj" />
+  </ItemGroup>
+
+</Project>

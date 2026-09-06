@@ -1,0 +1,55 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="using:System">
+    <!--
+        BOLD "Libro Mayor" design tokens.
+        See spec/features/phase-04/F-008-ui-capstone.spec.md §4.
+    -->
+
+    <!-- Palette -->
+    <Color x:Key="InkColor">#16181D</Color>
+    <Color x:Key="SurfaceColor">#1F232B</Color>
+    <Color x:Key="HairlineColor">#31363F</Color>
+    <Color x:Key="PaperColor">#E8E4D9</Color>
+    <Color x:Key="PaperDimColor">#9BA0A8</Color>
+    <Color x:Key="AmberColor">#E8A33D</Color>
+    <Color x:Key="SageColor">#7FB069</Color>
+    <Color x:Key="TerracottaColor">#D96459</Color>
+
+    <SolidColorBrush x:Key="InkBrush" Color="{StaticResource InkColor}" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="HairlineBrush" Color="{StaticResource HairlineColor}" />
+    <SolidColorBrush x:Key="PaperBrush" Color="{StaticResource PaperColor}" />
+    <SolidColorBrush x:Key="PaperDimBrush" Color="{StaticResource PaperDimColor}" />
+    <SolidColorBrush x:Key="AmberBrush" Color="{StaticResource AmberColor}" />
+    <SolidColorBrush x:Key="SageBrush" Color="{StaticResource SageColor}" />
+    <SolidColorBrush x:Key="TerracottaBrush" Color="{StaticResource TerracottaColor}" />
+
+    <!-- Typography -->
+    <!--
+        The preferred families are the OFL fonts in Assets/Fonts.
+        System fonts are listed as fallbacks until the TTF files are added.
+    -->
+    <FontFamily x:Key="FontDisplay">Fraunces, Times New Roman</FontFamily>
+    <FontFamily x:Key="FontBody">Instrument Sans, Segoe UI</FontFamily>
+    <FontFamily x:Key="FontMono">Spline Sans Mono, Consolas</FontFamily>
+
+    <!-- Spacing -->
+    <sys:Double x:Key="Space1">4</sys:Double>
+    <sys:Double x:Key="Space2">8</sys:Double>
+    <sys:Double x:Key="Space3">12</sys:Double>
+    <sys:Double x:Key="Space4">16</sys:Double>
+    <sys:Double x:Key="Space5">20</sys:Double>
+    <sys:Double x:Key="Space6">24</sys:Double>
+    <sys:Double x:Key="Space7">28</sys:Double>
+    <sys:Double x:Key="Space8">32</sys:Double>
+
+    <!-- Motion durations -->
+    <sys:TimeSpan x:Key="MotionFast">0:0:0.15</sys:TimeSpan>
+    <sys:TimeSpan x:Key="MotionNormal">0:0:0.2</sys:TimeSpan>
+    <sys:TimeSpan x:Key="MotionSlow">0:0:0.25</sys:TimeSpan>
+
+    <!-- Corner radii -->
+    <sys:Double x:Key="RadiusSmall">4</sys:Double>
+    <sys:Double x:Key="RadiusMedium">6</sys:Double>
+</ResourceDictionary>

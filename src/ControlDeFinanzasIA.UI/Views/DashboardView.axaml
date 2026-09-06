@@ -1,0 +1,10 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+             x:Class="ControlDeFinanzasIA.UI.Views.DashboardView"
+             x:DataType="vm:DashboardViewModel">
+    <Grid HorizontalAlignment="Center"
+          VerticalAlignment="Center">
+        <TextBlock Text="{Binding Title}" />
+    </Grid>
+</UserControl>

@@ -1,0 +1,105 @@
+<Project>
+
+  <!--
+    Centralized NuGet package versions for the whole solution.
+    See: spec/features/phase-01/F-001-skeleton-solution.md §5
+
+    With Central Package Management (CPM) enabled here, every
+    <PackageReference /> in any .csproj under the directory tree
+    must NOT specify Version. Version is resolved from this file.
+  -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+
+    <!-- ============================================================
+         Avalonia UI (desktop, .NET 8). All Avalonia packages pinned
+         to the same version to avoid mismatches.
+         See: https://api-docs.avaloniaui.net/
+         ============================================================ -->
+    <PackageVersion Include="Avalonia" Version="11.2.7" />
+    <PackageVersion Include="Avalonia.Desktop" Version="11.2.7" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.2.7" />
+
+    <!-- ============================================================
+          Avalonia.Headless is included as a capability for Phase 4+
+          headless rendering. It is pinned to the same Avalonia version
+          to avoid package mismatches. No .XUnit variant is used in
+          Phase 3 (VM tests are pure C#; smoke is manual).
+          ============================================================ -->
+    <PackageVersion Include="Avalonia.Headless" Version="11.2.7" />
+
+    <!-- ============================================================
+         Microsoft.Extensions.* aligned to .NET 8 LTS.
+         ============================================================ -->
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Localization" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
+
+    <!-- ============================================================
+         CommunityToolkit.Mvvm (MVVM source generators for Avalonia UI).
+         Provides ObservableObject, ObservableProperty, RelayCommand.
+         ============================================================ -->
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+
+    <!-- ============================================================
+         Static analysis: StyleCop rules.
+         Pinned to a beta build because it is the version that
+         explicitly supports modern C# (.NET 8 era). Reviewed via
+         Context7 (dotnetanalyzers/stylecopanalyzers).
+         ============================================================ -->
+    <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+
+    <!-- ============================================================
+         xUnit + Microsoft.NET.Test.Sdk (test framework).
+         xunit v2 is the current stable line; v3 is preview and
+         not used here.
+         ============================================================ -->
+    <PackageVersion Include="xunit" Version="2.9.0" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+
+    <!-- ============================================================
+         NetArchTest.Rules (architecture rules engine, used in T-007).
+         Reviewed via Context7 (benmorris/netarchtest). .NET Standard
+         2.0 library, compatible with .NET 8.
+         ============================================================ -->
+    <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
+
+    <!-- ============================================================
+         FluentValidation (Application layer, used in T-008+).
+         ============================================================ -->
+    <PackageVersion Include="FluentValidation" Version="11.10.0" />
+
+    <!-- ============================================================
+         Entity Framework Core 8 + SQLite provider (Infrastructure layer,
+         F-001 of Phase 2). Pinned to the latest 8.0.x patch aligned
+         with .NET 8 LTS.
+         ============================================================ -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.11" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
+
+  </ItemGroup>
+
+  <!--
+    Notes on version selection:
+    - All versions are EXACT (no floating ranges). Updates are
+      intentional and happen in dedicated PRs.
+    - The list above covers the packages needed by Phase 1 (F-001
+      through F-008) and the global analyzers. New packages added
+      in later features must be registered here with a justifying
+      comment, not in the consuming .csproj.
+    - Avalonia.Fonts.Inter is intentionally NOT listed. The spec
+      marks it as optional; it is added here only if a feature
+      actually uses it.
+  -->
+
+</Project>

@@ -1,0 +1,50 @@
+using ControlDeFinanzasIA.Domain.Enums;
+using FluentValidation;
+
+namespace ControlDeFinanzasIA.Application.UseCases.Incomes.UpdateIncome;
+
+/// <summary>
+/// Validates a <see cref="UpdateIncomeCommand"/> using synchronous
+/// FluentValidation rules. Mirrors <c>RegisterIncomeValidator</c> and
+/// adds an <c>Id != Guid.Empty</c> rule. Async validators are
+/// intentionally avoided to prevent
+/// <c>AsyncValidatorInvokedSynchronouslyException</c>.
+/// </summary>
+/// <remarks>
+/// <see cref="UpdateIncomeCommand.CategoryId"/> is nullable: the
+/// <c>NotEqual(Guid.Empty)</c> rule only applies when a category is
+/// supplied (<c>.When(c => c.CategoryId is not null)</c>). A null
+/// category is valid (an income may have no category).
+/// </remarks>
+public sealed class UpdateIncomeValidator : AbstractValidator<UpdateIncomeCommand>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UpdateIncomeValidator"/> class.
+    /// </summary>
+    public UpdateIncomeValidator()
+    {
+        RuleFor(c => c.Id)
+            .NotEqual(Guid.Empty).WithMessage("El identificador es obligatorio.");
+
+        RuleFor(c => c.CategoryId)
+            .NotEqual(Guid.Empty)
+            .When(c => c.CategoryId is not null)
+            .WithMessage("La categoría no es válida.");
+
+        RuleFor(c => c.Amount)
+            .GreaterThan(0).WithMessage("El monto debe ser mayor que 0.");
+
+        RuleFor(c => c.Description)
+            .NotEmpty().WithMessage("La descripción es obligatoria.")
+            .MaximumLength(200).WithMessage("La descripción no puede superar 200 caracteres.")
+            .Must(d => d.Trim().Length > 0).WithMessage("La descripción no puede contener solo espacios en blanco.");
+
+        RuleFor(c => c.Note)
+            .MaximumLength(500)
+            .When(c => c.Note is not null)
+            .WithMessage("La nota no puede superar 500 caracteres.");
+
+        RuleFor(c => c.Currency)
+            .IsInEnum().WithMessage("La moneda no es válida.");
+    }
+}

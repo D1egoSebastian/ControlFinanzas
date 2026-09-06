@@ -1,0 +1,98 @@
+using ControlDeFinanzasIA.Application.Abstractions;
+using ControlDeFinanzasIA.Application.Common;
+using ControlDeFinanzasIA.Application.DTOs;
+using ControlDeFinanzasIA.Domain.Transactions;
+using Microsoft.Extensions.Logging;
+
+namespace ControlDeFinanzasIA.Application.UseCases.Incomes.GetIncomes;
+
+/// <summary>
+/// Query de lectura que devuelve una página de ingresos mapeados a <see cref="IncomeDto"/>.
+/// </summary>
+/// <remarks>
+/// El método retorna un <see cref="Result"/> non-genérico. En caso de éxito,
+/// el caller debe castear <see cref="Result.Value"/> a
+/// <see cref="PagedResult{IncomeDto}"/> tras verificar <see cref="Result.IsSuccess"/>.
+/// </remarks>
+public sealed class GetIncomesQuery
+{
+    private readonly IIncomeRepository _repository;
+    private readonly ILogger<GetIncomesQuery> _logger;
+
+    /// <summary>
+    /// Inicializa una nueva instancia del query.
+    /// </summary>
+    /// <param name="repository">Repositorio de ingresos.</param>
+    /// <param name="logger">Logger para diagnosticar errores del repositorio.</param>
+    public GetIncomesQuery(IIncomeRepository repository, ILogger<GetIncomesQuery> logger)
+    {
+        _repository = repository;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Ejecuta el query de paginación de ingresos.
+    /// </summary>
+    /// <param name="request">Parámetros de paginación y filtros.</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    /// <returns>
+    /// <see cref="Result"/> con <see cref="PagedResult{IncomeDto}"/> en <see cref="Result.Value"/>
+    /// si la operación tiene éxito; de lo contrario, un <see cref="Error"/> con código
+    /// <c>"InvalidFilter"</c> o <c>"RepositoryError"</c>.
+    /// </returns>
+    public async Task<Result> ExecuteAsync(GetIncomesQueryRequest request, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (request.Page < 1)
+        {
+            return Result.Failure("InvalidFilter", "Page debe ser mayor o igual a 1.");
+        }
+
+        if (request.PageSize <= 0)
+        {
+            return Result.Failure("InvalidFilter", "PageSize debe ser mayor a 0.");
+        }
+
+        if (request.PageSize > 200)
+        {
+            return Result.Failure("InvalidFilter", "PageSize debe ser menor o igual a 200.");
+        }
+
+        if (request.DateFrom.HasValue && request.DateTo.HasValue && request.DateFrom > request.DateTo)
+        {
+            return Result.Failure("InvalidFilter", "DateFrom no puede ser mayor que DateTo.");
+        }
+
+        if (request.TagIds is not null && request.TagIds.Any(id => id == Guid.Empty))
+        {
+            return Result.Failure("InvalidFilter", "TagIds no puede contener identificadores vacíos.");
+        }
+
+        IncomeFilter filter = new()
+        {
+            Page = request.Page,
+            PageSize = request.PageSize,
+            CategoryId = request.CategoryId,
+            DateFrom = request.DateFrom,
+            DateTo = request.DateTo,
+            TagIds = request.TagIds,
+        };
+
+        try
+        {
+            PagedResult<Income> page = await _repository.GetByFilterAsync(filter, ct);
+            var items = page.Items.Select(i => i.ToDto()).ToList();
+            return Result.Success(new PagedResult<IncomeDto>(items, page.Total, filter.Page, filter.PageSize));
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener ingresos (Page={Page}, PageSize={PageSize})", filter.Page, filter.PageSize);
+            return Result.Failure("RepositoryError", "Ocurrió un error al obtener los ingresos.");
+        }
+    }
+}

@@ -1,0 +1,182 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        BOLD "Libro Mayor" control styles.
+        Classes are explicit so these styles never leak to the shell or dashboard.
+        See spec/features/phase-04/F-008-ui-capstone.spec.md §4.6.
+    -->
+
+    <!-- Ledger button: flat, paper text, amber underline on hover -->
+    <Style Selector="Button.ledger-btn">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource PaperBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="BorderThickness" Value="0,0,0,2" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.ledger-btn:pointerover">
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
+    </Style>
+
+    <!-- Primary CTA button -->
+    <Style Selector="Button.ledger-btn-primary">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.ledger-btn-primary:pointerover">
+        <Setter Property="Background" Value="#22E8A33D" />
+    </Style>
+
+    <!-- Danger / delete button -->
+    <Style Selector="Button.ledger-btn-danger">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource TerracottaBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.ledger-btn-danger:pointerover">
+        <Setter Property="Foreground" Value="#F5A9A3" />
+    </Style>
+
+    <!-- Inputs -->
+    <Style Selector="TextBox.ledger-input">
+        <Setter Property="Background" Value="{StaticResource InkBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource PaperBrush}" />
+        <Setter Property="CaretBrush" Value="{StaticResource AmberBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+        <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="8,6" />
+    </Style>
+    <Style Selector="TextBox.ledger-input:focus">
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+    </Style>
+
+    <Style Selector="ComboBox.ledger-input">
+        <Setter Property="Background" Value="{StaticResource InkBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource PaperBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+        <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Padding" Value="8,6" />
+    </Style>
+    <Style Selector="ComboBox.ledger-input:focus">
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+    </Style>
+
+    <!-- Ledger combo (BOLD): transparent, amber bottom border on hover, Fraunces for selected text -->
+    <Style Selector="ComboBox.ledger-combo">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource PaperBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+        <Setter Property="FontFamily" Value="{StaticResource FontDisplay}" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="Padding" Value="8,6" />
+    </Style>
+    <Style Selector="ComboBox.ledger-combo:pointerover">
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+    </Style>
+
+    <Style Selector="DatePicker.ledger-input">
+        <Setter Property="Background" Value="{StaticResource InkBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource PaperBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+        <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+
+    <!-- Ledger row -->
+    <Style Selector="ListBoxItem.ledger-row">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MinHeight" Value="42" />
+    </Style>
+    <Style Selector="ListBoxItem.ledger-row:pointerover">
+        <Setter Property="Background" Value="#0DE8A33D" />
+    </Style>
+    <Style Selector="ListBoxItem.ledger-row:selected">
+        <Setter Property="Background" Value="#1AE8A33D" />
+    </Style>
+
+    <!-- Section headers inside the rail -->
+    <Style Selector="TextBlock.ledger-section">
+        <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="500" />
+        <Setter Property="Foreground" Value="{StaticResource PaperDimBrush}" />
+        <Setter Property="Margin" Value="0,16,0,4" />
+    </Style>
+
+    <!-- Tabular amounts -->
+    <Style Selector="TextBlock.ledger-amount">
+        <Setter Property="FontFamily" Value="{StaticResource FontMono}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="Foreground" Value="{StaticResource PaperBrush}" />
+    </Style>
+    <Style Selector="TextBlock.ledger-amount.income">
+        <Setter Property="Foreground" Value="{StaticResource SageBrush}" />
+    </Style>
+    <Style Selector="TextBlock.ledger-amount.expense">
+        <Setter Property="Foreground" Value="{StaticResource TerracottaBrush}" />
+    </Style>
+
+    <!-- Editorial title -->
+    <Style Selector="TextBlock.ledger-title">
+        <Setter Property="FontFamily" Value="{StaticResource FontDisplay}" />
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontWeight" Value="600" />
+        <Setter Property="Foreground" Value="{StaticResource PaperBrush}" />
+    </Style>
+
+    <!-- Status message -->
+    <Style Selector="TextBlock.ledger-status">
+        <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{StaticResource PaperDimBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- Amber rule used under titles -->
+    <Style Selector="Border.amber-rule">
+        <Setter Property="Background" Value="{StaticResource AmberBrush}" />
+        <Setter Property="Height" Value="2" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Margin" Value="0,8,0,16" />
+    </Style>
+
+    <!-- Amber hover tick on row -->
+    <Style Selector="Border.amber-tick">
+        <Setter Property="Background" Value="{StaticResource AmberBrush}" />
+        <Setter Property="Width" Value="0" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+    <Style Selector="ListBoxItem.ledger-row:pointerover Border.amber-tick">
+        <Setter Property="Width" Value="3" />
+    </Style>
+</Styles>

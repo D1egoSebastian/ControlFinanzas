@@ -1,0 +1,312 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+             xmlns:dto="using:ControlDeFinanzasIA.Application.DTOs"
+             xmlns:enums="using:ControlDeFinanzasIA.Domain.Enums"
+             xmlns:res="using:ControlDeFinanzasIA.UI.Resources"
+             xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
+             x:Class="ControlDeFinanzasIA.UI.Views.ExpensesView"
+             x:DataType="vm:ExpensesViewModel"
+             x:Name="Root"
+             Background="{StaticResource InkBrush}">
+    <UserControl.Styles>
+        <StyleInclude Source="avares://ControlDeFinanzasIA.UI/Styles/LedgerStyles.axaml" />
+        <StyleInclude Source="avares://ControlDeFinanzasIA.UI/Styles/Motion.axaml" />
+    </UserControl.Styles>
+
+    <UserControl.Resources>
+        <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
+        <converters:DeleteRowLabelConverter x:Key="DeleteRowLabelConverter" />
+    </UserControl.Resources>
+
+    <Grid ColumnDefinitions="260,*">
+        <!-- Filter rail -->
+        <ScrollViewer Grid.Column="0"
+                      Background="{StaticResource SurfaceBrush}">
+            <StackPanel Margin="16"
+                        Spacing="{StaticResource Space2}">
+                <TextBlock Text="{x:Static res:Strings.FiltersSectionTitle}"
+                           Classes="ledger-section" />
+
+                <TextBlock Text="{x:Static res:Strings.CategoryLabel}"
+                           Foreground="{StaticResource PaperBrush}"
+                           FontFamily="{StaticResource FontBody}"
+                           FontSize="13" />
+                <ComboBox ItemsSource="{Binding Categories}"
+                          DisplayMemberBinding="{Binding Name}"
+                          SelectedValue="{Binding FilterCategoryId}"
+                          SelectedValueBinding="{Binding Id}"
+                          PlaceholderText="{x:Static res:Strings.SelectCategoryWatermark}"
+                          Classes="ledger-input" />
+
+                <TextBlock Text="{x:Static res:Strings.FilterTagsLabel}"
+                           Foreground="{StaticResource PaperBrush}"
+                           FontFamily="{StaticResource FontBody}"
+                           FontSize="13" />
+                <ItemsControl ItemsSource="{Binding AvailableTags}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SelectableTagItem">
+                            <CheckBox Content="{Binding Name}"
+                                      IsChecked="{Binding IsSelected}"
+                                      Foreground="{StaticResource PaperBrush}"
+                                      FontFamily="{StaticResource FontBody}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="{x:Static res:Strings.NoTagsMessage}"
+                           Foreground="{StaticResource PaperDimBrush}"
+                           FontFamily="{StaticResource FontBody}"
+                           FontSize="13"
+                           IsVisible="{Binding !AvailableTags.Count}" />
+
+                <TextBlock Text="{x:Static res:Strings.FilterDateFromLabel}"
+                           Foreground="{StaticResource PaperBrush}"
+                           FontFamily="{StaticResource FontBody}"
+                           FontSize="13" />
+                <DatePicker SelectedDate="{Binding FilterDateFrom, Converter={StaticResource DateOnlyConverter}}"
+                            Classes="ledger-input" />
+
+                <TextBlock Text="{x:Static res:Strings.FilterDateToLabel}"
+                           Foreground="{StaticResource PaperBrush}"
+                           FontFamily="{StaticResource FontBody}"
+                           FontSize="13" />
+                <DatePicker SelectedDate="{Binding FilterDateTo, Converter={StaticResource DateOnlyConverter}}"
+                            Classes="ledger-input" />
+
+                <StackPanel Orientation="Horizontal"
+                            Spacing="{StaticResource Space2}">
+                    <Button Content="{x:Static res:Strings.ApplyFilterButton}"
+                            Command="{Binding ApplyFilterCommand}"
+                            Classes="ledger-btn-primary" />
+                    <Button Content="{x:Static res:Strings.ClearFilterButton}"
+                            Command="{Binding ClearFilterCommand}"
+                            Classes="ledger-btn" />
+                </StackPanel>
+
+                <TextBlock Text="{x:Static res:Strings.SavedViewsSectionTitle}"
+                           Classes="ledger-section" />
+                <ComboBox ItemsSource="{Binding SavedViews}"
+                          DisplayMemberBinding="{Binding Name}"
+                          SelectedItem="{Binding SelectedSavedView}"
+                          PlaceholderText="{x:Static res:Strings.SavedViewsPlaceholder}"
+                          Classes="ledger-input" />
+                <TextBox Text="{Binding NewViewName}"
+                         Watermark="{x:Static res:Strings.NewViewNameWatermark}"
+                         Classes="ledger-input" />
+                <StackPanel Orientation="Horizontal"
+                            Spacing="{StaticResource Space2}">
+                    <Button Content="{x:Static res:Strings.SaveViewButton}"
+                            Command="{Binding SaveViewCommand}"
+                            Classes="ledger-btn-primary" />
+                    <Button Content="{x:Static res:Strings.DeleteViewButton}"
+                            Command="{Binding DeleteSavedViewCommand}"
+                            Classes="ledger-btn-danger" />
+                </StackPanel>
+
+                <TextBlock Text="{x:Static res:Strings.CreateTagSectionTitle}"
+                           Classes="ledger-section" />
+                <TextBox Text="{Binding NewTagName}"
+                         Watermark="{x:Static res:Strings.TagNameWatermark}"
+                         Classes="ledger-input" />
+                <TextBox Text="{Binding NewTagColor}"
+                         Watermark="{x:Static res:Strings.TagColorWatermark}"
+                         Classes="ledger-input" />
+                <TextBlock Text="{Binding TagCreationError}"
+                           Foreground="{StaticResource TerracottaBrush}"
+                           FontFamily="{StaticResource FontBody}"
+                           TextWrapping="Wrap" />
+                <Button Content="{x:Static res:Strings.CreateTagButton}"
+                        Command="{Binding CreateTagCommand}"
+                        Classes="ledger-btn-primary"
+                        HorizontalAlignment="Left" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Ledger -->
+        <ScrollViewer Grid.Column="1">
+            <StackPanel Margin="24"
+                        Spacing="{StaticResource Space4}">
+                <!-- Title -->
+                <StackPanel Spacing="{StaticResource Space2}">
+                    <TextBlock Text="{x:Static res:Strings.ExpensesTitle}"
+                               Classes="ledger-title" />
+                    <Border Classes="amber-rule" />
+                </StackPanel>
+
+                <TextBlock Text="{Binding StatusMessage}"
+                           Classes="ledger-status" />
+
+                <!-- Form -->
+                <StackPanel Spacing="{StaticResource Space2}">
+                    <TextBlock Text="{x:Static res:Strings.EditFormTitle}"
+                               Classes="ledger-section"
+                               IsVisible="{Binding IsEditMode}" />
+
+                    <TextBlock Text="{x:Static res:Strings.DateLabel}"
+                               Foreground="{StaticResource PaperBrush}"
+                               FontFamily="{StaticResource FontBody}"
+                               FontSize="13" />
+                    <DatePicker SelectedDate="{Binding Date, Converter={StaticResource DateOnlyConverter}}"
+                                Classes="ledger-input" />
+                    <TextBlock Text="{Binding ValidationErrors[Date]}"
+                               Foreground="{StaticResource TerracottaBrush}"
+                               FontFamily="{StaticResource FontBody}" />
+
+                    <TextBlock Text="{x:Static res:Strings.AmountLabel}"
+                               Foreground="{StaticResource PaperBrush}"
+                               FontFamily="{StaticResource FontBody}"
+                               FontSize="13" />
+                    <TextBox Text="{Binding Amount, StringFormat={}{0:N2}}"
+                             Watermark="0.00"
+                             Classes="ledger-input" />
+                    <TextBlock Text="{Binding ValidationErrors[Amount]}"
+                               Foreground="{StaticResource TerracottaBrush}"
+                               FontFamily="{StaticResource FontBody}" />
+
+                    <TextBlock Text="{x:Static res:Strings.CurrencyLabel}"
+                               Foreground="{StaticResource PaperBrush}"
+                               FontFamily="{StaticResource FontBody}"
+                               FontSize="13" />
+                    <ComboBox ItemsSource="{x:Static converters:EnumValues.Currencies}"
+                              SelectedItem="{Binding Currency}"
+                              Classes="ledger-input" />
+                    <TextBlock Text="{Binding ValidationErrors[Currency]}"
+                               Foreground="{StaticResource TerracottaBrush}"
+                               FontFamily="{StaticResource FontBody}" />
+
+                    <TextBlock Text="{x:Static res:Strings.CategoryLabel}"
+                               Foreground="{StaticResource PaperBrush}"
+                               FontFamily="{StaticResource FontBody}"
+                               FontSize="13" />
+                    <ComboBox ItemsSource="{Binding Categories}"
+                              DisplayMemberBinding="{Binding Name}"
+                              SelectedValue="{Binding SelectedCategoryId}"
+                              SelectedValueBinding="{Binding Id}"
+                              PlaceholderText="{x:Static res:Strings.SelectCategoryWatermark}"
+                              Classes="ledger-input" />
+                    <TextBlock Text="{Binding ValidationErrors[CategoryId]}"
+                               Foreground="{StaticResource TerracottaBrush}"
+                               FontFamily="{StaticResource FontBody}" />
+
+                    <TextBlock Text="{x:Static res:Strings.DescriptionLabel}"
+                               Foreground="{StaticResource PaperBrush}"
+                               FontFamily="{StaticResource FontBody}"
+                               FontSize="13" />
+                    <TextBox Text="{Binding Description}"
+                             Watermark="{x:Static res:Strings.DescriptionWatermark}"
+                             Classes="ledger-input" />
+                    <TextBlock Text="{Binding ValidationErrors[Description]}"
+                               Foreground="{StaticResource TerracottaBrush}"
+                               FontFamily="{StaticResource FontBody}" />
+
+                    <TextBlock Text="{x:Static res:Strings.NoteLabel}"
+                               Foreground="{StaticResource PaperBrush}"
+                               FontFamily="{StaticResource FontBody}"
+                               FontSize="13" />
+                    <TextBox Text="{Binding Note}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             Height="80"
+                             Watermark="{x:Static res:Strings.NoteWatermark}"
+                             Classes="ledger-input" />
+                    <TextBlock Text="{Binding ValidationErrors[Note]}"
+                               Foreground="{StaticResource TerracottaBrush}"
+                               FontFamily="{StaticResource FontBody}" />
+
+                    <TextBlock Text="{Binding FormError}"
+                               Foreground="{StaticResource TerracottaBrush}"
+                               FontFamily="{StaticResource FontBody}"
+                               TextWrapping="Wrap" />
+
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="{StaticResource Space2}"
+                                IsVisible="{Binding IsEditMode}">
+                        <Button Content="{x:Static res:Strings.UpdateButton}"
+                                Command="{Binding UpdateExpenseCommand}"
+                                Classes="ledger-btn-primary" />
+                        <Button Content="{x:Static res:Strings.CancelEditButton}"
+                                Command="{Binding CancelEditCommand}"
+                                Classes="ledger-btn" />
+                    </StackPanel>
+
+                    <Button Content="{x:Static res:Strings.RegisterButton}"
+                            Command="{Binding RegisterExpenseCommand}"
+                            Classes="ledger-btn-primary"
+                            HorizontalAlignment="Left"
+                            IsVisible="{Binding !IsEditMode}" />
+                </StackPanel>
+
+                <!-- List -->
+                <ListBox ItemsSource="{Binding Expenses}"
+                         MaxHeight="400"
+                         Background="Transparent"
+                         BorderThickness="0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="dto:ExpenseDto">
+                            <Border Classes="ledger-row">
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto">
+                                    <Border Classes="amber-tick"
+                                            Grid.Column="0"
+                                            Margin="0,0,8,0" />
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding Date}"
+                                               Foreground="{StaticResource PaperDimBrush}"
+                                               FontFamily="{StaticResource FontBody}"
+                                               FontSize="14"
+                                               Margin="8,0,16,0"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Description}"
+                                               TextTrimming="CharacterEllipsis"
+                                               Foreground="{StaticResource PaperBrush}"
+                                               FontFamily="{StaticResource FontBody}"
+                                               FontSize="14"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding Amount, StringFormat={}{0:N2}}"
+                                               Classes="ledger-amount expense"
+                                               Margin="16,0,8,0"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="3"
+                                               Text="{Binding Currency}"
+                                               Foreground="{StaticResource PaperDimBrush}"
+                                               FontFamily="{StaticResource FontMono}"
+                                               FontSize="14"
+                                               VerticalAlignment="Center" />
+                                    <Button Grid.Column="4"
+                                            Content="{x:Static res:Strings.EditButton}"
+                                            Command="{Binding #Root.((vm:ExpensesViewModel)DataContext).BeginEditCommand}"
+                                            CommandParameter="{Binding}"
+                                            Classes="ledger-btn"
+                                            Margin="8,0,0,0" />
+                                    <Button Grid.Column="5"
+                                            Content="{Binding #Root.((vm:ExpensesViewModel)DataContext).PendingDeleteExpenseId, Converter={StaticResource DeleteRowLabelConverter}, ConverterParameter={Binding Id}}"
+                                            Command="{Binding #Root.((vm:ExpensesViewModel)DataContext).ConfirmDeleteCommand}"
+                                            CommandParameter="{Binding}"
+                                            Classes="ledger-btn-danger"
+                                            Margin="8,0,0,0" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Pagination -->
+                <StackPanel Orientation="Horizontal"
+                            Spacing="{StaticResource Space2}"
+                            HorizontalAlignment="Center">
+                    <Button Content="{x:Static res:Strings.PreviousPageButton}"
+                            Command="{Binding PreviousPageCommand}"
+                            Classes="ledger-btn" />
+                    <TextBlock Text="{Binding PageSummary}"
+                               VerticalAlignment="Center"
+                               Foreground="{StaticResource PaperBrush}"
+                               FontFamily="{StaticResource FontBody}" />
+                    <Button Content="{x:Static res:Strings.NextPageButton}"
+                            Command="{Binding NextPageCommand}"
+                            Classes="ledger-btn" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

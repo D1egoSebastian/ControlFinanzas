@@ -1,0 +1,252 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        BOLD "Libro Mayor" motion.
+        Pure Avalonia Animation / Transitions — no code-behind.
+        See spec/features/phase-04/F-008-ui-capstone.spec.md §4.4.
+    -->
+
+    <!-- Base state for rows so transforms exist before animations run. -->
+    <Style Selector="ListBoxItem.ledger-row">
+        <Setter Property="Opacity" Value="1" />
+        <Setter Property="RenderTransform">
+            <TranslateTransform Y="0" />
+        </Setter>
+    </Style>
+
+    <!-- Staggered row reveal: capped at the first 10 rows. -->
+    <Style Selector="ListBoxItem.ledger-row:nth-child(1)">
+        <Style.Animations>
+            <Animation Duration="0:0:0.2" Delay="0:0:0.000" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="8" />
+                    </Setter>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="0" />
+                    </Setter>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="ListBoxItem.ledger-row:nth-child(2)">
+        <Style.Animations>
+            <Animation Duration="0:0:0.2" Delay="0:0:0.030" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="8" />
+                    </Setter>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="0" />
+                    </Setter>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="ListBoxItem.ledger-row:nth-child(3)">
+        <Style.Animations>
+            <Animation Duration="0:0:0.2" Delay="0:0:0.060" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="8" />
+                    </Setter>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="0" />
+                    </Setter>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="ListBoxItem.ledger-row:nth-child(4)">
+        <Style.Animations>
+            <Animation Duration="0:0:0.2" Delay="0:0:0.090" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="8" />
+                    </Setter>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="0" />
+                    </Setter>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="ListBoxItem.ledger-row:nth-child(5)">
+        <Style.Animations>
+            <Animation Duration="0:0:0.2" Delay="0:0:0.120" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="8" />
+                    </Setter>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="0" />
+                    </Setter>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="ListBoxItem.ledger-row:nth-child(6)">
+        <Style.Animations>
+            <Animation Duration="0:0:0.2" Delay="0:0:0.150" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="8" />
+                    </Setter>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="0" />
+                    </Setter>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="ListBoxItem.ledger-row:nth-child(7)">
+        <Style.Animations>
+            <Animation Duration="0:0:0.2" Delay="0:0:0.180" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="8" />
+                    </Setter>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="0" />
+                    </Setter>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="ListBoxItem.ledger-row:nth-child(8)">
+        <Style.Animations>
+            <Animation Duration="0:0:0.2" Delay="0:0:0.210" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="8" />
+                    </Setter>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="0" />
+                    </Setter>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="ListBoxItem.ledger-row:nth-child(9)">
+        <Style.Animations>
+            <Animation Duration="0:0:0.2" Delay="0:0:0.240" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="8" />
+                    </Setter>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="0" />
+                    </Setter>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="ListBoxItem.ledger-row:nth-child(10)">
+        <Style.Animations>
+            <Animation Duration="0:0:0.2" Delay="0:0:0.270" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="8" />
+                    </Setter>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="RenderTransform">
+                        <TranslateTransform Y="0" />
+                    </Setter>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- Amber tick animation on row hover. -->
+    <Style Selector="Border.amber-tick">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Width" Duration="0:0:0.15" Easing="CubicEaseOut" />
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <!-- Button press feedback. -->
+    <Style Selector="Button.ledger-btn-primary">
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.ledger-btn-primary:pointerpressed">
+        <Setter Property="RenderTransform">
+            <ScaleTransform ScaleX="0.98" ScaleY="0.98" />
+        </Setter>
+    </Style>
+
+    <!-- CTA underline grow: amber bottom-border thickness 0→2 on pointer-over. -->
+    <Style Selector="Button.ledger-btn-primary">
+        <Setter Property="Transitions">
+            <Transitions>
+                <ThicknessTransition Property="BorderThickness" Duration="0:0:0.15" Easing="CubicEaseOut" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.ledger-btn-primary:pointerover">
+        <Setter Property="BorderThickness" Value="0,0,0,2" />
+    </Style>
+
+    <!-- Rail section transition: width 260↔60 over 250ms on expand/collapse. -->
+    <Style Selector="Border.ledger-rail-section">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Width" Duration="0:0:0.25" Easing="CubicEaseInOut" />
+                <DoubleTransition Property="Opacity" Duration="0:0:0.25" Easing="CubicEaseInOut" />
+            </Transitions>
+        </Setter>
+    </Style>
+</Styles>

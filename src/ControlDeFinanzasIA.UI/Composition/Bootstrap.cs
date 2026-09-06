@@ -1,0 +1,154 @@
+using System.Reflection;
+using ControlDeFinanzasIA.Application.Abstractions;
+using ControlDeFinanzasIA.Application.UseCases.Catalog.CreateTag;
+using ControlDeFinanzasIA.Application.UseCases.Expenses.GetTransactions;
+using ControlDeFinanzasIA.Application.UseCases.Expenses.RegisterExpense;
+using ControlDeFinanzasIA.Application.UseCases.Expenses.UpdateExpense;
+using ControlDeFinanzasIA.Application.UseCases.Incomes.GetIncomes;
+using ControlDeFinanzasIA.Application.UseCases.Incomes.RegisterIncome;
+using ControlDeFinanzasIA.Application.UseCases.Incomes.UpdateIncome;
+using ControlDeFinanzasIA.Application.UseCases.SavedViews.ApplySavedView;
+using ControlDeFinanzasIA.Application.UseCases.SavedViews.DeleteSavedView;
+using ControlDeFinanzasIA.Application.UseCases.SavedViews.GetSavedViews;
+using ControlDeFinanzasIA.Application.UseCases.SavedViews.SaveCurrentFilter;
+using ControlDeFinanzasIA.Application.UseCases.Transactions.DeleteTransaction;
+using ControlDeFinanzasIA.Infrastructure.Persistence;
+using ControlDeFinanzasIA.UI.Navigation;
+using ControlDeFinanzasIA.UI.System;
+using ControlDeFinanzasIA.UI.ViewModels;
+using FluentValidation;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
+
+namespace ControlDeFinanzasIA.UI.Composition;
+
+/// <summary>
+/// Composition root of the application.
+/// </summary>
+/// <remarks>
+/// Annotated with <see cref="CompositionRootAttribute"/> to document that
+/// this is the only place where the UI layer wires concrete implementations
+/// to the abstractions defined in <c>Application</c>. The 15 repository
+/// interfaces are intentionally <strong>not</strong> registered here; their
+/// concrete implementations with EF Core + SQLite will be registered in
+/// F-002 of Phase 2. The <paramref name="configuration"/> parameter is
+/// accepted for forward compatibility with F-002 and F-012.
+/// </remarks>
+[CompositionRoot]
+public static class Bootstrap
+{
+    /// <summary>
+    /// Registers the application's services in the given
+    /// <see cref="IServiceCollection"/>.
+    /// </summary>
+    /// <param name="services">The service collection to populate.</param>
+    /// <param name="configuration">
+    /// Application configuration. Reserved for future use in F-002 and F-012.
+    /// </param>
+    /// <remarks>
+    /// Also registers the expense and income registration and update use cases,
+    /// the transaction deletion use case, the income query (<see cref="GetIncomesQuery"/>),
+    /// the tag creation use case (<see cref="CreateTagUseCase"/>) and its validator
+    /// (<see cref="CreateTagValidator"/>), the saved-view use cases
+    /// (<see cref="SaveCurrentFilterUseCase"/>, <see cref="ApplySavedViewUseCase"/>,
+    /// <see cref="GetSavedViewsUseCase"/>, <see cref="DeleteSavedViewUseCase"/>) and their validator
+    /// (<see cref="SaveCurrentFilterValidator"/>), plus the validators for register
+    /// and update of expenses and incomes, plus persistence (<see cref="AppDbContext"/>,
+    /// <see cref="IUnitOfWork"/>, <see cref="ICategoryRepository"/>,
+    /// <see cref="IPaymentMethodRepository"/>, <see cref="ISavedViewRepository"/>) via
+    /// <see cref="ServiceCollectionExtensions.AddPersistence(IServiceCollection, IPathResolver)"/>.
+    /// </remarks>
+    public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        _ = configuration;
+
+        services.AddSingleton<IClock, SystemClock>();
+        services.AddSingleton<IPathResolver, SystemPathResolver>();
+
+        services.AddLocalization();
+        services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<ShellViewModel>();
+        services.AddTransient<DashboardViewModel>();
+        services.AddTransient<ExpensesViewModel>();
+        services.AddTransient<IncomeViewModel>();
+
+        services.AddTransient<RegisterExpenseUseCase>();
+        services.AddTransient<UpdateExpenseUseCase>();
+        services.AddTransient<RegisterIncomeUseCase>();
+        services.AddTransient<UpdateIncomeUseCase>();
+        services.AddTransient<DeleteTransactionUseCase>();
+        services.AddTransient<GetTransactionsQuery>();
+        services.AddTransient<IValidator<RegisterExpenseCommand>, RegisterExpenseValidator>();
+        services.AddTransient<IValidator<UpdateExpenseCommand>, UpdateExpenseValidator>();
+        services.AddTransient<IValidator<RegisterIncomeCommand>, RegisterIncomeValidator>();
+        services.AddTransient<IValidator<UpdateIncomeCommand>, UpdateIncomeValidator>();
+
+        services.AddTransient<SaveCurrentFilterUseCase>();
+        services.AddTransient<ApplySavedViewUseCase>();
+        services.AddTransient<GetSavedViewsUseCase>();
+        services.AddTransient<DeleteSavedViewUseCase>();
+        services.AddTransient<IValidator<SaveCurrentFilterCommand>, SaveCurrentFilterValidator>();
+
+        services.AddTransient<GetIncomesQuery>();
+        services.AddTransient<CreateTagUseCase>();
+        services.AddTransient<IValidator<CreateTagCommand>, CreateTagValidator>();
+
+        ServiceProvider tempProvider = services.BuildServiceProvider();
+        try
+        {
+            IPathResolver pathResolver = tempProvider.GetRequiredService<IPathResolver>();
+            services.AddPersistence(pathResolver);
+        }
+        finally
+        {
+            tempProvider.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Applies pending EF Core migrations using a new service scope.
+    /// </summary>
+    /// <param name="services">The application's root service provider.</param>
+    /// <remarks>
+    /// This method is intentionally part of the composition root so that
+    /// the UI layer does not directly reference Entity Framework Core types
+    /// outside of <see cref="Bootstrap"/>, preserving the R-4 NetArchTest
+    /// boundary. The actual migration call is performed via reflection to
+    /// avoid a compile-time dependency on the EF Core package by the UI
+    /// assembly.
+    /// </remarks>
+    public static void ApplyMigrations(IServiceProvider services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        using IServiceScope scope = services.CreateScope();
+
+        Type appDbContextType = Type.GetType(
+            "ControlDeFinanzasIA.Infrastructure.Persistence.AppDbContext, ControlDeFinanzasIA.Infrastructure",
+            throwOnError: true)!;
+
+        object db = scope.ServiceProvider.GetRequiredService(appDbContextType);
+
+        object database = appDbContextType
+            .GetProperty("Database", BindingFlags.Public | BindingFlags.Instance)!
+            .GetValue(db)!;
+
+        Type extensionsType = Type.GetType(
+            "Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions, Microsoft.EntityFrameworkCore.Relational",
+            throwOnError: true)!;
+
+        MethodInfo migrateMethod = extensionsType
+            .GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Where(m => m.Name == "Migrate" && m.GetParameters().Length == 1)
+            .Single();
+
+        migrateMethod.Invoke(null, new[] { database });
+
+        ILoggerFactory loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
+        ILogger logger = loggerFactory.CreateLogger("Bootstrap");
+        logger.LogInformation("Migrations applied");
+    }
+}
