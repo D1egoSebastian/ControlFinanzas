@@ -3,6 +3,8 @@
   <ItemGroup>
     <ProjectReference Include="..\ControlDeFinanzasIA.Domain\ControlDeFinanzasIA.Domain.csproj" />
     <PackageReference Include="FluentValidation" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
   </ItemGroup>
 

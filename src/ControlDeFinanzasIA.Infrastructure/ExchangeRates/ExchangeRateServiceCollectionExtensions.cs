@@ -1,4 +1,6 @@
 using ControlDeFinanzasIA.Application.Abstractions;
+using ControlDeFinanzasIA.Application.Services;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,7 +14,9 @@ public static class ExchangeRateServiceCollectionExtensions
 {
     /// <summary>
     /// Registra <see cref="IExchangeRateProvider"/> como
-    /// <see cref="StubExchangeRateProvider"/> (Singleton).
+    /// <see cref="StubExchangeRateProvider"/> (Singleton) e
+    /// <see cref="ICurrencyConverter"/> como
+    /// <see cref="CurrencyConverter"/> (Singleton).
     /// </summary>
     /// <param name="services">Colección de servicios de DI.</param>
     /// <param name="configuration">
@@ -34,7 +38,9 @@ public static class ExchangeRateServiceCollectionExtensions
             services.AddSingleton<IConfiguration>(configuration);
         }
 
+        services.AddMemoryCache();
         services.AddSingleton<IExchangeRateProvider, StubExchangeRateProvider>();
+        services.AddSingleton<ICurrencyConverter, CurrencyConverter>();
 
         return services;
     }
