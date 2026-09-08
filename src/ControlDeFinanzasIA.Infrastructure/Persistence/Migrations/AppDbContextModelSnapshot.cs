@@ -262,6 +262,9 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("PaymentMethodId")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
 
@@ -270,6 +273,8 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("Date");
+
+                    b.HasIndex("PaymentMethodId");
 
                     b.ToTable("Expenses", (string)null);
                 });
@@ -297,6 +302,9 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("PaymentMethodId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Source")
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
@@ -309,6 +317,8 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("Date");
+
+                    b.HasIndex("PaymentMethodId");
 
                     b.ToTable("Incomes", (string)null);
                 });
@@ -390,6 +400,11 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("ControlDeFinanzasIA.Domain.Catalog.PaymentMethod", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentMethodId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.OwnsOne("ControlDeFinanzasIA.Domain.ValueObjects.Money", "Amount", b1 =>
                         {
                             b1.Property<Guid>("ExpenseId")
@@ -421,6 +436,11 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                     b.HasOne("ControlDeFinanzasIA.Domain.Catalog.Category", null)
                         .WithMany()
                         .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ControlDeFinanzasIA.Domain.Catalog.PaymentMethod", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentMethodId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.OwnsOne("ControlDeFinanzasIA.Domain.ValueObjects.Money", "Amount", b1 =>

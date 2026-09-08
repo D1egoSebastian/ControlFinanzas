@@ -31,6 +31,7 @@ public sealed class IncomeConfiguration : IEntityTypeConfiguration<Income>
         b.Property(e => e.Description).IsRequired().HasMaxLength(200);
         b.Property(e => e.Note).HasMaxLength(500);
         b.Property(e => e.Source).HasMaxLength(50);
+        b.Property(e => e.PaymentMethodId);
         b.Property(e => e.CreatedAt).IsRequired();
         b.Property(e => e.UpdatedAt).IsRequired();
 
@@ -39,8 +40,14 @@ public sealed class IncomeConfiguration : IEntityTypeConfiguration<Income>
             .HasForeignKey(e => e.CategoryId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        b.HasOne<PaymentMethod>()
+            .WithMany()
+            .HasForeignKey(e => e.PaymentMethodId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         b.HasIndex(e => e.Date);
         b.HasIndex(e => e.CategoryId);
+        b.HasIndex(e => e.PaymentMethodId);
 
         b.OwnsOne(e => e.Amount, money =>
         {

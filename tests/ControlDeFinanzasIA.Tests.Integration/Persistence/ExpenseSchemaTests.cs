@@ -14,7 +14,7 @@ public sealed class ExpenseSchemaTests
 {
     /// <summary>
     /// ST-1: tras aplicar las migraciones, la tabla <c>Expenses</c>
-    /// existe en SQLite con las 9 columnas esperadas.
+    /// existe en SQLite con las 10 columnas esperadas.
     /// </summary>
     [Fact]
     public async Task Migrate_CreatesExpensesTable()
@@ -32,7 +32,8 @@ public sealed class ExpenseSchemaTests
         List<string> columns = await QueryStringsAsync(
             context,
             "SELECT name FROM pragma_table_info('Expenses') ORDER BY name;");
-        Assert.Equal(9, columns.Count);
+        Assert.Equal(10, columns.Count);
+        Assert.Contains("PaymentMethodId", columns);
     }
 
     /// <summary>
@@ -63,15 +64,26 @@ public sealed class ExpenseSchemaTests
         Assert.Equal(500, note.GetMaxLength());
         Assert.True(note.IsNullable);
 
-        IForeignKey foreignKey = entityType.GetForeignKeys().Single();
-        Assert.Equal("Categories", foreignKey.PrincipalEntityType.GetTableName());
-        Assert.Equal(DeleteBehavior.Restrict, foreignKey.DeleteBehavior);
+        IEnumerable<IForeignKey> foreignKeys = entityType.GetForeignKeys();
+        Assert.Equal(2, foreignKeys.Count());
+
+        IForeignKey categoriesFk = foreignKeys
+            .Single(fk => fk.PrincipalEntityType.GetTableName() == "Categories");
+        Assert.Equal(DeleteBehavior.Restrict, categoriesFk.DeleteBehavior);
+
+        IForeignKey paymentMethodsFk = foreignKeys
+            .Single(fk => fk.PrincipalEntityType.GetTableName() == "PaymentMethods");
+        Assert.Equal(DeleteBehavior.SetNull, paymentMethodsFk.DeleteBehavior);
+
+        IProperty paymentMethodId = entityType.FindProperty(nameof(Expense.PaymentMethodId))!;
+        Assert.True(paymentMethodId.IsNullable);
 
         List<string> indexNames = await QueryStringsAsync(
             context,
             "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'Expenses' ORDER BY name;");
         Assert.Contains("IX_Expenses_Date", indexNames);
         Assert.Contains("IX_Expenses_CategoryId", indexNames);
+        Assert.Contains("IX_Expenses_PaymentMethodId", indexNames);
     }
 
     /// <summary>

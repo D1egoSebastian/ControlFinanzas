@@ -16,7 +16,7 @@ public sealed class IncomeSchemaTests
 {
     /// <summary>
     /// ST-1: tras aplicar las migraciones, la tabla <c>Incomes</c>
-    /// existe en SQLite con las 10 columnas esperadas.
+    /// existe en SQLite con las 11 columnas esperadas.
     /// </summary>
     [Fact]
     public async Task Migrate_CreatesIncomesTable_WithExpectedColumns()
@@ -34,7 +34,7 @@ public sealed class IncomeSchemaTests
         List<string> columns = await QueryStringsAsync(
             context,
             "SELECT name FROM pragma_table_info('Incomes') ORDER BY name;");
-        Assert.Equal(10, columns.Count);
+        Assert.Equal(11, columns.Count);
         Assert.Contains("Id", columns);
         Assert.Contains("CategoryId", columns);
         Assert.Contains("Date", columns);
@@ -43,6 +43,7 @@ public sealed class IncomeSchemaTests
         Assert.Contains("Description", columns);
         Assert.Contains("Note", columns);
         Assert.Contains("Source", columns);
+        Assert.Contains("PaymentMethodId", columns);
         Assert.Contains("CreatedAt", columns);
         Assert.Contains("UpdatedAt", columns);
     }
@@ -82,9 +83,19 @@ public sealed class IncomeSchemaTests
         Assert.Equal(50, source.GetMaxLength());
         Assert.True(source.IsNullable);
 
-        IForeignKey foreignKey = entityType.GetForeignKeys().Single();
-        Assert.Equal("Categories", foreignKey.PrincipalEntityType.GetTableName());
-        Assert.Equal(DeleteBehavior.SetNull, foreignKey.DeleteBehavior);
+        IEnumerable<IForeignKey> foreignKeys = entityType.GetForeignKeys();
+        Assert.Equal(2, foreignKeys.Count());
+
+        IForeignKey categoriesFk = foreignKeys
+            .Single(fk => fk.PrincipalEntityType.GetTableName() == "Categories");
+        Assert.Equal(DeleteBehavior.SetNull, categoriesFk.DeleteBehavior);
+
+        IForeignKey paymentMethodsFk = foreignKeys
+            .Single(fk => fk.PrincipalEntityType.GetTableName() == "PaymentMethods");
+        Assert.Equal(DeleteBehavior.SetNull, paymentMethodsFk.DeleteBehavior);
+
+        IProperty paymentMethodId = entityType.FindProperty(nameof(Income.PaymentMethodId))!;
+        Assert.True(paymentMethodId.IsNullable);
 
         INavigation amountNavigation = entityType.FindNavigation(nameof(Income.Amount))!;
         IEntityType moneyType = amountNavigation.TargetEntityType;
@@ -103,6 +114,7 @@ public sealed class IncomeSchemaTests
             "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'Incomes' ORDER BY name;");
         Assert.Contains("IX_Incomes_Date", indexNames);
         Assert.Contains("IX_Incomes_CategoryId", indexNames);
+        Assert.Contains("IX_Incomes_PaymentMethodId", indexNames);
     }
 
     /// <summary>

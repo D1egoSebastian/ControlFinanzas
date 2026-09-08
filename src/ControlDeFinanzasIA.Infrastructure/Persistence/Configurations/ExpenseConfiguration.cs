@@ -30,6 +30,7 @@ public sealed class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
         b.Property(e => e.Date).IsRequired();
         b.Property(e => e.Description).IsRequired().HasMaxLength(200);
         b.Property(e => e.Note).HasMaxLength(500);
+        b.Property(e => e.PaymentMethodId);
         b.Property(e => e.CreatedAt).IsRequired();
         b.Property(e => e.UpdatedAt).IsRequired();
 
@@ -38,8 +39,14 @@ public sealed class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
             .HasForeignKey(e => e.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        b.HasOne<PaymentMethod>()
+            .WithMany()
+            .HasForeignKey(e => e.PaymentMethodId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         b.HasIndex(e => e.Date);
         b.HasIndex(e => e.CategoryId);
+        b.HasIndex(e => e.PaymentMethodId);
 
         b.OwnsOne(e => e.Amount, money =>
         {

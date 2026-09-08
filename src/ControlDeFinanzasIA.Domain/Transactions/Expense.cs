@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.ValueObjects;
 
@@ -66,15 +65,6 @@ public sealed class Expense
     /// <see cref="Guid.Empty"/> (validado en
     /// <see cref="Create"/> y <see cref="Update"/>).
     /// </summary>
-    /// <remarks>
-    /// Marcado con <see cref="NotMappedAttribute"/> porque la
-    /// columna SQL todavia no existe. La migracion
-    /// <c>AddPaymentMethodIdToTransactions</c> (F-502 de Fase 5)
-    /// agregara la columna y este atributo se quitara en ese
-    /// momento. Mantener el atributo hasta entonces para evitar
-    /// que EF Core intente mapear la propiedad por convencion.
-    /// </remarks>
-    [NotMapped]
     public Guid? PaymentMethodId { get; private set; }
 
     /// <summary>
