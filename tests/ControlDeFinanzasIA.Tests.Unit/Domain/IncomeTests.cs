@@ -27,7 +27,8 @@ public sealed class IncomeTests
         string? description = null,
         string? note = null,
         string? source = null,
-        DateTime? createdAt = null)
+        DateTime? createdAt = null,
+        Guid? paymentMethodId = null)
     {
         return Income.Create(
             categoryId ?? _defaultCategoryId,
@@ -36,7 +37,8 @@ public sealed class IncomeTests
             description ?? _defaultDescription,
             note,
             source ?? _defaultSource,
-            createdAt ?? _defaultCreatedAt);
+            createdAt ?? _defaultCreatedAt,
+            paymentMethodId);
     }
 
     private static Tag CreateTag(string name, string? color = null)
@@ -196,6 +198,97 @@ public sealed class IncomeTests
     }
 
     // ============================================================
+    // PaymentMethodId (F-503)
+    // ============================================================
+
+    [Fact]
+    public void Create_WithPaymentMethodId_ReturnsIncomeWithThatId()
+    {
+        var paymentMethodId = Guid.NewGuid();
+
+        Income income = CreateValidIncome(paymentMethodId: paymentMethodId);
+
+        Assert.Equal(paymentMethodId, income.PaymentMethodId);
+    }
+
+    [Fact]
+    public void Create_WithoutPaymentMethodId_ReturnsIncomeWithNull()
+    {
+        Income income = CreateValidIncome();
+
+        Assert.Null(income.PaymentMethodId);
+    }
+
+    [Fact]
+    public void Create_WithEmptyPaymentMethodId_ThrowsArgumentException()
+    {
+        ArgumentException ex = Assert.Throws<ArgumentException>(
+            () => Income.Create(
+                _defaultCategoryId, _defaultDate, _defaultAmount,
+                _defaultDescription, null, null,
+                _defaultCreatedAt,
+                paymentMethodId: Guid.Empty));
+
+        Assert.Equal("paymentMethodId", ex.ParamName);
+        Assert.Contains("PaymentMethodId", ex.Message);
+    }
+
+    [Fact]
+    public void Create_WithPaymentMethodId_AssignsPaymentMethodId()
+    {
+        var paymentMethodId = Guid.NewGuid();
+        Income income = CreateValidIncome(paymentMethodId: paymentMethodId);
+
+        Assert.Equal(paymentMethodId, income.PaymentMethodId);
+    }
+
+    [Fact]
+    public void Update_WithPaymentMethodId_AssignsNewPaymentMethodId()
+    {
+        Income income = CreateValidIncome();
+        DateTime updatedAt = _defaultCreatedAt.AddMinutes(1);
+        var newPaymentMethodId = Guid.NewGuid();
+
+        income.Update(
+            _defaultCategoryId, _defaultDate, _defaultAmount,
+            _defaultDescription, null, null,
+            updatedAt,
+            newPaymentMethodId);
+
+        Assert.Equal(newPaymentMethodId, income.PaymentMethodId);
+        Assert.Equal(updatedAt, income.UpdatedAt);
+    }
+
+    [Fact]
+    public void Update_WithNullPaymentMethodId_DoesNotThrow()
+    {
+        Income income = CreateValidIncome();
+        DateTime updatedAt = _defaultCreatedAt.AddMinutes(1);
+
+        income.Update(
+            _defaultCategoryId, _defaultDate, _defaultAmount,
+            _defaultDescription, null, null,
+            updatedAt,
+            paymentMethodId: null);
+
+        Assert.Null(income.PaymentMethodId);
+    }
+
+    [Fact]
+    public void Update_WithEmptyPaymentMethodId_ThrowsArgumentException()
+    {
+        Income income = CreateValidIncome();
+        DateTime updatedAt = _defaultCreatedAt.AddMinutes(1);
+
+        Assert.Throws<ArgumentException>(
+            () => income.Update(
+                _defaultCategoryId, _defaultDate, _defaultAmount,
+                _defaultDescription, null, null,
+                updatedAt,
+                paymentMethodId: Guid.Empty));
+    }
+
+    // ============================================================
     // T-13 a T-15: Update
     // ============================================================
 
@@ -210,7 +303,7 @@ public sealed class IncomeTests
         var newCategoryId = Guid.NewGuid();
         var newUpdatedAt = new DateTime(2026, 1, 20, 12, 0, 0, DateTimeKind.Utc);
 
-        income.Update(newCategoryId, newDate, newAmount, "Nueva descripción", "Nueva nota", "Nuevo origen", newUpdatedAt);
+        income.Update(newCategoryId, newDate, newAmount, "Nueva descripción", "Nueva nota", "Nuevo origen", newUpdatedAt, paymentMethodId: null);
 
         Assert.Equal(originalId, income.Id);
         Assert.Equal(originalCreatedAt, income.CreatedAt);
@@ -246,7 +339,8 @@ public sealed class IncomeTests
                 description,
                 null,
                 null,
-                _defaultCreatedAt.AddDays(1)));
+                _defaultCreatedAt.AddDays(1),
+                paymentMethodId: null));
     }
 
     [Fact]
@@ -256,7 +350,7 @@ public sealed class IncomeTests
         DateTime invalidUpdatedAt = _defaultCreatedAt.AddDays(-1);
 
         ArgumentException ex = Assert.Throws<ArgumentException>(
-            () => income.Update(_defaultCategoryId, _defaultDate, _defaultAmount, _defaultDescription, null, null, invalidUpdatedAt));
+            () => income.Update(_defaultCategoryId, _defaultDate, _defaultAmount, _defaultDescription, null, null, invalidUpdatedAt, paymentMethodId: null));
 
         Assert.Contains("UpdatedAt", ex.Message);
     }

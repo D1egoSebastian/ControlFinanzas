@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.ValueObjects;
 
@@ -55,6 +56,25 @@ public sealed class Income
     public string? Source { get; private set; }
 
     /// <summary>
+    /// Identificador opcional del metodo de pago utilizado
+    /// (etiqueta: efectivo, debito, credito, transferencia, otro).
+    /// Es solo una etiqueta, no se llevan balances por metodo.
+    /// Puede ser <see langword="null"/> cuando el usuario decide no
+    /// asignar uno. Si esta presente, debe ser distinto de
+    /// <see cref="Guid.Empty"/> (validado en
+    /// <see cref="Create"/> y <see cref="Update"/>).
+    /// </summary>
+    /// <remarks>
+    /// Marcado con <see cref="NotMappedAttribute"/> porque la
+    /// columna SQL todavia no existe. La migracion
+    /// <c>AddPaymentMethodIdToTransactions</c> (F-502 de Fase 5)
+    /// agregara la columna y este atributo se quitara en ese
+    /// momento.
+    /// </remarks>
+    [NotMapped]
+    public Guid? PaymentMethodId { get; private set; }
+
+    /// <summary>
     /// Fecha y hora de creación del registro. Inmutable post-construcción.
     /// </summary>
     public DateTime CreatedAt { get; private set; }
@@ -95,6 +115,7 @@ public sealed class Income
     /// <param name="source">Origen normalizado; <c>null</c> si vacío o whitespace (INV-6).</param>
     /// <param name="createdAt">Timestamp de creación UTC (INV-8).</param>
     /// <param name="updatedAt">Timestamp de actualización UTC (INV-8).</param>
+    /// <param name="paymentMethodId">Identificador opcional del método de pago (INV-N).</param>
     private Income(
         Guid id,
         Guid? categoryId,
@@ -104,7 +125,8 @@ public sealed class Income
         string? note,
         string? source,
         DateTime createdAt,
-        DateTime updatedAt)
+        DateTime updatedAt,
+        Guid? paymentMethodId)
     {
         Id = id;
         CategoryId = categoryId;
@@ -113,6 +135,7 @@ public sealed class Income
         Description = description;
         Note = note;
         Source = source;
+        PaymentMethodId = paymentMethodId;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
         Tags = new List<Tag>();
@@ -120,7 +143,8 @@ public sealed class Income
 
     /// <summary>
     /// Crea una nueva instancia de <see cref="Income"/> validando
-    /// las invariantes INV-1 a INV-7.
+    /// las invariantes INV-1 a INV-7 y la invariante INV-N de
+    /// <paramref name="paymentMethodId"/>.
     /// </summary>
     /// <param name="categoryId">Identificador de la categoría; puede ser <c>null</c>.</param>
     /// <param name="date">Fecha del ingreso.</param>
@@ -129,9 +153,10 @@ public sealed class Income
     /// <param name="note">Nota opcional; se normaliza a <c>null</c> si es vacía.</param>
     /// <param name="source">Origen opcional; se normaliza a <c>null</c> si es vacío.</param>
     /// <param name="createdAt">Fecha y hora de creación.</param>
+    /// <param name="paymentMethodId">Identificador opcional del método de pago. El valor predeterminado es <see langword="null"/>.</param>
     /// <returns>Una instancia válida de <see cref="Income"/>.</returns>
     /// <exception cref="ArgumentNullException">Si <paramref name="amount"/> es <c>null</c> (INV-1).</exception>
-    /// <exception cref="ArgumentException">Si se viola alguna de las invariantes INV-2 a INV-7.</exception>
+    /// <exception cref="ArgumentException">Si se viola alguna de las invariantes INV-2 a INV-7 o INV-N.</exception>
     public static Income Create(
         Guid? categoryId,
         DateOnly date,
@@ -139,7 +164,8 @@ public sealed class Income
         string description,
         string? note,
         string? source,
-        DateTime createdAt)
+        DateTime createdAt,
+        Guid? paymentMethodId = null)
     {
         (string normalizedDescription, string? normalizedNote, string? normalizedSource) = ValidateAndNormalize(
             amount,
@@ -147,7 +173,8 @@ public sealed class Income
             description,
             note,
             source,
-            categoryId);
+            categoryId,
+            paymentMethodId);
 
         return new Income(
             Guid.NewGuid(),
@@ -158,13 +185,15 @@ public sealed class Income
             normalizedNote,
             normalizedSource,
             createdAt,
-            createdAt);
+            createdAt,
+            paymentMethodId);
     }
 
     /// <summary>
     /// Reasigna las propiedades mutables del ingreso y revalida las
-    /// invariantes INV-1 a INV-7, además de INV-8
-    /// (<paramref name="updatedAt"/> &gt;= <see cref="CreatedAt"/>).
+    /// invariantes INV-1 a INV-7, INV-8
+    /// (<paramref name="updatedAt"/> &gt;= <see cref="CreatedAt"/>), y
+    /// la invariante INV-N de <paramref name="paymentMethodId"/>.
     /// </summary>
     /// <param name="categoryId">Nuevo identificador de categoría; puede ser <c>null</c>.</param>
     /// <param name="date">Nueva fecha del ingreso.</param>
@@ -173,8 +202,9 @@ public sealed class Income
     /// <param name="note">Nueva nota; se normaliza a <c>null</c> si es vacía.</param>
     /// <param name="source">Nuevo origen; se normaliza a <c>null</c> si es vacío.</param>
     /// <param name="updatedAt">Nuevo timestamp de actualización.</param>
+    /// <param name="paymentMethodId">Nuevo identificador opcional del método de pago. Debe ser <see langword="null"/> o distinto de <see cref="Guid.Empty"/>.</param>
     /// <exception cref="ArgumentNullException">Si <paramref name="amount"/> es <c>null</c> (INV-1).</exception>
-    /// <exception cref="ArgumentException">Si se viola alguna de las invariantes INV-2 a INV-8.</exception>
+    /// <exception cref="ArgumentException">Si se viola alguna de las invariantes INV-2 a INV-8 o INV-N.</exception>
     public void Update(
         Guid? categoryId,
         DateOnly date,
@@ -182,7 +212,8 @@ public sealed class Income
         string description,
         string? note,
         string? source,
-        DateTime updatedAt)
+        DateTime updatedAt,
+        Guid? paymentMethodId = null)
     {
         if (updatedAt < CreatedAt)
         {
@@ -197,7 +228,8 @@ public sealed class Income
             description,
             note,
             source,
-            categoryId);
+            categoryId,
+            paymentMethodId);
 
         CategoryId = categoryId;
         Date = date;
@@ -205,6 +237,7 @@ public sealed class Income
         Description = normalizedDescription;
         Note = normalizedNote;
         Source = normalizedSource;
+        PaymentMethodId = paymentMethodId;
         UpdatedAt = updatedAt;
     }
 
@@ -255,7 +288,8 @@ public sealed class Income
         string description,
         string? note,
         string? source,
-        Guid? categoryId)
+        Guid? categoryId,
+        Guid? paymentMethodId)
     {
         if (amount is null)
         {
@@ -281,6 +315,13 @@ public sealed class Income
             throw new ArgumentException(
                 "CategoryId must be null or a non-empty Guid.",
                 nameof(categoryId));
+        }
+
+        if (paymentMethodId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "PaymentMethodId must be null or a non-empty Guid.",
+                nameof(paymentMethodId));
         }
 
         string normalizedDescription = description.Trim();

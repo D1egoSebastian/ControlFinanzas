@@ -25,7 +25,8 @@ public class ExpenseTests
         Money? amount = null,
         string? description = null,
         string? note = null,
-        DateTime? createdAt = null)
+        DateTime? createdAt = null,
+        Guid? paymentMethodId = null)
     {
         return Expense.Create(
             categoryId ?? _defaultCategoryId,
@@ -33,7 +34,8 @@ public class ExpenseTests
             amount ?? _defaultAmount,
             description ?? _defaultDescription,
             note,
-            createdAt ?? _defaultCreatedAt);
+            createdAt ?? _defaultCreatedAt,
+            paymentMethodId);
     }
 
     private static Tag CreateTag(string name, string? color = null)
@@ -175,6 +177,97 @@ public class ExpenseTests
     }
 
     // ============================================================
+    // PaymentMethodId (F-503)
+    // ============================================================
+
+    [Fact]
+    public void Create_WithPaymentMethodId_ReturnsExpenseWithThatId()
+    {
+        var paymentMethodId = Guid.NewGuid();
+
+        Expense expense = CreateValidExpense(paymentMethodId: paymentMethodId);
+
+        Assert.Equal(paymentMethodId, expense.PaymentMethodId);
+    }
+
+    [Fact]
+    public void Create_WithoutPaymentMethodId_ReturnsExpenseWithNull()
+    {
+        Expense expense = CreateValidExpense();
+
+        Assert.Null(expense.PaymentMethodId);
+    }
+
+    [Fact]
+    public void Create_WithEmptyPaymentMethodId_ThrowsArgumentException()
+    {
+        ArgumentException ex = Assert.Throws<ArgumentException>(
+            () => Expense.Create(
+                _defaultCategoryId, _defaultDate, _defaultAmount,
+                _defaultDescription, null,
+                _defaultCreatedAt,
+                paymentMethodId: Guid.Empty));
+
+        Assert.Equal("paymentMethodId", ex.ParamName);
+        Assert.Contains("PaymentMethodId", ex.Message);
+    }
+
+    [Fact]
+    public void Create_WithPaymentMethodId_AssignsPaymentMethodId()
+    {
+        var paymentMethodId = Guid.NewGuid();
+        Expense expense = CreateValidExpense(paymentMethodId: paymentMethodId);
+
+        Assert.Equal(paymentMethodId, expense.PaymentMethodId);
+    }
+
+    [Fact]
+    public void Update_WithPaymentMethodId_AssignsNewPaymentMethodId()
+    {
+        Expense expense = CreateValidExpense();
+        DateTime updatedAt = _defaultCreatedAt.AddMinutes(1);
+        var newPaymentMethodId = Guid.NewGuid();
+
+        expense.Update(
+            _defaultCategoryId, _defaultDate, _defaultAmount,
+            _defaultDescription, null,
+            updatedAt,
+            newPaymentMethodId);
+
+        Assert.Equal(newPaymentMethodId, expense.PaymentMethodId);
+        Assert.Equal(updatedAt, expense.UpdatedAt);
+    }
+
+    [Fact]
+    public void Update_WithNullPaymentMethodId_DoesNotThrow()
+    {
+        Expense expense = CreateValidExpense();
+        DateTime updatedAt = _defaultCreatedAt.AddMinutes(1);
+
+        expense.Update(
+            _defaultCategoryId, _defaultDate, _defaultAmount,
+            _defaultDescription, null,
+            updatedAt,
+            paymentMethodId: null);
+
+        Assert.Null(expense.PaymentMethodId);
+    }
+
+    [Fact]
+    public void Update_WithEmptyPaymentMethodId_ThrowsArgumentException()
+    {
+        Expense expense = CreateValidExpense();
+        DateTime updatedAt = _defaultCreatedAt.AddMinutes(1);
+
+        Assert.Throws<ArgumentException>(
+            () => expense.Update(
+                _defaultCategoryId, _defaultDate, _defaultAmount,
+                _defaultDescription, null,
+                updatedAt,
+                paymentMethodId: Guid.Empty));
+    }
+
+    // ============================================================
     // T-12 a T-14: Update
     // ============================================================
 
@@ -189,7 +282,7 @@ public class ExpenseTests
         var newCategoryId = Guid.NewGuid();
         var newUpdatedAt = new DateTime(2026, 1, 20, 12, 0, 0, DateTimeKind.Utc);
 
-        expense.Update(newCategoryId, newDate, newAmount, "Nueva descripción", "Nueva nota", newUpdatedAt);
+        expense.Update(newCategoryId, newDate, newAmount, "Nueva descripción", "Nueva nota", newUpdatedAt, paymentMethodId: null);
 
         Assert.Equal(originalId, expense.Id);
         Assert.Equal(originalCreatedAt, expense.CreatedAt);
@@ -223,7 +316,8 @@ public class ExpenseTests
                 amount,
                 description,
                 null,
-                _defaultCreatedAt.AddDays(1)));
+                _defaultCreatedAt.AddDays(1),
+                paymentMethodId: null));
     }
 
     [Fact]
@@ -233,7 +327,7 @@ public class ExpenseTests
         string note = new('a', 501);
 
         ArgumentException ex = Assert.Throws<ArgumentException>(
-            () => expense.Update(_defaultCategoryId, _defaultDate, _defaultAmount, _defaultDescription, note, _defaultCreatedAt.AddDays(1)));
+            () => expense.Update(_defaultCategoryId, _defaultDate, _defaultAmount, _defaultDescription, note, _defaultCreatedAt.AddDays(1), paymentMethodId: null));
 
         Assert.Contains("Note", ex.Message);
     }
@@ -245,7 +339,7 @@ public class ExpenseTests
         DateTime invalidUpdatedAt = _defaultCreatedAt.AddDays(-1);
 
         ArgumentException ex = Assert.Throws<ArgumentException>(
-            () => expense.Update(_defaultCategoryId, _defaultDate, _defaultAmount, _defaultDescription, null, invalidUpdatedAt));
+            () => expense.Update(_defaultCategoryId, _defaultDate, _defaultAmount, _defaultDescription, null, invalidUpdatedAt, paymentMethodId: null));
 
         Assert.Contains("UpdatedAt", ex.Message);
     }
