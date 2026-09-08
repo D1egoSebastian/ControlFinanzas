@@ -92,7 +92,8 @@ public sealed class UpdateIncomeUseCase
                 command.Description,
                 command.Note,
                 null,
-                audit);
+                audit,
+                command.PaymentMethodId);
         }
         catch (ArgumentException ex)
         {

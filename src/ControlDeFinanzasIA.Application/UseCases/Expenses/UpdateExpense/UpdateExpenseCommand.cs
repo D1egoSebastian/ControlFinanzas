@@ -17,4 +17,5 @@ public sealed record UpdateExpenseCommand(
     decimal Amount,
     Currency Currency,
     string Description,
-    string? Note);
+    string? Note,
+    Guid? PaymentMethodId = null);

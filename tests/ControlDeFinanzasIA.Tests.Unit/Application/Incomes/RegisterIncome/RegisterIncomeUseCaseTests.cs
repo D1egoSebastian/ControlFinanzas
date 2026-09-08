@@ -236,4 +236,33 @@ public sealed class RegisterIncomeUseCaseTests
         Assert.Equal(_clock.UtcNow, persisted.CreatedAt);
         Assert.Equal(_clock.UtcNow, persisted.UpdatedAt);
     }
+
+    // === PaymentMethodId (F-505) ===
+
+    [Fact]
+    public async Task ExecuteAsync_WithPaymentMethodId_AssignsToIncome()
+    {
+        Guid paymentMethodId = new("33333333-3333-3333-3333-000000000003");
+        RegisterIncomeCommand command = CreateValidCommand() with { PaymentMethodId = paymentMethodId };
+
+        Result result = await _useCase.ExecuteAsync(command);
+
+        Assert.True(result.IsSuccess);
+        Income persisted = Assert.Single(_repository.AddedIncomes);
+        Assert.Equal(paymentMethodId, persisted.PaymentMethodId);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithEmptyPaymentMethodId_ReturnsValidationFailure()
+    {
+        RegisterIncomeCommand command = CreateValidCommand() with { PaymentMethodId = Guid.Empty };
+
+        Result result = await _useCase.ExecuteAsync(command);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Validation", result.Error!.Code);
+        Assert.NotNull(result.Error.Details);
+        Assert.Contains("PaymentMethodId", result.Error.Details!.Keys);
+        Assert.Empty(_repository.AddedIncomes);
+    }
 }

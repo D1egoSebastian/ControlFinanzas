@@ -90,7 +90,8 @@ public sealed class RegisterExpenseUseCase
                 money,
                 command.Description,
                 command.Note,
-                audit);
+                audit,
+                command.PaymentMethodId);
         }
         catch (ArgumentException ex)
         {

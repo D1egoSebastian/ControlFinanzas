@@ -75,4 +75,41 @@ public sealed class RegisterExpenseValidatorTests
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.PropertyName == "Description");
     }
+
+    // === PaymentMethodId (F-505) ===
+
+    [Fact]
+    public void Validate_NullPaymentMethodId_ReturnsSuccess()
+    {
+        RegisterExpenseCommand command = CreateValidCommand() with { PaymentMethodId = null };
+
+        ValidationResult result = _validator.Validate(command);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Validate_NonEmptyPaymentMethodId_ReturnsSuccess()
+    {
+        RegisterExpenseCommand command = CreateValidCommand() with
+        {
+            PaymentMethodId = new Guid("22222222-2222-2222-2222-000000000002"),
+        };
+
+        ValidationResult result = _validator.Validate(command);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Validate_EmptyPaymentMethodId_ReturnsFailure()
+    {
+        RegisterExpenseCommand command = CreateValidCommand() with { PaymentMethodId = Guid.Empty };
+
+        ValidationResult result = _validator.Validate(command);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == "PaymentMethodId");
+        Assert.Contains(result.Errors, e => e.ErrorMessage.Contains("método de pago"));
+    }
 }

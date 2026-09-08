@@ -159,4 +159,47 @@ public sealed class RegisterExpenseUseCaseTests
         Assert.Equal(_clock.UtcNow, actual.Expense.CreatedAt);
         Assert.Equal(_clock.UtcNow, actual.Expense.UpdatedAt);
     }
+
+    // === PaymentMethodId (F-505) ===
+
+    [Fact]
+    public async Task ExecuteAsync_WithPaymentMethodId_AssignsToExpense()
+    {
+        Guid paymentMethodId = new("22222222-2222-2222-2222-000000000002");
+        RegisterExpenseCommand command = CreateValidCommand() with { PaymentMethodId = paymentMethodId };
+
+        Result result = await _useCase.ExecuteAsync(command);
+
+        Assert.True(result.IsSuccess);
+
+        Expense persisted = Assert.Single(_repository.AddedExpenses);
+        Assert.Equal(paymentMethodId, persisted.PaymentMethodId);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithoutPaymentMethodId_LeavesExpensePaymentMethodNull()
+    {
+        RegisterExpenseCommand command = CreateValidCommand();
+
+        Result result = await _useCase.ExecuteAsync(command);
+
+        Assert.True(result.IsSuccess);
+
+        Expense persisted = Assert.Single(_repository.AddedExpenses);
+        Assert.Null(persisted.PaymentMethodId);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_EmptyPaymentMethodId_ReturnsValidationFailure()
+    {
+        RegisterExpenseCommand command = CreateValidCommand() with { PaymentMethodId = Guid.Empty };
+
+        Result result = await _useCase.ExecuteAsync(command);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Validation", result.Error!.Code);
+        Assert.NotNull(result.Error.Details);
+        Assert.Contains("PaymentMethodId", result.Error.Details!.Keys);
+        Assert.Empty(_repository.AddedExpenses);
+    }
 }

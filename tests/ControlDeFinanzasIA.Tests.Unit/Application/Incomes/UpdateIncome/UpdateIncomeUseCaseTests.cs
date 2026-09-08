@@ -120,4 +120,41 @@ public sealed class UpdateIncomeUseCaseTests
         Assert.Equal("Validation", result.Error!.Code);
         Assert.Contains("Amount", result.Error.Details!.Keys);
     }
+
+    // === PaymentMethodId (F-505) ===
+
+    [Fact]
+    public async Task ExecuteAsync_WithPaymentMethodId_AssignsToIncome()
+    {
+        Income seeded = SeedIncome();
+        Guid paymentMethodId = new("44444444-4444-4444-4444-000000000004");
+        UpdateIncomeCommand command = ValidCommand() with
+        {
+            Id = seeded.Id,
+            PaymentMethodId = paymentMethodId,
+        };
+
+        Result result = await _useCase.ExecuteAsync(command);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(paymentMethodId, seeded.PaymentMethodId);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithEmptyPaymentMethodId_ReturnsValidationFailure()
+    {
+        Income seeded = SeedIncome();
+        UpdateIncomeCommand command = ValidCommand() with
+        {
+            Id = seeded.Id,
+            PaymentMethodId = Guid.Empty,
+        };
+
+        Result result = await _useCase.ExecuteAsync(command);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Validation", result.Error!.Code);
+        Assert.NotNull(result.Error.Details);
+        Assert.Contains("PaymentMethodId", result.Error.Details!.Keys);
+    }
 }

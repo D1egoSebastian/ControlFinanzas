@@ -46,5 +46,9 @@ public sealed class UpdateIncomeValidator : AbstractValidator<UpdateIncomeComman
 
         RuleFor(c => c.Currency)
             .IsInEnum().WithMessage("La moneda no es válida.");
+
+        RuleFor(c => c.PaymentMethodId)
+            .Must(id => id == null || id != Guid.Empty)
+            .WithMessage("El método de pago no es válido.");
     }
 }

@@ -14,4 +14,5 @@ public sealed record RegisterIncomeCommand(
     decimal Amount,
     Currency Currency,
     string Description,
-    string? Note);
+    string? Note,
+    Guid? PaymentMethodId = null);
