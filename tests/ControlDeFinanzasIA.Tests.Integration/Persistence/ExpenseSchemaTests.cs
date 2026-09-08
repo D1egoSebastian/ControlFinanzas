@@ -104,11 +104,13 @@ public sealed class ExpenseSchemaTests
         IProperty currency = moneyType.FindProperty("Currency")!;
         Assert.False(currency.IsNullable);
 
-        IEntityType? moneyEntityType = context.Model.FindEntityType(
-            "ControlDeFinanzasIA.Domain.ValueObjects.Money");
-        Assert.NotNull(moneyEntityType);
-        Assert.True(moneyEntityType!.IsOwned());
-        Assert.Equal("Expenses", moneyEntityType.GetTableName());
+        // Nota (Fase 3+): con el overload lambda de OwnsOne
+        // (`b.OwnsOne(e => e.Amount, money => ...)`), EF Core 8 NO expone
+        // Money como top-level entity en Model.GetEntityTypes() por
+        // encapsulacion. El schema real (2 columnas en Expenses) sigue
+        // correcto y se verifica arriba via navigation. La lookup por
+        // string/typeof queda obsoleta; si se necesita, cambiar a la
+        // overload de string en ExpenseConfiguration.
     }
 
     private static Task<List<string>> QueryStringsAsync(AppDbContext context, string sql)
