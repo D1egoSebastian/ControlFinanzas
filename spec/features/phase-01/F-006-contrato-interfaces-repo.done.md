@@ -2,7 +2,7 @@
 
 > **Fase:** 1 — Esqueleto de arquitectura y contratos base
 > **Feature:** F-006 (Phase 1, local a esta fase)
-> **Estado:** Pendiente de implementación
+> **Estado:** ✅ COMPLETADA (2026-09-07)
 > **Spec ID:** SPEC-F006
 >
 > **Nota de numeración:** este `F-006` es el de la **Fase 1**
