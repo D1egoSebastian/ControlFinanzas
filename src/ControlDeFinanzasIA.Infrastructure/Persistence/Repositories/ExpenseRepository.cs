@@ -210,6 +210,16 @@ public sealed class ExpenseRepository : IExpenseRepository
             query = query.Where(e => e.Tags.Any(t => filter.TagIds!.Contains(t.Id)));
         }
 
+        if (filter.PaymentMethodIds is { Count: > 0 })
+        {
+            // Solo incluimos gastos que tengan PaymentMethodId no nulo
+            // Y que esté en la lista seleccionada. Los gastos sin método
+            // quedan fuera cuando el filtro está activo (semántica OR/IN).
+            query = query.Where(e =>
+                e.PaymentMethodId != null
+                && filter.PaymentMethodIds!.Contains(e.PaymentMethodId.Value));
+        }
+
         query = query
             .OrderByDescending(e => e.Date)
             .ThenByDescending(e => e.CreatedAt);

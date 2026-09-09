@@ -41,10 +41,22 @@ public sealed record ExpenseFilter
     /// </summary>
     public DateOnly? DateTo { get; init; }
 
+/// <summary>
+/// Identificadores de tags para filtrar (semántica OR: la entidad
+/// debe tener al menos uno). <c>null</c> o lista vacía significan
+/// que no se aplica filtro por tags.
+/// </summary>
+public IReadOnlyList<Guid>? TagIds { get; init; }
+
     /// <summary>
-    /// Identificadores de tags para filtrar (semántica OR: la entidad
-    /// debe tener al menos uno). <c>null</c> o lista vacía significan
-    /// que no se aplica filtro por tags.
+    /// Identificadores de métodos de pago para filtrar (semántica OR:
+    /// la entidad debe tener uno de los métodos listados). <c>null</c>
+    /// o lista vacía significan que no se aplica filtro por método.
     /// </summary>
-    public IReadOnlyList<Guid>? TagIds { get; init; }
+    /// <remarks>
+    /// Fase 5 feature 5-006. Los gastos sin método (<c>PaymentMethodId</c>
+    /// <c>null</c>) NO se incluyen cuando este filtro está activo: la
+    /// query filtra a gastos que tengan uno de los métodos seleccionados.
+    /// </remarks>
+    public IReadOnlyList<Guid>? PaymentMethodIds { get; init; }
 }

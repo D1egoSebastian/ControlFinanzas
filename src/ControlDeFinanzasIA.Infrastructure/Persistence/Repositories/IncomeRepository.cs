@@ -214,6 +214,16 @@ public sealed class IncomeRepository : IIncomeRepository
             query = query.Where(i => i.Tags.Any(t => filter.TagIds!.Contains(t.Id)));
         }
 
+        if (filter.PaymentMethodIds is { Count: > 0 })
+        {
+            // Solo incluimos ingresos que tengan PaymentMethodId no nulo
+            // Y que esté en la lista seleccionada. Los ingresos sin método
+            // quedan fuera cuando el filtro está activo (semántica OR/IN).
+            query = query.Where(i =>
+                i.PaymentMethodId != null
+                && filter.PaymentMethodIds!.Contains(i.PaymentMethodId.Value));
+        }
+
         query = query
             .OrderByDescending(e => e.Date)
             .ThenByDescending(e => e.CreatedAt);
