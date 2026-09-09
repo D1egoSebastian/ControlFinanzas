@@ -26,6 +26,12 @@ namespace ControlDeFinanzasIA.Application.DTOs;
 /// por el repositorio via Include; <c>null</c> cuando no hay metodo
 /// o cuando el Include no se uso.
 /// </param>
+/// <param name="ConvertedAmountDisplay">
+/// Conversion display-time del monto a la otra moneda disponible
+/// (ej. <c>"≈ 1,500.00 DOP"</c>). Lo popula el ViewModel consultando
+/// <c>ICurrencyConverter</c> despues de cargar la pagina; <c>null</c>
+/// cuando falla la conversion.
+/// </param>
 public sealed record IncomeDto(
     Guid Id,
     Guid? CategoryId,
@@ -38,4 +44,5 @@ public sealed record IncomeDto(
     DateTime CreatedAt,
     DateTime UpdatedAt,
     Guid? PaymentMethodId,
-    string? PaymentMethodName);
+    string? PaymentMethodName,
+    string? ConvertedAmountDisplay);

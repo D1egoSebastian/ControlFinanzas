@@ -34,5 +34,6 @@ public static class ExpenseExtensions
             expense.CreatedAt,
             expense.UpdatedAt,
             expense.PaymentMethodId,
-            expense.PaymentMethod?.Name);
+            expense.PaymentMethod?.Name,
+            ConvertedAmountDisplay: null);
 }

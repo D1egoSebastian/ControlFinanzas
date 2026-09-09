@@ -1,10 +1,12 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Application.DTOs;
+using ControlDeFinanzasIA.Application.Services;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.CreateTag;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.GetTransactions;
@@ -17,6 +19,7 @@ using ControlDeFinanzasIA.Application.UseCases.SavedViews.SaveCurrentFilter;
 using ControlDeFinanzasIA.Application.UseCases.Transactions.DeleteTransaction;
 using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Enums;
+using ControlDeFinanzasIA.Domain.ValueObjects;
 using ControlDeFinanzasIA.Domain.Views;
 using ControlDeFinanzasIA.UI.Resources;
 using Microsoft.Extensions.Localization;
@@ -43,6 +46,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
     private readonly ICategoryRepository _categoryRepository;
     private readonly ITagRepository _tagRepository;
     private readonly GetPaymentMethodsQuery _getPaymentMethodsQuery;
+    private readonly ICurrencyConverter _currencyConverter;
     private readonly IClock _clock;
     private readonly ILogger<ExpensesViewModel> _logger;
     private readonly IStringLocalizer<Strings> _localizer;
@@ -63,6 +67,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         ICategoryRepository categoryRepository,
         ITagRepository tagRepository,
         GetPaymentMethodsQuery getPaymentMethodsQuery,
+        ICurrencyConverter currencyConverter,
         IClock clock,
         ILogger<ExpensesViewModel> logger,
         IStringLocalizer<Strings> localizer)
@@ -79,6 +84,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         ArgumentNullException.ThrowIfNull(categoryRepository);
         ArgumentNullException.ThrowIfNull(tagRepository);
         ArgumentNullException.ThrowIfNull(getPaymentMethodsQuery);
+        ArgumentNullException.ThrowIfNull(currencyConverter);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(localizer);
@@ -95,6 +101,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         _categoryRepository = categoryRepository;
         _tagRepository = tagRepository;
         _getPaymentMethodsQuery = getPaymentMethodsQuery;
+        _currencyConverter = currencyConverter;
         _clock = clock;
         _logger = logger;
         _localizer = localizer;
@@ -542,6 +549,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         if (result.IsSuccess)
         {
             var paged = (PagedResult<ExpenseDto>)result.Value!;
+            await EnrichWithConversionAsync(paged.Items, default);
             Expenses.Clear();
             foreach (ExpenseDto item in paged.Items)
             {
@@ -832,6 +840,42 @@ public sealed partial class ExpensesViewModel : ViewModelBase
                 IsSelected = selectedIds.Contains(t.Id)
             })
             .ToList();
+    }
+
+    /// <summary>
+    /// Populates <see cref="ExpenseDto.ConvertedAmountDisplay"/> for each
+    /// item by consulting <see cref="ICurrencyConverter"/>. Failures
+    /// are swallowed (Display = null) so a single bad item doesn't
+    /// break the whole page render.
+    /// </summary>
+    /// <param name="items">DTOs to enrich in-place.</param>
+    /// <param name="ct">Token de cancelacion.</param>
+    private async Task EnrichWithConversionAsync(IReadOnlyList<ExpenseDto> items, CancellationToken ct)
+    {
+        foreach (ExpenseDto item in items)
+        {
+            string? text;
+            try
+            {
+                MoneyDisplay display = await _currencyConverter.DisplayAsync(
+                    Money.Create(item.Amount, item.Currency), ct);
+                text = display.Converted is null
+                    ? null
+                    : string.Format(
+                        CultureInfo.CurrentCulture,
+                        Strings.ApproximateFormat,
+                        $"{display.Converted.Amount:N2} {display.Converted.Currency}");
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogDebug(ex, "Conversion skipped for {ExpenseId}.", item.Id);
+                text = null;
+            }
+
+            typeof(ExpenseDto)
+                .GetProperty(nameof(ExpenseDto.ConvertedAmountDisplay))?
+                .SetValue(item, text);
+        }
     }
 
     /// <summary>

@@ -13,6 +13,7 @@ using ControlDeFinanzasIA.Application.UseCases.SavedViews.DeleteSavedView;
 using ControlDeFinanzasIA.Application.UseCases.SavedViews.GetSavedViews;
 using ControlDeFinanzasIA.Application.UseCases.SavedViews.SaveCurrentFilter;
 using ControlDeFinanzasIA.Application.UseCases.Transactions.DeleteTransaction;
+using ControlDeFinanzasIA.Infrastructure.ExchangeRates;
 using ControlDeFinanzasIA.Infrastructure.Persistence;
 using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.System;
@@ -97,6 +98,9 @@ public static class Bootstrap
         services.AddTransient<CreateTagUseCase>();
         services.AddTransient<IValidator<CreateTagCommand>, CreateTagValidator>();
         services.AddTransient<GetPaymentMethodsQuery>();
+
+        // Multi-moneda F-501/F-502/F-511: provider stub + cache + converter.
+        services.AddExchangeRates(configuration);
 
         ServiceProvider tempProvider = services.BuildServiceProvider();
         try

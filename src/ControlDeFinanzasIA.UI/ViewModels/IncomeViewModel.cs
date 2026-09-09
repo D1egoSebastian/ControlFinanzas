@@ -1,10 +1,12 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Application.DTOs;
+using ControlDeFinanzasIA.Application.Services;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.CreateTag;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.GetIncomes;
@@ -17,6 +19,7 @@ using ControlDeFinanzasIA.Application.UseCases.SavedViews.SaveCurrentFilter;
 using ControlDeFinanzasIA.Application.UseCases.Transactions.DeleteTransaction;
 using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Enums;
+using ControlDeFinanzasIA.Domain.ValueObjects;
 using ControlDeFinanzasIA.Domain.Views;
 using ControlDeFinanzasIA.UI.Resources;
 using Microsoft.Extensions.Localization;
@@ -43,6 +46,7 @@ public sealed partial class IncomeViewModel : ViewModelBase
     private readonly ICategoryRepository _categoryRepository;
     private readonly ITagRepository _tagRepository;
     private readonly GetPaymentMethodsQuery _getPaymentMethodsQuery;
+    private readonly ICurrencyConverter _currencyConverter;
     private readonly IClock _clock;
     private readonly ILogger<IncomeViewModel> _logger;
     private readonly IStringLocalizer<Strings> _localizer;
@@ -63,6 +67,7 @@ public sealed partial class IncomeViewModel : ViewModelBase
         ICategoryRepository categoryRepository,
         ITagRepository tagRepository,
         GetPaymentMethodsQuery getPaymentMethodsQuery,
+        ICurrencyConverter currencyConverter,
         IClock clock,
         ILogger<IncomeViewModel> logger,
         IStringLocalizer<Strings> localizer)
@@ -79,6 +84,7 @@ public sealed partial class IncomeViewModel : ViewModelBase
         ArgumentNullException.ThrowIfNull(categoryRepository);
         ArgumentNullException.ThrowIfNull(tagRepository);
         ArgumentNullException.ThrowIfNull(getPaymentMethodsQuery);
+        ArgumentNullException.ThrowIfNull(currencyConverter);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(localizer);
@@ -95,6 +101,7 @@ public sealed partial class IncomeViewModel : ViewModelBase
         _categoryRepository = categoryRepository;
         _tagRepository = tagRepository;
         _getPaymentMethodsQuery = getPaymentMethodsQuery;
+        _currencyConverter = currencyConverter;
         _clock = clock;
         _logger = logger;
         _localizer = localizer;
@@ -542,6 +549,7 @@ public sealed partial class IncomeViewModel : ViewModelBase
         if (result.IsSuccess)
         {
             var paged = (PagedResult<IncomeDto>)result.Value!;
+            await EnrichWithConversionAsync(paged.Items, default);
             Incomes.Clear();
             foreach (IncomeDto item in paged.Items)
             {
@@ -832,6 +840,39 @@ public sealed partial class IncomeViewModel : ViewModelBase
                 IsSelected = selectedIds.Contains(t.Id)
             })
             .ToList();
+    }
+
+    /// <summary>
+    /// Populates <see cref="IncomeDto.ConvertedAmountDisplay"/> for each
+    /// item by consulting <see cref="ICurrencyConverter"/>. Failures
+    /// are swallowed (Display = null).
+    /// </summary>
+    private async Task EnrichWithConversionAsync(IReadOnlyList<IncomeDto> items, CancellationToken ct)
+    {
+        foreach (IncomeDto item in items)
+        {
+            string? text;
+            try
+            {
+                MoneyDisplay display = await _currencyConverter.DisplayAsync(
+                    Money.Create(item.Amount, item.Currency), ct);
+                text = display.Converted is null
+                    ? null
+                    : string.Format(
+                        CultureInfo.CurrentCulture,
+                        Strings.ApproximateFormat,
+                        $"{display.Converted.Amount:N2} {display.Converted.Currency}");
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogDebug(ex, "Conversion skipped for {IncomeId}.", item.Id);
+                text = null;
+            }
+
+            typeof(IncomeDto)
+                .GetProperty(nameof(IncomeDto.ConvertedAmountDisplay))?
+                .SetValue(item, text);
+        }
     }
 
     /// <summary>

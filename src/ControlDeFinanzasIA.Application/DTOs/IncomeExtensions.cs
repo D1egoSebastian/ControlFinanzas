@@ -34,5 +34,6 @@ public static class IncomeExtensions
             income.CreatedAt,
             income.UpdatedAt,
             income.PaymentMethodId,
-            income.PaymentMethod?.Name);
+            income.PaymentMethod?.Name,
+            ConvertedAmountDisplay: null);
 }

@@ -273,11 +273,16 @@
                                                FontFamily="{StaticResource FontBody}"
                                                FontSize="14"
                                                VerticalAlignment="Center" />
-                                    <TextBlock Grid.Column="2"
-                                               Text="{Binding Amount, StringFormat={}{0:N2}}"
-                                               Classes="ledger-amount income"
-                                               Margin="16,0,8,0"
-                                               VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="2"
+                                                Margin="16,0,8,0"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Amount, StringFormat={}{0:N2}}"
+                                                   Classes="ledger-amount income" />
+                                        <TextBlock Text="{Binding ConvertedAmountDisplay}"
+                                                   Foreground="{StaticResource PaperDimBrush}"
+                                                   FontFamily="{StaticResource FontBody}"
+                                                   FontSize="11" />
+                                    </StackPanel>
                                     <TextBlock Grid.Column="3"
                                                Text="{Binding Currency}"
                                                Foreground="{StaticResource PaperDimBrush}"

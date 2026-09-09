@@ -247,4 +247,13 @@
   <data name="OperationCancelledMessage" xml:space="preserve">
     <value>Operation cancelled.</value>
   </data>
+  <data name="ApproximateFormat" xml:space="preserve">
+    <value>≈ {0}</value>
+  </data>
+  <data name="CurrencyConversionUnavailableMessage" xml:space="preserve">
+    <value>Currency conversion temporarily unavailable.</value>
+  </data>
+  <data name="FilterPaymentMethodsLabel" xml:space="preserve">
+    <value>Payment methods</value>
+  </data>
 </root>

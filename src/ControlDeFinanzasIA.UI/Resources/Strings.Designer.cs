@@ -381,4 +381,19 @@ public class Strings
     /// Gets the localized string for the no-payment-method option label.
     /// </summary>
     public static string NoPaymentMethodOption => ResourceManager.GetString("NoPaymentMethodOption", Culture)!;
+
+    /// <summary>
+    /// Gets the localized format string for approximate converted amounts.
+    /// </summary>
+    public static string ApproximateFormat => ResourceManager.GetString("ApproximateFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized message shown when currency conversion is unavailable.
+    /// </summary>
+    public static string CurrencyConversionUnavailableMessage => ResourceManager.GetString("CurrencyConversionUnavailableMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the payment methods filter section.
+    /// </summary>
+    public static string FilterPaymentMethodsLabel => ResourceManager.GetString("FilterPaymentMethodsLabel", Culture)!;
 }

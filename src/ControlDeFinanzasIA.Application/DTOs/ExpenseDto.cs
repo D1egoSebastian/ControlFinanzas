@@ -16,6 +16,14 @@ namespace ControlDeFinanzasIA.Application.DTOs;
 /// por el repositorio via Include; <c>null</c> cuando no hay metodo
 /// o cuando el Include no se uso.
 /// </param>
+/// <param name="ConvertedAmountDisplay">
+/// Conversion display-time del monto a la otra moneda disponible
+/// (ej. <c>"≈ 1,500.00 DOP"</c>). Lo popula el ViewModel consultando
+/// <c>ICurrencyConverter</c> despues de cargar la pagina; <c>null</c>
+/// cuando falla la conversion o cuando la moneda origen coincide con
+/// la destino (no se muestra redundante). En Fase 5 siempre se calcula
+/// a la otra moneda del par DOP/USD.
+/// </param>
 public sealed record ExpenseDto(
     Guid Id,
     Guid CategoryId,
@@ -27,4 +35,5 @@ public sealed record ExpenseDto(
     DateTime CreatedAt,
     DateTime UpdatedAt,
     Guid? PaymentMethodId,
-    string? PaymentMethodName);
+    string? PaymentMethodName,
+    string? ConvertedAmountDisplay);

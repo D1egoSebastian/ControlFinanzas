@@ -2,6 +2,7 @@ using System.ComponentModel;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Application.DTOs;
+using ControlDeFinanzasIA.Application.Services;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.CreateTag;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.GetIncomes;
@@ -17,9 +18,12 @@ using ControlDeFinanzasIA.Domain.Enums;
 using ControlDeFinanzasIA.Domain.Transactions;
 using ControlDeFinanzasIA.Domain.ValueObjects;
 using ControlDeFinanzasIA.Domain.Views;
+using ControlDeFinanzasIA.Infrastructure.ExchangeRates;
 using ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 using ControlDeFinanzasIA.UI.Resources;
 using ControlDeFinanzasIA.UI.ViewModels;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -590,6 +594,18 @@ public sealed class IncomeViewModelTests
             paymentMethodRepo,
             NullLogger<GetPaymentMethodsQuery>.Instance);
 
+        ICurrencyConverter currencyConverter = new CurrencyConverter(
+            new StubExchangeRateProvider(
+                new ConfigurationBuilder().AddInMemoryCollection().Build(),
+                new FakeClock
+                {
+                    UtcNow = new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc),
+                }),
+            new MemoryCache(new MemoryCacheOptions()),
+            new FakeClock(),
+            new ConfigurationBuilder().AddInMemoryCollection().Build(),
+            NullLogger<CurrencyConverter>.Instance);
+
         IStringLocalizer<Strings> localizer = new FakeStringLocalizer<Strings>();
 
         return new IncomeViewModel(
@@ -605,6 +621,7 @@ public sealed class IncomeViewModelTests
             categoryRepo,
             tagRepo,
             getPaymentMethodsQuery,
+            currencyConverter,
             clock,
             NullLogger<IncomeViewModel>.Instance,
             localizer);
@@ -654,6 +671,7 @@ public sealed class IncomeViewModelTests
             null,
             new DateTime(2026, 1, 15, 10, 0, 0, DateTimeKind.Utc),
             new DateTime(2026, 1, 15, 10, 0, 0, DateTimeKind.Utc),
+            null,
             null,
             null);
 }
