@@ -256,4 +256,13 @@
   <data name="FilterPaymentMethodsLabel" xml:space="preserve">
     <value>Métodos de pago</value>
   </data>
+  <data name="ExchangeRateProviderWarning" xml:space="preserve">
+    <value>Proveedor de tasas no disponible; usando tasas en caché o por defecto.
+Mostrando conversiones aproximadas.
+    </value>
+  </data>
+  <data name="SystemMethodLockedTooltip" xml:space="preserve">
+    <value>Método del sistema (no se puede eliminar)
+    </value>
+  </data>
 </root>

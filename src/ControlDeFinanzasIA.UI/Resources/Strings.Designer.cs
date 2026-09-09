@@ -396,4 +396,14 @@ public class Strings
     /// Gets the localized label for the payment methods filter section.
     /// </summary>
     public static string FilterPaymentMethodsLabel => ResourceManager.GetString("FilterPaymentMethodsLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized warning shown when the exchange rate provider is unavailable.
+    /// </summary>
+    public static string ExchangeRateProviderWarning => ResourceManager.GetString("ExchangeRateProviderWarning", Culture)!;
+
+    /// <summary>
+    /// Gets the localized tooltip for the lock icon on system methods.
+    /// </summary>
+    public static string SystemMethodLockedTooltip => ResourceManager.GetString("SystemMethodLockedTooltip", Culture)!;
 }
