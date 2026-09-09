@@ -20,20 +20,19 @@ public sealed class RecurringOccurrenceCalculatorTests
         DateOnly? endDate = null,
         bool active = true)
     {
-        return new Subscription
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Rule",
-            Amount = Money.Create(100m, Currency.DOP),
-            Currency = Currency.DOP,
-            Frequency = frequency,
-            StartDate = startDate,
-            EndDate = endDate,
-            CategoryId = Guid.NewGuid(),
-            PaymentMethodId = Guid.NewGuid(),
-            Active = active,
-            NextGenerationDate = startDate,
-        };
+        return new Subscription(
+            Id: Guid.NewGuid(),
+            Name: "Test Rule",
+            Amount: Money.Create(100m, Currency.DOP),
+            Currency: Currency.DOP,
+            Frequency: frequency,
+            StartDate: startDate,
+            EndDate: endDate,
+            CategoryId: Guid.NewGuid(),
+            PaymentMethodId: Guid.NewGuid(),
+            TagIds: Array.Empty<Guid>(),
+            Active: active,
+            NextGenerationDate: startDate);
     }
 
     [Fact]
