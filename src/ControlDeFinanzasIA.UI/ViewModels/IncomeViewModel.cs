@@ -262,6 +262,12 @@ public sealed partial class IncomeViewModel : ViewModelBase
     private IReadOnlyList<SelectableTagItem> _availableTags = Array.Empty<SelectableTagItem>();
 
     /// <summary>
+    /// Gets or sets the payment methods available for the filter picker.
+    /// </summary>
+    [ObservableProperty]
+    private IReadOnlyList<SelectablePaymentMethodItem> _availablePaymentMethods = Array.Empty<SelectablePaymentMethodItem>();
+
+    /// <summary>
     /// Gets or sets the name of the new tag being created inline.
     /// </summary>
     [ObservableProperty]
@@ -332,6 +338,22 @@ public sealed partial class IncomeViewModel : ViewModelBase
             var selected = AvailableTags
                 .Where(t => t.IsSelected)
                 .Select(t => t.Id)
+                .ToList();
+
+            return selected.Count > 0 ? selected : null;
+        }
+    }
+
+    /// <summary>
+    /// Gets the identifiers of the currently selected payment methods.
+    /// </summary>
+    private IReadOnlyList<Guid>? SelectedPaymentMethodIds
+    {
+        get
+        {
+            var selected = AvailablePaymentMethods
+                .Where(m => m.IsSelected)
+                .Select(m => m.Id)
                 .ToList();
 
             return selected.Count > 0 ? selected : null;
@@ -587,6 +609,7 @@ public sealed partial class IncomeViewModel : ViewModelBase
             DateFrom = FilterDateFrom,
             DateTo = FilterDateTo,
             TagIds = SelectedTagIds,
+            PaymentMethodIds = SelectedPaymentMethodIds,
         };
 
         await RefreshAsync();
@@ -607,6 +630,11 @@ public sealed partial class IncomeViewModel : ViewModelBase
         foreach (SelectableTagItem tag in AvailableTags)
         {
             tag.IsSelected = false;
+        }
+
+        foreach (SelectablePaymentMethodItem method in AvailablePaymentMethods)
+        {
+            method.IsSelected = false;
         }
 
         Page = 1;
@@ -819,6 +847,18 @@ public sealed partial class IncomeViewModel : ViewModelBase
         Result result = await _getPaymentMethodsQuery.ExecuteAsync(default);
         if (result.IsSuccess && result.Value is IReadOnlyList<PaymentMethodDto> methods)
         {
+            var selectedIds = AvailablePaymentMethods
+                .Where(m => m.IsSelected)
+                .Select(m => m.Id)
+                .ToHashSet();
+
+            AvailablePaymentMethods = methods
+                .Select(m => new SelectablePaymentMethodItem(m.Id, m.Name, m.IsSystem)
+                {
+                    IsSelected = selectedIds.Contains(m.Id),
+                })
+                .ToList();
+
             PaymentMethods = methods;
         }
     }

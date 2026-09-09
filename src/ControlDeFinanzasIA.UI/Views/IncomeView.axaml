@@ -59,6 +59,21 @@
                            FontSize="13"
                            IsVisible="{Binding !AvailableTags.Count}" />
 
+                <TextBlock Text="{x:Static res:Strings.FilterPaymentMethodsLabel}"
+                           Foreground="{StaticResource PaperBrush}"
+                           FontFamily="{StaticResource FontBody}"
+                           FontSize="13" />
+                <ItemsControl ItemsSource="{Binding AvailablePaymentMethods}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SelectablePaymentMethodItem">
+                            <CheckBox Content="{Binding Name}"
+                                      IsChecked="{Binding IsSelected}"
+                                      Foreground="{StaticResource PaperBrush}"
+                                      FontFamily="{StaticResource FontBody}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
                 <TextBlock Text="{x:Static res:Strings.FilterDateFromLabel}"
                            Foreground="{StaticResource PaperBrush}"
                            FontFamily="{StaticResource FontBody}"
