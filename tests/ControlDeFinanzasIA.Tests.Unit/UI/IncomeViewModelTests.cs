@@ -3,6 +3,7 @@ using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Application.DTOs;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.CreateTag;
+using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.GetIncomes;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.RegisterIncome;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.UpdateIncome;
@@ -584,6 +585,11 @@ public sealed class IncomeViewModelTests
             new CreateTagValidator(),
             NullLogger<CreateTagUseCase>.Instance);
 
+        FakePaymentMethodRepository paymentMethodRepo = new();
+        GetPaymentMethodsQuery getPaymentMethodsQuery = new(
+            paymentMethodRepo,
+            NullLogger<GetPaymentMethodsQuery>.Instance);
+
         IStringLocalizer<Strings> localizer = new FakeStringLocalizer<Strings>();
 
         return new IncomeViewModel(
@@ -598,6 +604,7 @@ public sealed class IncomeViewModelTests
             createTagUseCase,
             categoryRepo,
             tagRepo,
+            getPaymentMethodsQuery,
             clock,
             NullLogger<IncomeViewModel>.Instance,
             localizer);

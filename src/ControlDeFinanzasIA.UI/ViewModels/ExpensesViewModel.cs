@@ -6,6 +6,7 @@ using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Application.DTOs;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.CreateTag;
+using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.GetTransactions;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.RegisterExpense;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.UpdateExpense;
@@ -41,6 +42,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
     private readonly CreateTagUseCase _createTagUseCase;
     private readonly ICategoryRepository _categoryRepository;
     private readonly ITagRepository _tagRepository;
+    private readonly GetPaymentMethodsQuery _getPaymentMethodsQuery;
     private readonly IClock _clock;
     private readonly ILogger<ExpensesViewModel> _logger;
     private readonly IStringLocalizer<Strings> _localizer;
@@ -60,6 +62,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         CreateTagUseCase createTagUseCase,
         ICategoryRepository categoryRepository,
         ITagRepository tagRepository,
+        GetPaymentMethodsQuery getPaymentMethodsQuery,
         IClock clock,
         ILogger<ExpensesViewModel> logger,
         IStringLocalizer<Strings> localizer)
@@ -75,6 +78,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         ArgumentNullException.ThrowIfNull(createTagUseCase);
         ArgumentNullException.ThrowIfNull(categoryRepository);
         ArgumentNullException.ThrowIfNull(tagRepository);
+        ArgumentNullException.ThrowIfNull(getPaymentMethodsQuery);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(localizer);
@@ -90,6 +94,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         _createTagUseCase = createTagUseCase;
         _categoryRepository = categoryRepository;
         _tagRepository = tagRepository;
+        _getPaymentMethodsQuery = getPaymentMethodsQuery;
         _clock = clock;
         _logger = logger;
         _localizer = localizer;
@@ -98,6 +103,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         _currentFilter = new ExpenseFilter { Page = 1, PageSize = 20 };
 
         _ = LoadCategoriesAsync();
+        _ = LoadPaymentMethodsAsync();
         _ = LoadTagsAsync();
         _ = LoadSavedViewsAsync();
         _ = RefreshAsync();
@@ -156,6 +162,19 @@ public sealed partial class ExpensesViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     private IReadOnlyList<CategoryDto> _categories = Array.Empty<CategoryDto>();
+
+    /// <summary>
+    /// Gets or sets the payment methods available for the payment-method picker.
+    /// </summary>
+    [ObservableProperty]
+    private IReadOnlyList<PaymentMethodDto> _paymentMethods = Array.Empty<PaymentMethodDto>();
+
+    /// <summary>
+    /// Gets or sets the selected payment method identifier. <c>null</c> when
+    /// the user does not assign a payment method to the expense.
+    /// </summary>
+    [ObservableProperty]
+    private Guid? _selectedPaymentMethodId;
 
     /// <summary>
     /// Gets or sets a value indicating whether the form is in edit mode.
@@ -329,7 +348,8 @@ public sealed partial class ExpensesViewModel : ViewModelBase
             Amount ?? 0m,
             Currency,
             Description ?? string.Empty,
-            Note);
+            Note,
+            SelectedPaymentMethodId);
 
         Result result = await _registerUseCase.ExecuteAsync(command, default);
 
@@ -381,6 +401,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         Amount = dto.Amount;
         Currency = dto.Currency;
         SelectedCategoryId = dto.CategoryId;
+        SelectedPaymentMethodId = dto.PaymentMethodId;
         Description = dto.Description;
         Note = dto.Note;
         EditableId = dto.Id;
@@ -410,7 +431,8 @@ public sealed partial class ExpensesViewModel : ViewModelBase
             Amount ?? 0m,
             Currency,
             Description ?? string.Empty,
-            Note);
+            Note,
+            SelectedPaymentMethodId);
 
         Result result = await _updateExpenseUseCase.ExecuteAsync(command, default);
 
@@ -782,6 +804,18 @@ public sealed partial class ExpensesViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Loads the payment-method catalog via <see cref="GetPaymentMethodsQuery"/>.
+    /// </summary>
+    private async Task LoadPaymentMethodsAsync()
+    {
+        Result result = await _getPaymentMethodsQuery.ExecuteAsync(default);
+        if (result.IsSuccess && result.Value is IReadOnlyList<PaymentMethodDto> methods)
+        {
+            PaymentMethods = methods;
+        }
+    }
+
+    /// <summary>
     /// Loads the tag list from the repository while preserving the current selection.
     /// </summary>
     private async Task LoadTagsAsync()
@@ -825,6 +859,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         Description = null;
         Note = null;
         SelectedCategoryId = null;
+        SelectedPaymentMethodId = null;
         ValidationErrors.Clear();
         FormError = null;
     }

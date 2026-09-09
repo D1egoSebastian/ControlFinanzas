@@ -1,6 +1,7 @@
 using System.Reflection;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.CreateTag;
+using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.GetTransactions;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.RegisterExpense;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.UpdateExpense;
@@ -95,6 +96,7 @@ public static class Bootstrap
         services.AddTransient<GetIncomesQuery>();
         services.AddTransient<CreateTagUseCase>();
         services.AddTransient<IValidator<CreateTagCommand>, CreateTagValidator>();
+        services.AddTransient<GetPaymentMethodsQuery>();
 
         ServiceProvider tempProvider = services.BuildServiceProvider();
         try

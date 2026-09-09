@@ -188,6 +188,17 @@
                                Foreground="{StaticResource TerracottaBrush}"
                                FontFamily="{StaticResource FontBody}" />
 
+                    <TextBlock Text="{x:Static res:Strings.PaymentMethodLabel}"
+                               Foreground="{StaticResource PaperBrush}"
+                               FontFamily="{StaticResource FontBody}"
+                               FontSize="13" />
+                    <ComboBox ItemsSource="{Binding PaymentMethods}"
+                              DisplayMemberBinding="{Binding Name}"
+                              SelectedValue="{Binding SelectedPaymentMethodId}"
+                              SelectedValueBinding="{Binding Id}"
+                              PlaceholderText="{x:Static res:Strings.SelectPaymentMethodWatermark}"
+                              Classes="ledger-input" />
+
                     <TextBlock Text="{x:Static res:Strings.DescriptionLabel}"
                                Foreground="{StaticResource PaperBrush}"
                                FontFamily="{StaticResource FontBody}"

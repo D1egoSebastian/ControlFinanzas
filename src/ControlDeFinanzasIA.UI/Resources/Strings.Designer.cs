@@ -366,4 +366,19 @@ public class Strings
     /// Gets the localized string for the operation cancelled message.
     /// </summary>
     public static string OperationCancelledMessage => ResourceManager.GetString("OperationCancelledMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized string for the payment method field label.
+    /// </summary>
+    public static string PaymentMethodLabel => ResourceManager.GetString("PaymentMethodLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized string for the payment method picker placeholder.
+    /// </summary>
+    public static string SelectPaymentMethodWatermark => ResourceManager.GetString("SelectPaymentMethodWatermark", Culture)!;
+
+    /// <summary>
+    /// Gets the localized string for the no-payment-method option label.
+    /// </summary>
+    public static string NoPaymentMethodOption => ResourceManager.GetString("NoPaymentMethodOption", Culture)!;
 }

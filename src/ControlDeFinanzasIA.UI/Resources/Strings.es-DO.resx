@@ -175,6 +175,15 @@
   <data name="SelectCategoryWatermark" xml:space="preserve">
     <value>Seleccione…</value>
   </data>
+  <data name="PaymentMethodLabel" xml:space="preserve">
+    <value>Método de pago</value>
+  </data>
+  <data name="SelectPaymentMethodWatermark" xml:space="preserve">
+    <value>Sin método (opcional)</value>
+  </data>
+  <data name="NoPaymentMethodOption" xml:space="preserve">
+    <value>Sin método</value>
+  </data>
   <data name="DescriptionWatermark" xml:space="preserve">
     <value>Descripción</value>
   </data>
