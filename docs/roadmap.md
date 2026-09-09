@@ -267,7 +267,7 @@ filtros y vistas se construye aquí, una sola vez y bien.
 
 ---
 
-### Fase 5 — Método de pago + multi-moneda DOP/USD
+### Fase 5 — Método de pago + multi-moneda DOP/USD ✅ COMPLETADA (2026-09-08)
 
 **Objetivo**
 Que cada movimiento lleve método de pago y moneda original, y que los
@@ -308,6 +308,17 @@ historia sin moneda quedaría mal modelada).
 > **Nota:** `IExchangeRateProvider` real (llamando a una API de tipos de
 > cambio) se elige e implementa cuando haya conectividad clara. El stub
 > mantiene la app funcionando offline y desacopla la decisión.
+
+**Estado actual (2026-09-08)**
+- ✅ 13/13 features implementadas (5-001 a 5-013).
+- ✅ 559/559 tests verdes.
+- ✅ Backend completo: entidad, migración no-destructiva, commands/validators,
+  DTOs extendidos, repos con `Include`, filtros, query de catálogo.
+- ✅ UI completa: picker de método en formularios + segunda línea de conversión
+  (`≈ 1,500.00 DOP`) en la lista + filter rail multi-select.
+- ⏳ Provider de tasas real: pendiente hasta decidir API (OpenExchangeRates,
+  banco central RD, etc.). El contrato `IExchangeRateProvider` está estable
+  y permite enchufar el provider real sin tocar use cases ni UI.
 
 ---
 

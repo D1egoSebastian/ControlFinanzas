@@ -1,7 +1,7 @@
-# Fase 5 — Método de pago + multi-moneda DOP/USD
+﻿# Fase 5 — Método de pago + multi-moneda DOP/USD
 
 > **Fase:** 5 — Multi-moneda (DOP/USD) + integración real de `PaymentMethod`
-> **Estado:** ⏳ Pendiente de inicio (Phase 4 ✅ COMPLETADA — 364/364 tests verdes)
+> **Estado:** ✅ COMPLETADA (2026-09-08 — 559/559 tests verdes)
 > **Spec ID:** PHASE-05-PLAN
 > **Dependencias:** Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅
 > **Roadmap:** `docs/roadmap.md` §Fase 5 (líneas 270-310)
@@ -536,19 +536,19 @@ presupuesto en DOP contra un gasto real en USD?") y la exportación
 
 | ID    | Feature                                                                                                  | Criticidad | Estimación | Estado            |
 |-------|----------------------------------------------------------------------------------------------------------|------------|------------|-------------------|
-| 5-001 | `Expense.PaymentMethodId` + `Income.PaymentMethodId` + invariantes + `Create`/`Update` extendidos        | Crítica    | S          | ⏳ Pendiente      |
-| 5-002 | Migración `AddPaymentMethodIdToTransactions` + FK en `ExpenseConfiguration`/`IncomeConfiguration` + seed lookup de Efectivo | Crítica | M          | ⏳ Pendiente      |
-| 5-003 | `IPaymentMethodRepository` use cases (CRUD ya existe de Phase 2) + `GetPaymentMethodsQuery` + `PaymentMethodExtensions` (DTO) + `PaymentMethodDto` | Alta | S          | ⏳ Pendiente      |
-| 5-004 | Commands actualizados (Register/Update Expense + Income) + validadores + tests                           | Crítica    | S          | ⏳ Pendiente      |
-| 5-005 | DTOs extendidos (`PaymentMethodId`, `PaymentMethodName`) + repos con `Include` + tests de query           | Crítica    | S          | ⏳ Pendiente      |
-| 5-006 | Filtros extendidos (`PaymentMethodIds` en `ExpenseFilter`/`IncomeFilter` + repo) + tests                  | Alta       | S          | ⏳ Pendiente      |
-| 5-007 | `ExchangeRate` value object + invariantes + tests                                                        | Alta       | S          | ⏳ Pendiente      |
-| 5-008 | `IExchangeRateProvider` + `StubExchangeRateProvider` (tasas configurables, thread-safe) + tests          | Crítica    | M          | ⏳ Pendiente      |
-| 5-009 | `ICurrencyConverter` + `CurrencyConverter` (cache TTL, fallback, misma-moneda no-op) + tests           | Crítica    | M          | ⏳ Pendiente      |
-| 5-010 | UI: `PaymentMethod` picker en `ExpensesView` + `IncomeView` + ViewModels cargan métodos                  | Alta       | M          | ⏳ Pendiente      |
-| 5-011 | UI: `ConvertedAmountDisplay` segunda línea + binding + manejo de fallo del provider                      | Alta       | M          | ⏳ Pendiente      |
-| 5-012 | i18n: claves nuevas en `Strings.resx` y `Strings.es-DO.resx` + diseño de las 2 vistas con skill frontend | Media      | S          | ⏳ Pendiente      |
-| 5-013 | DI registration en `Bootstrap.cs` + verificación manual + smoke test `dotnet run`                       | Crítica    | S          | ⏳ Pendiente      |
+| 5-001 | `Expense.PaymentMethodId` + `Income.PaymentMethodId` + invariantes + `Create`/`Update` extendidos        | Crítica    | S          | ✅ COMPLETADA      |
+| 5-002 | Migración `AddPaymentMethodIdToTransactions` + FK en `ExpenseConfiguration`/`IncomeConfiguration` + seed lookup de Efectivo | Crítica | M          | ✅ COMPLETADA      |
+| 5-003 | `IPaymentMethodRepository` use cases (CRUD ya existe de Phase 2) + `GetPaymentMethodsQuery` + `PaymentMethodExtensions` (DTO) + `PaymentMethodDto` | Alta | S          | ✅ COMPLETADA      |
+| 5-004 | Commands actualizados (Register/Update Expense + Income) + validadores + tests                           | Crítica    | S          | ✅ COMPLETADA      |
+| 5-005 | DTOs extendidos (`PaymentMethodId`, `PaymentMethodName`) + repos con `Include` + tests de query           | Crítica    | S          | ✅ COMPLETADA      |
+| 5-006 | Filtros extendidos (`PaymentMethodIds` en `ExpenseFilter`/`IncomeFilter` + repo) + tests                  | Alta       | S          | ✅ COMPLETADA      |
+| 5-007 | `ExchangeRate` value object + invariantes + tests                                                        | Alta       | S          | ✅ COMPLETADA      |
+| 5-008 | `IExchangeRateProvider` + `StubExchangeRateProvider` (tasas configurables, thread-safe) + tests          | Crítica    | M          | ✅ COMPLETADA      |
+| 5-009 | `ICurrencyConverter` + `CurrencyConverter` (cache TTL, fallback, misma-moneda no-op) + tests           | Crítica    | M          | ✅ COMPLETADA      |
+| 5-010 | UI: `PaymentMethod` picker en `ExpensesView` + `IncomeView` + ViewModels cargan métodos                  | Alta       | M          | ✅ COMPLETADA      |
+| 5-011 | UI: `ConvertedAmountDisplay` segunda línea + binding + manejo de fallo del provider                      | Alta       | M          | ✅ COMPLETADA      |
+| 5-012 | i18n: claves nuevas en `Strings.resx` y `Strings.es-DO.resx` + diseño de las 2 vistas con skill frontend | Media      | S          | ✅ COMPLETADA      |
+| 5-013 | DI registration en `Bootstrap.cs` + verificación manual + smoke test `dotnet run`                       | Crítica    | S          | ✅ COMPLETADA      |
 
 > **Nota sobre IDs:** los IDs `5-001` a `5-013` son locales a Phase 5.
 > Los `F-XXX` también se usan (siguen siendo locales al plan, ver

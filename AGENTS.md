@@ -11,14 +11,18 @@ the project state changes, update this file.
   **Entity Framework Core** (Code First, versioned migrations),
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
-- **Status (today):** Phase 3 complete — slice vertical of `Expense`
-  fully implemented and verified. Phases 1, 2, and **4 fully
-  archived** (Phase 4 F-001..F-008, including UI capstone F-008
-  delivered via 4 chained PRs + 1 fix-PR with BOLD "Libro Mayor"
-  design pass; verdict PASS WITH WARNINGS, 5 minor non-blocking
-  warnings). Phase 5 ready to start — multi-moneda DOP/USD +
-  `PaymentMethod`. See `spec/phases/phase-04/features.md` for the
-  Phase 4 plan and roadmap.
+- **Status (today):** Phases 1, 2, 3, 4, and **5 fully archived**.
+  Phase 3 slice vertical of `Expense` complete and verified. Phase 4
+  UI capstone F-008 delivered via 4 chained PRs + 1 fix-PR with
+  BOLD "Libro Mayor" design pass (verdict PASS WITH WARNINGS, 5 minor
+  non-blocking warnings). Phase 5 complete — multi-moneda DOP/USD
+  with stub `IExchangeRateProvider` + `ICurrencyConverter` cache,
+  `PaymentMethodId` threaded end-to-end (entity → migration →
+  commands/validators → DTOs → repos with Include → filters →
+  query catalog → form picker → multi-select filter rail → second-line
+  conversion display). 559/559 tests verde. See
+  `spec/phases/phase-05/features.md` for the Phase 5 plan and
+  roadmap.
 - **Roadmap / architecture / vision:** `docs/roadmap.md`,
   `docs/architecture.md`, `docs/vision.md`.
 - **Mission / stack constitution:** `spec/constitution/mission.md`,
