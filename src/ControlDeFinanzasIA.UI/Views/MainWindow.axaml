@@ -11,6 +11,7 @@
     <DockPanel>
         <ListBox DockPanel.Dock="Left"
                  ItemsSource="{Binding MenuItems}"
+                 SelectedItem="{Binding SelectedMenuItem}"
                  MinWidth="180">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="nav:RouteMenuItem">
