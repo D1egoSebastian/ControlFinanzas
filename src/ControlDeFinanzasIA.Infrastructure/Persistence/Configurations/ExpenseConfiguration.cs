@@ -39,7 +39,7 @@ public sealed class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
             .HasForeignKey(e => e.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        b.HasOne<PaymentMethod>()
+        b.HasOne(e => e.PaymentMethod)
             .WithMany()
             .HasForeignKey(e => e.PaymentMethodId)
             .OnDelete(DeleteBehavior.SetNull);

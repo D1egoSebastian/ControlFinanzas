@@ -400,7 +400,7 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ControlDeFinanzasIA.Domain.Catalog.PaymentMethod", null)
+                    b.HasOne("ControlDeFinanzasIA.Domain.Catalog.PaymentMethod", "PaymentMethod")
                         .WithMany()
                         .HasForeignKey("PaymentMethodId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -429,6 +429,8 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Amount")
                         .IsRequired();
+
+                    b.Navigation("PaymentMethod");
                 });
 
             modelBuilder.Entity("ControlDeFinanzasIA.Domain.Transactions.Income", b =>
@@ -438,7 +440,7 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("ControlDeFinanzasIA.Domain.Catalog.PaymentMethod", null)
+                    b.HasOne("ControlDeFinanzasIA.Domain.Catalog.PaymentMethod", "PaymentMethod")
                         .WithMany()
                         .HasForeignKey("PaymentMethodId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -467,6 +469,8 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Amount")
                         .IsRequired();
+
+                    b.Navigation("PaymentMethod");
                 });
 
             modelBuilder.Entity("ExpenseTags", b =>

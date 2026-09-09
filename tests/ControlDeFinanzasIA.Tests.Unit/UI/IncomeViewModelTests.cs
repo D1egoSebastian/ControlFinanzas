@@ -646,5 +646,7 @@ public sealed class IncomeViewModelTests
             null,
             null,
             new DateTime(2026, 1, 15, 10, 0, 0, DateTimeKind.Utc),
-            new DateTime(2026, 1, 15, 10, 0, 0, DateTimeKind.Utc));
+            new DateTime(2026, 1, 15, 10, 0, 0, DateTimeKind.Utc),
+            null,
+            null);
 }

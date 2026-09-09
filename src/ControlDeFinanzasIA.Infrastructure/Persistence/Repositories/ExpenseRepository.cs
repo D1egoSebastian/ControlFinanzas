@@ -136,7 +136,9 @@ public sealed class ExpenseRepository : IExpenseRepository
             return null;
         }
 
-        return await _db.Expenses.FindAsync(new object?[] { id }, ct);
+        return await _db.Expenses
+            .Include(e => e.PaymentMethod)
+            .FirstOrDefaultAsync(e => e.Id == id, ct);
     }
 
     /// <summary>
@@ -155,6 +157,7 @@ public sealed class ExpenseRepository : IExpenseRepository
     {
         return await _db.Expenses
             .AsNoTracking()
+            .Include(e => e.PaymentMethod)
             .OrderByDescending(e => e.Date)
             .ThenByDescending(e => e.CreatedAt)
             .ToListAsync(ct);
@@ -183,7 +186,9 @@ public sealed class ExpenseRepository : IExpenseRepository
     {
         ArgumentNullException.ThrowIfNull(filter);
 
-        IQueryable<Expense> query = _db.Expenses.AsNoTracking();
+        IQueryable<Expense> query = _db.Expenses
+            .AsNoTracking()
+            .Include(e => e.PaymentMethod);
 
         if (filter.CategoryId is not null)
         {

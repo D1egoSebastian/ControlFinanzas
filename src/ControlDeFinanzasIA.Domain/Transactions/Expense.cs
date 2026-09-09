@@ -75,6 +75,21 @@ public sealed class Expense
     public ICollection<Tag> Tags { get; private set; } = new List<Tag>();
 
     /// <summary>
+    /// Navegación opcional al método de pago asociado. Se popula via
+    /// <c>.Include(e => e.PaymentMethod)</c> en las queries del
+    /// repositorio; en entidades materializadas sin Include queda
+    /// <see langword="null"/> (carga diferida no habilitada en este proyecto).
+    /// </summary>
+    /// <remarks>
+    /// La FK ya está configurada en
+    /// <c>ExpenseConfiguration.HasOne&lt;PaymentMethod&gt;()</c>. Esta
+    /// propiedad es la contraparte navegacional; el setter es privado
+    /// para honrar el principio de que el dominio no escribe hacia FKs
+    /// externos (EF Core puede asignar via reflection al materializar).
+    /// </remarks>
+    public PaymentMethod? PaymentMethod { get; private set; }
+
+    /// <summary>
     /// Constructor sin parámetros reservado para EF Core. No debe usarse
     /// desde código de aplicación.
     /// </summary>

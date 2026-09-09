@@ -140,7 +140,9 @@ public sealed class IncomeRepository : IIncomeRepository
             return null;
         }
 
-        return await _db.Incomes.FindAsync(new object?[] { id }, ct);
+        return await _db.Incomes
+            .Include(i => i.PaymentMethod)
+            .FirstOrDefaultAsync(i => i.Id == id, ct);
     }
 
     /// <summary>
@@ -159,6 +161,7 @@ public sealed class IncomeRepository : IIncomeRepository
     {
         return await _db.Incomes
             .AsNoTracking()
+            .Include(i => i.PaymentMethod)
             .OrderByDescending(e => e.Date)
             .ThenByDescending(e => e.CreatedAt)
             .ToListAsync(ct);
@@ -187,7 +190,9 @@ public sealed class IncomeRepository : IIncomeRepository
     {
         ArgumentNullException.ThrowIfNull(filter);
 
-        IQueryable<Income> query = _db.Incomes.AsNoTracking();
+        IQueryable<Income> query = _db.Incomes
+            .AsNoTracking()
+            .Include(i => i.PaymentMethod);
 
         if (filter.CategoryId is not null)
         {

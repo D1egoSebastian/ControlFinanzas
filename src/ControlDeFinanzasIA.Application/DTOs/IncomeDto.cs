@@ -17,6 +17,15 @@ namespace ControlDeFinanzasIA.Application.DTOs;
 /// <param name="Source">Optional origin of the income (e.g., "Salary").</param>
 /// <param name="CreatedAt">UTC timestamp of creation.</param>
 /// <param name="UpdatedAt">UTC timestamp of the last update.</param>
+/// <param name="PaymentMethodId">
+/// Identificador opcional del metodo de pago asociado. <c>null</c>
+/// cuando el usuario no asigno uno.
+/// </param>
+/// <param name="PaymentMethodName">
+/// Nombre legible del metodo de pago (ej. <c>"Efectivo"</c>). Populado
+/// por el repositorio via Include; <c>null</c> cuando no hay metodo
+/// o cuando el Include no se uso.
+/// </param>
 public sealed record IncomeDto(
     Guid Id,
     Guid? CategoryId,
@@ -27,4 +36,6 @@ public sealed record IncomeDto(
     string? Note,
     string? Source,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    Guid? PaymentMethodId,
+    string? PaymentMethodName);

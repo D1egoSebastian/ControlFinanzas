@@ -40,9 +40,9 @@ public sealed class IncomeConfiguration : IEntityTypeConfiguration<Income>
             .HasForeignKey(e => e.CategoryId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        b.HasOne<PaymentMethod>()
+        b.HasOne(i => i.PaymentMethod)
             .WithMany()
-            .HasForeignKey(e => e.PaymentMethodId)
+            .HasForeignKey(i => i.PaymentMethodId)
             .OnDelete(DeleteBehavior.SetNull);
 
         b.HasIndex(e => e.Date);
