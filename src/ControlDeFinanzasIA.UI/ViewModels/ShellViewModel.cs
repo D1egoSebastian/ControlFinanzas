@@ -45,35 +45,14 @@ public sealed partial class ShellViewModel : ViewModelBase
     private ViewModelBase? _current;
 
     /// <summary>
-    /// Gets or sets the currently selected sidebar menu item. Setting this
-    /// property triggers navigation to the corresponding route, which in
-    /// turn updates <see cref="Current"/>. The setter ignores null
-    /// values (used during initial composition) and re-selections of
-    /// the same item (to avoid navigation loops).
+    /// Gets or sets the currently selected sidebar menu item. Kept in
+    /// sync with <see cref="Current"/> via
+    /// <see cref="OnNavigationCurrentChanged"/> when navigation happens
+    /// outside the sidebar (GoBack, programmatic NavigateTo). Drives
+    /// the sidebar's visual highlight.
     /// </summary>
     [ObservableProperty]
     private RouteMenuItem? _selectedMenuItem;
-
-    partial void OnSelectedMenuItemChanged(RouteMenuItem? value)
-    {
-        if (value is null)
-        {
-            return;
-        }
-
-        // Guard against re-navigation: if the current VM already maps to
-        // this route (e.g. when OnNavigationCurrentChanged syncs the
-        // SelectedItem back), calling NavigateTo again would push the
-        // same route onto the history stack.
-        string currentRoute = _navService.CurrentViewModel?.GetType().Name
-            .Replace("ViewModel", string.Empty) ?? string.Empty;
-        if (string.Equals(currentRoute, value.Route, StringComparison.Ordinal))
-        {
-            return;
-        }
-
-        _navService.NavigateTo(value.Route);
-    }
 
     /// <summary>
     /// Gets the list of sidebar menu items.
@@ -87,11 +66,21 @@ public sealed partial class ShellViewModel : ViewModelBase
     public bool CanGoBack => _navService.CanGoBack;
 
     /// <summary>
-    /// Navigates to the route provided as the command parameter.
+    /// Navigates to the route associated with the sidebar menu item
+    /// passed as the command parameter.
     /// </summary>
-    /// <param name="route">The route name to navigate to.</param>
+    /// <param name="item">Menu item whose <see cref="RouteMenuItem.Route"/>
+    /// identifies the destination. Null is treated as no-op.</param>
     [RelayCommand]
-    private void NavigateTo(string? route) => _navService.NavigateTo(route ?? string.Empty);
+    private void NavigateTo(RouteMenuItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        _navService.NavigateTo(item.Route);
+    }
 
     /// <summary>
     /// Goes back to the previous view-model in the navigation history.
@@ -118,5 +107,21 @@ public sealed partial class ShellViewModel : ViewModelBase
         }
 
         GoBackCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>
+    /// Gets the currently selected sidebar menu item. Exposed as a
+    /// read-only property (computed from <see cref="CurrentViewModel"/>)
+    /// so the sidebar's visual highlight can be data-bound even when
+    /// navigation happens outside the sidebar.
+    /// </summary>
+    public RouteMenuItem? CurrentMenuItem
+    {
+        get
+        {
+            string? currentTypeName = _navService.CurrentViewModel?.GetType().Name;
+            string? currentRoute = currentTypeName?.Replace("ViewModel", string.Empty);
+            return MenuItems.FirstOrDefault(m => m.Route == currentRoute);
+        }
     }
 }

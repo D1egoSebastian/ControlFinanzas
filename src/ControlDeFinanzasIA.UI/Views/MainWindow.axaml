@@ -11,11 +11,18 @@
     <DockPanel>
         <ListBox DockPanel.Dock="Left"
                  ItemsSource="{Binding MenuItems}"
-                 SelectedItem="{Binding SelectedMenuItem}"
                  MinWidth="180">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="nav:RouteMenuItem">
-                    <TextBlock Text="{Binding DisplayName}" />
+                    <Button Command="{Binding $parent[Window].((vm:ShellViewModel)DataContext).NavigateToCommand}"
+                            CommandParameter="{Binding .}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Padding="12,8">
+                        <TextBlock Text="{Binding DisplayName}" />
+                    </Button>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

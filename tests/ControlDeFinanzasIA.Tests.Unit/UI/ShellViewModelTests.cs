@@ -21,9 +21,10 @@ public sealed class ShellViewModelTests
             { RouteNames.Dashboard, new DashboardViewModel(CreateLocalizer()) }
         });
         ShellViewModel shell = new(fakeNav, CreateLocalizer());
+        RouteMenuItem dashboardItem = new(RouteNames.Dashboard, "Panel");
 
         // Act
-        shell.NavigateToCommand.Execute(RouteNames.Dashboard);
+        shell.NavigateToCommand.Execute(dashboardItem);
 
         // Assert
         Assert.Contains(RouteNames.Dashboard, fakeNav.NavigateCalls);
