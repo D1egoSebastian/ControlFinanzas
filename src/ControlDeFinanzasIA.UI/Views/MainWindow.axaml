@@ -3,6 +3,7 @@
         xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
         xmlns:nav="using:ControlDeFinanzasIA.UI.Navigation"
         xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
+        xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
         x:Class="ControlDeFinanzasIA.UI.Views.MainWindow"
         x:DataType="vm:ShellViewModel"
         Title="{x:Static resources:Strings.WindowTitle}"
@@ -28,9 +29,14 @@
         </ListBox>
 
         <Border DockPanel.Dock="Bottom"
-                Padding="12,6">
-            <TextBlock Text="{x:Static resources:Strings.StatusbarPlaceholder}"
-                       HorizontalAlignment="Center" />
+                Padding="12,6"
+                Background="DarkRed">
+            <TextBlock HorizontalAlignment="Center">
+                <Run Text="DEBUG Current=" />
+                <Run Text="{Binding Current}" />
+                <Run Text=" | type=" />
+                <Run Text="{Binding Current, Converter={x:Static converters:DebugTypeConverter.Instance}}" />
+            </TextBlock>
         </Border>
 
         <ContentControl Content="{Binding Current}"
