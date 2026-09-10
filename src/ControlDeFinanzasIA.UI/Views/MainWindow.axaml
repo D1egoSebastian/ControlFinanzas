@@ -5,6 +5,7 @@
         xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
         xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
         x:Class="ControlDeFinanzasIA.UI.Views.MainWindow"
+        x:Name="ShellRoot"
         x:DataType="vm:ShellViewModel"
         Title="{x:Static resources:Strings.WindowTitle}"
         MinWidth="800"
@@ -15,7 +16,7 @@
                  MinWidth="180">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="nav:RouteMenuItem">
-                    <Button Command="{Binding $parent[Window].((vm:ShellViewModel)DataContext).NavigateToCommand}"
+                    <Button Command="{Binding #ShellRoot.DataContext.NavigateToCommand}"
                             CommandParameter="{Binding .}"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Left"
