@@ -20,6 +20,15 @@
     </UserControl.Resources>
 
     <Grid ColumnDefinitions="260,*">
+        <!-- DEBUG marker to confirm the view rendered -->
+        <Border Grid.ColumnSpan="2"
+                Background="Red"
+                Padding="8">
+            <TextBlock Text="DEBUG: ExpensesView rendered, VM = "
+                       Foreground="White"
+                       FontWeight="Bold" />
+        </Border>
+
         <!-- Filter rail -->
         <ScrollViewer Grid.Column="0"
                       Background="{StaticResource SurfaceBrush}">

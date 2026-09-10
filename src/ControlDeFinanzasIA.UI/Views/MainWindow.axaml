@@ -35,6 +35,7 @@
 
         <ContentControl Content="{Binding Current}"
                         HorizontalContentAlignment="Stretch"
-                        VerticalContentAlignment="Stretch" />
+                        VerticalContentAlignment="Stretch"
+                        MinHeight="400" />
     </DockPanel>
 </Window>
