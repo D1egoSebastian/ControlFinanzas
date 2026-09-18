@@ -1,7 +1,9 @@
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
+using ControlDeFinanzasIA.Application.DTOs.Aggregates;
 using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Transactions;
+using ControlDeFinanzasIA.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace ControlDeFinanzasIA.Infrastructure.Persistence.Repositories;
@@ -235,5 +237,93 @@ public sealed class ExpenseRepository : IExpenseRepository
             .ToListAsync(ct);
 
         return new PagedResult<Expense>(items, total, filter.Page, filter.PageSize);
+    }
+
+    /// <summary>
+    /// Obtiene los totales de gasto por moneda dentro de
+    /// <paramref name="period"/> mediante <c>GROUP BY</c>/<c>SUM</c> en SQL (R-3).
+    /// </summary>
+    /// <remarks>
+    /// El proveedor SQLite de EF Core 8 lanza <c>NotSupportedException</c>
+    /// ("SQLite cannot apply aggregate operator 'Sum' on expressions of type
+    /// 'decimal'") si se intenta <c>Sum</c> directamente sobre la columna
+    /// <c>decimal</c>: SQLite no tiene un tipo decimal nativo y el traductor
+    /// de agregados de este proveedor no soporta <c>SUM</c> sobre ese tipo
+    /// CLR, sin importar la clave de agrupación. El <c>SUM</c> sigue
+    /// ejecutándose en SQL (satisface R-3); solo se castea a <c>double</c>
+    /// para que el proveedor lo traduzca, y se vuelve a <c>decimal</c> al
+    /// proyectar. Con la precisión de columna (18,4) y magnitudes de un
+    /// presupuesto personal, esto no pierde precisión significativa.
+    /// </remarks>
+    /// <param name="period">Rango de fechas, inclusivo en ambos extremos.</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    public async Task<IReadOnlyList<CurrencyTotal>> GetPeriodTotalsAsync(DateRange period, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(period);
+
+        List<CurrencyTotal> totals = await _db.Expenses
+            .AsNoTracking()
+            .Where(e => e.Date >= period.Start && e.Date <= period.End)
+            .GroupBy(e => e.Amount.Currency)
+            .Select(g => new CurrencyTotal(g.Key, (decimal)g.Sum(x => (double)x.Amount.Amount)))
+            .ToListAsync(ct);
+
+        return totals.Select(t => t with { Amount = Math.Round(t.Amount, 4) }).ToList();
+    }
+
+    /// <summary>
+    /// Obtiene los totales de gasto por categoría x moneda dentro de
+    /// <paramref name="period"/> mediante <c>GROUP BY</c>/<c>SUM</c> en SQL,
+    /// con join a <c>Categories</c> para la etiqueta. Devuelve todas las
+    /// categorías con gasto en el periodo; el ranking top-N y "Otras" se
+    /// calculan en la capa Application (D-2).
+    /// </summary>
+    /// <remarks>
+    /// Mismo workaround de cast a <c>double</c> que <see cref="GetPeriodTotalsAsync"/>
+    /// — ver esa nota para el porqué.
+    /// </remarks>
+    /// <param name="period">Rango de fechas, inclusivo en ambos extremos.</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    public async Task<IReadOnlyList<CategoryCurrencyTotal>> GetCategoryTotalsAsync(DateRange period, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(period);
+
+        List<CategoryCurrencyTotal> totals = await (from e in _db.Expenses.AsNoTracking()
+                       where e.Date >= period.Start && e.Date <= period.End
+                       join c in _db.Categories.AsNoTracking() on e.CategoryId equals c.Id
+                       group e by new { c.Id, c.Name, e.Amount.Currency } into g
+                       select new CategoryCurrencyTotal(
+                           g.Key.Id, g.Key.Name, g.Key.Currency, (decimal)g.Sum(x => (double)x.Amount.Amount)))
+                      .ToListAsync(ct);
+
+        return totals.Select(t => t with { Amount = Math.Round(t.Amount, 4) }).ToList();
+    }
+
+    /// <summary>
+    /// Obtiene los totales de gasto por mes x moneda dentro de
+    /// <paramref name="period"/> mediante <c>GROUP BY</c>/<c>SUM</c> en SQL.
+    /// Usado por el gráfico de evolución temporal (R-5).
+    /// </summary>
+    /// <remarks>
+    /// Mismo workaround de cast a <c>double</c> que <see cref="GetPeriodTotalsAsync"/>
+    /// — ver esa nota para el porqué. <c>Date.Year</c>/<c>Date.Month</c> sí
+    /// traducen correctamente a <c>strftime</c> en el proveedor SQLite de EF
+    /// Core 8 (confirmado por <c>DashboardAggregateQueryTests</c>); el único
+    /// problema real era el <c>Sum</c> sobre <c>decimal</c>.
+    /// </remarks>
+    /// <param name="period">Rango de fechas, inclusivo en ambos extremos.</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    public async Task<IReadOnlyList<MonthCurrencyTotal>> GetMonthlyTotalsAsync(DateRange period, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(period);
+
+        List<MonthCurrencyTotal> totals = await _db.Expenses
+            .AsNoTracking()
+            .Where(e => e.Date >= period.Start && e.Date <= period.End)
+            .GroupBy(e => new { e.Date.Year, e.Date.Month, e.Amount.Currency })
+            .Select(g => new MonthCurrencyTotal(g.Key.Year, g.Key.Month, g.Key.Currency, (decimal)g.Sum(x => (double)x.Amount.Amount)))
+            .ToListAsync(ct);
+
+        return totals.Select(t => t with { Amount = Math.Round(t.Amount, 4) }).ToList();
     }
 }

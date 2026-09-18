@@ -1,6 +1,8 @@
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
+using ControlDeFinanzasIA.Application.DTOs.Aggregates;
 using ControlDeFinanzasIA.Domain.Transactions;
+using ControlDeFinanzasIA.Domain.ValueObjects;
 
 namespace ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 
@@ -146,5 +148,58 @@ public sealed class FakeExpenseRepository : IExpenseRepository
         }
 
         return Task.FromResult(FilterResult);
+    }
+
+    /// <summary>
+    /// Nombres de categoría usados por <see cref="GetCategoryTotalsAsync"/>
+    /// para emular el join SQL a <c>Categories</c> que hace el repositorio
+    /// real. Los tests lo pueblan para controlar la etiqueta sin una BD real.
+    /// </summary>
+    public Dictionary<Guid, string> CategoryNames { get; } = new();
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<CurrencyTotal>> GetPeriodTotalsAsync(DateRange period, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(period);
+
+        IReadOnlyList<CurrencyTotal> totals = _addedExpenses
+            .Where(e => e.Date >= period.Start && e.Date <= period.End)
+            .GroupBy(e => e.Amount.Currency)
+            .Select(g => new CurrencyTotal(g.Key, g.Sum(x => x.Amount.Amount)))
+            .ToList();
+
+        return Task.FromResult(totals);
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<CategoryCurrencyTotal>> GetCategoryTotalsAsync(DateRange period, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(period);
+
+        IReadOnlyList<CategoryCurrencyTotal> totals = _addedExpenses
+            .Where(e => e.Date >= period.Start && e.Date <= period.End)
+            .GroupBy(e => new { e.CategoryId, e.Amount.Currency })
+            .Select(g => new CategoryCurrencyTotal(
+                g.Key.CategoryId,
+                CategoryNames.TryGetValue(g.Key.CategoryId, out string? name) ? name : string.Empty,
+                g.Key.Currency,
+                g.Sum(x => x.Amount.Amount)))
+            .ToList();
+
+        return Task.FromResult(totals);
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<MonthCurrencyTotal>> GetMonthlyTotalsAsync(DateRange period, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(period);
+
+        IReadOnlyList<MonthCurrencyTotal> totals = _addedExpenses
+            .Where(e => e.Date >= period.Start && e.Date <= period.End)
+            .GroupBy(e => new { e.Date.Year, e.Date.Month, e.Amount.Currency })
+            .Select(g => new MonthCurrencyTotal(g.Key.Year, g.Key.Month, g.Key.Currency, g.Sum(x => x.Amount.Amount)))
+            .ToList();
+
+        return Task.FromResult(totals);
     }
 }

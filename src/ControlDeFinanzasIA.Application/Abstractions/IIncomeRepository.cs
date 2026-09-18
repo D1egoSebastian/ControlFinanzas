@@ -1,5 +1,7 @@
 using ControlDeFinanzasIA.Application.Common;
+using ControlDeFinanzasIA.Application.DTOs.Aggregates;
 using ControlDeFinanzasIA.Domain.Transactions;
+using ControlDeFinanzasIA.Domain.ValueObjects;
 
 namespace ControlDeFinanzasIA.Application.Abstractions;
 
@@ -68,4 +70,23 @@ public interface IIncomeRepository
     /// solicitada y los metadatos de paginación.
     /// </returns>
     Task<PagedResult<Income>> GetByFilterAsync(IncomeFilter filter, CancellationToken ct = default);
+
+    /// <summary>
+    /// Obtiene los totales de ingreso por moneda dentro de
+    /// <paramref name="period"/>, agregados en SQL (<c>GROUP BY</c>/<c>SUM</c>).
+    /// No trae transacciones completas a memoria para sumarlas (R-3).
+    /// </summary>
+    /// <param name="period">Rango de fechas, inclusivo en ambos extremos.</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    /// <returns>Una fila por cada moneda presente en el periodo.</returns>
+    Task<IReadOnlyList<CurrencyTotal>> GetPeriodTotalsAsync(DateRange period, CancellationToken ct = default);
+
+    /// <summary>
+    /// Obtiene los totales de ingreso por mes x moneda dentro de
+    /// <paramref name="period"/>, agregados en SQL (<c>GROUP BY</c>/<c>SUM</c>).
+    /// Sin desglose por categoría: esta fase no lo requiere para ingresos.
+    /// </summary>
+    /// <param name="period">Rango de fechas, inclusivo en ambos extremos.</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    Task<IReadOnlyList<MonthCurrencyTotal>> GetMonthlyTotalsAsync(DateRange period, CancellationToken ct = default);
 }

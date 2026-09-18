@@ -1,5 +1,7 @@
 using ControlDeFinanzasIA.Application.Common;
+using ControlDeFinanzasIA.Application.DTOs.Aggregates;
 using ControlDeFinanzasIA.Domain.Transactions;
+using ControlDeFinanzasIA.Domain.ValueObjects;
 
 namespace ControlDeFinanzasIA.Application.Abstractions;
 
@@ -70,4 +72,34 @@ public interface IExpenseRepository
     /// solicitada y los metadatos de paginación.
     /// </returns>
     Task<PagedResult<Expense>> GetByFilterAsync(ExpenseFilter filter, CancellationToken ct = default);
+
+    /// <summary>
+    /// Obtiene los totales de gasto por moneda dentro de
+    /// <paramref name="period"/>, agregados en SQL (<c>GROUP BY</c>/<c>SUM</c>).
+    /// No trae transacciones completas a memoria para sumarlas (R-3).
+    /// </summary>
+    /// <param name="period">Rango de fechas, inclusivo en ambos extremos.</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    /// <returns>Una fila por cada moneda presente en el periodo.</returns>
+    Task<IReadOnlyList<CurrencyTotal>> GetPeriodTotalsAsync(DateRange period, CancellationToken ct = default);
+
+    /// <summary>
+    /// Obtiene los totales de gasto por categoría x moneda dentro de
+    /// <paramref name="period"/>, agregados en SQL (<c>GROUP BY</c>/<c>SUM</c>)
+    /// con join a <c>Categories</c> para la etiqueta. Devuelve TODAS las
+    /// categorías con gasto en el periodo; el ranking top-N y el bucket
+    /// "Otras" se calculan en la capa Application, no aquí (D-2).
+    /// </summary>
+    /// <param name="period">Rango de fechas, inclusivo en ambos extremos.</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    Task<IReadOnlyList<CategoryCurrencyTotal>> GetCategoryTotalsAsync(DateRange period, CancellationToken ct = default);
+
+    /// <summary>
+    /// Obtiene los totales de gasto por mes x moneda dentro de
+    /// <paramref name="period"/>, agregados en SQL (<c>GROUP BY</c>/<c>SUM</c>).
+    /// Usado por el gráfico de evolución temporal (R-5).
+    /// </summary>
+    /// <param name="period">Rango de fechas, inclusivo en ambos extremos.</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    Task<IReadOnlyList<MonthCurrencyTotal>> GetMonthlyTotalsAsync(DateRange period, CancellationToken ct = default);
 }

@@ -1,6 +1,8 @@
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
+using ControlDeFinanzasIA.Application.DTOs.Aggregates;
 using ControlDeFinanzasIA.Domain.Transactions;
+using ControlDeFinanzasIA.Domain.ValueObjects;
 
 namespace ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 
@@ -143,5 +145,33 @@ public sealed class FakeIncomeRepository : IIncomeRepository
         }
 
         return Task.FromResult(FilterResult);
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<CurrencyTotal>> GetPeriodTotalsAsync(DateRange period, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(period);
+
+        IReadOnlyList<CurrencyTotal> totals = _addedIncomes
+            .Where(i => i.Date >= period.Start && i.Date <= period.End)
+            .GroupBy(i => i.Amount.Currency)
+            .Select(g => new CurrencyTotal(g.Key, g.Sum(x => x.Amount.Amount)))
+            .ToList();
+
+        return Task.FromResult(totals);
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<MonthCurrencyTotal>> GetMonthlyTotalsAsync(DateRange period, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(period);
+
+        IReadOnlyList<MonthCurrencyTotal> totals = _addedIncomes
+            .Where(i => i.Date >= period.Start && i.Date <= period.End)
+            .GroupBy(i => new { i.Date.Year, i.Date.Month, i.Amount.Currency })
+            .Select(g => new MonthCurrencyTotal(g.Key.Year, g.Key.Month, g.Key.Currency, g.Sum(x => x.Amount.Amount)))
+            .ToList();
+
+        return Task.FromResult(totals);
     }
 }
