@@ -31,6 +31,8 @@ public sealed class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
         b.Property(e => e.Description).IsRequired().HasMaxLength(200);
         b.Property(e => e.Note).HasMaxLength(500);
         b.Property(e => e.PaymentMethodId);
+        b.Property(e => e.RecurringRuleId);
+        b.Property(e => e.RecurringPeriod);
         b.Property(e => e.CreatedAt).IsRequired();
         b.Property(e => e.UpdatedAt).IsRequired();
 
@@ -47,6 +49,8 @@ public sealed class ExpenseConfiguration : IEntityTypeConfiguration<Expense>
         b.HasIndex(e => e.Date);
         b.HasIndex(e => e.CategoryId);
         b.HasIndex(e => e.PaymentMethodId);
+        b.HasIndex(e => new { e.RecurringRuleId, e.RecurringPeriod }).IsUnique();
+
 
         b.OwnsOne(e => e.Amount, money =>
         {

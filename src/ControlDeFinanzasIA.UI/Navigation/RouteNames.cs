@@ -23,4 +23,6 @@ public static class RouteNames
     /// The incomes route (consumed by F-008 of Phase 4).
     /// </summary>
     public const string Incomes = "Incomes";
+
+    public const string Recurring = "Recurring";
 }

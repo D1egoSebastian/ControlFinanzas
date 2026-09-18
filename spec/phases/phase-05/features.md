@@ -485,7 +485,9 @@ presupuesto en DOP contra un gasto real en USD?") y la exportación
 ## 7. Requisitos no funcionales
 
 - `dotnet build`: 0 warnings, 0 errors (Release + Debug).
-- `dotnet test`: 364 actuales + ~20 nuevos ≈ **384 verdes**.
+- `dotnet test`: **559/559 tests verdes** al cierre de Phase 5
+  (2026-09-08). Este valor es evidencia histórica del cierre; debe
+  revalidarse antes de declarar una nueva fase como verificada.
 - NetArchTest R-1..R-5 verdes (Application no depende de
   Infrastructure; UI referencia Application + Domain;
   `IExchangeRateProvider` vive en Application).
@@ -627,7 +629,7 @@ Dos cadenas paralelas posibles:
 - ✅ Filtro por método funciona (OR semantics).
 - ✅ Tests de integración cubren queries con `PaymentMethodIds` y la
   migración completa (≥ 5 escenarios).
-- ✅ 364 actuales + ~20 nuevos ≈ **384 tests verdes**.
+- ✅ **559/559 tests verdes** al cierre de Phase 5.
 - ✅ NetArchTest R-1..R-5 verdes.
 - ✅ `dotnet run` arranca + registra un gasto de `25 USD` con
   método "Tarjeta de crédito" + lo ve en la lista con

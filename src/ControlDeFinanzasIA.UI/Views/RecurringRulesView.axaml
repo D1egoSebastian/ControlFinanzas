@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+             xmlns:domain="using:ControlDeFinanzasIA.Domain.Recurring"
+             x:Class="ControlDeFinanzasIA.UI.Views.RecurringRulesView"
+             x:DataType="vm:RecurringRulesViewModel"
+             x:Name="Root"
+             Background="{StaticResource InkBrush}">
+    <Grid ColumnDefinitions="320,*" Margin="24">
+        <ScrollViewer Grid.Column="0">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Reglas recurrentes" Classes="ledger-title" />
+                <TextBlock Text="Crea y administra pagos recurrentes." Foreground="{StaticResource PaperDimBrush}" />
+                <ComboBox ItemsSource="{Binding RuleTypes}" SelectedItem="{Binding RuleType}" Classes="ledger-input" />
+                <TextBox Text="{Binding Name}" Watermark="Nombre" Classes="ledger-input" />
+                <TextBox Text="{Binding Amount}" Watermark="Monto" Classes="ledger-input" />
+                <ComboBox ItemsSource="{Binding Currencies}" SelectedItem="{Binding Currency}" Classes="ledger-input" />
+                <ComboBox ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input" />
+                <DatePicker SelectedDate="{Binding StartDate}" Classes="ledger-input" />
+                <ComboBox ItemsSource="{Binding Categories}"
+                          DisplayMemberBinding="{Binding Name}"
+                          SelectedItem="{Binding SelectedCategory}"
+                          PlaceholderText="Categoría"
+                          Classes="ledger-input" />
+                <ComboBox ItemsSource="{Binding PaymentMethods}"
+                          DisplayMemberBinding="{Binding Name}"
+                          SelectedItem="{Binding SelectedPaymentMethod}"
+                          PlaceholderText="Método de pago"
+                          Classes="ledger-input" />
+                <TextBlock Text="{Binding FormError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Guardar" Command="{Binding SaveCommand}" Classes="ledger-btn-primary" />
+                    <Button Content="Cancelar" Command="{Binding CancelEditCommand}" Classes="ledger-btn" />
+                    <Button Content="Desactivar" Command="{Binding DeactivateSelectedCommand}" Classes="ledger-btn" />
+                    <Button Content="Eliminar" Command="{Binding DeleteSelectedCommand}" Classes="ledger-btn" />
+                </StackPanel>
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" />
+                <Separator Margin="0,12" />
+                <TextBlock Text="Generar del mes" Classes="ledger-section" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Previsualizar" Command="{Binding PreviewGenerationCommand}" Classes="ledger-btn" />
+                    <Button Content="Confirmar" Command="{Binding ConfirmGenerationCommand}" Classes="ledger-btn-primary" />
+                </StackPanel>
+                <TextBlock Text="{Binding GenerationError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+                <ItemsControl ItemsSource="{Binding PreviewItems}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding RuleName, StringFormat={}{0} — {1}}" Foreground="{StaticResource PaperDimBrush}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+        <ScrollViewer Grid.Column="1" Margin="24,0,0,0">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Reglas activas" Classes="ledger-title" />
+                <ItemsControl ItemsSource="{Binding Rules}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="domain:RecurringRule">
+                            <Border Classes="ledger-row" Padding="12">
+                                <Grid ColumnDefinitions="*,Auto,Auto">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" Classes="ledger-section" />
+                                        <TextBlock Text="{Binding Frequency}" Foreground="{StaticResource PaperDimBrush}" />
+                                        <TextBlock Text="{Binding NextGenerationDate}" Foreground="{StaticResource PaperDimBrush}" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Amount.Amount, StringFormat={}{0:N2}}"
+                                               Classes="ledger-amount" />
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" Margin="4,0,0,0">
+                                        <Button Content="Editar" Command="{Binding #Root.((vm:RecurringRulesViewModel)DataContext).EditCommand}" CommandParameter="{Binding}" Classes="ledger-btn" />
+                                        <Button Content="Saltar" Command="{Binding #Root.((vm:RecurringRulesViewModel)DataContext).SkipSelectedCommand}" Classes="ledger-btn" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="Todavía no hay reglas recurrentes." IsVisible="{Binding !Rules.Count}"
+                           Foreground="{StaticResource PaperDimBrush}" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

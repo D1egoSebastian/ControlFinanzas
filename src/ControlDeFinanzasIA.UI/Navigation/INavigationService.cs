@@ -30,7 +30,7 @@ public interface INavigationService
     void NavigateTo(string routeName);
 
     /// <summary>
-    /// Goes back to the previous view-model in the history stack.
+    /// Goes back to the previous view-model in the history stack. 
     /// </summary>
     /// <remarks>
     /// This method is a silent no-op when there is no history to go back to.

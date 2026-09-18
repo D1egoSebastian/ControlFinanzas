@@ -15,18 +15,7 @@
     </Application.Resources>
 
     <Application.DataTemplates>
-        <DataTemplate DataType="{x:Type vm:DashboardViewModel}"
-                      x:DataType="vm:DashboardViewModel">
-            <views:DashboardView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:ExpensesViewModel}"
-                      x:DataType="vm:ExpensesViewModel">
-            <views:ExpensesView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:IncomeViewModel}"
-                      x:DataType="vm:IncomeViewModel">
-            <views:IncomeView />
-        </DataTemplate>
+        <views:ViewLocator />
     </Application.DataTemplates>
 
     <Application.Styles>

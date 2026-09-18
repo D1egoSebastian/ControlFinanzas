@@ -1,19 +1,19 @@
+using ControlDeFinanzasIA.Domain.Enums;
+using ControlDeFinanzasIA.Domain.ValueObjects;
+
 namespace ControlDeFinanzasIA.Domain.Recurring;
 
-/// <summary>
-/// Gasto fijo recurrente (alquiler, internet, gimnasio, etc.).
-/// Hereda de <see cref="RecurringRule"/>.
-/// </summary>
-public sealed record FixedExpense(
-    Guid Id,
-    string Name,
-    Domain.ValueObjects.Money Amount,
-    Domain.Enums.Currency Currency,
-    string Frequency,
-    System.DateOnly StartDate,
-    System.DateOnly? EndDate,
-    Guid CategoryId,
-    Guid PaymentMethodId,
-    System.Collections.Generic.IReadOnlyList<Guid> TagIds,
-    bool Active,
-    System.DateOnly NextGenerationDate) : RecurringRule(Id, Name, Amount, Currency, Frequency, StartDate, EndDate, CategoryId, PaymentMethodId, TagIds, Active, NextGenerationDate);
+/// <summary>Gasto fijo recurrente, como alquiler o gimnasio.</summary>
+public sealed class FixedExpense : RecurringRule
+{
+    private FixedExpense() { }
+
+    public FixedExpense(
+        Guid id, string name, Money amount, Currency currency, string frequency,
+        DateOnly startDate, DateOnly? endDate, Guid categoryId, Guid paymentMethodId,
+        IReadOnlyList<Guid> tagIds, bool active, DateOnly nextGenerationDate)
+        : base(id, name, amount, currency, frequency, startDate, endDate,
+            categoryId, paymentMethodId, tagIds, active, nextGenerationDate)
+    {
+    }
+}

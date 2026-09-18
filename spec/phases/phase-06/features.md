@@ -1,7 +1,7 @@
 # Fase 6 — Recurrentes: suscripciones y gastos fijos
 
 > **Fase:** 6 — Recurrentes (suscripciones + gastos fijos)
-> **Estado:** ⏳ En curso (F6-001 — calculadora de ocurrencias)
+> **Estado:** ✅ Completada (2026-09-17) — ver `spec/features/phase-06/F-001-recurring-rules.done.md`
 > **Spec ID:** PHASE-06-PLAN
 > **Dependencias:** Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅, Phase 5 ✅
 > **Roadmap:** `docs/roadmap.md` §Fase 6 (líneas 325-364)
@@ -55,14 +55,14 @@ Application/UseCases/Recurring/
 
 | ID | Slice | Estimación | Estado |
 | --- | --- | --- | --- |
-| 6-001 | `RecurringOccurrenceCalculator` + tests | S | ⏳ En curso |
-| 6-002 | Strengthen `RecurringRule` (factory `Create`, invariants) | M | ⏳ |
-| 6-003 | `IRecurringRuleRepository` (existe) + EF Core implementation + migration | M | ⏳ |
-| 6-004 | `CreateSubscriptionUseCase` + `UpdateSubscriptionUseCase` + tests | M | ⏳ |
-| 6-005 | `GenerateDueRecurringUseCase` + tests (usa calculator) | M | ⏳ |
-| 6-006 | UI: lista de suscripciones + form de crear/editar | L | ⏳ |
-| 6-007 | UI: pantalla "Generar del mes" con preview antes de confirmar | M | ⏳ |
-| 6-008 | Mismo flujo para `FixedExpense` (paralelo) | M | ⏳ |
+| 6-001 | `RecurringOccurrenceCalculator` + tests | S | ✅ Completada |
+| 6-002 | Strengthen `RecurringRule` (factory `Create`, invariants) | M | ✅ Completada |
+| 6-003 | `IRecurringRuleRepository` (existe) + EF Core implementation + migration | M | ✅ Completada: configuración TPH, migración y repositorio |
+| 6-004 | `CreateSubscriptionUseCase` + `UpdateSubscriptionUseCase` + tests | M | ✅ Completada |
+| 6-005 | `GenerateDueRecurringUseCase` + tests (usa calculator) | M | ✅ Completada |
+| 6-006 | UI: lista de reglas + form de crear/editar (Subscription y FixedExpense) | L | ✅ Completada |
+| 6-007 | UI: pantalla "Generar del mes" con preview antes de confirmar | M | ✅ Completada |
+| 6-008 | Mismo flujo para `FixedExpense` (paralelo) | M | ✅ Completada |
 
 ## 5. Criterios de fase completada
 

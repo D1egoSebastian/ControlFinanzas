@@ -48,6 +48,8 @@ public interface IExpenseRepository
     /// <param name="ct">Token de cancelación opcional.</param>
     Task<Expense?> GetByIdAsync(Guid id, CancellationToken ct = default);
 
+    Task<Expense?> GetByRecurringRuleAndPeriodAsync(Guid recurringRuleId, DateOnly period, CancellationToken ct = default);
+
     /// <summary>
     /// Obtiene todos los <see cref="Expense"/>. La colección retornada
     /// es de solo lectura.

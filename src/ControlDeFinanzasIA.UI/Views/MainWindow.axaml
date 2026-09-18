@@ -29,18 +29,7 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <Border DockPanel.Dock="Bottom"
-                Padding="12,6"
-                Background="DarkRed">
-            <TextBlock HorizontalAlignment="Center">
-                <Run Text="DEBUG Current=" />
-                <Run Text="{Binding Current}" />
-                <Run Text=" | type=" />
-                <Run Text="{Binding Current, Converter={x:Static converters:DebugTypeConverter.Instance}}" />
-            </TextBlock>
-        </Border>
-
-        <ContentControl Content="{Binding Current}"
+        <ContentControl Content="{Binding Current, Converter={x:Static converters:CurrentViewConverter.Instance}}"
                         HorizontalContentAlignment="Stretch"
                         VerticalContentAlignment="Stretch"
                         MinHeight="400" />

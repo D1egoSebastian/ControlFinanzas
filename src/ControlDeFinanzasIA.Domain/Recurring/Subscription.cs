@@ -1,24 +1,19 @@
+using ControlDeFinanzasIA.Domain.Enums;
+using ControlDeFinanzasIA.Domain.ValueObjects;
+
 namespace ControlDeFinanzasIA.Domain.Recurring;
 
-/// <summary>
-/// Suscripción. Una por servicio (Netflix, internet, gimnasio, etc.).
-/// Hereda de <see cref="RecurringRule"/>.
-/// </summary>
-/// <remarks>
-/// El record expone un constructor primario con todos los campos
-/// del padre para que <see cref="RecurringRule.Create"/> pueda
-/// inicializar la instancia tras validar invariantes.
-/// </remarks>
-public sealed record Subscription(
-    Guid Id,
-    string Name,
-    Domain.ValueObjects.Money Amount,
-    Domain.Enums.Currency Currency,
-    string Frequency,
-    System.DateOnly StartDate,
-    System.DateOnly? EndDate,
-    Guid CategoryId,
-    Guid PaymentMethodId,
-    System.Collections.Generic.IReadOnlyList<Guid> TagIds,
-    bool Active,
-    System.DateOnly NextGenerationDate) : RecurringRule(Id, Name, Amount, Currency, Frequency, StartDate, EndDate, CategoryId, PaymentMethodId, TagIds, Active, NextGenerationDate);
+/// <summary>Suscripción recurrente, como Netflix o internet.</summary>
+public sealed class Subscription : RecurringRule
+{
+    private Subscription() { }
+
+    public Subscription(
+        Guid id, string name, Money amount, Currency currency, string frequency,
+        DateOnly startDate, DateOnly? endDate, Guid categoryId, Guid paymentMethodId,
+        IReadOnlyList<Guid> tagIds, bool active, DateOnly nextGenerationDate)
+        : base(id, name, amount, currency, frequency, startDate, endDate,
+            categoryId, paymentMethodId, tagIds, active, nextGenerationDate)
+    {
+    }
+}

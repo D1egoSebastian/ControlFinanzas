@@ -23,6 +23,8 @@ public sealed class FakeRecurringRuleRepository : IRecurringRuleRepository
     /// </summary>
     public Result AddResult { get; set; } = Result.Success(null!);
 
+    public void Seed(RecurringRule rule) => _rules.Add(rule);
+
     /// <inheritdoc />
     public Task<Result> AddAsync(RecurringRule rule, CancellationToken ct = default)
     {

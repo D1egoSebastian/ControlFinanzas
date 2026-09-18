@@ -322,7 +322,7 @@ historia sin moneda quedaría mal modelada).
 
 ---
 
-### Fase 6 — Recurrentes: suscripciones y gastos fijos
+### Fase 6 — Recurrentes: suscripciones y gastos fijos ✅ COMPLETADA (2026-09-17)
 
 **Objetivo**
 Permitir crear suscripciones y gastos fijos recurrentes, generar los
@@ -337,7 +337,8 @@ botón manual (no background job todavía) para mantener el comportamiento
 explícito.
 
 **Dependencias**
-- Fase 4.
+- Fases 4 y 5. Phase 5 debe estar cerrada porque las reglas recurrentes
+  reutilizan `Money`, `Currency` y `PaymentMethodId`.
 
 **Entregables esperados**
 - `RecurringRule` (base), `Subscription`, `FixedExpense` en `Domain`.
@@ -361,6 +362,25 @@ explícito.
 - Crear una suscripción mensual, generar el mes, ver el gasto, editar
   el monto, saltar el mes siguiente.
 - Tests de la calculadora cubren al menos 10 escenarios de fecha.
+
+**Estado actual (2026-09-17) — ✅ FASE COMPLETADA**
+- ✅ 6-001 `RecurringOccurrenceCalculator` (16 casos de fecha en `RecurringOccurrenceCalculatorTests`).
+- ✅ 6-002 `RecurringRule` fortalecida con factory `Create` + invariantes (19 tests).
+- ✅ 6-003 `IRecurringRuleRepository` + EF Core TPH + migración `20260910205248_AddRecurringRules`.
+- ✅ 6-004 `CreateSubscriptionUseCase` + `UpdateSubscriptionUseCase` (backend + tests).
+- ✅ 6-005 `GenerateDueRecurringUseCase` con preview/confirmación idempotente (no duplica en confirmaciones repetidas).
+- ✅ 6-006 UI unificada Subscription + FixedExpense (`RecurringRulesViewModel` + `RecurringRulesView.axaml`):
+  crear/editar/desactivar/eliminar/saltar.
+- ✅ 6-007 Sección "Generar del mes" integrada en `RecurringRulesView` con preview y confirmación.
+- ✅ 6-008 CRUD completo de `FixedExpense` (Create/Update/Delete/Deactivate) con tests.
+- ✅ Provenance: `Expense.RecurringRuleId`/`RecurringPeriod` (migración `20260912150000_AddRecurringExpenseProvenance`);
+  editar un movimiento generado no muta la regla origen.
+- ✅ Gates: build limpio, 614/614 tests verdes (492 unit + 122 integration), `dotnet format style` limpio, NetArchTest 11/11.
+- ✅ SDD archivado: `spec/features/phase-06/F-001-recurring-rules.done.md`.
+
+Detalle operativo: `spec/features/phase-06/F-001-recurring-rules.spec.md`,
+`tasks/phase-06/F-001-recurring-rules.tasks.md`,
+`.atl/sdd/f-006p6-formalize-recurrentes/`.
 
 ---
 
@@ -1003,8 +1023,10 @@ guardadas, multi-moneda, tema, idioma, backup/restore.
 No todas las fases son secuenciales. Estas se pueden solapar sin riesgo
 siempre que las dependencias estén terminadas:
 
-- **Fase 5 (multi-moneda) en paralelo con fase 6 (recurrentes)** — ambas
-  solo comparten `Transaction`, no se pisan.
+- **Fase 5 → Fase 6** — Phase 6 se ejecuta después de multi-moneda porque
+  las suscripciones y gastos fijos reutilizan `Money`, `Currency` y
+  `PaymentMethodId`. Se elimina la alternativa paralela que contradice el
+  contrato de dependencias de Phase 6.
 - **Fase 8 (visualizaciones) y fase 10 (presupuestos)** — los
   presupuestos pueden desarrollarse en paralelo si se acuerda el
   contrato del evaluador desde el inicio.
@@ -1046,3 +1068,7 @@ de 2+.
 - `spec/constitution/tech-stack.md` — stack y convenciones.
 - `spec/constitution/features/` — features individuales (se poblará
   fase por fase, una Specification por fase).
+
+---
+
+*Last reviewed: 2026-09-17.*

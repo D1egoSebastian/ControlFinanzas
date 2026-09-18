@@ -1,4 +1,5 @@
 using ControlDeFinanzasIA.Domain.Catalog;
+using ControlDeFinanzasIA.Domain.Recurring;
 using ControlDeFinanzasIA.Domain.Transactions;
 using ControlDeFinanzasIA.Domain.Views;
 using Microsoft.EntityFrameworkCore;
@@ -75,6 +76,9 @@ public class AppDbContext : DbContext
     /// </summary>
     public DbSet<SavedView> SavedViews => Set<SavedView>();
 
+    /// <summary>Conjunto de reglas recurrentes.</summary>
+    public DbSet<RecurringRule> RecurringRules => Set<RecurringRule>();
+
     /// <summary>
     /// Configura el modelo de EF Core aplicando las configuraciones de
     /// entidades del assembly actual y los datos iniciales del sistema.
@@ -82,6 +86,9 @@ public class AppDbContext : DbContext
     /// <param name="modelBuilder">Constructor del modelo de EF Core.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<RecurringRule>();
+        modelBuilder.Entity<Subscription>();
+        modelBuilder.Entity<FixedExpense>();
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
         SeedData.Apply(modelBuilder);
     }

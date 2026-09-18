@@ -14,7 +14,9 @@ public sealed class ExpenseSchemaTests
 {
     /// <summary>
     /// ST-1: tras aplicar las migraciones, la tabla <c>Expenses</c>
-    /// existe en SQLite con las 10 columnas esperadas.
+    /// existe en SQLite con las 12 columnas esperadas (incluye
+    /// <c>RecurringRuleId</c> y <c>RecurringPeriod</c> del provenance
+    /// de movimientos auto-generados, Fase 6).
     /// </summary>
     [Fact]
     public async Task Migrate_CreatesExpensesTable()
@@ -32,8 +34,10 @@ public sealed class ExpenseSchemaTests
         List<string> columns = await QueryStringsAsync(
             context,
             "SELECT name FROM pragma_table_info('Expenses') ORDER BY name;");
-        Assert.Equal(10, columns.Count);
+        Assert.Equal(12, columns.Count);
         Assert.Contains("PaymentMethodId", columns);
+        Assert.Contains("RecurringRuleId", columns);
+        Assert.Contains("RecurringPeriod", columns);
     }
 
     /// <summary>
@@ -84,6 +88,7 @@ public sealed class ExpenseSchemaTests
         Assert.Contains("IX_Expenses_Date", indexNames);
         Assert.Contains("IX_Expenses_CategoryId", indexNames);
         Assert.Contains("IX_Expenses_PaymentMethodId", indexNames);
+        Assert.Contains("IX_Expenses_RecurringRuleId_RecurringPeriod", indexNames);
     }
 
     /// <summary>

@@ -77,6 +77,7 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence;
         services.AddScoped<IIncomeRepository, IncomeRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<ISavedViewRepository, SavedViewRepository>();
+        services.AddScoped<IRecurringRuleRepository, RecurringRuleRepository>();
 
         return services;
     }

@@ -127,6 +127,9 @@ public sealed class FakeExpenseRepository : IExpenseRepository
         return Task.FromResult<Expense?>(_addedExpenses.FirstOrDefault(e => e.Id == id));
     }
 
+    public Task<Expense?> GetByRecurringRuleAndPeriodAsync(Guid recurringRuleId, DateOnly period, CancellationToken ct = default)
+        => Task.FromResult<Expense?>(_addedExpenses.FirstOrDefault(e => e.RecurringRuleId == recurringRuleId && e.RecurringPeriod == period));
+
     /// <inheritdoc />
     public Task<IReadOnlyList<Expense>> GetAllAsync(CancellationToken ct = default)
         => Task.FromResult<IReadOnlyList<Expense>>(Array.Empty<Expense>());

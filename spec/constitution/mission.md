@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Construir una aplicación de escritorio para Windows que ayude a los usuarios a administrar sus finanzas personales mediante el registro de ingresos y gastos, visualización de estadísticas y generación de presupuestos inteligentes utilizando un modelo de lenguaje (LLM).
+Construir una aplicación de escritorio multiplataforma que ayude a los usuarios a administrar sus finanzas personales mediante el registro de ingresos y gastos, visualización de estadísticas y generación de presupuestos inteligentes utilizando un modelo de lenguaje (LLM).
 
 ---
 
@@ -20,7 +20,7 @@ Construir una aplicación de escritorio para Windows que ayude a los usuarios a 
 # Tecnologías
 
 UI
-- WPF (.NET 8)
+- Avalonia (.NET 8)
 - MVVM
 
 Persistencia

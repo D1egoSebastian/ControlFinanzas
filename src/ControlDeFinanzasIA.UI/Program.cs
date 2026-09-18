@@ -31,6 +31,7 @@ internal static class Program
             optional: true,
             reloadOnChange: true);
 
+        builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
 
         Bootstrap.ConfigureServices(builder.Services, builder.Configuration);

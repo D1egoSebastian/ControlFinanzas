@@ -141,6 +141,9 @@ public sealed class ExpenseRepository : IExpenseRepository
             .FirstOrDefaultAsync(e => e.Id == id, ct);
     }
 
+    public Task<Expense?> GetByRecurringRuleAndPeriodAsync(Guid recurringRuleId, DateOnly period, CancellationToken ct = default) =>
+        _db.Expenses.FirstOrDefaultAsync(e => e.RecurringRuleId == recurringRuleId && e.RecurringPeriod == period, ct);
+
     /// <summary>
     /// Obtiene todos los <see cref="Expense"/> ordenados por fecha
     /// descendente, con <see cref="Expense.CreatedAt"/> descendente

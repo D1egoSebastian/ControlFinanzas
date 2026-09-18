@@ -239,6 +239,64 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                     b.ToTable("Tags", (string)null);
                 });
 
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Recurring.RecurringRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Currency")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Frequency")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("NextGenerationDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PaymentMethodId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RuleType")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TagIds")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Active");
+
+                    b.HasIndex("NextGenerationDate");
+
+                    b.ToTable("RecurringRules", (string)null);
+
+                    b.HasDiscriminator<string>("RuleType").HasValue("RecurringRule");
+
+                    b.UseTphMappingStrategy();
+                });
+
             modelBuilder.Entity("ControlDeFinanzasIA.Domain.Transactions.Expense", b =>
                 {
                     b.Property<Guid>("Id")
@@ -390,6 +448,48 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                     b.HasIndex("TagId");
 
                     b.ToTable("IncomeTags", (string)null);
+                });
+
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Recurring.FixedExpense", b =>
+                {
+                    b.HasBaseType("ControlDeFinanzasIA.Domain.Recurring.RecurringRule");
+
+                    b.HasDiscriminator().HasValue("FixedExpense");
+                });
+
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Recurring.Subscription", b =>
+                {
+                    b.HasBaseType("ControlDeFinanzasIA.Domain.Recurring.RecurringRule");
+
+                    b.HasDiscriminator().HasValue("Subscription");
+                });
+
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Recurring.RecurringRule", b =>
+                {
+                    b.OwnsOne("ControlDeFinanzasIA.Domain.ValueObjects.Money", "Amount", b1 =>
+                        {
+                            b1.Property<Guid>("RecurringRuleId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("Amount");
+
+                            b1.Property<int>("Currency")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("AmountCurrency");
+
+                            b1.HasKey("RecurringRuleId");
+
+                            b1.ToTable("RecurringRules");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RecurringRuleId");
+                        });
+
+                    b.Navigation("Amount")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ControlDeFinanzasIA.Domain.Transactions.Expense", b =>

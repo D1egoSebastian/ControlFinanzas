@@ -11,7 +11,10 @@ the project state changes, update this file.
   **Entity Framework Core** (Code First, versioned migrations),
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
-- **Status (today):** Phases 1, 2, 3, 4, and **5 fully archived**.
+- **Status (today):** Phases 1, 2, 3, 4, and **5 fully archived**. Phase 6 is in progress:
+  F6-001/F6-002 are complete, while F6-003 persistence and the F6-004
+  Subscription create/update demo slice and initial Subscription UI are
+  implemented; generation and FixedExpense remain pending.
   Phase 3 slice vertical of `Expense` complete and verified. Phase 4
   UI capstone F-008 delivered via 4 chained PRs + 1 fix-PR with
   BOLD "Libro Mayor" design pass (verdict PASS WITH WARNINGS, 5 minor

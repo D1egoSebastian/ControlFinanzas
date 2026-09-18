@@ -21,18 +21,18 @@ public sealed class RecurringOccurrenceCalculatorTests
         bool active = true)
     {
         return new Subscription(
-            Id: Guid.NewGuid(),
-            Name: "Test Rule",
-            Amount: Money.Create(100m, Currency.DOP),
-            Currency: Currency.DOP,
-            Frequency: frequency,
-            StartDate: startDate,
-            EndDate: endDate,
-            CategoryId: Guid.NewGuid(),
-            PaymentMethodId: Guid.NewGuid(),
-            TagIds: Array.Empty<Guid>(),
-            Active: active,
-            NextGenerationDate: startDate);
+            id: Guid.NewGuid(),
+            name: "Test Rule",
+            amount: Money.Create(100m, Currency.DOP),
+            currency: Currency.DOP,
+            frequency: frequency,
+            startDate: startDate,
+            endDate: endDate,
+            categoryId: Guid.NewGuid(),
+            paymentMethodId: Guid.NewGuid(),
+            tagIds: Array.Empty<Guid>(),
+            active: active,
+            nextGenerationDate: startDate);
     }
 
     [Fact]

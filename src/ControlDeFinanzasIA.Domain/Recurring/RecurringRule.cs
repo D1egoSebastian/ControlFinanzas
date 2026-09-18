@@ -15,8 +15,8 @@ namespace ControlDeFinanzasIA.Domain.Recurring;
 /// (Name, Amount, Frequency, StartDate, EndDate, etc.) y garantiza
 /// sus invariantes via factory <see cref="Create"/> y método
 /// <see cref="Update"/>. Las clases concretas (<see cref="Subscription"/>,
-/// <see cref="FixedExpense"/>) son records vacíos que solo
-/// distinguen el tipo para UI/consultas.
+/// <see cref="FixedExpense"/>) son tipos concretos que distinguen
+/// el tipo para UI/consultas y para la discriminación TPH de EF Core.
 /// </para>
 /// <para>
 /// <b>Invariantes:</b>
@@ -33,13 +33,13 @@ namespace ControlDeFinanzasIA.Domain.Recurring;
 /// </para>
 /// <para>
 /// <b>Patrón de persistencia:</b> las propiedades usan
-/// <c>init</c> para que EF Core pueda materializar la entidad via
-/// object initializer (después del constructor sin parámetros).
+/// setters privados y constructores sin parámetros para que EF Core
+/// pueda materializar la entidad sin exponer mutabilidad al exterior.
 /// El factory estático <see cref="Create"/> valida las invariantes
 /// antes de asignar.
 /// </para>
 /// </remarks>
-public abstract record RecurringRule
+public abstract class RecurringRule
 {
     /// <summary>Longitud maxima del nombre.</summary>
     public const int MaxNameLength = 100;
@@ -173,18 +173,8 @@ public abstract record RecurringRule
         IReadOnlyList<Guid> safeTags = tagIds ?? Array.Empty<Guid>();
 
         return new Subscription(
-            Id: Guid.NewGuid(),
-            Name: normalizedName,
-            Amount: amount,
-            Currency: currency,
-            Frequency: normalizedFrequency,
-            StartDate: startDate,
-            EndDate: endDate,
-            CategoryId: categoryId,
-            PaymentMethodId: paymentMethodId,
-            TagIds: safeTags,
-            Active: true,
-            NextGenerationDate: startDate);
+            Guid.NewGuid(), normalizedName, amount, currency, normalizedFrequency,
+            startDate, endDate, categoryId, paymentMethodId, safeTags, true, startDate);
     }
 
     /// <summary>
