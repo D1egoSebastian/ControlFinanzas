@@ -1,9 +1,11 @@
 using System.Threading;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
 using ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 using ControlDeFinanzasIA.UI.Navigation;
-using ControlDeFinanzasIA.UI.Resources;
 using ControlDeFinanzasIA.UI.ViewModels;
-using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace ControlDeFinanzasIA.Tests.Unit.UI;
@@ -110,7 +112,19 @@ public sealed class NavigationServiceTests
     }
 
     private static DashboardViewModel CreateDashboardViewModel()
-        => new(new FakeStringLocalizer<Strings>());
+    {
+        FakeExpenseRepository expenseRepo = new();
+        FakeIncomeRepository incomeRepo = new();
+        FakeCurrencyConverter converter = new();
+        FakeClock clock = new() { Today = new DateOnly(2026, 3, 15) };
+
+        return new DashboardViewModel(
+            new GetMonthSummaryQuery(expenseRepo, incomeRepo, converter),
+            new GetCategoryBreakdownQuery(expenseRepo, converter),
+            new GetMonthlyEvolutionQuery(expenseRepo, incomeRepo, converter),
+            clock,
+            NullLogger<DashboardViewModel>.Instance);
+    }
 
     private sealed class FakeServiceProvider : IServiceProvider
     {

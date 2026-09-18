@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             x:Class="ControlDeFinanzasIA.UI.Views.Charts.MonthlyEvolutionChart"
+             x:Name="Root">
+    <!--
+        Thin wrapper around LiveCharts2's CartesianChart (D-7): owns the
+        empty-state overlay so DashboardView.axaml does not duplicate it
+        for both charts. Bind Series/XAxes from the ViewModel; IsEmpty
+        drives which of the two children is shown.
+    -->
+    <Grid MinHeight="220">
+        <lvc:CartesianChart Series="{Binding #Root.Series}"
+                             XAxes="{Binding #Root.XAxes}"
+                             IsVisible="{Binding !#Root.IsEmpty}" />
+        <TextBlock Text="{Binding #Root.EmptyText}"
+                   IsVisible="{Binding #Root.IsEmpty}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Foreground="{StaticResource PaperDimBrush}"
+                   TextWrapping="Wrap" />
+    </Grid>
+</UserControl>

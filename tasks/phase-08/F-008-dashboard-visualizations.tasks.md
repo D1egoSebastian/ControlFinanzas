@@ -137,19 +137,40 @@ Depende del slice 1. Introduce LiveCharts2 y reescribe
 dependen del periodo navegado. **No** incluye "Próximos pagos" todavía
 (slice 3).
 
-- [ ] 2.1 Agregar referencia al paquete
+- [x] 2.1 Agregar referencia al paquete
   `LiveChartsCore.SkiaSharpView.Avalonia` versión `2.0.5`:
   `<PackageVersion>` en `Directory.Packages.props` con comentario
   justificando la versión (CPM, sin `Version` en el csproj) +
   `<PackageReference>` en `ControlDeFinanzasIA.UI.csproj`. (R-8)
-- [ ] 2.2 Chequeo temprano de renderizado cross-OS: levantar un
+  (`Directory.Packages.props` — `<PackageVersion Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.5" />`
+  con comentario justificando la versión; `ControlDeFinanzasIA.UI.csproj` —
+  `<PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" />` sin
+  `Version`. Verificado por `dotnet restore` (paquete + dependencias
+  transitivas `LiveChartsCore`/`LiveChartsCore.SkiaSharpView` resueltas sin
+  error) y por `dotnet build -c Release` en verde.)
+- [x] 2.2 Chequeo temprano de renderizado cross-OS: levantar un
   `CartesianChart`/`PieChart` mínimo de LiveCharts en la app y confirmar que
   renderiza en la(s) plataforma(s) disponibles en este entorno, **antes**
   de construir el resto del layout — per design.md, hacerlo temprano, no al
   final. Manual (Avalonia no tiene runner headless en este entorno, mismo
   caveat que Fase 7 §5.1). (R-8, criterio de aceptación "renderiza en
   Windows/macOS/Linux")
-- [ ] 2.3 Crear `GetMonthSummaryQuery` + `MonthSummaryResult` en
+  (Se construyeron `CategoryBreakdownChart`/`MonthlyEvolutionChart`
+  envolviendo `PieChart`/`CartesianChart` y se corrió
+  `dotnet build src/ControlDeFinanzasIA.UI/ControlDeFinanzasIA.UI.csproj`
+  **antes** de escribir `DashboardView.axaml`/`DashboardViewModel`,
+  confirmando que el compilador de AXAML de Avalonia resuelve los tipos de
+  LiveCharts2 (`lvc:PieChart`, `lvc:CartesianChart`) y que el build no falla
+  al referenciarlos. **Límite real de este entorno**: no hay Windows
+  Desktop/X11/macOS con GPU disponible para levantar la ventana y verificar
+  renderizado a ojo — mismo caveat manual/best-effort documentado en Fase 7
+  §5.1. No se pudo confirmar visualmente que los charts pintan píxeles en
+  pantalla; sí se confirmó que compilan, que el paquete trae los assets
+  nativos de SkiaSharp para win-x64/osx/linux-x64 vía sus dependencias
+  transitivas, y que los controles se instancian sin excepción de tipo en
+  tiempo de compilación de AXAML (que ya ejecuta parte de la resolución de
+  propiedades `Series`/`XAxes`).)
+- [x] 2.3 Crear `GetMonthSummaryQuery` + `MonthSummaryResult` en
   `Application/UseCases/Dashboard/GetMonthSummary/`: deriva rango del mes
   seleccionado y del mes anterior, convierte cada bucket por moneda con
   `ICurrencyConverter.ConvertAsync(money, Currency.DOP, ct)` (no
@@ -158,19 +179,52 @@ dependen del periodo navegado. **No** incluye "Próximos pagos" todavía
   `HasMissingRates`. Tests unitarios: delta positivo/negativo/mes anterior
   en 0 → null, exclusión por fallo de FX sin excepción. (R-2, R-3, R-7, S-1,
   S-6)
-- [ ] 2.4 Crear `GetCategoryBreakdownQuery` + `CategoryBreakdownResult` en
+  (`Application/UseCases/Dashboard/GetMonthSummary/{GetMonthSummaryQuery,MonthSummaryResult}.cs`
+  — `tests/…Tests.Unit/Application/Dashboard/GetMonthSummaryQueryTests.cs`,
+  6 tests: `ExecuteAsync_MixedCurrencies_NormalizesEverythingToDop` (S-1),
+  `ExecuteAsync_ExpensesIncreasedVsPreviousMonth_ReturnsPositiveDelta`,
+  `ExecuteAsync_ExpensesDecreasedVsPreviousMonth_ReturnsNegativeDelta`,
+  `ExecuteAsync_PreviousMonthHadNoExpenses_ReturnsNullDelta`,
+  `ExecuteAsync_FxConversionFails_ExcludesBucketAndSetsHasMissingRatesWithoutThrowing`
+  (S-6), `ExecuteAsync_MonthWithNoTransactions_ReturnsZeroSummaryWithoutThrowing`
+  (S-3). Usa `ICurrencyConverter.ConvertAsync` — confirmado leyendo
+  `CurrencyConverter.cs:141-143` que `DisplayAsync` habría convertido DOP→USD
+  en vez de normalizar a DOP.)
+- [x] 2.4 Crear `GetCategoryBreakdownQuery` + `CategoryBreakdownResult` en
   `Application/UseCases/Dashboard/GetCategoryBreakdown/`: trae **todas** las
   categorías del periodo desde `GetCategoryTotalsAsync`, normaliza a DOP,
   rankea y arma "Otras" en la Query (no en SQL, per D-2) — top 5 + "Otras"
   cuando hay más de 5. Tests unitarios: empate en el ranking, <5 categorías
   → sin "Otras", suma de slices == `TotalDop`. (R-3, R-4, S-4)
-- [ ] 2.5 Crear `GetMonthlyEvolutionQuery` + `MonthlyEvolutionResult` en
+  (`Application/UseCases/Dashboard/GetCategoryBreakdown/{GetCategoryBreakdownQuery,CategoryBreakdownResult}.cs`
+  — `tests/…Tests.Unit/Application/Dashboard/GetCategoryBreakdownQueryTests.cs`,
+  6 tests: `ExecuteAsync_SevenCategories_ReturnsTop5PlusOtras` (S-4),
+  `ExecuteAsync_FewerThanTopCountCategories_ReturnsNoOtrasSlice`,
+  `ExecuteAsync_SlicesSum_ReconcilesWithTotalDop`,
+  `ExecuteAsync_TiedAmountsAtRankingBoundary_IncludesBothDeterministically`
+  (empate en el ranking, desempate determinístico por nombre vía
+  `ThenBy(c => c.Label, StringComparer.Ordinal)` para no depender del orden
+  de iteración de un `Dictionary`),
+  `ExecuteAsync_FxConversionFails_ExcludesBucketAndSetsHasMissingRatesWithoutThrowing`,
+  `ExecuteAsync_MonthWithNoExpenses_ReturnsEmptySlicesWithoutThrowing` (S-3).
+  **Desviación menor de design.md**: la etiqueta "Otras" se hardcodea como
+  constante privada en Application (`_otherCategoryLabel`) porque esta capa
+  no tiene acceso a `IStringLocalizer`/Avalonia (prohibido por
+  `ArchitectureTests`); documentado en el XML doc de la clase.)
+- [x] 2.5 Crear `GetMonthlyEvolutionQuery` + `MonthlyEvolutionResult` en
   `Application/UseCases/Dashboard/GetMonthlyEvolution/`: ventana de
   `DashboardDefaults.EvolutionMonths` (6) meses consecutivos terminando en
   el mes seleccionado, vía `MonthPeriod.TrailingRange`; rellena con 0 los
   meses sin filas (zero-fill, mantiene el eje X estable). Tests unitarios:
   6 puntos incluso con solo 2 meses de datos. (R-3, R-5, S-3)
-- [ ] 2.6 Reescribir `DashboardViewModel`
+  (`Application/UseCases/Dashboard/GetMonthlyEvolution/{GetMonthlyEvolutionQuery,MonthlyEvolutionResult}.cs`
+  — `tests/…Tests.Unit/Application/Dashboard/GetMonthlyEvolutionQueryTests.cs`,
+  3 tests: `ExecuteAsync_OnlyTwoMonthsHaveData_ReturnsSixZeroFilledPointsInOrder`
+  (6 puntos con solo 2 meses de datos, orden cronológico Oct 2025..Mar 2026),
+  `ExecuteAsync_NoDataAtAll_ReturnsSixZeroPointsWithoutThrowing` (S-3),
+  `ExecuteAsync_FxConversionFails_ExcludesBucketAndSetsHasMissingRatesWithoutThrowing`
+  (S-6).)
+- [x] 2.6 Reescribir `DashboardViewModel`
   (`src/ControlDeFinanzasIA.UI/ViewModels/DashboardViewModel.cs`):
   `SelectedMonth`/`SelectedMonthLabel`, comandos
   `PreviousMonth`/`NextMonth`/`Refresh`, `IsLoading`/`LoadError`,
@@ -182,26 +236,76 @@ dependen del periodo navegado. **No** incluye "Próximos pagos" todavía
   `ILogger`, arranca con `SelectedMonth = MonthPeriod.Anchor(_clock.Today)`
   y `_ = LoadAsync()` (mismo patrón que `RecurringRulesViewModel`). Sin
   "Próximos pagos" todavía. (R-1, R-2)
-- [ ] 2.7 Tests de `DashboardViewModel`: navegar mes anterior/siguiente
+  (`UI/ViewModels/DashboardViewModel.cs` — reescritura completa, verificada
+  por `tests/…Tests.Unit/UI/DashboardViewModelTests.cs` (ver 2.7) y por el
+  build en verde. **Desviaciones de design.md, ambas documentadas también
+  en el reporte final:** (a) el formato `≈ {N2} DOP` se aplica siempre a
+  los 3 montos del resumen, no condicionalmente "solo si el periodo tuvo
+  filas no-DOP" — `MonthSummaryResult` no lleva ese flag adicional y una
+  cifra agregada normalizada siempre es, semánticamente, una aproximación;
+  (b) `Bootstrap.cs` registra las 3 queries de este slice como
+  `AddTransient<>` ahora (no en 3.6 como dice la tabla de archivos), porque
+  sin el registro el contenedor de DI no puede resolver
+  `DashboardViewModel` y la app no arrancaría — 3.6 solo añadirá
+  `GetUpcomingPaymentsQuery` cuando exista.)
+- [x] 2.7 Tests de `DashboardViewModel`: navegar mes anterior/siguiente
   recalcula resumen + ambos gráficos (S-2, parte dependiente del periodo);
   carga concurrente de las 3 queries vía `Task.WhenAll`.
   (`tests/…Tests.Unit/UI/DashboardViewModelTests.cs`) (R-1)
-- [ ] 2.8 Reescribir `DashboardView.axaml(.cs)`: cabecera con navegación de
+  (4 tests: `RefreshCommand_PopulatesSummaryCategoryBreakdownAndEvolutionTogether`
+  (las 3 queries del `Task.WhenAll` aportan al mismo snapshot coherente),
+  `PreviousMonthCommand_RecalculatesSummaryAndBothCharts`,
+  `NextMonthCommand_RecalculatesSummaryAndBothCharts` (S-2),
+  `RefreshCommand_FxConversionFails_SetsHasMissingRatesAndDoesNotThrow`
+  (S-6, a nivel ViewModel).)
+- [x] 2.8 Reescribir `DashboardView.axaml(.cs)`: cabecera con navegación de
   periodo, tarjeta de resumen, ubicación de los dos gráficos, bindings de
   estado vacío (`IsVisible="{Binding !Collection.Count}"`, mismo patrón que
   `RecurringRulesView.axaml:79`), aviso de "tasa no disponible" cuando
   `HasMissingRates`. (R-1, R-2, R-7)
-- [ ] 2.9 Crear `CategoryBreakdownChart` (UserControl,
+  (`UI/Views/DashboardView.axaml(.cs)` — reescritura completa: header con
+  `PreviousMonthCommand`/`NextMonthCommand`/`RefreshCommand`, tarjeta de
+  resumen (3 columnas), notice de `HasMissingRates`, dos `Border` con los
+  charts. El binding de estado vacío (`!CategorySlices.Count` /
+  `!EvolutionPoints.Count`) se pasa como `IsEmpty` a los `UserControl` de
+  2.9/2.10 en vez de duplicar el `TextBlock` de "sin datos" en esta vista
+  (ver D-7 en 2.9). Verificado por el compilador de AXAML de Avalonia
+  (`dotnet build -c Release` en verde, sin errores `AVLN2000`).)
+- [x] 2.9 Crear `CategoryBreakdownChart` (UserControl,
   `UI/Views/Charts/CategoryBreakdownChart.axaml(.cs)`): envuelve
   `PieChart`, expone `StyledProperty` de entrada, overlay de estado vacío
   propio (per D-7 — dos controles delgados, no uno parametrizado). (R-4,
   R-8)
-- [ ] 2.10 Crear `MonthlyEvolutionChart` (UserControl,
+  (`UI/Views/Charts/CategoryBreakdownChart.axaml(.cs)` —
+  `StyledProperty<IEnumerable<ISeries>?> Series`,
+  `StyledProperty<bool> IsEmpty`, `StyledProperty<string> EmptyText`; el
+  overlay de estado vacío (`TextBlock` vs. `PieChart`, alternados por
+  `IsEmpty`) vive dentro del control, no en `DashboardView.axaml` — la
+  razón explícita de D-7 para rechazar "sin wrapper". Verificado por
+  compilación del AXAML.)
+- [x] 2.10 Crear `MonthlyEvolutionChart` (UserControl,
   `UI/Views/Charts/MonthlyEvolutionChart.axaml(.cs)`): envuelve
   `CartesianChart`, `StyledProperty` de entrada, overlay de estado vacío
   propio. (R-5, R-8)
-- [ ] 2.11 Localización: etiquetas de los widgets y textos de estado vacío
+  (`UI/Views/Charts/MonthlyEvolutionChart.axaml(.cs)` — mismo patrón que
+  2.9, con `StyledProperty<IEnumerable<ISeries>?> Series` +
+  `StyledProperty<IEnumerable<ICartesianAxis>?> XAxes` adicional para los
+  meses del eje X. Verificado por compilación del AXAML.)
+- [x] 2.11 Localización: etiquetas de los widgets y textos de estado vacío
   en `UI/Resources/Strings.resx` y `Strings.es-DO.resx`. (R-7)
+  (13 claves nuevas añadidas a `Strings.resx` (inglés) y
+  `Strings.es-DO.resx` (español) — navegación de periodo, las 3 etiquetas
+  de la tarjeta de resumen, títulos de los 2 gráficos, 2 mensajes de estado
+  vacío, aviso de tasa no disponible y mensaje de error de carga — todas
+  consumidas por `DashboardView.axaml` vía `{x:Static resources:Strings.X}`
+  (mismo patrón que `MainWindow.axaml:10`). **Hallazgo no anticipado**:
+  `Strings.Designer.cs` **no se regenera automáticamente** en este repo con
+  `dotnet build` (no hay un target de MSBuild para
+  `ResXFileCodeGenerator` en un csproj SDK-style plano); el build falló con
+  `AVLN2000: Unable to resolve "Strings.X"` hasta añadir a mano los 13
+  accessors `public static string X => ResourceManager.GetString("X", Culture)!;`
+  al final de la clase. Documentado aquí porque es un paso manual fácil de
+  olvidar en el próximo slice que agregue claves de localización.)
 
 ## 3. Próximos pagos
 

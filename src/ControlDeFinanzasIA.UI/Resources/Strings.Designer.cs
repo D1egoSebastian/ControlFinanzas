@@ -406,4 +406,64 @@ public class Strings
     /// Gets the localized tooltip for the lock icon on system methods.
     /// </summary>
     public static string SystemMethodLockedTooltip => ResourceManager.GetString("SystemMethodLockedTooltip", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the Dashboard's previous-month navigation button.
+    /// </summary>
+    public static string DashboardPreviousMonthButton => ResourceManager.GetString("DashboardPreviousMonthButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the Dashboard's next-month navigation button.
+    /// </summary>
+    public static string DashboardNextMonthButton => ResourceManager.GetString("DashboardNextMonthButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the Dashboard's refresh button.
+    /// </summary>
+    public static string DashboardRefreshButton => ResourceManager.GetString("DashboardRefreshButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the Dashboard's expenses summary tile.
+    /// </summary>
+    public static string DashboardExpensesLabel => ResourceManager.GetString("DashboardExpensesLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the Dashboard's incomes summary tile.
+    /// </summary>
+    public static string DashboardIncomesLabel => ResourceManager.GetString("DashboardIncomesLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the Dashboard's net-balance summary tile.
+    /// </summary>
+    public static string DashboardNetBalanceLabel => ResourceManager.GetString("DashboardNetBalanceLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the Dashboard's category-breakdown chart.
+    /// </summary>
+    public static string DashboardCategoryBreakdownTitle => ResourceManager.GetString("DashboardCategoryBreakdownTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the Dashboard's monthly-evolution chart.
+    /// </summary>
+    public static string DashboardMonthlyEvolutionTitle => ResourceManager.GetString("DashboardMonthlyEvolutionTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized empty-state message for the Dashboard's category-breakdown chart.
+    /// </summary>
+    public static string DashboardEmptyCategoryBreakdownMessage => ResourceManager.GetString("DashboardEmptyCategoryBreakdownMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized empty-state message for the Dashboard's monthly-evolution chart.
+    /// </summary>
+    public static string DashboardEmptyMonthlyEvolutionMessage => ResourceManager.GetString("DashboardEmptyMonthlyEvolutionMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized notice shown when an exchange rate was unavailable for the Dashboard.
+    /// </summary>
+    public static string DashboardMissingRatesNotice => ResourceManager.GetString("DashboardMissingRatesNotice", Culture)!;
+
+    /// <summary>
+    /// Gets the localized error message shown when the Dashboard fails to load.
+    /// </summary>
+    public static string DashboardLoadErrorMessage => ResourceManager.GetString("DashboardLoadErrorMessage", Culture)!;
 }

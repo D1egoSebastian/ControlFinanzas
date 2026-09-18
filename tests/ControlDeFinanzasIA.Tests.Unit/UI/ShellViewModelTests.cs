@@ -1,8 +1,12 @@
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
 using ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.Resources;
 using ControlDeFinanzasIA.UI.ViewModels;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace ControlDeFinanzasIA.Tests.Unit.UI;
@@ -18,7 +22,7 @@ public sealed class ShellViewModelTests
         // Arrange
         FakeNavigationService fakeNav = new(new Dictionary<string, ViewModelBase>
         {
-            { RouteNames.Dashboard, new DashboardViewModel(CreateLocalizer()) }
+            { RouteNames.Dashboard, CreateDashboardViewModel() }
         });
         ShellViewModel shell = new(fakeNav, CreateLocalizer());
         RouteMenuItem dashboardItem = new(RouteNames.Dashboard, "Panel");
@@ -51,7 +55,7 @@ public sealed class ShellViewModelTests
         // Arrange
         FakeNavigationService fakeNav = new();
         ShellViewModel shell = new(fakeNav, CreateLocalizer());
-        DashboardViewModel dashboard = new(CreateLocalizer());
+        DashboardViewModel dashboard = CreateDashboardViewModel();
 
         // Act
         fakeNav.CurrentViewModel = dashboard;
@@ -67,4 +71,19 @@ public sealed class ShellViewModelTests
             { "SidebarDashboard", "Panel" },
             { "SidebarExpenses", "Gastos" }
         });
+
+    private static DashboardViewModel CreateDashboardViewModel()
+    {
+        FakeExpenseRepository expenseRepo = new();
+        FakeIncomeRepository incomeRepo = new();
+        FakeCurrencyConverter converter = new();
+        FakeClock clock = new() { Today = new DateOnly(2026, 3, 15) };
+
+        return new DashboardViewModel(
+            new GetMonthSummaryQuery(expenseRepo, incomeRepo, converter),
+            new GetCategoryBreakdownQuery(expenseRepo, converter),
+            new GetMonthlyEvolutionQuery(expenseRepo, incomeRepo, converter),
+            clock,
+            NullLogger<DashboardViewModel>.Instance);
+    }
 }

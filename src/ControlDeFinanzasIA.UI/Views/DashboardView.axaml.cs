@@ -3,9 +3,9 @@ using Avalonia.Controls;
 namespace ControlDeFinanzasIA.UI.Views;
 
 /// <summary>
-/// Placeholder view for the dashboard content area. All content is data-bound
-/// to <see cref="DashboardViewModel.Title"/>; this code-behind contains no
-/// logic.
+/// View for the Dashboard screen (F-008, slice 2): period navigation,
+/// summary card and the two charts. All content is data-bound to
+/// <see cref="DashboardViewModel"/>; this code-behind contains no logic.
 /// </summary>
 public partial class DashboardView : UserControl
 {

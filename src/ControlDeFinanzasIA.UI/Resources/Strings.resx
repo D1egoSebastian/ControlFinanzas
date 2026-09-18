@@ -265,4 +265,40 @@ Showing approximate conversions only.
     <value>System method (cannot be deleted)
     </value>
   </data>
+  <data name="DashboardPreviousMonthButton" xml:space="preserve">
+    <value>‹ Previous</value>
+  </data>
+  <data name="DashboardNextMonthButton" xml:space="preserve">
+    <value>Next ›</value>
+  </data>
+  <data name="DashboardRefreshButton" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="DashboardExpensesLabel" xml:space="preserve">
+    <value>Expenses</value>
+  </data>
+  <data name="DashboardIncomesLabel" xml:space="preserve">
+    <value>Incomes</value>
+  </data>
+  <data name="DashboardNetBalanceLabel" xml:space="preserve">
+    <value>Net balance</value>
+  </data>
+  <data name="DashboardCategoryBreakdownTitle" xml:space="preserve">
+    <value>Expenses by category</value>
+  </data>
+  <data name="DashboardMonthlyEvolutionTitle" xml:space="preserve">
+    <value>Monthly evolution</value>
+  </data>
+  <data name="DashboardEmptyCategoryBreakdownMessage" xml:space="preserve">
+    <value>No expenses for this period.</value>
+  </data>
+  <data name="DashboardEmptyMonthlyEvolutionMessage" xml:space="preserve">
+    <value>Not enough data for the last few months.</value>
+  </data>
+  <data name="DashboardMissingRatesNotice" xml:space="preserve">
+    <value>Exchange rate unavailable for some conversions; figures may be incomplete.</value>
+  </data>
+  <data name="DashboardLoadErrorMessage" xml:space="preserve">
+    <value>The dashboard could not be loaded.</value>
+  </data>
 </root>

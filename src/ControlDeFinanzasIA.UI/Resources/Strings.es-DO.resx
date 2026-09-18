@@ -265,4 +265,40 @@ Mostrando conversiones aproximadas.
     <value>Método del sistema (no se puede eliminar)
     </value>
   </data>
+  <data name="DashboardPreviousMonthButton" xml:space="preserve">
+    <value>‹ Anterior</value>
+  </data>
+  <data name="DashboardNextMonthButton" xml:space="preserve">
+    <value>Siguiente ›</value>
+  </data>
+  <data name="DashboardRefreshButton" xml:space="preserve">
+    <value>Actualizar</value>
+  </data>
+  <data name="DashboardExpensesLabel" xml:space="preserve">
+    <value>Gastos</value>
+  </data>
+  <data name="DashboardIncomesLabel" xml:space="preserve">
+    <value>Ingresos</value>
+  </data>
+  <data name="DashboardNetBalanceLabel" xml:space="preserve">
+    <value>Balance neto</value>
+  </data>
+  <data name="DashboardCategoryBreakdownTitle" xml:space="preserve">
+    <value>Gastos por categoría</value>
+  </data>
+  <data name="DashboardMonthlyEvolutionTitle" xml:space="preserve">
+    <value>Evolución mensual</value>
+  </data>
+  <data name="DashboardEmptyCategoryBreakdownMessage" xml:space="preserve">
+    <value>Sin gastos para este periodo.</value>
+  </data>
+  <data name="DashboardEmptyMonthlyEvolutionMessage" xml:space="preserve">
+    <value>Sin suficientes datos de los últimos meses.</value>
+  </data>
+  <data name="DashboardMissingRatesNotice" xml:space="preserve">
+    <value>Tasa de cambio no disponible para algunas conversiones; las cifras podrían estar incompletas.</value>
+  </data>
+  <data name="DashboardLoadErrorMessage" xml:space="preserve">
+    <value>No se pudo cargar el dashboard.</value>
+  </data>
 </root>
