@@ -1,7 +1,7 @@
 # Fase 7 — Deudas con plan de cuotas
 
 > **Fase:** 7 — Deudas
-> **Estado:** ⏳ Scaffolding SDD listo, apply no iniciado
+> **Estado:** ✅ Apply completado (2026-09-18) — pendiente verify/archive del ciclo SDD
 > **Spec ID:** PHASE-07-PLAN
 > **Dependencias:** Phase 6 ✅ (comparte el patrón de generación y reutiliza `Money`, `Currency`, `PaymentMethodId`)
 > **Roadmap:** `docs/roadmap.md` §Fase 7 (líneas ~383–424)
@@ -60,14 +60,14 @@ Application/UseCases/Debts/
 
 | ID | Slice | Estimación | Estado |
 | --- | --- | --- | --- |
-| 7-001 | `Debt` + `DebtPayment` entidades, invariantes, tests | M | ⏳ |
-| 7-002 | `DebtScheduleGenerator` (servicio de dominio puro) + tests (≥10 escenarios: mensual, quincenal, con/sin saltos, 1 cuota, N cuotas) | M | ⏳ |
-| 7-003 | `IDebtRepository` + `IDebtPaymentRepository` + EF Core config + migración | M | ⏳ |
-| 7-004 | `CreateDebtWithScheduleUseCase` + tests | M | ⏳ |
-| 7-005 | `RegisterDebtPaymentUseCase` (pago total; parcial fuera de alcance v1) + `SkipDebtPaymentUseCase` + tests | M | ⏳ |
-| 7-006 | Cierre automático de la deuda al pagar la última cuota + test de consistencia de saldo | S | ⏳ |
-| 7-007 | UI: lista de deudas + detalle con calendario de cuotas + registro de pago | L | ⏳ |
-| 7-008 | Integración con "Generar del mes" de Fase 6: las `DebtPayment` del mes visibles junto a recurrentes (decisión de diseño: ¿pantalla compartida o separada?) | M | ⏳ |
+| 7-001 | `Debt` + `DebtPayment` entidades, invariantes, tests | M | ✅ Completada |
+| 7-002 | `DebtScheduleGenerator` (servicio de dominio puro) + tests (≥10 escenarios: mensual, quincenal, con/sin saltos, 1 cuota, N cuotas) | M | ✅ Completada |
+| 7-003 | `IDebtRepository` + `IDebtPaymentRepository` + EF Core config + migración | M | ✅ Completada |
+| 7-004 | `CreateDebtWithScheduleUseCase` + tests | M | ✅ Completada |
+| 7-005 | `RegisterDebtPaymentUseCase` (pago total; parcial fuera de alcance v1) + `SkipDebtPaymentUseCase` + tests | M | ✅ Completada |
+| 7-006 | Cierre automático de la deuda al pagar la última cuota + test de consistencia de saldo | S | ✅ Completada |
+| 7-007 | UI: lista de deudas + detalle con calendario de cuotas + registro de pago | L | ✅ Completada |
+| 7-008 | Integración con "Generar del mes" de Fase 6: las `DebtPayment` del mes visibles junto a recurrentes (decisión de diseño: ¿pantalla compartida o separada?) | M | ✅ Completada — decisión: pantalla `DebtsView` separada (ver §6) |
 
 ## 5. Criterios de fase completada
 

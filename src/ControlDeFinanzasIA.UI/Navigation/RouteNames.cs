@@ -25,4 +25,9 @@ public static class RouteNames
     public const string Incomes = "Incomes";
 
     public const string Recurring = "Recurring";
+
+    /// <summary>
+    /// The debts route (consumed by F-001 of Phase 7).
+    /// </summary>
+    public const string Debts = "Debts";
 }

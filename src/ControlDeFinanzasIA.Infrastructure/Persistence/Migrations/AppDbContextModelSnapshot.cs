@@ -239,6 +239,80 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                     b.ToTable("Tags", (string)null);
                 });
 
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Debts.Debt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CounterpartyName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Currency")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Frequency")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TotalInstallments")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("Debts", (string)null);
+                });
+
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Debts.DebtPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DebtId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("InstallmentNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly?>("PaidDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("ScheduledDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DebtId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("DebtId", "InstallmentNumber")
+                        .IsUnique();
+
+                    b.ToTable("DebtPayments", (string)null);
+                });
+
             modelBuilder.Entity("ControlDeFinanzasIA.Domain.Recurring.RecurringRule", b =>
                 {
                     b.Property<Guid>("Id")
@@ -323,6 +397,12 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("PaymentMethodId")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateOnly?>("RecurringPeriod")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("RecurringRuleId")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
 
@@ -333,6 +413,9 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                     b.HasIndex("Date");
 
                     b.HasIndex("PaymentMethodId");
+
+                    b.HasIndex("RecurringRuleId", "RecurringPeriod")
+                        .IsUnique();
 
                     b.ToTable("Expenses", (string)null);
                 });
@@ -462,6 +545,93 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                     b.HasBaseType("ControlDeFinanzasIA.Domain.Recurring.RecurringRule");
 
                     b.HasDiscriminator().HasValue("Subscription");
+                });
+
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Debts.Debt", b =>
+                {
+                    b.OwnsOne("ControlDeFinanzasIA.Domain.ValueObjects.Money", "InstallmentAmount", b1 =>
+                        {
+                            b1.Property<Guid>("DebtId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("InstallmentAmount");
+
+                            b1.Property<int>("Currency")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("InstallmentAmountCurrency");
+
+                            b1.HasKey("DebtId");
+
+                            b1.ToTable("Debts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DebtId");
+                        });
+
+                    b.OwnsOne("ControlDeFinanzasIA.Domain.ValueObjects.Money", "OriginalAmount", b1 =>
+                        {
+                            b1.Property<Guid>("DebtId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("OriginalAmount");
+
+                            b1.Property<int>("Currency")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("OriginalAmountCurrency");
+
+                            b1.HasKey("DebtId");
+
+                            b1.ToTable("Debts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DebtId");
+                        });
+
+                    b.Navigation("InstallmentAmount")
+                        .IsRequired();
+
+                    b.Navigation("OriginalAmount")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Debts.DebtPayment", b =>
+                {
+                    b.HasOne("ControlDeFinanzasIA.Domain.Debts.Debt", null)
+                        .WithMany()
+                        .HasForeignKey("DebtId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("ControlDeFinanzasIA.Domain.ValueObjects.Money", "Amount", b1 =>
+                        {
+                            b1.Property<Guid>("DebtPaymentId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("Amount");
+
+                            b1.Property<int>("Currency")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("AmountCurrency");
+
+                            b1.HasKey("DebtPaymentId");
+
+                            b1.ToTable("DebtPayments");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DebtPaymentId");
+                        });
+
+                    b.Navigation("Amount")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ControlDeFinanzasIA.Domain.Recurring.RecurringRule", b =>

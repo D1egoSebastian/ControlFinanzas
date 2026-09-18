@@ -1,4 +1,5 @@
 using ControlDeFinanzasIA.Domain.Catalog;
+using ControlDeFinanzasIA.Domain.Debts;
 using ControlDeFinanzasIA.Domain.Recurring;
 using ControlDeFinanzasIA.Domain.Transactions;
 using ControlDeFinanzasIA.Domain.Views;
@@ -78,6 +79,12 @@ public class AppDbContext : DbContext
 
     /// <summary>Conjunto de reglas recurrentes.</summary>
     public DbSet<RecurringRule> RecurringRules => Set<RecurringRule>();
+
+    /// <summary>Conjunto de deudas con plan de cuotas.</summary>
+    public DbSet<Debt> Debts => Set<Debt>();
+
+    /// <summary>Conjunto de cuotas de deudas.</summary>
+    public DbSet<DebtPayment> DebtPayments => Set<DebtPayment>();
 
     /// <summary>
     /// Configura el modelo de EF Core aplicando las configuraciones de

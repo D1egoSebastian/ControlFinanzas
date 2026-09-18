@@ -36,6 +36,7 @@ public sealed partial class ShellViewModel : ViewModelBase
             new RouteMenuItem(RouteNames.Expenses, _localizer["SidebarExpenses"]),
             new RouteMenuItem(RouteNames.Incomes, _localizer["SidebarIncomes"])
             ,new RouteMenuItem(RouteNames.Recurring, "Recurrentes")
+            ,new RouteMenuItem(RouteNames.Debts, "Deudas")
         ];
     }
 

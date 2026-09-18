@@ -2,6 +2,11 @@ using System.Reflection;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.CreateTag;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
+using ControlDeFinanzasIA.Application.UseCases.Debts.CreateDebtWithSchedule;
+using ControlDeFinanzasIA.Application.UseCases.Debts.GetDebts;
+using ControlDeFinanzasIA.Application.UseCases.Debts.GetDebtSchedule;
+using ControlDeFinanzasIA.Application.UseCases.Debts.RegisterDebtPayment;
+using ControlDeFinanzasIA.Application.UseCases.Debts.SkipDebtPayment;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.GetTransactions;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.RegisterExpense;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.UpdateExpense;
@@ -85,6 +90,7 @@ public static class Bootstrap
         services.AddTransient<ExpensesViewModel>();
         services.AddTransient<IncomeViewModel>();
         services.AddTransient<RecurringRulesViewModel>();
+        services.AddTransient<DebtsViewModel>();
 
         services.AddTransient<RegisterExpenseUseCase>();
         services.AddTransient<UpdateExpenseUseCase>();
@@ -102,6 +108,12 @@ public static class Bootstrap
         services.AddTransient<IValidator<UpdateFixedExpenseCommand>, UpdateFixedExpenseValidator>();
         services.AddTransient<IValidator<CreateSubscriptionCommand>, CreateSubscriptionValidator>();
         services.AddTransient<IValidator<UpdateSubscriptionCommand>, UpdateSubscriptionValidator>();
+        services.AddTransient<CreateDebtWithScheduleUseCase>();
+        services.AddTransient<RegisterDebtPaymentUseCase>();
+        services.AddTransient<SkipDebtPaymentUseCase>();
+        services.AddTransient<GetDebtsQuery>();
+        services.AddTransient<GetDebtScheduleQuery>();
+        services.AddTransient<IValidator<CreateDebtWithScheduleCommand>, CreateDebtWithScheduleValidator>();
         services.AddTransient<DeleteTransactionUseCase>();
         services.AddTransient<GetTransactionsQuery>();
         services.AddTransient<IValidator<RegisterExpenseCommand>, RegisterExpenseValidator>();

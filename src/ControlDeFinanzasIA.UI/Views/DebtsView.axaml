@@ -1,0 +1,95 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+             xmlns:domain="using:ControlDeFinanzasIA.Domain.Debts"
+             x:Class="ControlDeFinanzasIA.UI.Views.DebtsView"
+             x:DataType="vm:DebtsViewModel"
+             x:Name="Root"
+             Background="{StaticResource InkBrush}">
+    <Grid ColumnDefinitions="320,*,320" Margin="24">
+        <ScrollViewer Grid.Column="0">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Nueva deuda" Classes="ledger-title" />
+                <TextBlock Text="Crea una deuda con su plan de cuotas completo." Foreground="{StaticResource PaperDimBrush}" />
+                <TextBox Text="{Binding Description}" Watermark="Descripción" Classes="ledger-input" />
+                <TextBox Text="{Binding OriginalAmount}" Watermark="Monto original" Classes="ledger-input" />
+                <ComboBox ItemsSource="{Binding Currencies}" SelectedItem="{Binding Currency}" Classes="ledger-input" />
+                <TextBox Text="{Binding TotalInstallments}" Watermark="Número de cuotas" Classes="ledger-input" />
+                <TextBox Text="{Binding InstallmentAmount}" Watermark="Monto por cuota" Classes="ledger-input" />
+                <ComboBox ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input" />
+                <DatePicker SelectedDate="{Binding StartDate}" Classes="ledger-input" />
+                <TextBox Text="{Binding CounterpartyName}" Watermark="Contraparte (opcional)" Classes="ledger-input" />
+                <TextBox Text="{Binding Note}" Watermark="Nota (opcional)" Classes="ledger-input" />
+                <TextBlock Text="{Binding FormError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+                <Button Content="Crear deuda" Command="{Binding CreateCommand}" Classes="ledger-btn-primary" />
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+        <ScrollViewer Grid.Column="1" Margin="24,0,0,0">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Deudas" Classes="ledger-title" />
+                <ItemsControl ItemsSource="{Binding Debts}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="domain:Debt">
+                            <Border Classes="ledger-row" Padding="12">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Description}" Classes="ledger-section" />
+                                        <TextBlock Text="{Binding CounterpartyName}" Foreground="{StaticResource PaperDimBrush}" />
+                                        <TextBlock Text="{Binding TotalInstallments, StringFormat={}{0} cuotas}" Foreground="{StaticResource PaperDimBrush}" />
+                                        <TextBlock Text="{Binding Status}" Foreground="{StaticResource PaperDimBrush}" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding OriginalAmount.Amount, StringFormat={}{0:N2}}"
+                                               Classes="ledger-amount" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="Todavía no hay deudas registradas." IsVisible="{Binding !Debts.Count}"
+                           Foreground="{StaticResource PaperDimBrush}" />
+            </StackPanel>
+        </ScrollViewer>
+        <ScrollViewer Grid.Column="2" Margin="24,0,0,0">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Calendario de cuotas" Classes="ledger-title" />
+                <ListBox ItemsSource="{Binding Debts}" SelectedItem="{Binding SelectedDebt}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="domain:Debt">
+                            <TextBlock Text="{Binding Description}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock Text="{Binding PendingBalance, StringFormat={}Saldo pendiente: {0:N2}}" Classes="ledger-section" />
+                <TextBlock Text="{Binding ScheduleError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+                <ItemsControl ItemsSource="{Binding Schedule}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="domain:DebtPayment">
+                            <Border Classes="ledger-row" Padding="8">
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                    <TextBlock Text="{Binding InstallmentNumber}" />
+                                    <StackPanel Grid.Column="1" Margin="8,0">
+                                        <TextBlock Text="{Binding ScheduledDate}" />
+                                        <TextBlock Text="{Binding Status}" Foreground="{StaticResource PaperDimBrush}" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2" Content="Pagar"
+                                            Command="{Binding #Root.((vm:DebtsViewModel)DataContext).RegisterPaymentCommand}"
+                                            CommandParameter="{Binding}"
+                                            Classes="ledger-btn-primary" />
+                                    <Button Grid.Column="3" Content="Saltar"
+                                            Command="{Binding #Root.((vm:DebtsViewModel)DataContext).SkipPaymentCommand}"
+                                            CommandParameter="{Binding}"
+                                            Classes="ledger-btn"
+                                            Margin="4,0,0,0" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="Selecciona una deuda para ver su calendario." IsVisible="{Binding !Schedule.Count}"
+                           Foreground="{StaticResource PaperDimBrush}" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
