@@ -449,7 +449,7 @@ la fase 6.
 
 ---
 
-### Fase 8 — Vistas por periodo y visualizaciones base
+### Fase 8 — Vistas por periodo y visualizaciones base ✅ COMPLETADA (2026-09-18)
 
 **Objetivo**
 Implementar las vistas por periodo (semana, mes, año, comparación) y las
@@ -475,16 +475,47 @@ control". Las visualizaciones de calendario (fase 9) y presupuestos
 - Componentes de gráficos reutilizables.
 - Tests del cálculo de agregaciones y del componente de periodo.
 
-**Riesgos principales**
-- Elección de librería de gráficos para Avalonia cross-platform.
-- Rendimiento de agregaciones sobre datasets grandes.
-- Formato correcto de números por cultura (DOP con dos decimales,
-  separadores es-DO).
+**Riesgos principales (resueltos)**
+- Elección de librería de gráficos → **resuelto: LiveCharts2**
+  (`LiveChartsCore.SkiaSharpView.Avalonia` 2.0.5, MIT). Única opción mantenida y compatible con
+  Avalonia 11.2.7 al momento de evaluar (OxyPlot solo tenía soporte prerelease para Avalonia 11;
+  ScottPlot requiere Avalonia 12).
+- Rendimiento de agregaciones sobre datasets grandes → **resuelto**: agregación en SQL
+  (`GROUP BY`/`SUM`), nunca en memoria. El proveedor SQLite de EF Core 8 no soporta `Sum(decimal)`
+  directamente (lanza `NotSupportedException`); se castea a `double` y se redondea de vuelta a 4
+  decimales tras materializar, con tests de precisión dedicados.
+- Formato correcto de números por cultura → reusa el patrón `≈ {N2} {Currency}` ya establecido.
+
+**Alcance ajustado respecto al plan original** (documentado, no drift silencioso):
+- Selector de periodo: solo **mes** con navegación anterior/siguiente en este slice (semana/año/
+  comparación dedicada quedan diferidos — Fases 6 y 7 mostraron que el riesgo de PR sube mucho al
+  no acotar el alcance inicial). El criterio "comparación con mes anterior" se satisface con un
+  delta % inline en la tarjeta de resumen, no una vista de comparación separada.
+- Se agregó una tarjeta **"Próximos pagos"** (cuotas de deuda + recurrentes próximas) no prevista
+  en el plan original — decisión deliberada del usuario durante el proposal, ya que Fases 6 y 7
+  dejaron los datos disponibles y es lo más accionable de una pantalla de inicio financiera.
 
 **Criterios de fase completada**
-- Dashboard muestra mes actual, navegación a meses anteriores/posteriores.
-- Comparación este mes vs mes anterior funciona.
-- Gráficos se renderizan correctamente en los 3 SO.
+- Dashboard muestra mes actual, navegación a meses anteriores/posteriores. ✅
+- Comparación este mes vs mes anterior funciona (como delta inline). ✅
+- Gráficos se renderizan correctamente en los 3 SO — verificado hasta el techo posible en este
+  entorno (compila, resuelve en runtime sin excepción); confirmación visual pixel-a-pixel
+  pendiente de que Diego abra la app localmente.
+
+**Estado actual (2026-09-18) — ✅ FASE COMPLETADA**
+- ✅ Capa de agregación: DTOs, `MonthPeriod`/`DashboardDefaults`, métodos SQL en
+  `IExpenseRepository`/`IIncomeRepository`.
+- ✅ `GetMonthSummaryQuery`, `GetCategoryBreakdownQuery`, `GetMonthlyEvolutionQuery`,
+  `GetUpcomingPaymentsQuery` — normalizan a DOP vía `ConvertAsync` (no `DisplayAsync`, bug real
+  detectado en el diseño antes de escribir código).
+- ✅ `DashboardViewModel`/`DashboardView` reescritos: navegación de mes, resumen, 2 gráficos
+  LiveCharts2, tarjeta de próximos pagos.
+- ✅ Gates: build limpio, 751/751 tests verdes (608 unit + 143 integration, subiendo desde 614 al
+  cierre de Fase 7), `dotnet format style` limpio, NetArchTest 11/11.
+- ⚠️ Nota de entorno: los tests unitarios en configuración Release están bloqueados en esta
+  máquina por una política de Windows Application Control (no es un defecto de código — el build
+  Release compila limpio y los tests de integración sí corren en Release). Verificados en Debug.
+- ✅ SDD archivado: `spec/features/phase-08/F-008-dashboard-visualizations.done.md`.
 
 ---
 

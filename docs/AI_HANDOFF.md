@@ -9,8 +9,8 @@
 ## 1. TL;DR
 
 - **What it is:** `ControlDeFinanzasIA` — a cross-platform (.NET 8 + Avalonia MVVM) desktop app for personal-finance control with AI assist. 100% local data. DOP + USD.
-- **Current phase:** **Phase 7 archived** (Debts with installment plan). Phases 0–7 fully archived. **Phase 8 (dashboard/visualizations) not started.**
-- **Test count:** 698/698 passing (568 unit + 130 integration) as of 2026-09-18, Phase 7 close.
+- **Current phase:** **Phase 8 archived** (Dashboard with period navigation, charts, and upcoming payments). Phases 0–8 fully archived. **Phase 9 (calendar view) not started.**
+- **Test count:** 751/751 passing (608 unit + 143 integration) as of 2026-09-18, Phase 8 close. Verified in Debug — Release unit-test host is currently blocked on this machine by a Windows Application Control policy (not a code defect; Release build and Integration tests are unaffected — see `.atl/sdd/f-008p8-dashboard-visualizations/verify-report.md`).
 - **Key constraint:** Filesystem-based SDD specs in `spec/features/phase-NN/` (NOT OpenSpec). `.spec.md` = active, `.done.md` = archived. Do not create `openspec/`.
 - **Architecture:** Clean Architecture (Domain / Application / Infrastructure / UI). NetArchTest rules R-1..R-5 enforced in `Tests.Unit`.
 
@@ -26,7 +26,7 @@
 | Type | Cross-platform desktop (Windows, macOS, Linux), single-user, local data only |
 | UI pattern | MVVM strict with **CommunityToolkit.Mvvm** (`[ObservableProperty]`, `[RelayCommand]`) |
 | Localization | `es-DO` default + `en` via `IStringLocalizer` / resx |
-| Status | Phases 0–7 ✅ archived; Phase 8 (dashboard/visualizations) not started |
+| Status | Phases 0–8 ✅ archived; Phase 9 (calendar view) not started |
 
 ---
 
@@ -44,6 +44,7 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 | 5 | Payment method + multi-moneda DOP/USD | 3 (`F-501..F-503`; plan says 13 sub-features 5-001..5-013 grouped) | 3 | 0 | 100% | `spec/phases/phase-05/features.md` |
 | 6 | Recurring rules (subscriptions + fixed expenses) | 1 umbrella `F-001` covering 8 sub-features (6-001..6-008) | 1 | 0 | 100% | `spec/phases/phase-06/features.md` + `spec/features/phase-06/F-001-recurring-rules.done.md` |
 | 7 | Debts with installment plan | 1 umbrella `F-001` covering 8 slices (7-001..7-008) | 1 | 0 | 100% | `spec/phases/phase-07/features.md` + `spec/features/phase-07/F-001-debts-installment-plan.done.md` |
+| 8 | Dashboard + period views/visualizations | 1 umbrella `F-008` covering 3 slices (aggregation/UI/upcoming-payments) | 1 | 0 | 100% | `spec/phases/phase-08/features.md` + `spec/features/phase-08/F-008-dashboard-visualizations.done.md` |
 
 ### Per-phase detail
 
@@ -76,7 +77,7 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 
 ---
 
-## 4. Phase 6 & 7 — archived (2026-09-17, 2026-09-18)
+## 4. Phase 6, 7 & 8 — archived (2026-09-17, 2026-09-18, 2026-09-18)
 
 ### What's done (backend)
 
@@ -119,23 +120,50 @@ The full task breakdown is at `tasks/phase-06/F-001-recurring-rules.tasks.md`.
 
 The full task breakdown is at `tasks/phase-07/F-001-debts-installment-plan.tasks.md`.
 
+### Phase 8 — what's done
+
+- Application: `Application/DTOs/Aggregates/{CurrencyTotal,CategoryCurrencyTotal,MonthCurrencyTotal}.cs`;
+  `Application/Common/{MonthPeriod,DashboardDefaults}.cs`;
+  `Application/UseCases/Dashboard/{GetMonthSummary,GetCategoryBreakdown,GetMonthlyEvolution,GetUpcomingPayments}/*.cs`
+- Infrastructure: `IExpenseRepository`/`IIncomeRepository`/`IDebtPaymentRepository` extended with
+  SQL `GROUP BY`/`SUM` aggregate methods (EF Core 8's SQLite provider doesn't support
+  `Sum(decimal)` directly — cast through `double`, round back to 4 decimals after materialization)
+- UI: `src/ControlDeFinanzasIA.UI/Views/DashboardView.axaml(.cs)` + `ViewModels/DashboardViewModel.cs`
+  rewritten from placeholder; `Views/Charts/{CategoryBreakdownChart,MonthlyEvolutionChart}.axaml(.cs)`
+  wrapping LiveChartsCore.SkiaSharpView.Avalonia 2.0.5
+- Applied in 3 separate commits (`b53102f` aggregation, `3fc5325` UI+charts, `5aee8c9` upcoming
+  payments) per `sdd-tasks`' chained-PR recommendation — isolates the untested LiveCharts2
+  cross-OS rendering risk from the already-tested, lower-risk aggregation layer.
+- Gates: build clean, 751/751 tests (Debug — Release unit-test host blocked on this machine by
+  a Windows Application Control policy, not a code defect; Release build and Integration tests
+  are unaffected), `dotnet format style` clean, NetArchTest 11/11 — re-verified independently
+  before archive, see `.atl/sdd/f-008p8-dashboard-visualizations/verify-report.md` and
+  `archive-report.md`.
+- Spec archived to `spec/features/phase-08/F-008-dashboard-visualizations.done.md`.
+- Two real bugs caught before/during apply, not just at review: the proposal's plan to reuse
+  `ICurrencyConverter.DisplayAsync` for DOP normalization was wrong (it converts to the "other"
+  currency, not always DOP) — caught in the design phase, before code was written; and the
+  `Sum(decimal)`/SQLite workaround initially had no rounding step, risking float noise in money
+  figures — caught and fixed during slice 1 review, with regression tests added.
+
+The full task breakdown is at `tasks/phase-08/F-008-dashboard-visualizations.tasks.md`.
+
 ---
 
 ## 5. What's pending (next up)
 
 Ordered by priority. Each item references its source-of-truth spec/plan.
 
-1. **Phase 8 — Period selector + dashboard + visualizations** — `docs/roadmap.md` §Fase 8 (lines ~426–463). Not started; no SDD scaffolding yet.
-2. **Phase 9 — Calendar view** — `docs/roadmap.md` §Fase 9
-3. **Phase 10 — Monthly budgets** — `docs/roadmap.md` §Fase 10
-4. **Phase 11 — Savings goals** — `docs/roadmap.md` §Fase 11
-5. **Phase 12 — Settings, i18n, IA config (no IA use yet)** — `docs/roadmap.md` §Fase 12
-6. **Phase 13–16 — IA pipeline** (categorization, insights/forecast/anomalies, chat, savings plan explanation) — `docs/roadmap.md` §Fases 13–16
-7. **Phase 17 — Notifications** — `docs/roadmap.md` §Fase 17
-8. **Phase 18 — PDF/Excel export** — `docs/roadmap.md` §Fase 18
-9. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19
-10. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20
-11. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
+1. **Phase 9 — Calendar view** — `docs/roadmap.md` §Fase 9. Not started; no SDD scaffolding yet.
+2. **Phase 10 — Monthly budgets** — `docs/roadmap.md` §Fase 10
+3. **Phase 11 — Savings goals** — `docs/roadmap.md` §Fase 11
+4. **Phase 12 — Settings, i18n, IA config (no IA use yet)** — `docs/roadmap.md` §Fase 12
+5. **Phase 13–16 — IA pipeline** (categorization, insights/forecast/anomalies, chat, savings plan explanation) — `docs/roadmap.md` §Fases 13–16
+6. **Phase 17 — Notifications** — `docs/roadmap.md` §Fase 17
+7. **Phase 18 — PDF/Excel export** — `docs/roadmap.md` §Fase 18
+8. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19
+9. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20
+10. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
 
 **MVP (no IA) = phases 0–12.** Phases 13+ are IA + polish.
 
@@ -411,8 +439,8 @@ dotnet ef migrations add <Name> `
 
 ### Where to start
 
-1. **Read `spec/` first.** Phase 7 (Debts) is archived at `spec/features/phase-07/F-001-debts-installment-plan.done.md`. There is no active feature yet — Phase 8 (dashboard/visualizations) has no SDD scaffolding. Start there with `sdd-explore`/`sdd-propose` if picking up next work.
-2. **Check tasks:** `tasks/phase-07/F-001-debts-installment-plan.tasks.md` is the closed checklist for the last completed phase — use it as the pattern reference for Phase 8's task breakdown.
+1. **Read `spec/` first.** Phase 8 (Dashboard) is archived at `spec/features/phase-08/F-008-dashboard-visualizations.done.md`. There is no active feature yet — Phase 9 (calendar view) has no SDD scaffolding. Start there with `sdd-explore`/`sdd-propose` if picking up next work.
+2. **Check tasks:** `tasks/phase-08/F-008-dashboard-visualizations.tasks.md` is the closed checklist for the last completed phase — use it as the pattern reference for Phase 9's task breakdown.
 3. **Read constitution** if touching architecture or stack: `spec/constitution/mission.md`, `spec/constitution/tech-stack.md`.
 4. **Check the SDD working dir** for any in-flight change: `.atl/sdd/<change-id>/`.
 
@@ -477,6 +505,10 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 
 15. **MVVM in `RecurringRulesViewModel` injects 11 dependencies.** That wide constructor is a smell for "Form vs ListView" split when you formalize F-006. Use it as a hint that the UI needs a refactor in the formal apply phase.
 
+16. **Phase 8 is fully closed** — 751/751 tests as of 2026-09-18 (up from 698 at Phase 7 close). Applied in 3 separate commits (`b53102f`, `3fc5325`, `5aee8c9`), one per slice, per `sdd-tasks`' chained-PR recommendation — the first time this project actually split an apply into multiple commits instead of one (Phases 6 and 7 both landed as a single commit despite similar "high risk" flags). Two real bugs caught: `ICurrencyConverter.DisplayAsync` converts to the "other" currency, not always DOP — wrong for a DOP-normalizing dashboard, caught in design before any code was written; and EF Core 8's SQLite provider throws `NotSupportedException` on `Sum(decimal)` inside any `GroupBy` regardless of grouping key — worked around by summing as `double` and rounding back to 4 decimals after materialization, with dedicated precision-regression tests (summing 0.1m repeatedly, cross-checking independent aggregates reconcile exactly).
+
+17. **Windows Application Control can block a freshly-built Release DLL from loading into the xUnit test host** (`0x800711C7`) on this machine, first observed during Phase 8's slice 3. `dotnet build -c Release` still succeeds and Release Integration tests still run — only the Unit test host's load of `ControlDeFinanzasIA.UI.dll` is blocked. Not a code defect. If you hit this, fall back to `-c Debug` for the unit-test gate and note it explicitly rather than silently skip verification; check whether it has resolved before assuming it's still active.
+
 ---
 
 ## 12. First 5 commands a new agent should run
@@ -487,7 +519,7 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 # 1. Confirm the build is clean before you do anything
 dotnet build -c Release
 
-# 2. Confirm the existing 698 tests still pass
+# 2. Confirm the existing 751 tests still pass (Debug config on this machine — see gotcha below)
 dotnet test -c Release --no-build
 
 # 3. Confirm CI's format gate is green
@@ -497,7 +529,7 @@ dotnet format style --verify-no-changes
 dotnet test --no-build -c Release --filter "FullyQualifiedName~Architecture"
 
 # 5. Inspect the current Phase 6 task list
-Get-Content -Raw .\tasks\phase-07\F-001-debts-installment-plan.tasks.md
+Get-Content -Raw .\tasks\phase-08\F-008-dashboard-visualizations.tasks.md
 ```
 
 If all five succeed, the working tree is healthy. If any fail, **stop and fix before reading further code** — fixing a broken build first will save you time.

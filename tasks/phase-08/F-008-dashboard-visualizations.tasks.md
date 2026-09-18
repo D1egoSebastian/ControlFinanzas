@@ -415,19 +415,25 @@ periodo (D-6).
 
 ## 4. Cierre
 
-- [ ] 4.1 Ejecutar build, `dotnet test` (unit + integración), `dotnet
-  format style --verify-no-changes`, `ArchitectureTests`/NetArchTest
-  (confirma que `LiveChartsCore.SkiaSharpView.Avalonia` en UI sin
-  abstracción sigue siendo legal per R-8), smoke test manual si el entorno
-  lo permite.
-- [ ] 4.2 Crear/actualizar `spec/phases/phase-08/features.md` siguiendo el
+- [x] 4.1 Ejecutar build, `dotnet test` (unit + integración), `dotnet
+  format style --verify-no-changes`, `ArchitectureTests`/NetArchTest,
+  smoke test manual. (Build Release limpio; 751/751 tests verdes — unit
+  tests verificados en Debug porque el host de tests en Release está
+  bloqueado en esta máquina por una política de Windows Application
+  Control ajena al código, ver `.atl/sdd/f-008p8-dashboard-visualizations/verify-report.md`;
+  `dotnet format style` limpio; NetArchTest 11/11 — R-8 confirmado legal;
+  smoke test real vía `dotnet run`: migraciones aplican, DI resuelve
+  `DashboardViewModel`, las 5 queries SQL del Dashboard ejecutan sin
+  excepción contra SQLite real.)
+- [x] 4.2 Crear/actualizar `spec/phases/phase-08/features.md` siguiendo el
   patrón de `spec/phases/phase-06/features.md` y
-  `spec/phases/phase-07/features.md` (resumen, modelo, plan de slices con
-  la tabla de los 3 slices de este archivo + su estado, criterios de fase
-  completada, referencias).
-- [ ] 4.3 Archivar la spec
+  `spec/phases/phase-07/features.md`.
+- [x] 4.3 Archivar la spec
   (`F-008-dashboard-visualizations.spec.md` → `.done.md`), escribir
   `verify-report.md` + `archive-report.md` en
   `.atl/sdd/f-008p8-dashboard-visualizations/`, actualizar `docs/roadmap.md`
-  §Fase 8. *(Sin marcar — es un paso posterior a apply + verify, no lo
-  alcanza este ciclo.)*
+  §Fase 8. (Gates re-verificados de forma independiente antes de archivar
+  — no se confió solo en el reporte de los agentes que hicieron el apply;
+  dos hallazgos reales corregidos en el camino: `DisplayAsync`→`ConvertAsync`
+  detectado en design, y falta de redondeo tras el workaround de `Sum(decimal)`
+  detectado y corregido en la revisión del slice 1.)

@@ -1,7 +1,7 @@
 # F-008 — Dashboard y visualizaciones base
 
 > **Fase:** 8 — Vistas por periodo y visualizaciones base
-> **Estado:** 📝 Spec lista, apply no iniciado
+> **Estado:** ✅ Archivada (2026-09-18)
 > **SDD:** `.atl/sdd/f-008p8-dashboard-visualizations/`
 
 ## Objetivo
@@ -156,23 +156,34 @@ reglas de `ArchitectureTests`.
 
 ## Criterios de aceptación
 
-- [ ] El Dashboard muestra el mes actual al abrir, con navegación
+- [x] El Dashboard muestra el mes actual al abrir, con navegación
   funcional al mes anterior y siguiente.
-- [ ] El resumen del mes muestra total de gastos, total de ingresos,
+- [x] El resumen del mes muestra total de gastos, total de ingresos,
   balance neto y delta vs. mes anterior, todo normalizado a DOP con el
-  patrón `≈ convertido`.
-- [ ] El gráfico de categorías muestra 5 categorías + "Otras", y sus
-  totales reconcilian con el resumen del mes.
-- [ ] El gráfico de evolución temporal renderiza los totales mensuales en
-  una línea.
-- [ ] La tarjeta "Próximos pagos" lista cuotas de deuda pendientes y/o
+  patrón `≈ convertido` (vía `ConvertAsync`, no `DisplayAsync` — bug real
+  detectado en design y verificado corregido).
+- [x] El gráfico de categorías muestra 5 categorías + "Otras", y sus
+  totales reconcilian con el resumen del mes (probado explícitamente,
+  incluyendo el camino de precisión decimal/SQLite).
+- [x] El gráfico de evolución temporal renderiza los totales mensuales en
+  una línea (ventana de 6 meses, zero-filled).
+- [x] La tarjeta "Próximos pagos" lista cuotas de deuda pendientes y/o
   generaciones de recurrentes próximas dentro del horizonte de 30 días,
   anclada a la fecha actual (no cambia al navegar de mes).
-- [ ] Las agregaciones se ejecutan como SQL `GROUP BY`/`SUM`, no como sumas
-  en memoria sobre listas paginadas.
-- [ ] Los gráficos renderizan correctamente en Windows, macOS y Linux.
-- [ ] Los estados vacíos (sin transacciones, sin próximos pagos, tasa de
+- [x] Las agregaciones se ejecutan como SQL `GROUP BY`/`SUM`, no como sumas
+  en memoria sobre listas paginadas (confirmado también en runtime real,
+  no solo en tests).
+- [~] Los gráficos renderizan correctamente en Windows, macOS y Linux —
+  verificado hasta el techo posible en este entorno (compila, AXAML
+  resuelve los controles de LiveCharts, la app no crashea al cargar el
+  Dashboard); el renderizado visual pixel-a-pixel en las 3 plataformas
+  queda pendiente de confirmación manual por Diego — no hay herramienta de
+  captura de ventanas nativas disponible en este entorno.
+- [x] Los estados vacíos (sin transacciones, sin próximos pagos, tasa de
   cambio no disponible) degradan sin lanzar excepciones ni dejar la vista
   en blanco.
-- [ ] `dotnet format style`, tests unitarios, de integración y de
-  arquitectura pasan en verde.
+- [x] `dotnet format style`, tests unitarios, de integración y de
+  arquitectura pasan en verde (Release: build y tests de integración
+  verificados; tests unitarios verificados en Debug — el host de tests en
+  Release está bloqueado en esta máquina por una política de Windows
+  Application Control ajena al código, ver `verify-report.md`).
