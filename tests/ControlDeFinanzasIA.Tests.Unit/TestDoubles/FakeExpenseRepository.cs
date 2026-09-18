@@ -202,4 +202,18 @@ public sealed class FakeExpenseRepository : IExpenseRepository
 
         return Task.FromResult(totals);
     }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<DayCurrencyTotal>> GetDailyTotalsAsync(DateRange period, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(period);
+
+        IReadOnlyList<DayCurrencyTotal> totals = _addedExpenses
+            .Where(e => e.Date >= period.Start && e.Date <= period.End)
+            .GroupBy(e => new { e.Date, e.Amount.Currency })
+            .Select(g => new DayCurrencyTotal(g.Key.Date, g.Key.Currency, g.Sum(x => x.Amount.Amount)))
+            .ToList();
+
+        return Task.FromResult(totals);
+    }
 }

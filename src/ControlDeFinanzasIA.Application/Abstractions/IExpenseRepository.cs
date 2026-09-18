@@ -102,4 +102,13 @@ public interface IExpenseRepository
     /// <param name="period">Rango de fechas, inclusivo en ambos extremos.</param>
     /// <param name="ct">Token de cancelación opcional.</param>
     Task<IReadOnlyList<MonthCurrencyTotal>> GetMonthlyTotalsAsync(DateRange period, CancellationToken ct = default);
+
+    /// <summary>
+    /// Obtiene los totales de gasto por día x moneda dentro de
+    /// <paramref name="period"/>, agregados en SQL (<c>GROUP BY</c>/<c>SUM</c>).
+    /// Usado por la vista de calendario (R-5).
+    /// </summary>
+    /// <param name="period">Rango de fechas, inclusivo en ambos extremos.</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    Task<IReadOnlyList<DayCurrencyTotal>> GetDailyTotalsAsync(DateRange period, CancellationToken ct = default);
 }

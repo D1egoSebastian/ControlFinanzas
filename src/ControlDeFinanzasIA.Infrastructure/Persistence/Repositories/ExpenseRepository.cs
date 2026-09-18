@@ -326,4 +326,32 @@ public sealed class ExpenseRepository : IExpenseRepository
 
         return totals.Select(t => t with { Amount = Math.Round(t.Amount, 4) }).ToList();
     }
+
+    /// <summary>
+    /// Obtiene los totales de gasto por día x moneda dentro de
+    /// <paramref name="period"/>, agregados en SQL (<c>GROUP BY</c>/<c>SUM</c>).
+    /// Usado por la vista de calendario (R-5).
+    /// </summary>
+    /// <remarks>
+    /// Mismo patrón de cast a <c>double</c> + <c>Math.Round(_, 4)</c>
+    /// post-materialización que <see cref="GetMonthlyTotalsAsync"/> — SQLite
+    /// no soporta <c>Sum(decimal)</c> (ver <see cref="GetPeriodTotalsAsync"/>).
+    /// <c>e.Date</c> agrupa sobre la columna <see cref="DateOnly"/> cruda,
+    /// sin traducción <c>strftime</c>.
+    /// </remarks>
+    /// <param name="period">Rango de fechas, inclusivo en ambos extremos.</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    public async Task<IReadOnlyList<DayCurrencyTotal>> GetDailyTotalsAsync(DateRange period, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(period);
+
+        List<DayCurrencyTotal> totals = await _db.Expenses
+            .AsNoTracking()
+            .Where(e => e.Date >= period.Start && e.Date <= period.End)
+            .GroupBy(e => new { e.Date, e.Amount.Currency })
+            .Select(g => new DayCurrencyTotal(g.Key.Date, g.Key.Currency, (decimal)g.Sum(x => (double)x.Amount.Amount)))
+            .ToListAsync(ct);
+
+        return totals.Select(t => t with { Amount = Math.Round(t.Amount, 4) }).ToList();
+    }
 }
