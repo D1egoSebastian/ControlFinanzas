@@ -301,4 +301,16 @@ Showing approximate conversions only.
   <data name="DashboardLoadErrorMessage" xml:space="preserve">
     <value>The dashboard could not be loaded.</value>
   </data>
+  <data name="DashboardUpcomingPaymentsTitle" xml:space="preserve">
+    <value>Upcoming payments</value>
+  </data>
+  <data name="DashboardEmptyUpcomingPaymentsMessage" xml:space="preserve">
+    <value>No upcoming payments in the next 30 days.</value>
+  </data>
+  <data name="DashboardUpcomingPaymentKindDebt" xml:space="preserve">
+    <value>Debt installment</value>
+  </data>
+  <data name="DashboardUpcomingPaymentKindRecurring" xml:space="preserve">
+    <value>Recurring rule</value>
+  </data>
 </root>

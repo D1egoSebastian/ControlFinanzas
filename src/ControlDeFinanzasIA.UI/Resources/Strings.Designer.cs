@@ -466,4 +466,24 @@ public class Strings
     /// Gets the localized error message shown when the Dashboard fails to load.
     /// </summary>
     public static string DashboardLoadErrorMessage => ResourceManager.GetString("DashboardLoadErrorMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the Dashboard's "Próximos pagos" card.
+    /// </summary>
+    public static string DashboardUpcomingPaymentsTitle => ResourceManager.GetString("DashboardUpcomingPaymentsTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized empty-state message for the Dashboard's "Próximos pagos" card.
+    /// </summary>
+    public static string DashboardEmptyUpcomingPaymentsMessage => ResourceManager.GetString("DashboardEmptyUpcomingPaymentsMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for a debt-installment upcoming payment.
+    /// </summary>
+    public static string DashboardUpcomingPaymentKindDebt => ResourceManager.GetString("DashboardUpcomingPaymentKindDebt", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for a recurring-rule upcoming payment.
+    /// </summary>
+    public static string DashboardUpcomingPaymentKindRecurring => ResourceManager.GetString("DashboardUpcomingPaymentKindRecurring", Culture)!;
 }

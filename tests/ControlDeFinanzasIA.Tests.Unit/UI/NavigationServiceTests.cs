@@ -2,6 +2,7 @@ using System.Threading;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
 using ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.ViewModels;
@@ -122,6 +123,8 @@ public sealed class NavigationServiceTests
             new GetMonthSummaryQuery(expenseRepo, incomeRepo, converter),
             new GetCategoryBreakdownQuery(expenseRepo, converter),
             new GetMonthlyEvolutionQuery(expenseRepo, incomeRepo, converter),
+            new GetUpcomingPaymentsQuery(
+                new FakeDebtPaymentRepository(), new FakeDebtRepository(), new FakeRecurringRuleRepository(), clock),
             clock,
             NullLogger<DashboardViewModel>.Instance);
     }

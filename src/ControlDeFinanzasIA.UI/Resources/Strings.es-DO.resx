@@ -301,4 +301,16 @@ Mostrando conversiones aproximadas.
   <data name="DashboardLoadErrorMessage" xml:space="preserve">
     <value>No se pudo cargar el dashboard.</value>
   </data>
+  <data name="DashboardUpcomingPaymentsTitle" xml:space="preserve">
+    <value>Próximos pagos</value>
+  </data>
+  <data name="DashboardEmptyUpcomingPaymentsMessage" xml:space="preserve">
+    <value>Sin próximos pagos en los siguientes 30 días.</value>
+  </data>
+  <data name="DashboardUpcomingPaymentKindDebt" xml:space="preserve">
+    <value>Cuota de deuda</value>
+  </data>
+  <data name="DashboardUpcomingPaymentKindRecurring" xml:space="preserve">
+    <value>Regla recurrente</value>
+  </data>
 </root>

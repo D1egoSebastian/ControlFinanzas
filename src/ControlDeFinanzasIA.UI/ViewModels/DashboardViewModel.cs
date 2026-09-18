@@ -7,6 +7,7 @@ using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
 using ControlDeFinanzasIA.UI.Resources;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
@@ -15,16 +16,17 @@ using Microsoft.Extensions.Logging;
 namespace ControlDeFinanzasIA.UI.ViewModels;
 
 /// <summary>
-/// View-model for the Dashboard screen (F-008, slice 2): monthly period
-/// navigation, the DOP-normalized summary card, and the category-breakdown
-/// and monthly-evolution charts. "Próximos pagos" is not part of this
-/// slice (see slice 3).
+/// View-model for the Dashboard screen: monthly period navigation, the
+/// DOP-normalized summary card, the category-breakdown and
+/// monthly-evolution charts (F-008, slice 2), and the "Próximos pagos"
+/// card (F-008, slice 3).
 /// </summary>
 public sealed partial class DashboardViewModel : ViewModelBase
 {
     private readonly GetMonthSummaryQuery _getMonthSummaryQuery;
     private readonly GetCategoryBreakdownQuery _getCategoryBreakdownQuery;
     private readonly GetMonthlyEvolutionQuery _getMonthlyEvolutionQuery;
+    private readonly GetUpcomingPaymentsQuery _getUpcomingPaymentsQuery;
     private readonly IClock _clock;
     private readonly ILogger<DashboardViewModel> _logger;
 
@@ -32,24 +34,30 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// Initializes a new instance of the <see cref="DashboardViewModel"/> class.
     /// Starts on the current month (<see cref="IClock.Today"/>) and kicks off
     /// the initial load, following the same constructor-load pattern as
-    /// <see cref="RecurringRulesViewModel"/>.
+    /// <see cref="RecurringRulesViewModel"/>. "Próximos pagos" is loaded
+    /// separately from <see cref="LoadAsync"/>, exactly once, because it is
+    /// anchored to today rather than to <see cref="SelectedMonth"/> (R-1a,
+    /// D-6): it must not re-run when the user navigates months.
     /// </summary>
     public DashboardViewModel(
         GetMonthSummaryQuery getMonthSummaryQuery,
         GetCategoryBreakdownQuery getCategoryBreakdownQuery,
         GetMonthlyEvolutionQuery getMonthlyEvolutionQuery,
+        GetUpcomingPaymentsQuery getUpcomingPaymentsQuery,
         IClock clock,
         ILogger<DashboardViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(getMonthSummaryQuery);
         ArgumentNullException.ThrowIfNull(getCategoryBreakdownQuery);
         ArgumentNullException.ThrowIfNull(getMonthlyEvolutionQuery);
+        ArgumentNullException.ThrowIfNull(getUpcomingPaymentsQuery);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(logger);
 
         _getMonthSummaryQuery = getMonthSummaryQuery;
         _getCategoryBreakdownQuery = getCategoryBreakdownQuery;
         _getMonthlyEvolutionQuery = getMonthlyEvolutionQuery;
+        _getUpcomingPaymentsQuery = getUpcomingPaymentsQuery;
         _clock = clock;
         _logger = logger;
 
@@ -57,6 +65,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
         _selectedMonthLabel = FormatMonthLabel(_selectedMonth);
 
         _ = LoadAsync();
+        _ = LoadUpcomingPaymentsAsync();
     }
 
     /// <summary>Gets or sets the currently navigated month (always a month anchor, i.e. day 1).</summary>
@@ -130,6 +139,17 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// <see cref="EvolutionSeries"/>/<see cref="EvolutionXAxes"/> are derived from it.
     /// </summary>
     public ObservableCollection<EvolutionPoint> EvolutionPoints { get; } = [];
+
+    /// <summary>
+    /// Gets the "Próximos pagos" items (R-6): pending debt installments and
+    /// upcoming recurring-rule generations within the next
+    /// <see cref="Application.Common.DashboardDefaults.UpcomingHorizonDays"/>
+    /// days from <see cref="IClock.Today"/>, date-ordered. Loaded exactly
+    /// once (see <see cref="LoadUpcomingPaymentsAsync"/>): navigating months
+    /// via <see cref="PreviousMonthCommand"/>/<see cref="NextMonthCommand"/>
+    /// never touches this collection (R-1a, D-6).
+    /// </summary>
+    public ObservableCollection<UpcomingPaymentItem> UpcomingPayments { get; } = [];
 
     /// <summary>Navigates to the month immediately before <see cref="SelectedMonth"/> and reloads.</summary>
     [RelayCommand]
@@ -277,6 +297,42 @@ public sealed partial class DashboardViewModel : ViewModelBase
                     .ToArray(),
             },
         ];
+    }
+
+    /// <summary>
+    /// Loads the "Próximos pagos" card exactly once (constructor-only call,
+    /// see the class remarks and R-1a/D-6). Deliberately separate from
+    /// <see cref="LoadAsync"/> so that <see cref="PreviousMonthAsync"/> and
+    /// <see cref="NextMonthAsync"/> — which call <see cref="LoadAsync"/> on
+    /// every navigation — never re-run this query.
+    /// </summary>
+    private async Task LoadUpcomingPaymentsAsync()
+    {
+        try
+        {
+            Result result = await _getUpcomingPaymentsQuery.ExecuteAsync();
+            ApplyUpcomingPayments(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unable to load upcoming payments for the dashboard.");
+        }
+    }
+
+    private void ApplyUpcomingPayments(Result result)
+    {
+        UpcomingPayments.Clear();
+
+        if (!result.IsSuccess)
+        {
+            return;
+        }
+
+        var items = (IReadOnlyList<UpcomingPaymentItem>)result.Value!;
+        foreach (UpcomingPaymentItem item in items)
+        {
+            UpcomingPayments.Add(item);
+        }
     }
 
     private static string FormatMonthLabel(DateOnly month)

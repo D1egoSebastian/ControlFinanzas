@@ -2,6 +2,8 @@ using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
+using ControlDeFinanzasIA.Domain.Debts;
 using ControlDeFinanzasIA.Domain.Enums;
 using ControlDeFinanzasIA.Domain.Transactions;
 using ControlDeFinanzasIA.Domain.ValueObjects;
@@ -112,11 +114,48 @@ public sealed class DashboardViewModelTests
         Assert.Empty(viewModel.LoadError);
     }
 
+    [Fact]
+    public async Task NavigatingMonths_DoesNotReloadOrChangeUpcomingPayments()
+    {
+        FakeExpenseRepository expenseRepo = new();
+        FakeIncomeRepository incomeRepo = new();
+
+        FakeDebtRepository debtRepo = new();
+        var debt = Debt.Create(
+            "Préstamo carro",
+            Money.Create(1000m, Currency.DOP),
+            Currency.DOP,
+            totalInstallments: 1,
+            installmentAmount: Money.Create(1000m, Currency.DOP),
+            frequency: nameof(DebtFrequency.Monthly),
+            startDate: _march.AddDays(5));
+        debtRepo.Seed(debt);
+        FakeDebtPaymentRepository debtPaymentRepo = new();
+        debtPaymentRepo.SeedRange(new DebtScheduleGenerator().Generate(debt));
+
+        DashboardViewModel viewModel = CreateViewModel(
+            expenseRepo, incomeRepo, _march, debtPaymentRepo: debtPaymentRepo, debtRepo: debtRepo);
+
+        await viewModel.RefreshCommand.ExecuteAsync(null);
+        Assert.Single(viewModel.UpcomingPayments);
+        UpcomingPaymentItem original = viewModel.UpcomingPayments[0];
+
+        await viewModel.PreviousMonthCommand.ExecuteAsync(null);
+        await viewModel.NextMonthCommand.ExecuteAsync(null);
+        await viewModel.NextMonthCommand.ExecuteAsync(null);
+
+        Assert.Single(viewModel.UpcomingPayments);
+        Assert.Equal(original, viewModel.UpcomingPayments[0]);
+    }
+
     private static DashboardViewModel CreateViewModel(
         FakeExpenseRepository expenseRepo,
         FakeIncomeRepository incomeRepo,
         DateOnly today,
-        FakeCurrencyConverter? converter = null)
+        FakeCurrencyConverter? converter = null,
+        FakeDebtPaymentRepository? debtPaymentRepo = null,
+        FakeDebtRepository? debtRepo = null,
+        FakeRecurringRuleRepository? recurringRuleRepo = null)
     {
         converter ??= new FakeCurrencyConverter();
         FakeClock clock = new() { Today = today };
@@ -124,11 +163,17 @@ public sealed class DashboardViewModelTests
         GetMonthSummaryQuery summaryQuery = new(expenseRepo, incomeRepo, converter);
         GetCategoryBreakdownQuery breakdownQuery = new(expenseRepo, converter);
         GetMonthlyEvolutionQuery evolutionQuery = new(expenseRepo, incomeRepo, converter);
+        GetUpcomingPaymentsQuery upcomingPaymentsQuery = new(
+            debtPaymentRepo ?? new FakeDebtPaymentRepository(),
+            debtRepo ?? new FakeDebtRepository(),
+            recurringRuleRepo ?? new FakeRecurringRuleRepository(),
+            clock);
 
         return new DashboardViewModel(
             summaryQuery,
             breakdownQuery,
             evolutionQuery,
+            upcomingPaymentsQuery,
             clock,
             NullLogger<DashboardViewModel>.Instance);
     }

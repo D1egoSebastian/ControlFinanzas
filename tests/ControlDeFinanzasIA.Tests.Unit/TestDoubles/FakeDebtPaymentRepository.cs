@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Domain.Debts;
+using ControlDeFinanzasIA.Domain.ValueObjects;
 
 namespace ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 
@@ -62,4 +63,17 @@ public sealed class FakeDebtPaymentRepository : IDebtPaymentRepository
             .Where(p => p.DebtId == debtId)
             .OrderBy(p => p.InstallmentNumber)
             .ToList());
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<DebtPayment>> GetPendingByDateRangeAsync(DateRange range, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(range);
+
+        return Task.FromResult<IReadOnlyList<DebtPayment>>(_payments
+            .Where(p => p.Status == DebtPaymentStatus.Pending
+                && p.ScheduledDate >= range.Start
+                && p.ScheduledDate <= range.End)
+            .OrderBy(p => p.ScheduledDate)
+            .ToList());
+    }
 }

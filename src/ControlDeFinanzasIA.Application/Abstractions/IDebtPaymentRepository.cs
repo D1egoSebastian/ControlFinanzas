@@ -1,5 +1,6 @@
 using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Domain.Debts;
+using ControlDeFinanzasIA.Domain.ValueObjects;
 
 namespace ControlDeFinanzasIA.Application.Abstractions;
 
@@ -62,4 +63,22 @@ public interface IDebtPaymentRepository
     /// <param name="debtId">Identificador de la <c>Debt</c> due&#241;a.</param>
     /// <param name="ct">Token de cancelaci&#243;n opcional.</param>
     Task<IReadOnlyList<DebtPayment>> GetByDebtIdAsync(Guid debtId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Obtiene las <see cref="DebtPayment"/> en estado
+    /// <see cref="DebtPaymentStatus.Pending"/> cuya <see cref="DebtPayment.ScheduledDate"/>
+    /// cae dentro de <paramref name="range"/>, ordenadas por
+    /// <see cref="DebtPayment.ScheduledDate"/> ascendente. Usado por la
+    /// tarjeta "Pr&#243;ximos pagos" del Dashboard (F-008, slice 3, R-6).
+    /// </summary>
+    /// <remarks>
+    /// A diferencia de <see cref="GetAllAsync"/>, este m&#233;todo aplica el
+    /// filtro en SQL: <see cref="DebtPayment"/> crece con
+    /// <c>debts &#215; cuotas</c> (potencialmente cientos de filas), a
+    /// diferencia de <c>RecurringRule</c> cuya cardinalidad est&#225; acotada
+    /// por el cat&#225;logo de reglas del usuario.
+    /// </remarks>
+    /// <param name="range">Rango de fechas, inclusivo en ambos extremos.</param>
+    /// <param name="ct">Token de cancelaci&#243;n opcional.</param>
+    Task<IReadOnlyList<DebtPayment>> GetPendingByDateRangeAsync(DateRange range, CancellationToken ct = default);
 }

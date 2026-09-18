@@ -3,6 +3,8 @@
              xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
              xmlns:charts="using:ControlDeFinanzasIA.UI.Views.Charts"
              xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
+             xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
+             xmlns:dashboard="using:ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments"
              x:Class="ControlDeFinanzasIA.UI.Views.DashboardView"
              x:DataType="vm:DashboardViewModel"
              Background="{StaticResource InkBrush}">
@@ -90,6 +92,40 @@
                     </StackPanel>
                 </Border>
             </Grid>
+
+            <!-- "Próximos pagos" (R-6, R-1a): anchored to today, not the -->
+            <!-- selected month; does not change on PreviousMonth/NextMonth. -->
+            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Static resources:Strings.DashboardUpcomingPaymentsTitle}" Classes="ledger-section" />
+                    <ItemsControl ItemsSource="{Binding UpcomingPayments}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="dashboard:UpcomingPaymentItem">
+                                <Border Classes="ledger-row" Padding="12">
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding Date}"
+                                                   Foreground="{StaticResource PaperDimBrush}"
+                                                   Margin="0,0,12,0" />
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Label}" Classes="ledger-section" />
+                                            <TextBlock Text="{Binding Kind, Converter={x:Static converters:UpcomingPaymentKindLabelConverter.Instance}}"
+                                                       Foreground="{StaticResource PaperDimBrush}" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding Amount, Converter={x:Static converters:MoneyApproximateConverter.Instance}}"
+                                                   Classes="ledger-amount"
+                                                   Margin="12,0,0,0" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{x:Static resources:Strings.DashboardEmptyUpcomingPaymentsMessage}"
+                               IsVisible="{Binding !UpcomingPayments.Count}"
+                               Foreground="{StaticResource PaperDimBrush}" />
+                </StackPanel>
+            </Border>
 
         </StackPanel>
     </ScrollViewer>

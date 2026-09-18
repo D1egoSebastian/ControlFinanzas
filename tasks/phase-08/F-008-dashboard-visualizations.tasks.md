@@ -313,13 +313,23 @@ Depende del slice 1 (`IDebtPaymentRepository`) y del slice 2
 (`DashboardViewModel` ya reescrito). Aditivo — no toca la navegación de
 periodo (D-6).
 
-- [ ] 3.1 Extender `IDebtPaymentRepository` con
+- [x] 3.1 Extender `IDebtPaymentRepository` con
   `GetPendingByDateRangeAsync(DateRange range, ct)`, implementarlo en
   `DebtPaymentRepository` (EF Core, filtro SQL por `Status == Pending` y
   `ScheduledDate` en rango — `DebtPayment` crece con `debts × cuotas`, por
   eso sí lleva filtro SQL a diferencia de `RecurringRule`), y actualizar
   `FakeDebtPaymentRepository` con el método nuevo. (R-6)
-- [ ] 3.2 Crear `GetUpcomingPaymentsQuery` +
+  (`Application/Abstractions/IDebtPaymentRepository.cs`,
+  `Infrastructure/Persistence/Repositories/DebtPaymentRepository.cs` —
+  `Where(payment => payment.Status == DebtPaymentStatus.Pending &&
+  payment.ScheduledDate >= range.Start && payment.ScheduledDate <=
+  range.End)`, `AsNoTracking()`, sin `Include`.
+  `tests/…Tests.Unit/TestDoubles/FakeDebtPaymentRepository.cs` — mismo
+  filtro en memoria. Verificado por compilación (`DebtPaymentRepository`
+  y el fake siguen implementando la interfaz completa) y por
+  `GetUpcomingPaymentsQueryTests` de 3.2, que consumen el método a través
+  del fake.)
+- [x] 3.2 Crear `GetUpcomingPaymentsQuery` +
   `UpcomingPaymentItem`/`UpcomingPaymentKind` en
   `Application/UseCases/Dashboard/GetUpcomingPayments/`: combina
   `DebtPayment` pendientes (`IDebtPaymentRepository`,
@@ -332,22 +342,76 @@ periodo (D-6).
   `DashboardDefaults.UpcomingHorizonDays` (30) desde `IClock.Today`. Tests
   unitarios: límite de 30 días inclusive, mezcla y orden de ambas fuentes,
   tope de 10 elementos, reglas `Active == false` excluidas. (R-6, S-5)
-- [ ] 3.3 Conectar `GetUpcomingPaymentsQuery` a `DashboardViewModel`:
+  (`Application/UseCases/Dashboard/GetUpcomingPayments/{UpcomingPaymentItem,GetUpcomingPaymentsQuery}.cs`
+  — `tests/…Tests.Unit/Application/Dashboard/GetUpcomingPaymentsQueryTests.cs`,
+  6 tests: `ExecuteAsync_PendingPaymentExactlyAtHorizonBoundary_IsIncluded`
+  y `ExecuteAsync_PendingPaymentOneDayPastHorizon_IsExcluded` (límite de
+  30 días inclusive), `ExecuteAsync_CombinesDebtPaymentsAndRecurringRules_OrderedByDate`
+  (S-5), `ExecuteAsync_MoreThanMaxItems_CapsAtMaxItems` (tope de 10),
+  `ExecuteAsync_InactiveRecurringRule_IsExcluded`,
+  `ExecuteAsync_NoUpcomingPayments_ReturnsEmptyListWithoutThrowing` (R-7).
+  Desempate determinístico por `Label` (`ThenBy(item => item.Label,
+  StringComparer.Ordinal)`) cuando dos ítems caen el mismo día, mismo
+  patrón que el desempate de `GetCategoryBreakdownQuery` (2.4).)
+- [x] 3.3 Conectar `GetUpcomingPaymentsQuery` a `DashboardViewModel`:
   cargar **una sola vez** dentro de `LoadAsync` (no se vuelve a ejecutar en
   `PreviousMonth`/`NextMonth`, per D-6), colección
   `UpcomingPayments`. (R-1a, S-2 — la tarjeta NO cambia al navegar)
-- [ ] 3.4 Test de `DashboardViewModel`: navegar entre meses deja
+  (`UI/ViewModels/DashboardViewModel.cs` — **desviación deliberada del
+  texto literal de esta tarea** (documentada también en el reporte
+  final): la carga vive en un método separado, `LoadUpcomingPaymentsAsync`,
+  invocado una sola vez desde el constructor (`_ =
+  LoadUpcomingPaymentsAsync();`, junto a `_ = LoadAsync();`), en vez de
+  vivir dentro de `LoadAsync`. `LoadAsync` es el método que
+  `PreviousMonthAsync`/`NextMonthAsync` invocan en cada navegación; mover
+  la carga de "Próximos pagos" ahí habría exigido una bandera de "ya
+  cargado" para no violar D-6, más frágil que no ponerla ahí. El propio
+  texto de la tarea 3.3 en la sección "Alcance exacto" de este archivo ya
+  preveía esta alternativa como válida ("o como una carga separada que
+  solo corre una vez — tu decisión"). El resultado es idéntico: la
+  colección `UpcomingPayments` se puebla una sola vez y nunca cambia al
+  navegar.)
+- [x] 3.4 Test de `DashboardViewModel`: navegar entre meses deja
   `UpcomingPayments` sin cambios. (R-1a)
-- [ ] 3.5 Tarjeta "Próximos pagos" en `DashboardView.axaml`: lista de
+  (`tests/…Tests.Unit/UI/DashboardViewModelTests.cs` —
+  `NavigatingMonths_DoesNotReloadOrChangeUpcomingPayments`: siembra una
+  cuota de deuda pendiente, hace `RefreshCommand` y captura el único item
+  de `UpcomingPayments`, navega `PreviousMonth` → `NextMonth` →
+  `NextMonth`, y confirma que la colección sigue teniendo exactamente 1
+  elemento igual (por valor) al capturado antes de navegar.)
+- [x] 3.5 Tarjeta "Próximos pagos" en `DashboardView.axaml`: lista de
   `UpcomingPaymentItem` (cuota de deuda / regla recurrente) ordenada por
   fecha, cada monto con su formato `≈` por-ítem existente, estado vacío
   cuando `!UpcomingPayments.Count`. (R-6, R-7)
-- [ ] 3.6 Registrar en `Bootstrap.cs` las 4 queries del dashboard
+  (`UI/Views/DashboardView.axaml` — `ItemsControl` sobre `UpcomingPayments`
+  con `DataTemplate x:DataType="dashboard:UpcomingPaymentItem"`: fecha,
+  `Label`, tipo (`Kind`) vía el nuevo
+  `UI/Converters/UpcomingPaymentKindLabelConverter.cs`, y monto vía el
+  nuevo `UI/Converters/MoneyApproximateConverter.cs` (formatea
+  `≈ {N2} {Currency}` con `Strings.ApproximateFormat`, en la moneda nativa
+  del ítem, sin conversión — a diferencia de
+  `ExpensesViewModel.EnrichWithConversionAsync`, que sí convierte). Estado
+  vacío con el mismo patrón `IsVisible="{Binding
+  !UpcomingPayments.Count}"` que `RecurringRulesView.axaml:79`. 4 claves
+  nuevas de localización en `Strings.resx`/`Strings.es-DO.resx`
+  (`DashboardUpcomingPaymentsTitle`,
+  `DashboardEmptyUpcomingPaymentsMessage`,
+  `DashboardUpcomingPaymentKindDebt`, `DashboardUpcomingPaymentKindRecurring`)
+  con sus accessors manuales en `Strings.Designer.cs` (mismo paso manual
+  documentado en 2.11). Verificado por el compilador de AXAML de Avalonia
+  (`dotnet build -c Release` en verde).)
+- [x] 3.6 Registrar en `Bootstrap.cs` las 4 queries del dashboard
   (`GetMonthSummaryQuery`, `GetCategoryBreakdownQuery`,
   `GetMonthlyEvolutionQuery`, `GetUpcomingPaymentsQuery`) como
   `AddTransient<…>()`, junto a `GetDebtsQuery`. No requiere nuevo registro
   de repositorio (`AddPersistence` ya expone las implementaciones
   concretas). (infra)
+  (`UI/Composition/Bootstrap.cs` —
+  `services.AddTransient<GetUpcomingPaymentsQuery>();` junto a las otras 3
+  queries del dashboard. Verificado por el build en verde y por
+  `NavigationServiceTests`/`ShellViewModelTests`, que ya construían
+  `DashboardViewModel` completo antes de este slice y siguen en verde con
+  el nuevo parámetro de constructor.)
 
 ## 4. Cierre
 

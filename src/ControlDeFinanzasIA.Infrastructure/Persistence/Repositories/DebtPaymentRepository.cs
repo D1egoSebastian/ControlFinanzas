@@ -1,6 +1,7 @@
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Domain.Debts;
+using ControlDeFinanzasIA.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace ControlDeFinanzasIA.Infrastructure.Persistence.Repositories;
@@ -62,4 +63,23 @@ public sealed class DebtPaymentRepository : IDebtPaymentRepository
             .OrderBy(payment => payment.InstallmentNumber)
             .ToListAsync(ct)
             .ConfigureAwait(false);
+
+    /// <summary>
+    /// Filtro SQL real (<c>WHERE</c>) por <see cref="DebtPaymentStatus.Pending"/>
+    /// y <see cref="DebtPayment.ScheduledDate"/> dentro de <paramref name="range"/>
+    /// — no trae el calendario completo a memoria para filtrar (F-008, slice 3, R-6).
+    /// </summary>
+    public async Task<IReadOnlyList<DebtPayment>> GetPendingByDateRangeAsync(DateRange range, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(range);
+
+        return await _db.DebtPayments
+            .AsNoTracking()
+            .Where(payment => payment.Status == DebtPaymentStatus.Pending
+                && payment.ScheduledDate >= range.Start
+                && payment.ScheduledDate <= range.End)
+            .OrderBy(payment => payment.ScheduledDate)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+    }
 }

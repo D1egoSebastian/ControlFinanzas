@@ -5,6 +5,7 @@ using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
 using ControlDeFinanzasIA.Application.UseCases.Debts.CreateDebtWithSchedule;
 using ControlDeFinanzasIA.Application.UseCases.Debts.GetDebts;
 using ControlDeFinanzasIA.Application.UseCases.Debts.GetDebtSchedule;
@@ -135,11 +136,11 @@ public static class Bootstrap
         services.AddTransient<IValidator<CreateTagCommand>, CreateTagValidator>();
         services.AddTransient<GetPaymentMethodsQuery>();
 
-        // Dashboard (F-008 Phase 8, slice 2): GetUpcomingPaymentsQuery is
-        // registered separately in slice 3, once it exists.
+        // Dashboard (F-008 Phase 8): the 4 dashboard queries.
         services.AddTransient<GetMonthSummaryQuery>();
         services.AddTransient<GetCategoryBreakdownQuery>();
         services.AddTransient<GetMonthlyEvolutionQuery>();
+        services.AddTransient<GetUpcomingPaymentsQuery>();
 
         // Multi-moneda F-501/F-502/F-511: provider stub + cache + converter.
         services.AddExchangeRates(configuration);
