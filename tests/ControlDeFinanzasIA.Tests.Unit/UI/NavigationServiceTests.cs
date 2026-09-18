@@ -112,6 +112,88 @@ public sealed class NavigationServiceTests
         Assert.False(navigationService.CanGoBack);
     }
 
+    [Fact]
+    public void NavigateToTyped_ConfigureRunsBeforeCurrentViewModelChanges_AndBeforeCurrentChanged()
+    {
+        // Arrange
+        DashboardViewModel dashboard = CreateDashboardViewModel();
+        FakeServiceProvider services = new(new Dictionary<Type, object>
+        {
+            { typeof(DashboardViewModel), dashboard }
+        });
+        NavigationService navigationService = new(services);
+
+        ViewModelBase? currentDuringConfigure = dashboard; // sentinel distinct from the expected null
+        bool currentChangedFiredBeforeConfigure = false;
+        bool currentChangedFired = false;
+        navigationService.CurrentChanged += (_, _) => currentChangedFired = true;
+
+        // Act
+        navigationService.NavigateTo<DashboardViewModel>(RouteNames.Dashboard, vm =>
+        {
+            currentDuringConfigure = navigationService.CurrentViewModel;
+            currentChangedFiredBeforeConfigure = currentChangedFired;
+            Assert.Same(dashboard, vm);
+        });
+
+        // Assert
+        Assert.Null(currentDuringConfigure);
+        Assert.False(currentChangedFiredBeforeConfigure);
+        Assert.Same(dashboard, navigationService.CurrentViewModel);
+        Assert.True(currentChangedFired);
+    }
+
+    [Fact]
+    public void NavigateToTyped_UnknownRoute_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        FakeServiceProvider services = new(new Dictionary<Type, object>
+        {
+            { typeof(DashboardViewModel), CreateDashboardViewModel() }
+        });
+        NavigationService navigationService = new(services);
+
+        // Act & Assert
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(
+            () => navigationService.NavigateTo<DashboardViewModel>("Nope", _ => { }));
+        Assert.Contains("Unknown route", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void NavigateToTyped_RouteTypeMismatch_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        FakeServiceProvider services = new(new Dictionary<Type, object>
+        {
+            { typeof(DashboardViewModel), CreateDashboardViewModel() }
+        });
+        NavigationService navigationService = new(services);
+
+        // Act & Assert
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(
+            () => navigationService.NavigateTo<IncomeViewModel>(RouteNames.Dashboard, _ => { }));
+        Assert.Contains("not assignable", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void NavigateToTyped_ValidRoute_PushesHistoryAndSupportsGoBack()
+    {
+        // Arrange
+        DashboardViewModel dashboard = CreateDashboardViewModel();
+        FakeServiceProvider services = new(new Dictionary<Type, object>
+        {
+            { typeof(DashboardViewModel), dashboard }
+        });
+        NavigationService navigationService = new(services);
+        navigationService.NavigateTo(RouteNames.Dashboard);
+
+        // Act
+        navigationService.NavigateTo<DashboardViewModel>(RouteNames.Dashboard, _ => { });
+
+        // Assert
+        Assert.True(navigationService.CanGoBack);
+    }
+
     private static DashboardViewModel CreateDashboardViewModel()
     {
         FakeExpenseRepository expenseRepo = new();

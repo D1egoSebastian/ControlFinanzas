@@ -64,6 +64,39 @@ public sealed class FakeNavigationService : INavigationService
         CurrentChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Gets the list of (routeName, configure) pairs passed to
+    /// <see cref="NavigateTo{TViewModel}(string, Action{TViewModel})"/>.
+    /// </summary>
+    public List<string> NavigateToTypedCalls { get; } = new();
+
+    /// <inheritdoc />
+    public void NavigateTo<TViewModel>(string routeName, Action<TViewModel> configure)
+        where TViewModel : ViewModelBase
+    {
+        ArgumentNullException.ThrowIfNull(routeName);
+        ArgumentNullException.ThrowIfNull(configure);
+
+        NavigateToTypedCalls.Add(routeName);
+
+        if (!_routes.TryGetValue(routeName, out ViewModelBase? viewModel))
+        {
+            throw new InvalidOperationException($"Unknown route: {routeName}");
+        }
+
+        if (viewModel is not TViewModel typed)
+        {
+            throw new InvalidOperationException(
+                $"Route '{routeName}' resolves to '{viewModel.GetType().Name}', which is not assignable to requested type '{typeof(TViewModel).Name}'.");
+        }
+
+        configure(typed);
+
+        CurrentViewModel = viewModel;
+        _history.Push(viewModel);
+        CurrentChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     /// <inheritdoc />
     public void GoBack()
     {

@@ -30,6 +30,26 @@ public interface INavigationService
     void NavigateTo(string routeName);
 
     /// <summary>
+    /// Navigates to the view-model registered for <paramref name="routeName"/>, configuring it
+    /// via <paramref name="configure"/> before it becomes the active view-model.
+    /// </summary>
+    /// <remarks>
+    /// <paramref name="configure"/> runs after the view-model is resolved but before
+    /// <see cref="CurrentViewModel"/> changes and before <see cref="CurrentChanged"/> fires, so the
+    /// target view-model's constructor-driven load has already started (it cannot be pre-empted) and
+    /// <paramref name="configure"/> supersedes it rather than preceding it.
+    /// </remarks>
+    /// <typeparam name="TViewModel">The expected view-model type registered for the route.</typeparam>
+    /// <param name="routeName">The route name to navigate to.</param>
+    /// <param name="configure">A delegate that configures the resolved view-model before activation.</param>
+    /// <exception cref="InvalidOperationException">
+    /// The route is not registered, or is registered for a view-model type that is not assignable to
+    /// <typeparamref name="TViewModel"/>.
+    /// </exception>
+    void NavigateTo<TViewModel>(string routeName, Action<TViewModel> configure)
+        where TViewModel : ViewModelBase;
+
+    /// <summary>
     /// Goes back to the previous view-model in the history stack. 
     /// </summary>
     /// <remarks>

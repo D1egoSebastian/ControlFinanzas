@@ -49,7 +49,41 @@ public sealed class NavigationService : ObservableObject, INavigationService
     public event EventHandler? CurrentChanged;
 
     /// <inheritdoc />
-    public void NavigateTo(string routeName)
+    public void NavigateTo(string routeName) => NavigateCore(routeName, configure: null);
+
+    /// <inheritdoc />
+    public void NavigateTo<TViewModel>(string routeName, Action<TViewModel> configure)
+        where TViewModel : ViewModelBase
+    {
+        ArgumentNullException.ThrowIfNull(routeName);
+        ArgumentNullException.ThrowIfNull(configure);
+
+        if (!_routes.TryGetValue(routeName, out Type? viewModelType))
+        {
+            throw new InvalidOperationException($"Unknown route: {routeName}");
+        }
+
+        if (!typeof(TViewModel).IsAssignableFrom(viewModelType))
+        {
+            throw new InvalidOperationException(
+                $"Route '{routeName}' resolves to '{viewModelType.Name}', which is not assignable to requested type '{typeof(TViewModel).Name}'.");
+        }
+
+        NavigateCore(routeName, viewModel => configure((TViewModel)viewModel));
+    }
+
+    /// <summary>
+    /// Resolves and activates the view-model registered for <paramref name="routeName"/>, optionally
+    /// running <paramref name="configure"/> on the resolved instance before it becomes the active
+    /// view-model. Shared by <see cref="NavigateTo(string)"/> and the typed overload so both produce
+    /// byte-for-byte identical navigation behavior.
+    /// </summary>
+    /// <param name="routeName">The route name to navigate to.</param>
+    /// <param name="configure">
+    /// An optional delegate invoked after resolution and before activation. <see langword="null"/> for
+    /// the untyped overload.
+    /// </param>
+    private void NavigateCore(string routeName, Action<ViewModelBase>? configure)
     {
         ArgumentNullException.ThrowIfNull(routeName);
 
@@ -63,6 +97,8 @@ public sealed class NavigationService : ObservableObject, INavigationService
         {
             throw new InvalidOperationException($"Route '{routeName}' resolved to an invalid type.");
         }
+
+        configure?.Invoke(viewModel);
 
         _history.Push(viewModel);
         CurrentViewModel = viewModel;

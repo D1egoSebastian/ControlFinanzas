@@ -52,6 +52,16 @@ public sealed partial class ExpensesViewModel : ViewModelBase
     private readonly IStringLocalizer<Strings> _localizer;
 
     /// <summary>
+    /// Monotonically increasing token used by <see cref="RefreshAsync"/> to discard the result of a
+    /// refresh that has been superseded by a newer one that started later but completed first (e.g.
+    /// the constructor's initial unfiltered load racing with <see cref="ApplyDayFilter"/>'s filtered
+    /// one during parameterized navigation drill-down, F-009). This is a pre-existing race — the same
+    /// overlap already happens today between Apply and Clear in quick succession — the guard just
+    /// makes it safe under any caller, not only calendar drill-down.
+    /// </summary>
+    private int _refreshGeneration;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="ExpensesViewModel"/> class.
     /// </summary>
     public ExpensesViewModel(
@@ -558,6 +568,8 @@ public sealed partial class ExpensesViewModel : ViewModelBase
     [RelayCommand]
     private async Task RefreshAsync()
     {
+        int generation = ++_refreshGeneration;
+
         Result result = await _getTransactionsQuery.ExecuteAsync(
             new GetTransactionsQueryRequest(
                 Page,
@@ -568,12 +580,24 @@ public sealed partial class ExpensesViewModel : ViewModelBase
                 CurrentFilter.TagIds),
             default);
 
+        PagedResult<ExpenseDto>? paged = null;
         if (result.IsSuccess)
         {
-            var paged = (PagedResult<ExpenseDto>)result.Value!;
+            paged = (PagedResult<ExpenseDto>)result.Value!;
             await EnrichWithConversionAsync(paged.Items, default);
+        }
+
+        // A newer refresh started and possibly completed while this one was awaiting; its result is
+        // stale and must not clobber whatever the newer generation already wrote.
+        if (generation != _refreshGeneration)
+        {
+            return;
+        }
+
+        if (result.IsSuccess)
+        {
             Expenses.Clear();
-            foreach (ExpenseDto item in paged.Items)
+            foreach (ExpenseDto item in paged!.Items)
             {
                 Expenses.Add(item);
             }
@@ -590,6 +614,25 @@ public sealed partial class ExpensesViewModel : ViewModelBase
                 result.Error?.Code,
                 result.Error?.Message);
         }
+    }
+
+    /// <summary>
+    /// Sets the expense filter to a single exact day and applies it, refreshing the list from page 1.
+    /// </summary>
+    /// <remarks>
+    /// Intended as the <c>configure</c> delegate target for parameterized navigation drill-down from
+    /// the calendar view (F-009): <c>INavigationService.NavigateTo&lt;ExpensesViewModel&gt;</c> calls
+    /// this after the view-model is resolved but before it becomes the active view-model. Setting
+    /// <see cref="FilterDateFrom"/>/<see cref="FilterDateTo"/> alone does not reload the list — there
+    /// are no property-changed partials for those properties — so <see cref="ApplyFilterCommand"/>
+    /// must be invoked explicitly.
+    /// </remarks>
+    /// <param name="day">The exact day to filter by; used for both <c>DateFrom</c> and <c>DateTo</c>.</param>
+    public void ApplyDayFilter(DateOnly day)
+    {
+        FilterDateFrom = day;
+        FilterDateTo = day;
+        _ = ApplyFilterCommand.ExecuteAsync(null);
     }
 
     /// <summary>

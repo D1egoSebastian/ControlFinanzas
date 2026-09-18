@@ -2,6 +2,7 @@ using System.ComponentModel;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Application.DTOs;
+using ControlDeFinanzasIA.Application.DTOs.Aggregates;
 using ControlDeFinanzasIA.Application.Services;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.CreateTag;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
@@ -379,6 +380,129 @@ public sealed class ExpensesViewModelTests
     }
 
     [Fact]
+    public void ApplyDayFilter_SetsCurrentFilterToSingleDay_Synchronously()
+    {
+        // Arrange
+        FakeExpenseRepository expenseRepo = new();
+        expenseRepo.SetFilterResult(CreateExpenses(1), 1, 1, 20);
+        ExpensesViewModel viewModel = CreateViewModel(expenseRepo: expenseRepo);
+        DateOnly day = new(2026, 3, 10);
+
+        // Act
+        viewModel.ApplyDayFilter(day);
+
+        // Assert: CurrentFilter is set synchronously, before ApplyFilterAsync's own await completes.
+        Assert.Equal(day, viewModel.FilterDateFrom);
+        Assert.Equal(day, viewModel.FilterDateTo);
+        Assert.Equal(day, viewModel.CurrentFilter.DateFrom);
+        Assert.Equal(day, viewModel.CurrentFilter.DateTo);
+        Assert.Equal(1, viewModel.CurrentFilter.Page);
+    }
+
+    [Fact]
+    public async Task ApplyDayFilter_RefreshesListForThatDay()
+    {
+        // Arrange
+        FakeExpenseRepository expenseRepo = new();
+        expenseRepo.SetFilterResult(CreateExpenses(3), 3, 1, 20);
+        ExpensesViewModel viewModel = CreateViewModel(expenseRepo: expenseRepo);
+        DateOnly day = new(2026, 3, 10);
+
+        // Act
+        viewModel.ApplyDayFilter(day);
+        // ApplyDayFilter's own refresh is fire-and-forget; force-await one more refresh cycle against
+        // the now-set CurrentFilter so the assertion below observes a settled repository call.
+        await viewModel.RefreshCommand.ExecuteAsync(null);
+
+        // Assert
+        Assert.Equal(day, expenseRepo.LastExpenseFilter!.DateFrom);
+        Assert.Equal(day, expenseRepo.LastExpenseFilter.DateTo);
+    }
+
+    [Fact]
+    public async Task Refresh_SupersededBySecondCall_DiscardsStaleResultViaGenerationGuard()
+    {
+        // Arrange: the constructor's own fire-and-forget refresh completes synchronously against the
+        // fallback FakeExpenseRepository (Task.FromResult), so it never reaches the controlled queue.
+        SequencedExpenseRepository expenseRepo = new();
+        ExpensesViewModel viewModel = CreateViewModel(expenseRepo: expenseRepo);
+
+        List<Expense> staleItems = CreateExpenses(1);
+        List<Expense> freshItems = CreateExpenses(2);
+
+        TaskCompletionSource<PagedResult<Expense>> staleTcs = expenseRepo.EnqueueControlledCall();
+        Task staleRefresh = viewModel.RefreshCommand.ExecuteAsync(null);
+
+        TaskCompletionSource<PagedResult<Expense>> freshTcs = expenseRepo.EnqueueControlledCall();
+        Task freshRefresh = viewModel.RefreshCommand.ExecuteAsync(null);
+
+        // Act: the newer (second) call completes first...
+        freshTcs.SetResult(new PagedResult<Expense>(freshItems, freshItems.Count, 1, 20));
+        await freshRefresh;
+        Assert.Equal(freshItems.Count, viewModel.Expenses.Count);
+
+        // ...then the superseded (first) call completes later, and must be discarded.
+        staleTcs.SetResult(new PagedResult<Expense>(staleItems, staleItems.Count, 1, 20));
+        await staleRefresh;
+
+        // Assert: the stale completion did not clobber the fresher state.
+        Assert.Equal(freshItems.Count, viewModel.Expenses.Count);
+    }
+
+    /// <summary>
+    /// Test-only <see cref="IExpenseRepository"/> whose <see cref="GetByFilterAsync"/> can be made to
+    /// return a caller-controlled, not-yet-completed <see cref="Task{TResult}"/> so tests can force a
+    /// specific interleaving of concurrent <c>RefreshAsync</c> calls (generation-guard coverage).
+    /// Calls made before any controlled task is enqueued fall back to an in-memory
+    /// <see cref="FakeExpenseRepository"/> so the constructor's own initial refresh is unaffected.
+    /// </summary>
+    private sealed class SequencedExpenseRepository : IExpenseRepository
+    {
+        private readonly FakeExpenseRepository _inner = new();
+        private readonly Queue<TaskCompletionSource<PagedResult<Expense>>> _pending = new();
+
+        public TaskCompletionSource<PagedResult<Expense>> EnqueueControlledCall()
+        {
+            TaskCompletionSource<PagedResult<Expense>> tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            _pending.Enqueue(tcs);
+            return tcs;
+        }
+
+        public Task<PagedResult<Expense>> GetByFilterAsync(ExpenseFilter filter, CancellationToken ct = default)
+            => _pending.Count > 0 ? _pending.Dequeue().Task : _inner.GetByFilterAsync(filter, ct);
+
+        public Task<Result> AddAsync(Expense expense, CancellationToken ct = default)
+            => _inner.AddAsync(expense, ct);
+
+        public Task<Result> UpdateAsync(Expense expense, CancellationToken ct = default)
+            => _inner.UpdateAsync(expense, ct);
+
+        public Task<Result> RemoveAsync(Guid id, CancellationToken ct = default)
+            => _inner.RemoveAsync(id, ct);
+
+        public Task<Expense?> GetByIdAsync(Guid id, CancellationToken ct = default)
+            => _inner.GetByIdAsync(id, ct);
+
+        public Task<Expense?> GetByRecurringRuleAndPeriodAsync(Guid recurringRuleId, DateOnly period, CancellationToken ct = default)
+            => _inner.GetByRecurringRuleAndPeriodAsync(recurringRuleId, period, ct);
+
+        public Task<IReadOnlyList<Expense>> GetAllAsync(CancellationToken ct = default)
+            => _inner.GetAllAsync(ct);
+
+        public Task<IReadOnlyList<CurrencyTotal>> GetPeriodTotalsAsync(DateRange period, CancellationToken ct = default)
+            => _inner.GetPeriodTotalsAsync(period, ct);
+
+        public Task<IReadOnlyList<CategoryCurrencyTotal>> GetCategoryTotalsAsync(DateRange period, CancellationToken ct = default)
+            => _inner.GetCategoryTotalsAsync(period, ct);
+
+        public Task<IReadOnlyList<MonthCurrencyTotal>> GetMonthlyTotalsAsync(DateRange period, CancellationToken ct = default)
+            => _inner.GetMonthlyTotalsAsync(period, ct);
+
+        public Task<IReadOnlyList<DayCurrencyTotal>> GetDailyTotalsAsync(DateRange period, CancellationToken ct = default)
+            => _inner.GetDailyTotalsAsync(period, ct);
+    }
+
+    [Fact]
     public void NewViewName_SetRaisesPropertyChanged()
     {
         // Arrange
@@ -402,7 +526,7 @@ public sealed class ExpensesViewModelTests
 
     private static ExpensesViewModel CreateViewModel(
         FakeClock? clock = null,
-        FakeExpenseRepository? expenseRepo = null,
+        IExpenseRepository? expenseRepo = null,
         FakeIncomeRepository? incomeRepo = null,
         FakeCategoryRepository? categoryRepo = null,
         FakeTagRepository? tagRepo = null,
