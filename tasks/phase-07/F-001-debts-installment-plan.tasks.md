@@ -2,12 +2,15 @@
 
 ## Revisión de entrega
 
-Estimated changed lines: 600–900 (similar order of magnitude to F-006/F-001)
-Decision needed before apply: Yes — pago parcial vs total (spec asume total-only,
-confirmar antes de codear) y si "Generar del mes" de Fase 6 muestra las
-`DebtPayment` del periodo o si Deudas tiene su propia pantalla.
-Chained PRs recommended: Yes (foundation → use cases → UI, igual que F-006)
-400-line budget risk: Medium-High
+Estimated changed lines: 600–900 (similar order of magnitude to F-006/F-001) —
+actual: 46 files, ~4,468 insertions (single apply pass, not chained; accepted
+given the whole feature landed green in one commit).
+Decisions (resolved): pago total-only (confirmed, as spec assumed). Deudas
+tiene su propia pantalla (`DebtsView`), separada de "Generar del mes" —
+modelos de interacción distintos (seguimiento de pago vs. preview de
+generación).
+Applied: 2026-09-18. Verified independently (not just the applying agent's
+self-report) before archive — see `.atl/sdd/f-007p7-debts-installment-plan/verify-report.md`.
 
 ## Foundation
 
@@ -100,9 +103,8 @@ Chained PRs recommended: Yes (foundation → use cases → UI, igual que F-006)
   no ejecutado — Avalonia no tiene runner headless en este entorno; cubierto
   por `DebtsViewModelTests` en su lugar.)
 - [x] 5.2 Actualizar `spec/phases/phase-07/features.md` (marcar slices completados).
-- [ ] 5.3 Archivar spec (`F-001-debts-installment-plan.spec.md` → `.done.md`),
+- [x] 5.3 Archivar spec (`F-001-debts-installment-plan.spec.md` → `.done.md`),
   escribir `verify-report.md` + `archive-report.md` en
   `.atl/sdd/f-007p7-debts-installment-plan/`, actualizar `docs/roadmap.md` §Fase 7.
-  (Fuera de alcance de este apply por instrucción explícita: el cierre de
-  fase — archivar spec, verify-report, archive-report — es un paso separado
-  posterior a la revisión de este apply.)
+  (Gates re-verificados de forma independiente antes de archivar — no se confió
+  solo en el reporte del agente que hizo el apply. Ver `verify-report.md`.)

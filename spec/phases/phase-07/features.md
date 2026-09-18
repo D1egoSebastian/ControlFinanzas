@@ -1,7 +1,7 @@
 # Fase 7 — Deudas con plan de cuotas
 
 > **Fase:** 7 — Deudas
-> **Estado:** ✅ Apply completado (2026-09-18) — pendiente verify/archive del ciclo SDD
+> **Estado:** ✅ Completada (2026-09-18) — ver `spec/features/phase-07/F-001-debts-installment-plan.done.md`
 > **Spec ID:** PHASE-07-PLAN
 > **Dependencias:** Phase 6 ✅ (comparte el patrón de generación y reutiliza `Money`, `Currency`, `PaymentMethodId`)
 > **Roadmap:** `docs/roadmap.md` §Fase 7 (líneas ~383–424)

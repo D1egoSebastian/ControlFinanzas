@@ -384,7 +384,7 @@ Detalle operativo: `spec/features/phase-06/F-001-recurring-rules.spec.md`,
 
 ---
 
-### Fase 7 — Deudas con plan de cuotas
+### Fase 7 — Deudas con plan de cuotas ✅ COMPLETADA (2026-09-18)
 
 **Objetivo**
 Modelar deudas con plan de cuotas: crear la deuda, ver el calendario de
@@ -398,8 +398,10 @@ separada aísla su complejidad y permite iterar sobre las lecciones de
 la fase 6.
 
 **Dependencias**
-- Fase 6 (comparte patrón de generación; los pagos de deuda también
-  aparecen como "generados del mes" en la pantalla de generación).
+- Fase 6 (comparte patrón de generación de dominio; reutiliza `Money`,
+  `Currency`. Nota: en la implementación, los pagos de deuda quedaron en su
+  propia pantalla `DebtsView`, no integrados a "Generar del mes" — ver
+  decisión resuelta más abajo).
 
 **Entregables esperados**
 - `Debt` y `DebtPayment` entidades.
@@ -413,17 +415,37 @@ la fase 6.
 - Tests: generador con varios escenarios (cuotas mensuales, quincenales,
   con y sin saltos), consistencia del saldo.
 
-**Riesgos principales**
-- Pago parcial vs total.
-- Saltar cuotas manteniendo coherencia del plan.
-- Interacción con la fase 6: ¿la generación de recurrentes maneja
-  también las cuotas o son dos pantallas separadas? Decisión a fijar en
-  la Specification.
+**Riesgos principales (resueltos)**
+- Pago parcial vs total → **resuelto: solo pago total en v1** (parcial queda
+  fuera de alcance, documentado explícitamente en la spec).
+- Saltar cuotas manteniendo coherencia del plan → **resuelto**: `SkipDebtPaymentUseCase`
+  no re-numera ni desplaza las cuotas siguientes (probado).
+- Interacción con la fase 6 → **resuelto: pantalla separada** (`DebtsView`).
+  Pagar una cuota es un evento de seguimiento explícito, distinto del modelo
+  de preview/confirmación de "Generar del mes".
 
 **Criterios de fase completada**
 - Crear una deuda a 12 cuotas, ver el calendario, registrar 3 pagos,
   ver el saldo actualizado, cerrar la deuda al pagar la última.
 - El saldo pendiente nunca es inconsistente con los pagos registrados.
+
+**Estado actual (2026-09-18) — ✅ FASE COMPLETADA**
+- ✅ `Debt`/`DebtPayment` (aggregate con factory `Create`, invariantes) + `DebtScheduleGenerator`
+  (servicio de dominio puro, 15 escenarios de fecha en `DebtScheduleGeneratorTests`).
+- ✅ `IDebtRepository`/`IDebtPaymentRepository` + EF Core + migración `20260918025303_AddDebts`.
+- ✅ `CreateDebtWithScheduleUseCase` (calendario completo en una operación transaccional),
+  `RegisterDebtPaymentUseCase` (recalcula saldo, cierra automáticamente en la última cuota),
+  `SkipDebtPaymentUseCase`, `GetDebtsQuery`, `GetDebtScheduleQuery`.
+- ✅ UI: `DebtsView`/`DebtsViewModel` — lista de deudas, calendario de cuotas, registrar pago,
+  saltar cuota, saldo pendiente visible.
+- ✅ Gates: build limpio, 698/698 tests verdes (568 unit + 130 integration, subiendo desde 614),
+  `dotnet format style` limpio, NetArchTest 11/11 — verificados de forma independiente antes de
+  archivar, no solo confiando en el reporte del agente que implementó.
+- ✅ Dos bugs reales detectados y corregidos durante el apply: instancia de `Money` compartida
+  entre cuotas generadas (EF Core owned-type la perdía silenciosamente para todas menos una),
+  y `AppDbContextModelSnapshot.cs` desactualizado respecto a una migración de Fase 6 escrita a
+  mano (habría reintentado añadir columnas de `Expenses` ya existentes).
+- ✅ SDD archivado: `spec/features/phase-07/F-001-debts-installment-plan.done.md`.
 
 ---
 

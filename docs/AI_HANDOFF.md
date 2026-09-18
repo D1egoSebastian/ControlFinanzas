@@ -1,7 +1,7 @@
 # AI_HANDOFF.md — ControlDeFinanzasIA
 
 > Self-contained handoff document for any AI agent picking up the project tomorrow.
-> Verified against the filesystem on **2026-09-17**. All claims are sourced from
+> Verified against the filesystem on **2026-09-18**. All claims are sourced from
 > `AGENTS.md`, `spec/`, `docs/`, or the repo's actual state.
 
 ---
@@ -9,8 +9,8 @@
 ## 1. TL;DR
 
 - **What it is:** `ControlDeFinanzasIA` — a cross-platform (.NET 8 + Avalonia MVVM) desktop app for personal-finance control with AI assist. 100% local data. DOP + USD.
-- **Current phase:** **Phase 6 archived** (Recurring rules: subscriptions + fixed expenses). Phases 0–6 fully archived. **Phase 7 (Debts) scaffolding in progress.**
-- **Test count:** 614/614 passing (492 unit + 122 integration) as of 2026-09-17, Phase 6 close.
+- **Current phase:** **Phase 7 archived** (Debts with installment plan). Phases 0–7 fully archived. **Phase 8 (dashboard/visualizations) not started.**
+- **Test count:** 698/698 passing (568 unit + 130 integration) as of 2026-09-18, Phase 7 close.
 - **Key constraint:** Filesystem-based SDD specs in `spec/features/phase-NN/` (NOT OpenSpec). `.spec.md` = active, `.done.md` = archived. Do not create `openspec/`.
 - **Architecture:** Clean Architecture (Domain / Application / Infrastructure / UI). NetArchTest rules R-1..R-5 enforced in `Tests.Unit`.
 
@@ -26,7 +26,7 @@
 | Type | Cross-platform desktop (Windows, macOS, Linux), single-user, local data only |
 | UI pattern | MVVM strict with **CommunityToolkit.Mvvm** (`[ObservableProperty]`, `[RelayCommand]`) |
 | Localization | `es-DO` default + `en` via `IStringLocalizer` / resx |
-| Status | Phases 0–5 ✅ archived; Phase 6 in progress (recurring rules) |
+| Status | Phases 0–7 ✅ archived; Phase 8 (dashboard/visualizations) not started |
 
 ---
 
@@ -43,6 +43,7 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 | 4 | Income + edit/delete + tags + filters + saved views | 8 | 8 | 0 | 100% | `spec/phases/phase-04/features.md` |
 | 5 | Payment method + multi-moneda DOP/USD | 3 (`F-501..F-503`; plan says 13 sub-features 5-001..5-013 grouped) | 3 | 0 | 100% | `spec/phases/phase-05/features.md` |
 | 6 | Recurring rules (subscriptions + fixed expenses) | 1 umbrella `F-001` covering 8 sub-features (6-001..6-008) | 1 | 0 | 100% | `spec/phases/phase-06/features.md` + `spec/features/phase-06/F-001-recurring-rules.done.md` |
+| 7 | Debts with installment plan | 1 umbrella `F-001` covering 8 slices (7-001..7-008) | 1 | 0 | 100% | `spec/phases/phase-07/features.md` + `spec/features/phase-07/F-001-debts-installment-plan.done.md` |
 
 ### Per-phase detail
 
@@ -61,20 +62,21 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 **Phase 5** — `spec/features/phase-05/` (3 done)
 - `F-501-exchange-rate-stub`, `F-502-currency-converter`, `F-503-payment-method-id-entities`. Plan-level IDs 5-001..5-013 grouped under these three specs. Payment method + multi-moneda wired end-to-end. `559/559 tests verde` at close (2026-09-08).
 
-**Phase 6** — `spec/features/phase-06/` (1 active)
-- `F-001-recurring-rules.spec.md` (umbrella). 8 sub-features in `spec/phases/phase-06/features.md`:
-  - `6-001` Calculator (Monthly/Bimonthly/Yearly, leap year, end-of-month) — ✅
-  - `6-002` Strengthen `RecurringRule` (factory `Create`, invariants) — ✅
-  - `6-003` `IRecurringRuleRepository` + EF Core impl + migration `20260910205248_AddRecurringRules` — ✅
-  - `6-004` `CreateSubscriptionUseCase` + `UpdateSubscriptionUseCase` — ✅ backend; ⏳ formal tests
-  - `6-005` `GenerateDueRecurringUseCase` (botón "Generar del mes") — code exists, preview/confirm path not verified
-  - `6-006` UI: lista + form create/edit — 🔄 Subscription demo implemented (`RecurringRulesViewModel` + `RecurringRulesView.axaml`); broader coverage pending
-  - `6-007` UI: "Generar del mes" screen with preview — ⏳
-  - `6-008` Same flow for `FixedExpense` — backend `Create/Update/Delete/Deactivate FixedExpense` use cases present; UI coverage partial
+**Phase 6** — `spec/features/phase-06/` (1 done, archived 2026-09-17)
+- `F-001-recurring-rules.done.md` (umbrella). All 8 slices (6-001..6-008) complete:
+  calculator, `RecurringRule`/`Subscription`/`FixedExpense`, repository + migration,
+  full CRUD for both rule types, `GenerateDueRecurringUseCase` with idempotent
+  preview/confirm, unified `RecurringRulesView` UI including the "Generar del mes" section.
+
+**Phase 7** — `spec/features/phase-07/` (1 done, archived 2026-09-18)
+- `F-001-debts-installment-plan.done.md` (umbrella). All 8 slices (7-001..7-008) complete:
+  `Debt`/`DebtPayment` aggregate + `DebtScheduleGenerator`, repository + migration,
+  `CreateDebtWithScheduleUseCase`/`RegisterDebtPaymentUseCase` (auto-close on last
+  installment)/`SkipDebtPaymentUseCase`/queries, standalone `DebtsView` UI.
 
 ---
 
-## 4. Phase 6 — archived (2026-09-17)
+## 4. Phase 6 & 7 — archived (2026-09-17, 2026-09-18)
 
 ### What's done (backend)
 
@@ -106,24 +108,34 @@ All 12 items (1.1–4.5) are checked off. Summary of what closed them:
 
 The full task breakdown is at `tasks/phase-06/F-001-recurring-rules.tasks.md`.
 
+### Phase 7 — what's done
+
+- Domain: `src/ControlDeFinanzasIA.Domain/Debts/{Debt,DebtPayment,DebtScheduleGenerator,DebtFrequency,DebtStatus,DebtPaymentStatus}.cs`
+- Application: `Application/Abstractions/{IDebtRepository,IDebtPaymentRepository}.cs`; `Application/UseCases/Debts/{CreateDebtWithSchedule,RegisterDebtPayment,SkipDebtPayment,GetDebts,GetDebtSchedule}/*.cs`
+- Infrastructure: `Infrastructure/Persistence/Configurations/{DebtConfiguration,DebtPaymentConfiguration}.cs`; `Infrastructure/Persistence/Repositories/{DebtRepository,DebtPaymentRepository}.cs`; migration `20260918025303_AddDebts`
+- UI: `src/ControlDeFinanzasIA.UI/Views/DebtsView.axaml(.cs)` + `ViewModels/DebtsViewModel.cs`, own screen (not merged into "Generar del mes"), registered under `RouteNames.Debts`
+- Gates: build clean, 698/698 tests, `dotnet format style` clean, NetArchTest 11/11 — re-verified independently before archive, see `.atl/sdd/f-007p7-debts-installment-plan/verify-report.md` and `archive-report.md`.
+- Spec archived to `spec/features/phase-07/F-001-debts-installment-plan.done.md`.
+
+The full task breakdown is at `tasks/phase-07/F-001-debts-installment-plan.tasks.md`.
+
 ---
 
 ## 5. What's pending (next up)
 
 Ordered by priority. Each item references its source-of-truth spec/plan.
 
-1. **Phase 7 — Debts with installment plan** — `docs/roadmap.md` §Fase 7 (lines ~383–424). Proposal/spec/tasks scaffolding is under `.atl/sdd/f-007p7-debts-installment-plan/` and `spec/features/phase-07/`, `tasks/phase-07/` — ready for `apply`.
-2. **Phase 8 — Period selector + dashboard + visualizations** — `docs/roadmap.md` §Fase 8 (lines ~426–463)
-3. **Phase 9 — Calendar view** — `docs/roadmap.md` §Fase 9
-4. **Phase 10 — Monthly budgets** — `docs/roadmap.md` §Fase 10
-5. **Phase 11 — Savings goals** — `docs/roadmap.md` §Fase 11
-6. **Phase 12 — Settings, i18n, IA config (no IA use yet)** — `docs/roadmap.md` §Fase 12
-7. **Phase 13–16 — IA pipeline** (categorization, insights/forecast/anomalies, chat, savings plan explanation) — `docs/roadmap.md` §Fases 13–16
-8. **Phase 17 — Notifications** — `docs/roadmap.md` §Fase 17
-9. **Phase 18 — PDF/Excel export** — `docs/roadmap.md` §Fase 18
-10. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19
-11. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20
-12. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
+1. **Phase 8 — Period selector + dashboard + visualizations** — `docs/roadmap.md` §Fase 8 (lines ~426–463). Not started; no SDD scaffolding yet.
+2. **Phase 9 — Calendar view** — `docs/roadmap.md` §Fase 9
+3. **Phase 10 — Monthly budgets** — `docs/roadmap.md` §Fase 10
+4. **Phase 11 — Savings goals** — `docs/roadmap.md` §Fase 11
+5. **Phase 12 — Settings, i18n, IA config (no IA use yet)** — `docs/roadmap.md` §Fase 12
+6. **Phase 13–16 — IA pipeline** (categorization, insights/forecast/anomalies, chat, savings plan explanation) — `docs/roadmap.md` §Fases 13–16
+7. **Phase 17 — Notifications** — `docs/roadmap.md` §Fase 17
+8. **Phase 18 — PDF/Excel export** — `docs/roadmap.md` §Fase 18
+9. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19
+10. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20
+11. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
 
 **MVP (no IA) = phases 0–12.** Phases 13+ are IA + polish.
 
@@ -399,8 +411,8 @@ dotnet ef migrations add <Name> `
 
 ### Where to start
 
-1. **Read `spec/` first.** The active feature is Phase 7 (Debts) under `spec/features/phase-07/`. The phase plan is `spec/phases/phase-07/features.md`. Phase 6 is archived at `spec/features/phase-06/F-001-recurring-rules.done.md`.
-2. **Check tasks:** `tasks/phase-07/` is the prioritized checklist for the active phase.
+1. **Read `spec/` first.** Phase 7 (Debts) is archived at `spec/features/phase-07/F-001-debts-installment-plan.done.md`. There is no active feature yet — Phase 8 (dashboard/visualizations) has no SDD scaffolding. Start there with `sdd-explore`/`sdd-propose` if picking up next work.
+2. **Check tasks:** `tasks/phase-07/F-001-debts-installment-plan.tasks.md` is the closed checklist for the last completed phase — use it as the pattern reference for Phase 8's task breakdown.
 3. **Read constitution** if touching architecture or stack: `spec/constitution/mission.md`, `spec/constitution/tech-stack.md`.
 4. **Check the SDD working dir** for any in-flight change: `.atl/sdd/<change-id>/`.
 
@@ -457,7 +469,7 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 
 11. **DI registration is centralized in `Bootstrap.ConfigureServices`.** New ViewModels, use cases, repositories, or services are registered there — not scattered.
 
-12. **Phase 6 is fully closed** — all gates ran clean on 2026-09-17 (build, 614/614 tests, format, NetArchTest) and the spec is archived. `dotnet format style` had caught two real bugs, not just noise: `Subscription`/`FixedExpense` public constructors used PascalCase parameter names (`Guid Id, string Name, ...`), which is both a style and a convention violation — always run the format gate for real, don't skip it as "just style."
+12. **Phases 6 and 7 are fully closed** — all gates ran clean on 2026-09-17 and 2026-09-18 respectively (build, tests, format, NetArchTest) and both specs are archived. `dotnet format style` caught a real bug in Phase 6 close (PascalCase constructor parameters) — always run the format gate for real, don't skip it as "just style." Phase 7's apply (delegated to an agent) independently introduced and then self-caught two more real bugs: a `Money` instance shared across generated `DebtPayment`s (EF Core owned-type tracking silently drops the value for all but one owner) and a stale `AppDbContextModelSnapshot.cs` that would have re-emitted already-applied `Expenses` columns. Both were verified fixed independently before archiving, not just trusted from the agent's self-report — see `.atl/sdd/f-007p7-debts-installment-plan/verify-report.md`.
 
 13. **Tests use hand-rolled fakes, not Moq/NSubstitute.** `FakeClock`, `FakePathResolver`, `FakeExpenseRepository`, etc. live in `tests/.../TestDoubles/`. The project intentionally avoided a mocking library.
 
@@ -475,7 +487,7 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 # 1. Confirm the build is clean before you do anything
 dotnet build -c Release
 
-# 2. Confirm the existing 559 tests still pass
+# 2. Confirm the existing 698 tests still pass
 dotnet test -c Release --no-build
 
 # 3. Confirm CI's format gate is green
@@ -485,7 +497,7 @@ dotnet format style --verify-no-changes
 dotnet test --no-build -c Release --filter "FullyQualifiedName~Architecture"
 
 # 5. Inspect the current Phase 6 task list
-Get-Content -Raw .\tasks\phase-06\F-001-recurring-rules.tasks.md
+Get-Content -Raw .\tasks\phase-07\F-001-debts-installment-plan.tasks.md
 ```
 
 If all five succeed, the working tree is healthy. If any fail, **stop and fix before reading further code** — fixing a broken build first will save you time.

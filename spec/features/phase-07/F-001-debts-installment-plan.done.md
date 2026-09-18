@@ -1,7 +1,7 @@
 # F-001 — Deudas con plan de cuotas
 
 > **Fase:** 7 — Deudas
-> **Estado:** 📝 Spec lista, apply no iniciado
+> **Estado:** ✅ Archivada (2026-09-18)
 > **SDD:** `.atl/sdd/f-007p7-debts-installment-plan/`
 
 ## Objetivo
@@ -106,10 +106,13 @@ todo momento sin recalcular desde cero fuera del dominio.
 
 ## Criterios de aceptación
 
-- [ ] `DebtScheduleGenerator` cubre al menos 10 escenarios (mensual, quincenal,
-  1 cuota, N cuotas, fin de mes, año bisiesto si aplica a la frecuencia).
-- [ ] Crear/pagar/saltar cuotas probado con tests que verifiquen R-7
-  (consistencia de saldo) en cada transición de estado.
-- [ ] Cierre automático de deuda probado (S-5).
-- [ ] Integración y UI verificadas por los gates del repositorio (build,
-  tests, `dotnet format style`, NetArchTest).
+- [x] `DebtScheduleGenerator` cubre al menos 10 escenarios (15 en
+  `DebtScheduleGeneratorTests`: mensual, quincenal, 1 cuota, 36 cuotas, fin de
+  mes en año bisiesto y no bisiesto).
+- [x] Crear/pagar/saltar cuotas probado con tests que verifiquen R-7
+  (consistencia de saldo) en cada transición de estado
+  (`RegisterDebtPaymentUseCaseTests.ExecuteAsync_ThreeSequentialPayments_BalanceDecreasesConsistentlyAtEachStep`).
+- [x] Cierre automático de deuda probado (S-5:
+  `RegisterDebtPaymentUseCaseTests.ExecuteAsync_LastPendingPayment_ClosesDebtAutomatically`).
+- [x] Integración y UI verificadas por los gates del repositorio (build limpio,
+  698/698 tests, `dotnet format style` limpio, NetArchTest 11/11).
