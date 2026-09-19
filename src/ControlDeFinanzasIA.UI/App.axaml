@@ -20,5 +20,12 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://ControlDeFinanzasIA.UI/Styles/LedgerStyles.axaml" />
+        <!-- Motion.axaml is NOT merged: its RenderTransform animations throw
+             "No animator registered for the property RenderTransform" at
+             runtime (Avalonia needs the transform's sub-property animated,
+             not the whole RenderTransform object). Confirmed by actually
+             launching the app - fixing the animation syntax is out of
+             scope here; tracked as follow-up work. -->
     </Application.Styles>
 </Application>

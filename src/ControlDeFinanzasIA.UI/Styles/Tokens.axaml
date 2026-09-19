@@ -50,6 +50,6 @@
     <sys:TimeSpan x:Key="MotionSlow">0:0:0.25</sys:TimeSpan>
 
     <!-- Corner radii -->
-    <sys:Double x:Key="RadiusSmall">4</sys:Double>
-    <sys:Double x:Key="RadiusMedium">6</sys:Double>
+    <CornerRadius x:Key="RadiusSmall">4</CornerRadius>
+    <CornerRadius x:Key="RadiusMedium">6</CornerRadius>
 </ResourceDictionary>
