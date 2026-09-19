@@ -9,8 +9,9 @@
 ## 1. TL;DR
 
 - **What it is:** `ControlDeFinanzasIA` — a cross-platform (.NET 8 + Avalonia MVVM) desktop app for personal-finance control with AI assist. 100% local data. DOP + USD.
-- **Current phase:** **Phase 8 archived** (Dashboard with period navigation, charts, and upcoming payments). Phases 0–8 fully archived. **Phase 9 (calendar view) not started.**
-- **Test count:** 751/751 passing (608 unit + 143 integration) as of 2026-09-18, Phase 8 close. Verified in Debug — Release unit-test host is currently blocked on this machine by a Windows Application Control policy (not a code defect; Release build and Integration tests are unaffected — see `.atl/sdd/f-008p8-dashboard-visualizations/verify-report.md`).
+- **Current phase:** **Phase 9 archived** (expense calendar with drill-down to Expenses). Phases 0–9 fully archived. **Phase 10 (monthly budgets) not started.**
+- **Test count:** 795/795 passing (647 unit + 148 integration) as of 2026-09-18, Phase 9 close. Release unit-test host (blocked by a Windows Application Control policy at Phase 8's close) resolved itself by Phase 9 — Release now runs cleanly end to end, no Debug fallback needed.
+- **The app was actually launched and screenshotted for the first time this project** (Phase 9 close) — confirmed real rendering (LiveCharts2, all 6 sidebar routes) and caught two real runtime-only bugs no test suite could catch: `ViewLocator` missing the `DebtsViewModel` case (Debts route rendered blank since Phase 7) and the entire "Libro Mayor" stylesheet never merged into `App.axaml` (every `ledger-*` class had been inert since Phase 4). Both fixed — see gotchas below.
 - **Key constraint:** Filesystem-based SDD specs in `spec/features/phase-NN/` (NOT OpenSpec). `.spec.md` = active, `.done.md` = archived. Do not create `openspec/`.
 - **Architecture:** Clean Architecture (Domain / Application / Infrastructure / UI). NetArchTest rules R-1..R-5 enforced in `Tests.Unit`.
 
@@ -26,7 +27,7 @@
 | Type | Cross-platform desktop (Windows, macOS, Linux), single-user, local data only |
 | UI pattern | MVVM strict with **CommunityToolkit.Mvvm** (`[ObservableProperty]`, `[RelayCommand]`) |
 | Localization | `es-DO` default + `en` via `IStringLocalizer` / resx |
-| Status | Phases 0–8 ✅ archived; Phase 9 (calendar view) not started |
+| Status | Phases 0–9 ✅ archived; Phase 10 (monthly budgets) not started |
 
 ---
 
@@ -45,6 +46,7 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 | 6 | Recurring rules (subscriptions + fixed expenses) | 1 umbrella `F-001` covering 8 sub-features (6-001..6-008) | 1 | 0 | 100% | `spec/phases/phase-06/features.md` + `spec/features/phase-06/F-001-recurring-rules.done.md` |
 | 7 | Debts with installment plan | 1 umbrella `F-001` covering 8 slices (7-001..7-008) | 1 | 0 | 100% | `spec/phases/phase-07/features.md` + `spec/features/phase-07/F-001-debts-installment-plan.done.md` |
 | 8 | Dashboard + period views/visualizations | 1 umbrella `F-008` covering 3 slices (aggregation/UI/upcoming-payments) | 1 | 0 | 100% | `spec/phases/phase-08/features.md` + `spec/features/phase-08/F-008-dashboard-visualizations.done.md` |
+| 9 | Calendar view + parameterized navigation | 1 umbrella `F-009` covering 3 slices (data/navigation/UI) | 1 | 0 | 100% | `spec/phases/phase-09/features.md` + `spec/features/phase-09/F-009-calendar-view.done.md` |
 
 ### Per-phase detail
 
@@ -77,7 +79,7 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 
 ---
 
-## 4. Phase 6, 7 & 8 — archived (2026-09-17, 2026-09-18, 2026-09-18)
+## 4. Phase 6, 7, 8 & 9 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18)
 
 ### What's done (backend)
 
@@ -148,14 +150,49 @@ The full task breakdown is at `tasks/phase-07/F-001-debts-installment-plan.tasks
 
 The full task breakdown is at `tasks/phase-08/F-008-dashboard-visualizations.tasks.md`.
 
+### Phase 9 — what's done
+
+- Application: `Application/DTOs/Aggregates/DayCurrencyTotal.cs`; `Application/Common/CalendarGrid.cs`
+  (pure 42-cell month-grid math); `Application/UseCases/Calendar/GetCalendarMonth/*.cs`
+- Infrastructure: `IExpenseRepository.GetDailyTotalsAsync` (same SQLite decimal-Sum workaround as
+  Phase 8's other aggregates)
+- UI: `Navigation/{INavigationService,NavigationService}.cs` extended with an additive typed
+  overload (`NavigateTo<TViewModel>(routeName, configure)`) for drill-down — first time this
+  project modified a shared interface instead of only adding files; `ExpensesViewModel.ApplyDayFilter`
+  + a refresh generation guard (fixes a real pre-existing Apply/Clear race, made load-bearing by
+  drill-down); `ViewModels/CalendarViewModel.cs` + `Views/CalendarView.axaml(.cs)` +
+  `Views/Calendar/MonthGrid.axaml(.cs)` (one shared `ItemTemplate`, not 42 hand-written cells)
+- Applied in 3 separate commits (`9eab856` data layer, `6ffe1b2` navigation, `313133b` calendar UI)
+  per `sdd-tasks`' chained-PR recommendation — isolating the shared-interface risk.
+- **Two real, previously-unreachable runtime bugs found and fixed** by actually launching the app
+  (`dotnet run` + screenshot) instead of trusting a green test suite:
+  - `fix(ui): register DebtsViewModel in ViewLocator` (`e0e51d3`) — the Debts route (shipped
+    Phase 7) rendered blank; `ViewLocator.Build`/`Match` never had a case for it.
+  - `fix(ui): wire up the Libro Mayor design system, fix its CornerRadius bug` (`4d981df`) —
+    `LedgerStyles.axaml` (204 lines, since Phase 4) was never merged into `App.axaml`'s
+    `Application.Styles`; every `ledger-*` class referenced across the app had zero effect.
+    Merging it surfaced a second bug: `RadiusSmall`/`RadiusMedium` were `sys:Double` but consumed
+    as `CornerRadius`, throwing `InvalidCastException` at startup — fixed by declaring them as
+    `CornerRadius` resources. `Motion.axaml` (row-reveal animations) is deliberately still NOT
+    merged — it has its own real bug (`RenderTransform` animation with no registered animator);
+    tracked as follow-up, not blocking.
+- Gates: build clean, 795/795 tests (647 unit + 148 integration, up from 751) — Release unit
+  tests ran cleanly this time (the Windows Application Control block from Phase 8's close
+  resolved itself), format clean, NetArchTest 11/11.
+- Spec archived to `spec/features/phase-09/F-009-calendar-view.done.md`.
+
+The full task breakdown is at `tasks/phase-09/F-009-calendar-view.tasks.md`.
+
 ---
 
 ## 5. What's pending (next up)
 
 Ordered by priority. Each item references its source-of-truth spec/plan.
 
-1. **Phase 9 — Calendar view** — `docs/roadmap.md` §Fase 9. Not started; no SDD scaffolding yet.
-2. **Phase 10 — Monthly budgets** — `docs/roadmap.md` §Fase 10
+1. **Phase 10 — Monthly budgets** — `docs/roadmap.md` §Fase 10. Not started; no SDD scaffolding yet.
+2. **Follow-up, not phase-blocking**: fix `Motion.axaml`'s `RenderTransform` animation bug (see
+   Phase 9 notes above) so the row-reveal animations can be merged into `App.axaml` alongside
+   `LedgerStyles.axaml`.
 3. **Phase 11 — Savings goals** — `docs/roadmap.md` §Fase 11
 4. **Phase 12 — Settings, i18n, IA config (no IA use yet)** — `docs/roadmap.md` §Fase 12
 5. **Phase 13–16 — IA pipeline** (categorization, insights/forecast/anomalies, chat, savings plan explanation) — `docs/roadmap.md` §Fases 13–16
@@ -439,8 +476,8 @@ dotnet ef migrations add <Name> `
 
 ### Where to start
 
-1. **Read `spec/` first.** Phase 8 (Dashboard) is archived at `spec/features/phase-08/F-008-dashboard-visualizations.done.md`. There is no active feature yet — Phase 9 (calendar view) has no SDD scaffolding. Start there with `sdd-explore`/`sdd-propose` if picking up next work.
-2. **Check tasks:** `tasks/phase-08/F-008-dashboard-visualizations.tasks.md` is the closed checklist for the last completed phase — use it as the pattern reference for Phase 9's task breakdown.
+1. **Read `spec/` first.** Phase 9 (Calendar) is archived at `spec/features/phase-09/F-009-calendar-view.done.md`. There is no active feature yet — Phase 10 (monthly budgets) has no SDD scaffolding. Start there with `sdd-explore`/`sdd-propose` if picking up next work.
+2. **Check tasks:** `tasks/phase-09/F-009-calendar-view.tasks.md` is the closed checklist for the last completed phase — use it as the pattern reference for Phase 10's task breakdown.
 3. **Read constitution** if touching architecture or stack: `spec/constitution/mission.md`, `spec/constitution/tech-stack.md`.
 4. **Check the SDD working dir** for any in-flight change: `.atl/sdd/<change-id>/`.
 
@@ -507,7 +544,9 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 
 16. **Phase 8 is fully closed** — 751/751 tests as of 2026-09-18 (up from 698 at Phase 7 close). Applied in 3 separate commits (`b53102f`, `3fc5325`, `5aee8c9`), one per slice, per `sdd-tasks`' chained-PR recommendation — the first time this project actually split an apply into multiple commits instead of one (Phases 6 and 7 both landed as a single commit despite similar "high risk" flags). Two real bugs caught: `ICurrencyConverter.DisplayAsync` converts to the "other" currency, not always DOP — wrong for a DOP-normalizing dashboard, caught in design before any code was written; and EF Core 8's SQLite provider throws `NotSupportedException` on `Sum(decimal)` inside any `GroupBy` regardless of grouping key — worked around by summing as `double` and rounding back to 4 decimals after materialization, with dedicated precision-regression tests (summing 0.1m repeatedly, cross-checking independent aggregates reconcile exactly).
 
-17. **Windows Application Control can block a freshly-built Release DLL from loading into the xUnit test host** (`0x800711C7`) on this machine, first observed during Phase 8's slice 3. `dotnet build -c Release` still succeeds and Release Integration tests still run — only the Unit test host's load of `ControlDeFinanzasIA.UI.dll` is blocked. Not a code defect. If you hit this, fall back to `-c Debug` for the unit-test gate and note it explicitly rather than silently skip verification; check whether it has resolved before assuming it's still active.
+17. **Windows Application Control can block a freshly-built Release DLL from loading into the xUnit test host** (`0x800711C7`) on this machine, first observed during Phase 8's slice 3. `dotnet build -c Release` still succeeds and Release Integration tests still run — only the Unit test host's load of `ControlDeFinanzasIA.UI.dll` is blocked. Not a code defect. It resolved itself by Phase 9's close (Release ran cleanly end to end again) — if you hit it, fall back to `-c Debug` for the unit-test gate and note it explicitly, and don't assume it's permanently active.
+
+18. **Nobody had actually launched the app until Phase 9's close** — every prior phase verified purely through `dotnet test`. Doing `dotnet run` + a screenshot (Phase 9) found two runtime-only bugs a green test suite could never catch: `ViewLocator` missing the `DebtsViewModel` case (Debts rendered blank since Phase 7, fixed in `e0e51d3`) and the entire "Libro Mayor" stylesheet (`LedgerStyles.axaml`, since Phase 4) never merged into `App.axaml` — every `ledger-*` class had been inert the whole time (fixed in `4d981df`, which also fixed a real `CornerRadius`/`sys:Double` type mismatch that only threw at runtime). **Lesson: a passing test suite is necessary but not sufficient — periodically actually run the app.** `Motion.axaml` (row animations) still isn't merged; it has its own unfixed `RenderTransform` animator bug, tracked as follow-up.
 
 ---
 
@@ -519,7 +558,7 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 # 1. Confirm the build is clean before you do anything
 dotnet build -c Release
 
-# 2. Confirm the existing 751 tests still pass (Debug config on this machine — see gotcha below)
+# 2. Confirm the existing 795 tests still pass
 dotnet test -c Release --no-build
 
 # 3. Confirm CI's format gate is green
@@ -528,8 +567,8 @@ dotnet format style --verify-no-changes
 # 4. Confirm the architecture rules still hold
 dotnet test --no-build -c Release --filter "FullyQualifiedName~Architecture"
 
-# 5. Inspect the current Phase 6 task list
-Get-Content -Raw .\tasks\phase-08\F-008-dashboard-visualizations.tasks.md
+# 5. Inspect the current Phase 9 task list
+Get-Content -Raw .\tasks\phase-09\F-009-calendar-view.tasks.md
 ```
 
 If all five succeed, the working tree is healthy. If any fail, **stop and fix before reading further code** — fixing a broken build first will save you time.

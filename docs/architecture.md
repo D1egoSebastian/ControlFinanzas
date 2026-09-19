@@ -322,7 +322,9 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 - `ShellViewModel` expone `CurrentViewModel` (bindado a `ContentControl`).
 - `INavigationService` se inyecta en los ViewModels de feature y permite:
   - `NavigateTo(RouteNames.Dashboard)`
-  - `NavigateTo<ExpenseDetailViewModel>(id)`
+  - `NavigateTo<ExpensesViewModel>(RouteNames.Expenses, vm => vm.ApplyDayFilter(day))` — navegación
+    parametrizada (F-009): la ruta se resuelve por `RouteNames`, y el view-model de destino se
+    configura mediante una `Action<TViewModel>` antes de convertirse en `CurrentViewModel`.
   - `GoBack()` (con pila de historial en memoria)
 
 ### Detalle de un movimiento (modal)

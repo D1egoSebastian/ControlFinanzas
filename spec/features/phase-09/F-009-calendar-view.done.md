@@ -1,7 +1,7 @@
 # F-009 — Vista de calendario de gastos
 
 > **Fase:** 9 — Vista de calendario de gastos
-> **Estado:** 📝 Spec lista, apply no iniciado
+> **Estado:** ✅ Archivada (2026-09-18)
 > **SDD:** `.atl/sdd/f-009p9-calendar-view/`
 
 ## Objetivo
@@ -136,19 +136,21 @@ decidido), listas de gastos dentro de la celda.
 
 ## Criterios de aceptación
 
-- [ ] El calendario muestra una grilla mensual; cada día del mes navegado
+- [x] El calendario muestra una grilla mensual; cada día del mes navegado
   muestra su total de gastos en DOP (incluyendo cero cuando no hay
   gastos).
-- [ ] La navegación mes a mes funciona; nombres de mes y de día respetan
+- [x] La navegación mes a mes funciona; nombres de mes y de día respetan
   `CultureInfo.CurrentCulture`.
-- [ ] Los días de meses adyacentes (leading/trailing) que completan la
+- [x] Los días de meses adyacentes (leading/trailing) que completan la
   grilla de 42 celdas se muestran visualmente distinguidos y, al
   clickearlos, navegan el calendario a su mes, no a Gastos.
-- [ ] Clickear cualquier día del mes navegado abre Gastos filtrado a
+- [x] Clickear cualquier día del mes navegado abre Gastos filtrado a
   exactamente ese día, incluyendo días sin gastos.
-- [ ] `GetDailyTotalsAsync` (o equivalente) agrega en SQL, una consulta por
-  mes.
-- [ ] Las 5 rutas de navegación existentes siguen funcionando sin cambios
-  después de agregar el overload parametrizado.
-- [ ] `docs/architecture.md` §10 refleja la capacidad de navegación real.
-- [ ] Todos los tests pasan en verde (suite completa, sin regresiones).
+- [x] `GetDailyTotalsAsync` agrega en SQL, una consulta por mes (confirmado
+  también en runtime real vía `dotnet run`, no solo en tests).
+- [x] Las 5 rutas de navegación existentes siguen funcionando sin cambios
+  después de agregar el overload parametrizado (los 5 tests preexistentes
+  pasan sin modificación).
+- [x] `docs/architecture.md` §10 refleja la capacidad de navegación real.
+- [x] Todos los tests pasan en verde (795/795: 647 unit + 148 integration,
+  sin regresiones).

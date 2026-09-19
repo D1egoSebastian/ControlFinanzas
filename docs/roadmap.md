@@ -519,7 +519,7 @@ control". Las visualizaciones de calendario (fase 9) y presupuestos
 
 ---
 
-### Fase 9 — Vista de calendario de gastos
+### Fase 9 — Vista de calendario de gastos ✅ COMPLETADA (2026-09-18)
 
 **Objetivo**
 Una vista de calendario donde cada día muestra los gastos (totales o
@@ -539,12 +539,40 @@ Deferirla a una fase propia permite que la decisión de UX del calendario
 - Drill-down a los gastos del día al hacer click.
 - Tests del componente de calendario y de la query de totales diarios.
 
-**Riesgos principales**
-- UX densa cuando hay muchos días con gastos.
-- Localización de nombres de día/mes (es-DO vs en-US).
+**Riesgos principales (resueltos)**
+- UX densa cuando hay muchos días con gastos → **resuelto: badge numérico simple** (decisión del
+  usuario), sin mapa de calor. Un día de 42 en la grilla es lo bastante chico para que un badge
+  de texto no se sienta denso.
+- Localización de nombres de día/mes → **resuelto**: reusa `CultureInfo.CurrentCulture`, mismo
+  patrón que `DashboardViewModel.FormatMonthLabel` de Fase 8.
+
+**Alcance ajustado respecto al plan original**:
+- Días de meses adyacentes (relleno de la grilla de 42 celdas) NO hacen drill-down al clickearlos
+  — navegan el calendario a su propio mes. El plan original no distinguía este caso; se fijó como
+  decisión explícita de la spec.
+- Esta fase agregó, además, una extensión real a `INavigationService` (navegación parametrizada)
+  no prevista en el plan original — necesaria para que el drill-down funcione sin acoplar el
+  calendario a los internals de `ExpensesViewModel`.
 
 **Criterios de fase completada**
-- Calendario funcional con drill-down a gastos del día.
+- Calendario funcional con drill-down a gastos del día. ✅
+
+**Estado actual (2026-09-18) — ✅ FASE COMPLETADA**
+- ✅ `GetDailyTotalsAsync` (agregación SQL diaria), `CalendarGrid` (grilla pura de 42 celdas),
+  `GetCalendarMonthQuery` (normaliza a DOP).
+- ✅ `INavigationService` extendido con navegación parametrizada aditiva — las 5 rutas existentes
+  sin regresión (confirmado con sus tests preexistentes sin modificar).
+- ✅ `CalendarViewModel`/`CalendarView`/`MonthGrid` — un solo `ItemTemplate` compartido, no 42
+  celdas escritas a mano.
+- ✅ Gates: build limpio, 795/795 tests verdes (647 unit + 148 integration, subiendo desde 751 al
+  cierre de Fase 8), `dotnet format style` limpio, NetArchTest 11/11.
+- ✅ **Primera vez que se ejecutó la app de verdad** (`dotnet run` + captura de pantalla) en vez de
+  confiar solo en tests — encontró y permitió corregir dos bugs reales preexistentes: la ruta
+  Deudas renderizaba en blanco desde Fase 7 (`ViewLocator` sin el caso `DebtsViewModel`), y todo
+  el sistema de diseño "Libro Mayor" (desde Fase 4) nunca tuvo efecto en runtime porque su hoja de
+  estilos no estaba fusionada en `App.axaml` — al fusionarla apareció un bug real de tipo
+  (`CornerRadius` declarado como `double`) que solo se manifestaba ejecutando la app.
+- ✅ SDD archivado: `spec/features/phase-09/F-009-calendar-view.done.md`.
 
 ---
 

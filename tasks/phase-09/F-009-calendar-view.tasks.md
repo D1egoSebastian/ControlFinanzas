@@ -106,7 +106,7 @@ Depende de 1 y 2.
 
 ## 4. Cierre
 
-- [ ] 4.1 Ejecutar build, `dotnet test` (unit + integración), `dotnet format style --verify-no-changes`, `ArchitectureTests`/NetArchTest.
-- [ ] 4.2 Corregir `docs/architecture.md` §10 (líneas 324-326): reemplazar por el texto exacto del design (nuevo overload documentado, eliminar la línea obsoleta de `NavigateTo<ExpenseDetailViewModel>(id)` — ese view-model no existe en `src/`).
-- [ ] 4.3 Crear `spec/phases/phase-09/features.md` siguiendo el patrón de `spec/phases/phase-06/` y `phase-07/`.
-- [ ] 4.4 Archivar la spec (`F-009-calendar-view.spec.md` → `.done.md`) y escribir `verify-report.md`/`archive-report.md` en `.atl/sdd/f-009p9-calendar-view/` — dejar sin marcar, paso separado después de apply + verify.
+- [x] 4.1 Ejecutar build, `dotnet test` (unit + integración), `dotnet format style --verify-no-changes`, `ArchitectureTests`/NetArchTest. (Build Release limpio; 795/795 tests verdes (647 unit + 148 integration); `dotnet format style` limpio; NetArchTest 11/11. Además: la app se ejecutó de verdad — `dotnet run` + captura de pantalla del Dashboard confirmó renderizado real de LiveCharts2 y de las 6 rutas del sidebar.)
+- [x] 4.2 Corregir `docs/architecture.md` §10 (líneas 324-326): reemplazar por el texto exacto del design.
+- [x] 4.3 Crear `spec/phases/phase-09/features.md` siguiendo el patrón de `spec/phases/phase-06/` y `phase-07/`.
+- [x] 4.4 Archivar la spec (`F-009-calendar-view.spec.md` → `.done.md`) y escribir `verify-report.md`/`archive-report.md` en `.atl/sdd/f-009p9-calendar-view/`. (Gates re-verificados de forma independiente antes de archivar; además se encontraron y corrigieron dos bugs reales de UI nunca antes ejecutados: `ViewLocator` sin el caso `DebtsViewModel` desde Fase 7, y `LedgerStyles.axaml`/`Motion.axaml` nunca fusionados en `App.axaml` — con un bug de tipo real en `CornerRadius` que solo se manifestaba al ejecutar la app, no al compilarla.)
