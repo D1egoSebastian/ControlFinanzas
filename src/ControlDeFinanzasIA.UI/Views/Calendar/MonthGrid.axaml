@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+             x:Class="ControlDeFinanzasIA.UI.Views.Calendar.MonthGrid"
+             x:Name="Root">
+    <!--
+        Day-grid UserControl (D-6): a single shared ItemTemplate over a
+        UniformGrid Rows="6" Columns="7", driven entirely by Cells — NOT 42
+        hand-written cells. Owns its own empty-state overlay, following the
+        Views/Charts/* convention (x:Name="Root", StyledProperty plumbing
+        only in code-behind).
+    -->
+    <Grid MinHeight="320">
+        <ItemsControl ItemsSource="{Binding #Root.Cells}"
+                      IsVisible="{Binding #Root.Cells.Count}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="6" Columns="7" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:CalendarCell">
+                    <Button Command="{Binding #Root.DayCommand}"
+                            CommandParameter="{Binding}"
+                            Classes="calendar-day"
+                            Classes.adjacent="{Binding !IsCurrentMonth}"
+                            Classes.today="{Binding IsToday}"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch"
+                            Margin="2">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding DayNumber}" HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding TotalDisplay}"
+                                       IsVisible="{Binding IsCurrentMonth}"
+                                       HorizontalAlignment="Center"
+                                       Classes="ledger-amount" />
+                        </StackPanel>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Text="{Binding #Root.EmptyText}"
+                   IsVisible="{Binding !#Root.Cells.Count}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Foreground="{StaticResource PaperDimBrush}"
+                   TextWrapping="Wrap" />
+    </Grid>
+</UserControl>

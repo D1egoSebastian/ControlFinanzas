@@ -30,4 +30,9 @@ public static class RouteNames
     /// The debts route (consumed by F-001 of Phase 7).
     /// </summary>
     public const string Debts = "Debts";
+
+    /// <summary>
+    /// The expense calendar route (consumed by F-009 of Phase 9).
+    /// </summary>
+    public const string Calendar = "Calendar";
 }

@@ -313,4 +313,13 @@ Showing approximate conversions only.
   <data name="DashboardUpcomingPaymentKindRecurring" xml:space="preserve">
     <value>Recurring rule</value>
   </data>
+  <data name="CalendarTitle" xml:space="preserve">
+    <value>Expense calendar</value>
+  </data>
+  <data name="CalendarEmptyMessage" xml:space="preserve">
+    <value>No calendar data to show yet.</value>
+  </data>
+  <data name="CalendarLoadErrorMessage" xml:space="preserve">
+    <value>The calendar could not be loaded.</value>
+  </data>
 </root>

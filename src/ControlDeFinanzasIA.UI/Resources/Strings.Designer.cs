@@ -486,4 +486,19 @@ public class Strings
     /// Gets the localized label for a recurring-rule upcoming payment.
     /// </summary>
     public static string DashboardUpcomingPaymentKindRecurring => ResourceManager.GetString("DashboardUpcomingPaymentKindRecurring", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the expense calendar screen.
+    /// </summary>
+    public static string CalendarTitle => ResourceManager.GetString("CalendarTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized empty-state message for the calendar's month grid.
+    /// </summary>
+    public static string CalendarEmptyMessage => ResourceManager.GetString("CalendarEmptyMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized error message shown when the calendar fails to load.
+    /// </summary>
+    public static string CalendarLoadErrorMessage => ResourceManager.GetString("CalendarLoadErrorMessage", Culture)!;
 }

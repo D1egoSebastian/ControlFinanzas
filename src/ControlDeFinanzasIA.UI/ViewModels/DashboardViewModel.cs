@@ -8,6 +8,7 @@ using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
+using ControlDeFinanzasIA.UI.Formatting;
 using ControlDeFinanzasIA.UI.Resources;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
@@ -345,8 +346,8 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// summary figure is a normalized aggregate (R-2), so it always carries
     /// the "≈" prefix — unlike a per-transaction display, there is no
     /// single-currency "exact" case at this granularity once currencies
-    /// are combined into one total.
+    /// are combined into one total. Delegates to <see cref="MoneyFormat.ApproximateDop"/>
+    /// (D-5, Phase 9), which now owns the shared formatting body.
     /// </summary>
-    private static string FormatDop(decimal amount)
-        => string.Format(CultureInfo.CurrentCulture, Strings.ApproximateFormat, $"{amount:N2} DOP");
+    private static string FormatDop(decimal amount) => MoneyFormat.ApproximateDop(amount);
 }

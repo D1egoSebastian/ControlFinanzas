@@ -1,5 +1,6 @@
 using System.Reflection;
 using ControlDeFinanzasIA.Application.Abstractions;
+using ControlDeFinanzasIA.Application.UseCases.Calendar.GetCalendarMonth;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.CreateTag;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
@@ -95,6 +96,7 @@ public static class Bootstrap
         services.AddTransient<IncomeViewModel>();
         services.AddTransient<RecurringRulesViewModel>();
         services.AddTransient<DebtsViewModel>();
+        services.AddTransient<CalendarViewModel>();
 
         services.AddTransient<RegisterExpenseUseCase>();
         services.AddTransient<UpdateExpenseUseCase>();
@@ -141,6 +143,9 @@ public static class Bootstrap
         services.AddTransient<GetCategoryBreakdownQuery>();
         services.AddTransient<GetMonthlyEvolutionQuery>();
         services.AddTransient<GetUpcomingPaymentsQuery>();
+
+        // Calendario de gastos (F-009 Phase 9): grilla mensual + drill-down.
+        services.AddTransient<GetCalendarMonthQuery>();
 
         // Multi-moneda F-501/F-502/F-511: provider stub + cache + converter.
         services.AddExchangeRates(configuration);
