@@ -1,3 +1,4 @@
+using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
@@ -86,6 +87,8 @@ public sealed class ShellViewModelTests
             new GetMonthlyEvolutionQuery(expenseRepo, incomeRepo, converter),
             new GetUpcomingPaymentsQuery(
                 new FakeDebtPaymentRepository(), new FakeDebtRepository(), new FakeRecurringRuleRepository(), clock),
+            new GetBudgetVsActualQuery(
+                new FakeBudgetRepository(), expenseRepo, new FakeCategoryRepository(), converter),
             clock,
             NullLogger<DashboardViewModel>.Instance);
     }

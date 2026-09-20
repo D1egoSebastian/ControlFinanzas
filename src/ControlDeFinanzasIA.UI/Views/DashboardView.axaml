@@ -127,6 +127,44 @@
                 </StackPanel>
             </Border>
 
+            <!-- Budget-progress card (F-010, R-7, D-11): one bar per budgeted -->
+            <!-- category for SelectedMonth — reuses the Dashboard's own month -->
+            <!-- navigation, no second month selector. -->
+            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Static resources:Strings.DashboardBudgetProgressTitle}" Classes="ledger-section" />
+                    <ItemsControl ItemsSource="{Binding BudgetProgress}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BudgetProgressItem">
+                                <Border Classes="ledger-row" Padding="12">
+                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                                   Text="{Binding CategoryName}"
+                                                   Classes="ledger-section" />
+                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                                   Text="{Binding PercentDisplay}"
+                                                   Classes="ledger-amount" />
+                                        <ProgressBar Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                                     Minimum="0" Maximum="100"
+                                                     Value="{Binding ProgressValue}"
+                                                     IsIndeterminate="{Binding IsIndeterminate}"
+                                                     Classes="budget-progress"
+                                                     Classes.near="{Binding IsNear}"
+                                                     Classes.exceeded="{Binding IsExceeded}" />
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                                   Text="{Binding AmountsDisplay}"
+                                                   Foreground="{StaticResource PaperDimBrush}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{x:Static resources:Strings.DashboardEmptyBudgetProgressMessage}"
+                               IsVisible="{Binding !BudgetProgress.Count}"
+                               Foreground="{StaticResource PaperDimBrush}" />
+                </StackPanel>
+            </Border>
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

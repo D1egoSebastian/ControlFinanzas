@@ -146,6 +146,17 @@
         <Setter Property="Foreground" Value="{StaticResource TerracottaBrush}" />
     </Style>
 
+    <!-- Budget-progress bars (F-010, R-6, D-11): color-coded by BudgetStatus -->
+    <Style Selector="ProgressBar.budget-progress">
+        <Setter Property="Foreground" Value="{StaticResource SageBrush}" />
+    </Style>
+    <Style Selector="ProgressBar.budget-progress.near">
+        <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
+    </Style>
+    <Style Selector="ProgressBar.budget-progress.exceeded">
+        <Setter Property="Foreground" Value="{StaticResource TerracottaBrush}" />
+    </Style>
+
     <!-- Editorial title -->
     <Style Selector="TextBlock.ledger-title">
         <Setter Property="FontFamily" Value="{StaticResource FontDisplay}" />

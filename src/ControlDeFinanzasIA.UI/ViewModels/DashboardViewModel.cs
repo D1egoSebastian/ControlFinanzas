@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
+using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
@@ -28,6 +29,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
     private readonly GetCategoryBreakdownQuery _getCategoryBreakdownQuery;
     private readonly GetMonthlyEvolutionQuery _getMonthlyEvolutionQuery;
     private readonly GetUpcomingPaymentsQuery _getUpcomingPaymentsQuery;
+    private readonly GetBudgetVsActualQuery _getBudgetVsActualQuery;
     private readonly IClock _clock;
     private readonly ILogger<DashboardViewModel> _logger;
 
@@ -45,6 +47,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
         GetCategoryBreakdownQuery getCategoryBreakdownQuery,
         GetMonthlyEvolutionQuery getMonthlyEvolutionQuery,
         GetUpcomingPaymentsQuery getUpcomingPaymentsQuery,
+        GetBudgetVsActualQuery getBudgetVsActualQuery,
         IClock clock,
         ILogger<DashboardViewModel> logger)
     {
@@ -52,6 +55,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
         ArgumentNullException.ThrowIfNull(getCategoryBreakdownQuery);
         ArgumentNullException.ThrowIfNull(getMonthlyEvolutionQuery);
         ArgumentNullException.ThrowIfNull(getUpcomingPaymentsQuery);
+        ArgumentNullException.ThrowIfNull(getBudgetVsActualQuery);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(logger);
 
@@ -59,6 +63,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
         _getCategoryBreakdownQuery = getCategoryBreakdownQuery;
         _getMonthlyEvolutionQuery = getMonthlyEvolutionQuery;
         _getUpcomingPaymentsQuery = getUpcomingPaymentsQuery;
+        _getBudgetVsActualQuery = getBudgetVsActualQuery;
         _clock = clock;
         _logger = logger;
 
@@ -152,6 +157,16 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// </summary>
     public ObservableCollection<UpcomingPaymentItem> UpcomingPayments { get; } = [];
 
+    /// <summary>
+    /// Gets the budget-progress items (R-7): one bar per budgeted category
+    /// for <see cref="SelectedMonth"/>, ordered by percent-consumed
+    /// descending (indeterminate lines last), reusing the Dashboard's own
+    /// month-navigation state — there is no second, independent month
+    /// selector. Rebuilt on every <see cref="LoadAsync"/>, including
+    /// <see cref="PreviousMonthCommand"/>/<see cref="NextMonthCommand"/>.
+    /// </summary>
+    public ObservableCollection<BudgetProgressItem> BudgetProgress { get; } = [];
+
     /// <summary>Navigates to the month immediately before <see cref="SelectedMonth"/> and reloads.</summary>
     [RelayCommand]
     private async Task PreviousMonthAsync()
@@ -173,10 +188,14 @@ public sealed partial class DashboardViewModel : ViewModelBase
     private async Task RefreshAsync() => await LoadAsync();
 
     /// <summary>
-    /// Runs the three period-dependent queries concurrently
+    /// Runs the four period-dependent queries concurrently
     /// (<see cref="Task.WhenAll(Task[])"/>) and rebuilds every bound
     /// collection/series from a single coherent snapshot, so a load never
-    /// renders a summary from one month next to a chart from another (R-1, R-7).
+    /// renders a summary from one month next to a chart (or budget line)
+    /// from another (R-1, R-7). The budget-vs-actual query joins this
+    /// batch — not <see cref="LoadUpcomingPaymentsAsync"/>'s load-once
+    /// pattern — because the budget-progress section is anchored to
+    /// <see cref="SelectedMonth"/>, not to today.
     /// </summary>
     private async Task LoadAsync()
     {
@@ -190,12 +209,14 @@ public sealed partial class DashboardViewModel : ViewModelBase
             Task<Result> summaryTask = _getMonthSummaryQuery.ExecuteAsync(SelectedMonth);
             Task<Result> breakdownTask = _getCategoryBreakdownQuery.ExecuteAsync(SelectedMonth);
             Task<Result> evolutionTask = _getMonthlyEvolutionQuery.ExecuteAsync(SelectedMonth);
+            Task<Result> budgetVsActualTask = _getBudgetVsActualQuery.ExecuteAsync(SelectedMonth);
 
-            await Task.WhenAll(summaryTask, breakdownTask, evolutionTask);
+            await Task.WhenAll(summaryTask, breakdownTask, evolutionTask, budgetVsActualTask);
 
             ApplySummary(summaryTask.Result);
             ApplyCategoryBreakdown(breakdownTask.Result);
             ApplyMonthlyEvolution(evolutionTask.Result);
+            ApplyBudgetVsActual(budgetVsActualTask.Result);
         }
         catch (Exception ex)
         {
@@ -299,6 +320,71 @@ public sealed partial class DashboardViewModel : ViewModelBase
             },
         ];
     }
+
+    /// <summary>
+    /// Rebuilds <see cref="BudgetProgress"/> from a <see cref="GetBudgetVsActualQuery"/>
+    /// result (R-7, D-11). A category with no budget set for <see cref="SelectedMonth"/>
+    /// never appears here, because the query iterates budgets, not categories.
+    /// </summary>
+    private void ApplyBudgetVsActual(Result result)
+    {
+        BudgetProgress.Clear();
+
+        if (!result.IsSuccess)
+        {
+            LoadError = result.Error?.Message ?? "No se pudo cargar el progreso de presupuestos.";
+            return;
+        }
+
+        var budgetVsActual = (BudgetVsActualResult)result.Value!;
+        foreach (BudgetVsActualLine line in budgetVsActual.Lines)
+        {
+            BudgetProgress.Add(ToBudgetProgressItem(line));
+        }
+
+        HasMissingRates |= budgetVsActual.HasMissingRates;
+    }
+
+    /// <summary>
+    /// Projects a <see cref="BudgetVsActualLine"/> into UI-ready display
+    /// text (R-5, S-6): an indeterminate line (missing conversion rate on
+    /// either side) NEVER renders as 0% or 100% — its <see cref="BudgetProgressItem.PercentDisplay"/>
+    /// is the localized <see cref="Strings.DashboardBudgetIndeterminateLabel"/>
+    /// placeholder and its <see cref="BudgetProgressItem.Status"/> stays
+    /// <see langword="null"/>, so no color class applies.
+    /// </summary>
+    private static BudgetProgressItem ToBudgetProgressItem(BudgetVsActualLine line)
+    {
+        string amountsDisplay = string.Format(
+            CultureInfo.CurrentCulture,
+            "{0} / {1}",
+            FormatDopOrPlaceholder(line.ActualDop),
+            FormatDopOrPlaceholder(line.BudgetDop));
+
+        if (line.IsIndeterminate)
+        {
+            return new BudgetProgressItem(
+                line.CategoryId,
+                line.CategoryName,
+                amountsDisplay,
+                Strings.DashboardBudgetIndeterminateLabel,
+                ProgressValue: 0d,
+                Status: null);
+        }
+
+        decimal percent = line.PercentConsumed!.Value;
+        return new BudgetProgressItem(
+            line.CategoryId,
+            line.CategoryName,
+            amountsDisplay,
+            PercentDisplay: $"{percent.ToString("0.0", CultureInfo.CurrentCulture)}%",
+            ProgressValue: Math.Min((double)percent, 100d),
+            Status: line.Status);
+    }
+
+    /// <summary>Formats a DOP amount, or an em dash placeholder when the side failed to convert (R-5, S-6).</summary>
+    private static string FormatDopOrPlaceholder(decimal? amount)
+        => amount.HasValue ? FormatDop(amount.Value) : "—";
 
     /// <summary>
     /// Loads the "Próximos pagos" card exactly once (constructor-only call,

@@ -313,6 +313,15 @@ Showing approximate conversions only.
   <data name="DashboardUpcomingPaymentKindRecurring" xml:space="preserve">
     <value>Recurring rule</value>
   </data>
+  <data name="DashboardBudgetProgressTitle" xml:space="preserve">
+    <value>Budget progress</value>
+  </data>
+  <data name="DashboardEmptyBudgetProgressMessage" xml:space="preserve">
+    <value>No budgets set for this month.</value>
+  </data>
+  <data name="DashboardBudgetIndeterminateLabel" xml:space="preserve">
+    <value>Rate unavailable</value>
+  </data>
   <data name="CalendarTitle" xml:space="preserve">
     <value>Expense calendar</value>
   </data>

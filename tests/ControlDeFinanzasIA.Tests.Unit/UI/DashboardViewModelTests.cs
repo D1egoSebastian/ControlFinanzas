@@ -1,13 +1,17 @@
 using ControlDeFinanzasIA.Application.Common;
+using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
+using ControlDeFinanzasIA.Domain.Budgets;
+using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Debts;
 using ControlDeFinanzasIA.Domain.Enums;
 using ControlDeFinanzasIA.Domain.Transactions;
 using ControlDeFinanzasIA.Domain.ValueObjects;
 using ControlDeFinanzasIA.Tests.Unit.TestDoubles;
+using ControlDeFinanzasIA.UI.Resources;
 using ControlDeFinanzasIA.UI.ViewModels;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -148,6 +152,153 @@ public sealed class DashboardViewModelTests
         Assert.Equal(original, viewModel.UpcomingPayments[0]);
     }
 
+    [Fact]
+    public async Task RefreshCommand_PopulatesBudgetProgress_FromBudgetVsActualQuery()
+    {
+        FakeExpenseRepository expenseRepo = new();
+        expenseRepo.CategoryNames[_categoryId] = "Comida";
+        await expenseRepo.AddAsync(CreateExpense(_march, 3000m));
+
+        FakeIncomeRepository incomeRepo = new();
+
+        FakeBudgetRepository budgetRepo = new();
+        budgetRepo.Seed(Budget.Create(2026, 3, _categoryId, Money.Create(10000m, Currency.DOP)));
+
+        FakeCategoryRepository categoryRepo = new();
+        categoryRepo.SetCategories(new[] { new Category { Id = _categoryId, Name = "Comida" } });
+
+        DashboardViewModel viewModel = CreateViewModel(
+            expenseRepo, incomeRepo, _march, budgetRepo: budgetRepo, categoryRepo: categoryRepo);
+
+        await viewModel.RefreshCommand.ExecuteAsync(null);
+
+        BudgetProgressItem item = Assert.Single(viewModel.BudgetProgress);
+        Assert.Equal("Comida", item.CategoryName);
+        Assert.Equal(BudgetStatus.Ok, item.Status);
+        Assert.False(item.IsIndeterminate);
+        Assert.Equal("30.0%", item.PercentDisplay);
+        Assert.Equal(30d, item.ProgressValue);
+    }
+
+    [Fact]
+    public async Task RefreshCommand_OverBudgetCategory_ClampsProgressValueButKeepsTruePercentDisplay()
+    {
+        FakeExpenseRepository expenseRepo = new();
+        expenseRepo.CategoryNames[_categoryId] = "Comida";
+        await expenseRepo.AddAsync(CreateExpense(_march, 20000m));
+
+        FakeIncomeRepository incomeRepo = new();
+
+        FakeBudgetRepository budgetRepo = new();
+        budgetRepo.Seed(Budget.Create(2026, 3, _categoryId, Money.Create(15000m, Currency.DOP)));
+
+        FakeCategoryRepository categoryRepo = new();
+        categoryRepo.SetCategories(new[] { new Category { Id = _categoryId, Name = "Comida" } });
+
+        DashboardViewModel viewModel = CreateViewModel(
+            expenseRepo, incomeRepo, _march, budgetRepo: budgetRepo, categoryRepo: categoryRepo);
+
+        await viewModel.RefreshCommand.ExecuteAsync(null);
+
+        BudgetProgressItem item = Assert.Single(viewModel.BudgetProgress);
+        Assert.Equal(BudgetStatus.Exceeded, item.Status);
+        Assert.True(item.IsExceeded);
+        Assert.Equal("133.3%", item.PercentDisplay); // true, unclamped percent
+        Assert.Equal(100d, item.ProgressValue);      // clamped, the bar can't overflow its track
+    }
+
+    [Fact]
+    public async Task RefreshCommand_NearThresholdCategory_MapsToIsNear()
+    {
+        FakeExpenseRepository expenseRepo = new();
+        expenseRepo.CategoryNames[_categoryId] = "Comida";
+        await expenseRepo.AddAsync(CreateExpense(_march, 8000m));
+
+        FakeIncomeRepository incomeRepo = new();
+
+        FakeBudgetRepository budgetRepo = new();
+        budgetRepo.Seed(Budget.Create(2026, 3, _categoryId, Money.Create(10000m, Currency.DOP)));
+
+        FakeCategoryRepository categoryRepo = new();
+        categoryRepo.SetCategories(new[] { new Category { Id = _categoryId, Name = "Comida" } });
+
+        DashboardViewModel viewModel = CreateViewModel(
+            expenseRepo, incomeRepo, _march, budgetRepo: budgetRepo, categoryRepo: categoryRepo);
+
+        await viewModel.RefreshCommand.ExecuteAsync(null);
+
+        BudgetProgressItem item = Assert.Single(viewModel.BudgetProgress);
+        Assert.Equal(BudgetStatus.Near, item.Status);
+        Assert.True(item.IsNear);
+        Assert.False(item.IsExceeded);
+    }
+
+    [Fact]
+    public async Task RefreshCommand_BudgetConversionFails_RendersIndeterminateAndSetsHasMissingRates()
+    {
+        FakeExpenseRepository expenseRepo = new();
+        expenseRepo.CategoryNames[_categoryId] = "Comida";
+        await expenseRepo.AddAsync(CreateExpense(_march, 2000m)); // DOP, converts fine
+
+        FakeIncomeRepository incomeRepo = new();
+
+        FakeBudgetRepository budgetRepo = new();
+        budgetRepo.Seed(Budget.Create(2026, 3, _categoryId, Money.Create(10000m, Currency.USD)));
+
+        FakeCategoryRepository categoryRepo = new();
+        categoryRepo.SetCategories(new[] { new Category { Id = _categoryId, Name = "Comida" } });
+
+        // Only USD conversions fail; the DOP expense side still converts.
+        FakeCurrencyConverter converter = new(onConvert: (money, target) =>
+            money.Currency == Currency.USD
+                ? Result.Failure("ExchangeRateUnavailable", "No rate.")
+                : Result.Success(Money.Create(money.Amount, target)));
+
+        DashboardViewModel viewModel = CreateViewModel(
+            expenseRepo, incomeRepo, _march, converter, budgetRepo: budgetRepo, categoryRepo: categoryRepo);
+
+        await viewModel.RefreshCommand.ExecuteAsync(null);
+
+        BudgetProgressItem item = Assert.Single(viewModel.BudgetProgress);
+        Assert.True(item.IsIndeterminate);
+        Assert.Null(item.Status);
+        Assert.False(item.IsNear);
+        Assert.False(item.IsExceeded);
+        Assert.Equal(0d, item.ProgressValue);
+        Assert.Equal(Strings.DashboardBudgetIndeterminateLabel, item.PercentDisplay);
+        Assert.True(viewModel.HasMissingRates);
+    }
+
+    [Fact]
+    public async Task PreviousMonthCommand_RecalculatesBudgetProgressForNavigatedMonth()
+    {
+        FakeExpenseRepository expenseRepo = new();
+        expenseRepo.CategoryNames[_categoryId] = "Comida";
+        await expenseRepo.AddAsync(CreateExpense(_march, 3000m));
+        await expenseRepo.AddAsync(CreateExpense(new DateOnly(2026, 2, 10), 1000m));
+
+        FakeIncomeRepository incomeRepo = new();
+
+        FakeBudgetRepository budgetRepo = new();
+        budgetRepo.Seed(Budget.Create(2026, 3, _categoryId, Money.Create(10000m, Currency.DOP)));
+        budgetRepo.Seed(Budget.Create(2026, 2, _categoryId, Money.Create(5000m, Currency.DOP)));
+
+        FakeCategoryRepository categoryRepo = new();
+        categoryRepo.SetCategories(new[] { new Category { Id = _categoryId, Name = "Comida" } });
+
+        DashboardViewModel viewModel = CreateViewModel(
+            expenseRepo, incomeRepo, _march, budgetRepo: budgetRepo, categoryRepo: categoryRepo);
+
+        await viewModel.RefreshCommand.ExecuteAsync(null);
+        Assert.Equal(30d, Assert.Single(viewModel.BudgetProgress).ProgressValue); // 3000/10000
+
+        await viewModel.PreviousMonthCommand.ExecuteAsync(null);
+
+        Assert.Equal(_februaryAnchor, viewModel.SelectedMonth);
+        BudgetProgressItem febItem = Assert.Single(viewModel.BudgetProgress);
+        Assert.Equal(20d, febItem.ProgressValue); // 1000/5000
+    }
+
     private static DashboardViewModel CreateViewModel(
         FakeExpenseRepository expenseRepo,
         FakeIncomeRepository incomeRepo,
@@ -155,7 +306,9 @@ public sealed class DashboardViewModelTests
         FakeCurrencyConverter? converter = null,
         FakeDebtPaymentRepository? debtPaymentRepo = null,
         FakeDebtRepository? debtRepo = null,
-        FakeRecurringRuleRepository? recurringRuleRepo = null)
+        FakeRecurringRuleRepository? recurringRuleRepo = null,
+        FakeBudgetRepository? budgetRepo = null,
+        FakeCategoryRepository? categoryRepo = null)
     {
         converter ??= new FakeCurrencyConverter();
         FakeClock clock = new() { Today = today };
@@ -168,12 +321,18 @@ public sealed class DashboardViewModelTests
             debtRepo ?? new FakeDebtRepository(),
             recurringRuleRepo ?? new FakeRecurringRuleRepository(),
             clock);
+        GetBudgetVsActualQuery budgetVsActualQuery = new(
+            budgetRepo ?? new FakeBudgetRepository(),
+            expenseRepo,
+            categoryRepo ?? new FakeCategoryRepository(),
+            converter);
 
         return new DashboardViewModel(
             summaryQuery,
             breakdownQuery,
             evolutionQuery,
             upcomingPaymentsQuery,
+            budgetVsActualQuery,
             clock,
             NullLogger<DashboardViewModel>.Instance);
     }

@@ -488,6 +488,21 @@ public class Strings
     public static string DashboardUpcomingPaymentKindRecurring => ResourceManager.GetString("DashboardUpcomingPaymentKindRecurring", Culture)!;
 
     /// <summary>
+    /// Gets the localized title for the Dashboard's budget-progress card.
+    /// </summary>
+    public static string DashboardBudgetProgressTitle => ResourceManager.GetString("DashboardBudgetProgressTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized empty-state message for the Dashboard's budget-progress card.
+    /// </summary>
+    public static string DashboardEmptyBudgetProgressMessage => ResourceManager.GetString("DashboardEmptyBudgetProgressMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized placeholder shown for an indeterminate budget line (missing conversion rate).
+    /// </summary>
+    public static string DashboardBudgetIndeterminateLabel => ResourceManager.GetString("DashboardBudgetIndeterminateLabel", Culture)!;
+
+    /// <summary>
     /// Gets the localized title for the expense calendar screen.
     /// </summary>
     public static string CalendarTitle => ResourceManager.GetString("CalendarTitle", Culture)!;

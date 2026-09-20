@@ -313,6 +313,15 @@ Mostrando conversiones aproximadas.
   <data name="DashboardUpcomingPaymentKindRecurring" xml:space="preserve">
     <value>Regla recurrente</value>
   </data>
+  <data name="DashboardBudgetProgressTitle" xml:space="preserve">
+    <value>Progreso de presupuestos</value>
+  </data>
+  <data name="DashboardEmptyBudgetProgressMessage" xml:space="preserve">
+    <value>No hay presupuestos configurados para este mes.</value>
+  </data>
+  <data name="DashboardBudgetIndeterminateLabel" xml:space="preserve">
+    <value>Tasa no disponible</value>
+  </data>
   <data name="CalendarTitle" xml:space="preserve">
     <value>Calendario de gastos</value>
   </data>
