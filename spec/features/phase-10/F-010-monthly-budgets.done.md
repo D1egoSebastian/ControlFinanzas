@@ -1,7 +1,7 @@
 # F-010 — Monthly Budgets per Category
 
 > **Phase:** 10 — Monthly Budgets per Category
-> **Status:** 📝 Spec (ready for design)
+> **Status:** ✅ Archived (2026-09-20)
 > **SDD:** `.atl/sdd/f-010p10-monthly-budgets/`
 
 ## Goal
@@ -216,24 +216,40 @@ expenses (not built unless explicitly requested later).
 
 ## Acceptance Criteria
 
-- [ ] `Budget.Create` rejects amount ≤ 0 and invalid year/month; an invalid
-  budget cannot be constructed from outside the domain.
-- [ ] A budget can be created, edited, and deleted per category for a given
-  month from `BudgetsView`.
-- [ ] Setting a budget twice for the same category+month updates rather
-  than duplicating it, enforced both at the use-case layer and via a DB
-  unique index on `(Year, Month, CategoryId)`.
-- [ ] The Dashboard shows percent consumed and `Ok`/`Near`/`Exceeded` per
+- [x] `Budget.Create` rejects amount ≤ 0 and invalid year/month; an invalid
+  budget cannot be constructed from outside the domain. Confirmed by direct
+  read of `Domain/Budgets/Budget.cs` (private setters, private ctor, `Create`
+  factory validates `Year`/`Month`/`CategoryId`/`Amount`) plus passing unit
+  tests.
+- [x] A budget can be created, edited, and deleted per category for a given
+  month from `BudgetsView`. `BudgetsViewModel.SaveCommand`/`DeleteCommand`/
+  `EditCommand` wired to `CreateOrUpdateBudgetUseCase`/`DeleteBudgetUseCase`.
+- [x] Setting a budget twice for the same category+month updates rather
+  than duplicating it, enforced both at the use-case layer
+  (`CreateOrUpdateBudgetUseCase`'s `GetByCategoryAndMonthAsync` check) and via
+  a DB unique index on `(Year, Month, CategoryId)`
+  (`BudgetConfiguration.HasIndex(...).IsUnique()`).
+- [x] The Dashboard shows percent consumed and `Ok`/`Near`/`Exceeded` per
   budgeted category, driven by the Dashboard's existing month-navigation
-  state.
-- [ ] A foreign-currency expense counts against a DOP budget at its
-  `ConvertAsync`-converted amount.
-- [ ] A failed or missing conversion rate surfaces as an indeterminate
+  state. Verified running the app: "Progreso de presupuestos" card renders
+  below "Próximos pagos", recalculating on `PreviousMonth`/`NextMonth`.
+- [x] A foreign-currency expense counts against a DOP budget at its
+  `ConvertAsync`-converted amount. Confirmed by direct read of
+  `GetBudgetVsActualQuery.cs` — `ConvertAsync` used on both sides, never
+  `DisplayAsync`.
+- [x] A failed or missing conversion rate surfaces as an indeterminate
   status, never as a silently wrong percentage.
-- [ ] `ExpenseRepository.GetCategoryTotalsAsync` is unchanged; aggregation
-  still happens in SQL, not in memory.
-- [ ] `CategoryId == null` budgets are rejected at the use-case layer in v1.
-- [ ] Month labels on both the management screen and the Dashboard section
-  use `CultureInfo.CurrentCulture`.
-- [ ] `AppDbContextModelSnapshot.cs` matches the `AddBudgets` migration.
-- [ ] Full test suite green, no regressions.
+  `BudgetProgressItem.IsIndeterminate => Status is null`, confirmed directly.
+- [x] `ExpenseRepository.GetCategoryTotalsAsync` is unchanged; aggregation
+  still happens in SQL, not in memory. Confirmed: no diff to
+  `ExpenseRepository.cs` across all 4 Phase 10 commits.
+- [x] `CategoryId == null` budgets are rejected at the use-case layer in v1.
+  `CreateOrUpdateBudgetValidator` rejects `CategoryId == null` with a
+  dedicated global-budget message.
+- [x] Month labels on both the management screen and the Dashboard section
+  use `CultureInfo.CurrentCulture`, matching `DashboardViewModel.FormatMonthLabel`.
+- [x] `AppDbContextModelSnapshot.cs` matches the `AddBudgets` migration —
+  scaffolded via `dotnet ef migrations add AddBudgets`, confirmed to touch
+  only the `Budgets` table.
+- [x] Full test suite green, no regressions: 861/861 (703 unit + 158
+  integration), re-verified independently during `sdd-verify`.

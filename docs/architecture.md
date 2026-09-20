@@ -139,7 +139,11 @@ La solución `ControlDeFinanzasIA.sln` contiene **seis proyectos** C#:
   - Las **cuotas de deuda** se modelan como `DebtPayment`, no como `RecurringRule`, porque tienen una cantidad finita y un plan.
 - **`Goal`** — `Id`, `Name`, `TargetAmount` (Money), `Currency`, `TargetDate`, `CreatedAt`, `Note?`.
 - **`GoalContribution`** — `Id`, `GoalId`, `Date`, `Amount` (Money), `Source` (Manual | AutoFromUnspentIncome), `PeriodYear`, `PeriodMonth`.
-- **`Budget`** — `Id`, `Year`, `Month`, `CategoryId`, `Amount` (Money).
+- **`Budget`** (Fase 10, implementado) — `Id`, `Year`, `Month`, `CategoryId` (nullable en el esquema
+  para futuros presupuestos globales, pero `Create` exige un valor no nulo en v1), `Amount` (Money),
+  `Currency` (denormalizado de `Amount.Currency`). Clase con setters privados y factory estático
+  `Create` que valida las invariantes (mismo patrón que `Debt`), no un record con setters públicos.
+  Índice único en `(Year, Month, CategoryId)` garantiza upsert sin duplicados a nivel de esquema.
 - **`Category`** — `Id`, `Name`, `Color?`, `Icon?`, `IsSystem` (no se puede borrar si es del sistema).
 - **`Tag`** — `Id`, `Name` (único).
 - **`PaymentMethod`** — `Id`, `Name`, `IsSystem`.

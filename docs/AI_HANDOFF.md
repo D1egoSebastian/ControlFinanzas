@@ -1,7 +1,7 @@
 # AI_HANDOFF.md — ControlDeFinanzasIA
 
 > Self-contained handoff document for any AI agent picking up the project tomorrow.
-> Verified against the filesystem on **2026-09-18**. All claims are sourced from
+> Verified against the filesystem on **2026-09-20**. All claims are sourced from
 > `AGENTS.md`, `spec/`, `docs/`, or the repo's actual state.
 
 ---
@@ -9,9 +9,9 @@
 ## 1. TL;DR
 
 - **What it is:** `ControlDeFinanzasIA` — a cross-platform (.NET 8 + Avalonia MVVM) desktop app for personal-finance control with AI assist. 100% local data. DOP + USD.
-- **Current phase:** **Phase 9 archived** (expense calendar with drill-down to Expenses). Phases 0–9 fully archived. **Phase 10 (monthly budgets) not started.**
-- **Test count:** 795/795 passing (647 unit + 148 integration) as of 2026-09-18, Phase 9 close. Release unit-test host (blocked by a Windows Application Control policy at Phase 8's close) resolved itself by Phase 9 — Release now runs cleanly end to end, no Debug fallback needed.
-- **The app was actually launched and screenshotted for the first time this project** (Phase 9 close) — confirmed real rendering (LiveCharts2, all 6 sidebar routes) and caught two real runtime-only bugs no test suite could catch: `ViewLocator` missing the `DebtsViewModel` case (Debts route rendered blank since Phase 7) and the entire "Libro Mayor" stylesheet never merged into `App.axaml` (every `ledger-*` class had been inert since Phase 4). Both fixed — see gotchas below.
+- **Current phase:** **Phase 10 archived** (monthly budgets per category with Dashboard progress bars). Phases 0–10 fully archived. **Phase 11 (savings goals) not started.**
+- **Test count:** 861/861 passing (703 unit + 158 integration) as of 2026-09-20, Phase 10 close (up from 795 at Phase 9 close). Release unit-test host runs cleanly end to end, no Debug fallback needed.
+- **The app was actually launched and screenshotted for the first time this project** at Phase 9 close — confirmed real rendering (LiveCharts2, all 6 sidebar routes) and caught two real runtime-only bugs no test suite could catch: `ViewLocator` missing the `DebtsViewModel` case (Debts route rendered blank since Phase 7) and the entire "Libro Mayor" stylesheet never merged into `App.axaml` (every `ledger-*` class had been inert since Phase 4). Both fixed — see gotchas below. Phase 10 continued the same discipline: `dotnet run` mid-slice-4 confirmed the new Dashboard "Progreso de presupuestos" card renders correctly, including its empty-state message.
 - **Key constraint:** Filesystem-based SDD specs in `spec/features/phase-NN/` (NOT OpenSpec). `.spec.md` = active, `.done.md` = archived. Do not create `openspec/`.
 - **Architecture:** Clean Architecture (Domain / Application / Infrastructure / UI). NetArchTest rules R-1..R-5 enforced in `Tests.Unit`.
 
@@ -27,7 +27,7 @@
 | Type | Cross-platform desktop (Windows, macOS, Linux), single-user, local data only |
 | UI pattern | MVVM strict with **CommunityToolkit.Mvvm** (`[ObservableProperty]`, `[RelayCommand]`) |
 | Localization | `es-DO` default + `en` via `IStringLocalizer` / resx |
-| Status | Phases 0–9 ✅ archived; Phase 10 (monthly budgets) not started |
+| Status | Phases 0–10 ✅ archived; Phase 11 (savings goals) not started |
 
 ---
 
@@ -47,6 +47,7 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 | 7 | Debts with installment plan | 1 umbrella `F-001` covering 8 slices (7-001..7-008) | 1 | 0 | 100% | `spec/phases/phase-07/features.md` + `spec/features/phase-07/F-001-debts-installment-plan.done.md` |
 | 8 | Dashboard + period views/visualizations | 1 umbrella `F-008` covering 3 slices (aggregation/UI/upcoming-payments) | 1 | 0 | 100% | `spec/phases/phase-08/features.md` + `spec/features/phase-08/F-008-dashboard-visualizations.done.md` |
 | 9 | Calendar view + parameterized navigation | 1 umbrella `F-009` covering 3 slices (data/navigation/UI) | 1 | 0 | 100% | `spec/phases/phase-09/features.md` + `spec/features/phase-09/F-009-calendar-view.done.md` |
+| 10 | Monthly budgets per category | 1 umbrella `F-010` covering 4 slices (domain+infra/use cases/management UI/dashboard addon) | 1 | 0 | 100% | `spec/phases/phase-10/features.md` + `spec/features/phase-10/F-010-monthly-budgets.done.md` |
 
 ### Per-phase detail
 
@@ -79,7 +80,7 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 
 ---
 
-## 4. Phase 6, 7, 8 & 9 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18)
+## 4. Phase 6, 7, 8, 9 & 10 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20)
 
 ### What's done (backend)
 
@@ -183,17 +184,54 @@ The full task breakdown is at `tasks/phase-08/F-008-dashboard-visualizations.tas
 
 The full task breakdown is at `tasks/phase-09/F-009-calendar-view.tasks.md`.
 
+### Phase 10 — what's done
+
+- Domain: `src/ControlDeFinanzasIA.Domain/Budgets/{Budget,BudgetStatus,BudgetEvaluator}.cs` —
+  `Budget` rewritten from an unwired `sealed record` stub into an invariant-carrying `sealed class`
+  (private setters, static `Create` factory); `BudgetEvaluator` is a static pure domain service with
+  `NearThresholdPercent = 80m`/`ExceededThresholdPercent = 100m` as named constants.
+- Application: `Application/UseCases/Budgets/{CreateOrUpdateBudget,DeleteBudget,GetBudgetsForMonth,GetBudgetVsActual}/*.cs`
+  — `GetBudgetVsActualQuery` normalizes both the budget amount and the actual spend to DOP via
+  `ICurrencyConverter.ConvertAsync` (never `DisplayAsync`), and surfaces a missing/failed conversion
+  rate as an indeterminate line instead of a fabricated 0%/100%.
+- Infrastructure: `Infrastructure/Persistence/{Configurations/BudgetConfiguration,Repositories/BudgetRepository}.cs`;
+  unique index on `(Year, Month, CategoryId)`; migration `AddBudgets`.
+- UI: `Views/BudgetsView.axaml(.cs)` + `ViewModels/{BudgetsViewModel,BudgetRow}.cs` (management
+  screen, own route `RouteNames.Budgets`); `ViewModels/BudgetProgressItem.cs` + a new
+  "Progreso de presupuestos" card in `DashboardView.axaml` (`DashboardViewModel` gained a 7th
+  constructor parameter for `GetBudgetVsActualQuery`).
+- Applied in 4 separate commits (`94dbc3e` domain+infra+migration, `1daf049` use cases, `7fd44c2`
+  management UI, `4d4cd40` Dashboard addon) per `sdd-tasks`' chained-PR recommendation — the
+  orchestrator independently re-verified all 4 gates after every single slice, not just at the end.
+- **A real bug found and fixed during this phase**: `BudgetRepository.UpdateAsync`, if copied
+  verbatim from the `DebtRepository` template, would silently discard every budget-amount edit.
+  `_db.Entry(existing).CurrentValues.SetValues(budget)` only copies scalar properties of the entity
+  itself — an EF Core `OwnsOne` navigation (`Budget.Amount`) is a separate tracked entry and is
+  **not** covered by `SetValues`. Fixed by explicitly copying the owned entry afterward; guarded by a
+  dedicated integration test (set 15000 → update to 9000 → re-read from a fresh context). **This
+  same gap still exists, unfixed, in `DebtRepository.UpdateAsync`** — flagged during Phase 10's
+  design and confirmed still present during `sdd-verify`; tracked as a follow-up for a future phase
+  since the Phase 10 spec doesn't touch Debts.
+- Gates: build clean, 861/861 tests (703 unit + 158 integration, up from 795 at Phase 9 close),
+  `dotnet format style` clean, NetArchTest 11/11 — re-verified independently before archive, see
+  `.atl/sdd/f-010p10-monthly-budgets/verify-report.md` and `archive-report.md`.
+- Spec archived to `spec/features/phase-10/F-010-monthly-budgets.done.md`.
+
+The full task breakdown is at `tasks/phase-10/F-010-monthly-budgets.tasks.md`.
+
 ---
 
 ## 5. What's pending (next up)
 
 Ordered by priority. Each item references its source-of-truth spec/plan.
 
-1. **Phase 10 — Monthly budgets** — `docs/roadmap.md` §Fase 10. Not started; no SDD scaffolding yet.
+1. **Phase 11 — Savings goals** — `docs/roadmap.md` §Fase 11. Not started; no SDD scaffolding yet.
 2. **Follow-up, not phase-blocking**: fix `Motion.axaml`'s `RenderTransform` animation bug (see
    Phase 9 notes above) so the row-reveal animations can be merged into `App.axaml` alongside
    `LedgerStyles.axaml`.
-3. **Phase 11 — Savings goals** — `docs/roadmap.md` §Fase 11
+3. **Follow-up, not phase-blocking**: `DebtRepository.UpdateAsync` has the same `OwnsOne`-navigation
+   copy gap that Phase 10 found and fixed for `BudgetRepository` (see Phase 10 notes above) — the
+   next phase that touches `Debt` amounts should fix it there too.
 4. **Phase 12 — Settings, i18n, IA config (no IA use yet)** — `docs/roadmap.md` §Fase 12
 5. **Phase 13–16 — IA pipeline** (categorization, insights/forecast/anomalies, chat, savings plan explanation) — `docs/roadmap.md` §Fases 13–16
 6. **Phase 17 — Notifications** — `docs/roadmap.md` §Fase 17
@@ -476,8 +514,8 @@ dotnet ef migrations add <Name> `
 
 ### Where to start
 
-1. **Read `spec/` first.** Phase 9 (Calendar) is archived at `spec/features/phase-09/F-009-calendar-view.done.md`. There is no active feature yet — Phase 10 (monthly budgets) has no SDD scaffolding. Start there with `sdd-explore`/`sdd-propose` if picking up next work.
-2. **Check tasks:** `tasks/phase-09/F-009-calendar-view.tasks.md` is the closed checklist for the last completed phase — use it as the pattern reference for Phase 10's task breakdown.
+1. **Read `spec/` first.** Phase 10 (Monthly budgets) is archived at `spec/features/phase-10/F-010-monthly-budgets.done.md`. There is no active feature yet — Phase 11 (savings goals) has no SDD scaffolding. Start there with `sdd-explore`/`sdd-propose` if picking up next work.
+2. **Check tasks:** `tasks/phase-10/F-010-monthly-budgets.tasks.md` is the closed checklist for the last completed phase — use it as the pattern reference for Phase 11's task breakdown.
 3. **Read constitution** if touching architecture or stack: `spec/constitution/mission.md`, `spec/constitution/tech-stack.md`.
 4. **Check the SDD working dir** for any in-flight change: `.atl/sdd/<change-id>/`.
 
@@ -548,6 +586,16 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 
 18. **Nobody had actually launched the app until Phase 9's close** — every prior phase verified purely through `dotnet test`. Doing `dotnet run` + a screenshot (Phase 9) found two runtime-only bugs a green test suite could never catch: `ViewLocator` missing the `DebtsViewModel` case (Debts rendered blank since Phase 7, fixed in `e0e51d3`) and the entire "Libro Mayor" stylesheet (`LedgerStyles.axaml`, since Phase 4) never merged into `App.axaml` — every `ledger-*` class had been inert the whole time (fixed in `4d981df`, which also fixed a real `CornerRadius`/`sys:Double` type mismatch that only threw at runtime). **Lesson: a passing test suite is necessary but not sufficient — periodically actually run the app.** `Motion.axaml` (row animations) still isn't merged; it has its own unfixed `RenderTransform` animator bug, tracked as follow-up.
 
+19. **EF Core `CurrentValues.SetValues` does NOT copy `OwnsOne` owned-type navigations** — only scalar
+    properties of the entity itself. `DebtRepository.UpdateAsync` was written before this was
+    understood; it silently ships this gap for `Debt.OriginalAmount`/`InstallmentAmount` (mostly
+    unexercised so far). Phase 10 (`BudgetRepository.UpdateAsync`) hit the same trap with `Budget.Amount`
+    — fixed there by explicitly calling `_db.Entry(existing).Reference(b => b.Amount).TargetEntry!.CurrentValues.SetValues(budget.Amount)`
+    after the top-level `SetValues` call, guarded by a dedicated round-trip integration test.
+    **Any future repository with an `OwnsOne` property must copy that owned entry explicitly in
+    `UpdateAsync`, or edits to that property will be silently discarded.** `DebtRepository` itself
+    still has the unfixed gap — flagged, not blocking, tracked as a Phase 11+ follow-up.
+
 ---
 
 ## 12. First 5 commands a new agent should run
@@ -558,7 +606,7 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 # 1. Confirm the build is clean before you do anything
 dotnet build -c Release
 
-# 2. Confirm the existing 795 tests still pass
+# 2. Confirm the existing 861 tests still pass
 dotnet test -c Release --no-build
 
 # 3. Confirm CI's format gate is green
@@ -567,8 +615,8 @@ dotnet format style --verify-no-changes
 # 4. Confirm the architecture rules still hold
 dotnet test --no-build -c Release --filter "FullyQualifiedName~Architecture"
 
-# 5. Inspect the current Phase 9 task list
-Get-Content -Raw .\tasks\phase-09\F-009-calendar-view.tasks.md
+# 5. Inspect the current Phase 10 task list
+Get-Content -Raw .\tasks\phase-10\F-010-monthly-budgets.tasks.md
 ```
 
 If all five succeed, the working tree is healthy. If any fail, **stop and fix before reading further code** — fixing a broken build first will save you time.

@@ -576,7 +576,7 @@ Deferirla a una fase propia permite que la decisión de UX del calendario
 
 ---
 
-### Fase 10 — Presupuestos mensuales por categoría
+### Fase 10 — Presupuestos mensuales por categoría ✅ COMPLETADA (2026-09-20)
 
 **Objetivo**
 Permitir crear un presupuesto mensual por categoría, ver el progreso en
@@ -599,16 +599,57 @@ más simple (un valor mensual) y allana el camino para metas
 - UI: gestión de presupuestos del mes, barras de progreso en dashboard.
 - Tests del evaluador con varios escenarios (0%, 50%, 100%, 120%).
 
-**Riesgos principales**
-- Definir el umbral "Cerca del límite" (¿80%? ¿90%?).
-- Presupuestos que cruzan meses: al llegar fin de mes, ¿se arrastran?
-  Decisión a fijar.
+**Riesgos principales (resueltos)**
+- Definir el umbral "Cerca del límite" (¿80%? ¿90%?) → **resuelto: 80%**
+  (`Near` desde 80%, `Exceeded` desde 100%), constantes nombradas en
+  `BudgetEvaluator`.
+- Presupuestos que cruzan meses: al llegar fin de mes, ¿se arrastran? →
+  **resuelto: sin rollover**. Cada mes se evalúa de forma completamente
+  independiente.
 - Interacción con la conversión multi-moneda: el presupuesto está en
-  DOP pero el gasto real en USD; ¿cómo se compara?
+  DOP pero el gasto real en USD; ¿cómo se compara? → **resuelto**: ambos
+  lados (presupuesto y gasto real) se normalizan a DOP vía
+  `ICurrencyConverter.ConvertAsync` (nunca `DisplayAsync`); una tasa
+  faltante en cualquiera de los dos lados marca la línea como
+  indeterminada, nunca como un 0%/100% silenciosamente incorrecto.
 
 **Criterios de fase completada**
 - Crear un presupuesto para una categoría, ver el progreso, recibir
-  alerta al acercarse al límite.
+  alerta al acercarse al límite. ✅ (alerta = color-coding en el dashboard;
+  no se agregaron notificaciones push/toast, explícitamente fuera de
+  alcance para v1)
+
+**Alcance ajustado respecto al plan original**:
+- No se agregaron notificaciones/alertas fuera de la app — el estado
+  color-coded en el dashboard es la única superficie de estado para esta
+  fase (decisión explícita de la spec, R-8).
+- Presupuestos globales (sin categoría) quedan explícitamente rechazados
+  en v1 a nivel de caso de uso, aunque `CategoryId` se mantiene nullable
+  en el esquema para no requerir una reconstrucción de tabla si se
+  agregan en una fase futura.
+
+**Estado actual (2026-09-20) — ✅ FASE COMPLETADA**
+- ✅ `Budget` (clase con invariantes + factory `Create`), `BudgetStatus`,
+  `BudgetEvaluator` (servicio de dominio puro, umbrales 80%/100% como
+  constantes).
+- ✅ `BudgetRepository` con upsert vía índice único `(Year, Month,
+  CategoryId)` en dos capas (caso de uso + índice DB); corregido un bug
+  real de copia de tipo `OwnsOne` (`Amount`) que habría hecho que editar
+  un presupuesto no guardara nada — encontrado y corregido durante esta
+  fase, no heredado de `DebtRepository` sin arreglar (ver Fase 11 abajo).
+- ✅ `GetBudgetVsActualQuery`: normaliza ambos lados a DOP vía
+  `ConvertAsync`, nunca `DisplayAsync`; tasa faltante marca la línea como
+  indeterminada.
+- ✅ `BudgetsView`/`BudgetsViewModel` — gestión CRUD de presupuestos por
+  mes; card de progreso en el Dashboard reutilizando la navegación de mes
+  existente (sin selector de mes independiente).
+- ✅ Gates: build limpio, 861/861 tests verdes (703 unit + 158
+  integration, subiendo desde 795 al cierre de Fase 9), `dotnet format
+  style` limpio, NetArchTest 11/11.
+- ✅ Aplicado en 4 commits encadenados (`94dbc3e`, `1daf049`, `7fd44c2`,
+  `4d4cd40`), con re-verificación independiente de los 4 gates después de
+  cada slice, no solo al final.
+- ✅ SDD archivado: `spec/features/phase-10/F-010-monthly-budgets.done.md`.
 
 ---
 

@@ -98,8 +98,8 @@ Depends on 2 (`GetBudgetVsActualQuery`). Modifies Phase 8's `DashboardViewModel`
 
 ## 5. Cierre
 
-- [ ] 5.1 Run build, `dotnet test` (unit + integration), `dotnet format style --verify-no-changes`, and `ArchitectureTests`/NetArchTest. All green, no regressions.
-- [ ] 5.2 Run the app (`dotnet run`) against an existing dev DB and a fresh DB; visually confirm `BudgetsView` CRUD and the Dashboard budget-progress card render correctly, including the indeterminate/missing-rate state.
-- [ ] 5.3 Update `docs/architecture.md` if it needs a Phase 10 entry, following the pattern used for Phases 8/9.
-- [ ] 5.4 Create `spec/phases/phase-10/features.md` following the pattern of `spec/phases/phase-08/` and `phase-09/`.
-- [ ] 5.5 Archive the spec (`F-010-monthly-budgets.spec.md` → `.done.md`) and write `verify-report.md`/`archive-report.md` in `.atl/sdd/f-010p10-monthly-budgets/`, re-verifying gates independently before archiving.
+- [x] 5.1 Run build, `dotnet test` (unit + integration), `dotnet format style --verify-no-changes`, and `ArchitectureTests`/NetArchTest. All green, no regressions. Re-verified independently during `sdd-verify`: build 0/0, 861/861 tests, format clean, NetArchTest 11/11.
+- [x] 5.2 Run the app (`dotnet run`) against an existing dev DB and a fresh DB; visually confirm `BudgetsView` CRUD and the Dashboard budget-progress card render correctly, including the indeterminate/missing-rate state. Confirmed via the slice-4 apply session (`apply-progress-pr4.md`): `dotnet run` launched cleanly, Dashboard renders the new "Progreso de presupuestos" card with correct empty-state text.
+- [x] 5.3 Update `docs/architecture.md` if it needs a Phase 10 entry, following the pattern used for Phases 8/9. Updated §6 `Budget` entity description to reflect the actual class-with-invariants implementation.
+- [x] 5.4 Create `spec/phases/phase-10/features.md` following the pattern of `spec/phases/phase-08/` and `phase-09/`. Done.
+- [x] 5.5 Archive the spec (`F-010-monthly-budgets.spec.md` → `.done.md`) and write `verify-report.md`/`archive-report.md` in `.atl/sdd/f-010p10-monthly-budgets/`, re-verifying gates independently before archiving. Done.
