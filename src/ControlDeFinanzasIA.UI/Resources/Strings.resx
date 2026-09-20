@@ -322,4 +322,40 @@ Showing approximate conversions only.
   <data name="CalendarLoadErrorMessage" xml:space="preserve">
     <value>The calendar could not be loaded.</value>
   </data>
+  <data name="SidebarBudgets" xml:space="preserve">
+    <value>Budgets</value>
+  </data>
+  <data name="BudgetsFormTitle" xml:space="preserve">
+    <value>Monthly budget</value>
+  </data>
+  <data name="BudgetsListTitle" xml:space="preserve">
+    <value>Budgets for the month</value>
+  </data>
+  <data name="BudgetsCategoryPlaceholder" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="BudgetsAmountWatermark" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="BudgetsCurrencyPlaceholder" xml:space="preserve">
+    <value>Currency</value>
+  </data>
+  <data name="BudgetsSaveButton" xml:space="preserve">
+    <value>Save budget</value>
+  </data>
+  <data name="BudgetsErrorMessage" xml:space="preserve">
+    <value>The operation could not be completed.</value>
+  </data>
+  <data name="BudgetsSavedMessage" xml:space="preserve">
+    <value>Budget saved successfully.</value>
+  </data>
+  <data name="BudgetsDeletedMessage" xml:space="preserve">
+    <value>Budget deleted successfully.</value>
+  </data>
+  <data name="BudgetsEmptyMessage" xml:space="preserve">
+    <value>No budgets set for this month yet.</value>
+  </data>
+  <data name="BudgetsLoadErrorMessage" xml:space="preserve">
+    <value>The budgets could not be loaded.</value>
+  </data>
 </root>

@@ -35,4 +35,12 @@ public static class RouteNames
     /// The expense calendar route (consumed by F-009 of Phase 9).
     /// </summary>
     public const string Calendar = "Calendar";
+
+    /// <summary>
+    /// The monthly budgets management route (consumed by F-010 of Phase 10).
+    /// The literal value matters: <see cref="UI.ViewModels.ShellViewModel"/>
+    /// derives the sidebar highlight by stripping "ViewModel" from the
+    /// current view-model's type name, so this must stay <c>"Budgets"</c>.
+    /// </summary>
+    public const string Budgets = "Budgets";
 }

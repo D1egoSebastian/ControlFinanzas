@@ -1,0 +1,94 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+             xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
+             x:Class="ControlDeFinanzasIA.UI.Views.BudgetsView"
+             x:DataType="vm:BudgetsViewModel"
+             x:Name="Root"
+             Background="{StaticResource InkBrush}">
+    <Grid ColumnDefinitions="360,*" Margin="24">
+        <ScrollViewer Grid.Column="0">
+            <StackPanel Spacing="10">
+                <TextBlock Text="{x:Static resources:Strings.BudgetsFormTitle}" Classes="ledger-title" />
+
+                <!-- Month header + navigation (R-1, R-9) -->
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding SelectedMonthLabel}"
+                               Classes="ledger-section"
+                               VerticalAlignment="Center" />
+                    <Button Grid.Column="1"
+                            Content="{x:Static resources:Strings.DashboardPreviousMonthButton}"
+                            Command="{Binding PreviousMonthCommand}"
+                            Classes="ledger-btn" />
+                    <Button Grid.Column="2"
+                            Content="{x:Static resources:Strings.DashboardNextMonthButton}"
+                            Command="{Binding NextMonthCommand}"
+                            Classes="ledger-btn"
+                            Margin="8,0,0,0" />
+                </Grid>
+
+                <ComboBox ItemsSource="{Binding Categories}"
+                          DisplayMemberBinding="{Binding Name}"
+                          SelectedValue="{Binding SelectedCategoryId}"
+                          SelectedValueBinding="{Binding Id}"
+                          PlaceholderText="{x:Static resources:Strings.BudgetsCategoryPlaceholder}"
+                          Classes="ledger-input"
+                          HorizontalAlignment="Stretch" />
+                <TextBox Text="{Binding Amount}"
+                         Watermark="{x:Static resources:Strings.BudgetsAmountWatermark}"
+                         Classes="ledger-input" />
+                <ComboBox ItemsSource="{Binding Currencies}"
+                          SelectedItem="{Binding Currency}"
+                          PlaceholderText="{x:Static resources:Strings.BudgetsCurrencyPlaceholder}"
+                          Classes="ledger-input"
+                          HorizontalAlignment="Stretch" />
+
+                <TextBlock Text="{Binding FormError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+                <Button Content="{x:Static resources:Strings.BudgetsSaveButton}"
+                        Command="{Binding SaveCommand}"
+                        Classes="ledger-btn-primary" />
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <ScrollViewer Grid.Column="1" Margin="24,0,0,0">
+            <StackPanel Spacing="12">
+                <TextBlock Text="{x:Static resources:Strings.BudgetsListTitle}" Classes="ledger-title" />
+                <ItemsControl ItemsSource="{Binding Budgets}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:BudgetRow">
+                            <Border Classes="ledger-row" Padding="12">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding CategoryName}"
+                                               Classes="ledger-section"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Amount, StringFormat={}{0:N2}}"
+                                               Classes="ledger-amount"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,12,0" />
+                                    <Button Grid.Column="2"
+                                            Content="{x:Static resources:Strings.EditButton}"
+                                            Command="{Binding #Root.((vm:BudgetsViewModel)DataContext).EditCommand}"
+                                            CommandParameter="{Binding}"
+                                            Classes="ledger-btn" />
+                                    <Button Grid.Column="3"
+                                            Content="{x:Static resources:Strings.DeleteButton}"
+                                            Command="{Binding #Root.((vm:BudgetsViewModel)DataContext).DeleteCommand}"
+                                            CommandParameter="{Binding}"
+                                            Classes="ledger-btn"
+                                            Margin="4,0,0,0" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="{x:Static resources:Strings.BudgetsEmptyMessage}"
+                           IsVisible="{Binding !Budgets.Count}"
+                           Foreground="{StaticResource PaperDimBrush}" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

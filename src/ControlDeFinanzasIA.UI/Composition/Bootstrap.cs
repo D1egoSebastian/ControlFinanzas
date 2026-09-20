@@ -101,6 +101,7 @@ public static class Bootstrap
         services.AddTransient<RecurringRulesViewModel>();
         services.AddTransient<DebtsViewModel>();
         services.AddTransient<CalendarViewModel>();
+        services.AddTransient<BudgetsViewModel>();
 
         services.AddTransient<RegisterExpenseUseCase>();
         services.AddTransient<UpdateExpenseUseCase>();
@@ -152,8 +153,8 @@ public static class Bootstrap
         services.AddTransient<GetCalendarMonthQuery>();
 
         // Presupuestos mensuales por categoría (F-010 Phase 10, slice 2):
-        // los 4 use cases/queries de Application. BudgetsViewModel (slice 3)
-        // se registra por separado cuando esa slice aterrice.
+        // los 4 use cases/queries de Application. BudgetsViewModel se
+        // registra arriba junto con las demás pantallas (slice 3).
         services.AddTransient<CreateOrUpdateBudgetUseCase>();
         services.AddTransient<DeleteBudgetUseCase>();
         services.AddTransient<GetBudgetsForMonthQuery>();

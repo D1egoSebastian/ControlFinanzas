@@ -501,4 +501,64 @@ public class Strings
     /// Gets the localized error message shown when the calendar fails to load.
     /// </summary>
     public static string CalendarLoadErrorMessage => ResourceManager.GetString("CalendarLoadErrorMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized string for the budgets sidebar item.
+    /// </summary>
+    public static string SidebarBudgets => ResourceManager.GetString("SidebarBudgets", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the budget management screen's form column.
+    /// </summary>
+    public static string BudgetsFormTitle => ResourceManager.GetString("BudgetsFormTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the budget management screen's list column.
+    /// </summary>
+    public static string BudgetsListTitle => ResourceManager.GetString("BudgetsListTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized placeholder for the budget category picker.
+    /// </summary>
+    public static string BudgetsCategoryPlaceholder => ResourceManager.GetString("BudgetsCategoryPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the localized watermark for the budget amount field.
+    /// </summary>
+    public static string BudgetsAmountWatermark => ResourceManager.GetString("BudgetsAmountWatermark", Culture)!;
+
+    /// <summary>
+    /// Gets the localized placeholder for the budget currency picker.
+    /// </summary>
+    public static string BudgetsCurrencyPlaceholder => ResourceManager.GetString("BudgetsCurrencyPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the budget save button.
+    /// </summary>
+    public static string BudgetsSaveButton => ResourceManager.GetString("BudgetsSaveButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized fallback message shown when a budget save or delete operation fails.
+    /// </summary>
+    public static string BudgetsErrorMessage => ResourceManager.GetString("BudgetsErrorMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized status message shown after a budget is saved.
+    /// </summary>
+    public static string BudgetsSavedMessage => ResourceManager.GetString("BudgetsSavedMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized status message shown after a budget is deleted.
+    /// </summary>
+    public static string BudgetsDeletedMessage => ResourceManager.GetString("BudgetsDeletedMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized empty-state message for the budget list.
+    /// </summary>
+    public static string BudgetsEmptyMessage => ResourceManager.GetString("BudgetsEmptyMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized error message shown when the budget list fails to load.
+    /// </summary>
+    public static string BudgetsLoadErrorMessage => ResourceManager.GetString("BudgetsLoadErrorMessage", Culture)!;
 }
