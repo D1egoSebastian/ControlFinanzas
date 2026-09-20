@@ -17,6 +17,31 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.11");
 
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Budgets.Budget", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Currency")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Year", "Month", "CategoryId")
+                        .IsUnique();
+
+                    b.ToTable("Budgets", (string)null);
+                });
+
             modelBuilder.Entity("ControlDeFinanzasIA.Domain.Catalog.Category", b =>
                 {
                     b.Property<Guid>("Id")
@@ -545,6 +570,34 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                     b.HasBaseType("ControlDeFinanzasIA.Domain.Recurring.RecurringRule");
 
                     b.HasDiscriminator().HasValue("Subscription");
+                });
+
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Budgets.Budget", b =>
+                {
+                    b.OwnsOne("ControlDeFinanzasIA.Domain.ValueObjects.Money", "Amount", b1 =>
+                        {
+                            b1.Property<Guid>("BudgetId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("Amount");
+
+                            b1.Property<int>("Currency")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("AmountCurrency");
+
+                            b1.HasKey("BudgetId");
+
+                            b1.ToTable("Budgets");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BudgetId");
+                        });
+
+                    b.Navigation("Amount")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ControlDeFinanzasIA.Domain.Debts.Debt", b =>

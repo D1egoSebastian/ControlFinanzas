@@ -1,3 +1,4 @@
+using ControlDeFinanzasIA.Domain.Budgets;
 using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Debts;
 using ControlDeFinanzasIA.Domain.Recurring;
@@ -85,6 +86,9 @@ public class AppDbContext : DbContext
 
     /// <summary>Conjunto de cuotas de deudas.</summary>
     public DbSet<DebtPayment> DebtPayments => Set<DebtPayment>();
+
+    /// <summary>Conjunto de presupuestos mensuales por categoria.</summary>
+    public DbSet<Budget> Budgets => Set<Budget>();
 
     /// <summary>
     /// Configura el modelo de EF Core aplicando las configuraciones de

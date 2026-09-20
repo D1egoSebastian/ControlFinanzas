@@ -54,4 +54,24 @@ public interface IBudgetRepository
     /// </summary>
     /// <param name="ct">Token de cancelación opcional.</param>
     Task<IReadOnlyList<Budget>> GetAllAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Obtiene todos los <see cref="Budget"/> de un mes calendario,
+    /// ordenados deterministicamente por <c>CategoryId</c>.
+    /// </summary>
+    /// <param name="year">Año del periodo.</param>
+    /// <param name="month">Mes del periodo (1-12).</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    Task<IReadOnlyList<Budget>> GetByMonthAsync(int year, int month, CancellationToken ct = default);
+
+    /// <summary>
+    /// Obtiene el único <see cref="Budget"/> de una categoría en un mes
+    /// calendario, o <c>null</c> si no existe. Respalda el upsert de
+    /// <c>CreateOrUpdateBudgetUseCase</c>.
+    /// </summary>
+    /// <param name="categoryId">Identificador de la categoría.</param>
+    /// <param name="year">Año del periodo.</param>
+    /// <param name="month">Mes del periodo (1-12).</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    Task<Budget?> GetByCategoryAndMonthAsync(Guid categoryId, int year, int month, CancellationToken ct = default);
 }
