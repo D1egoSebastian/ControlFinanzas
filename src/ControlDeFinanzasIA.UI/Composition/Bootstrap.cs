@@ -1,5 +1,9 @@
 using System.Reflection;
 using ControlDeFinanzasIA.Application.Abstractions;
+using ControlDeFinanzasIA.Application.UseCases.Budgets.CreateOrUpdateBudget;
+using ControlDeFinanzasIA.Application.UseCases.Budgets.DeleteBudget;
+using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetsForMonth;
+using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
 using ControlDeFinanzasIA.Application.UseCases.Calendar.GetCalendarMonth;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.CreateTag;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
@@ -146,6 +150,15 @@ public static class Bootstrap
 
         // Calendario de gastos (F-009 Phase 9): grilla mensual + drill-down.
         services.AddTransient<GetCalendarMonthQuery>();
+
+        // Presupuestos mensuales por categoría (F-010 Phase 10, slice 2):
+        // los 4 use cases/queries de Application. BudgetsViewModel (slice 3)
+        // se registra por separado cuando esa slice aterrice.
+        services.AddTransient<CreateOrUpdateBudgetUseCase>();
+        services.AddTransient<DeleteBudgetUseCase>();
+        services.AddTransient<GetBudgetsForMonthQuery>();
+        services.AddTransient<GetBudgetVsActualQuery>();
+        services.AddTransient<IValidator<CreateOrUpdateBudgetCommand>, CreateOrUpdateBudgetValidator>();
 
         // Multi-moneda F-501/F-502/F-511: provider stub + cache + converter.
         services.AddExchangeRates(configuration);

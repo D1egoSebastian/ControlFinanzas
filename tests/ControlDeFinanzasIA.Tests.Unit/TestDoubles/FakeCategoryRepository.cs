@@ -6,8 +6,9 @@ namespace ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 
 /// <summary>
 /// Hand-rolled fake for <see cref="ICategoryRepository"/> used in unit tests.
-/// Only <see cref="GetAllAsync"/> is implemented; the remaining members are
-/// stubs because the view-model under test does not invoke them.
+/// <see cref="GetAllAsync"/> and <see cref="GetByIdAsync"/> resolve against
+/// <see cref="Categories"/>; the remaining members are stubs because no
+/// current consumer under test invokes them.
 /// </summary>
 public sealed class FakeCategoryRepository : ICategoryRepository
 {
@@ -37,7 +38,7 @@ public sealed class FakeCategoryRepository : ICategoryRepository
 
     /// <inheritdoc />
     public Task<Category?> GetByIdAsync(Guid id, CancellationToken ct = default)
-        => Task.FromResult<Category?>(null);
+        => Task.FromResult(Categories.FirstOrDefault(c => c.Id == id));
 
     /// <inheritdoc />
     public Task<IReadOnlyList<Category>> GetAllAsync(CancellationToken ct = default)

@@ -157,6 +157,13 @@ public sealed class FakeExpenseRepository : IExpenseRepository
     /// </summary>
     public Dictionary<Guid, string> CategoryNames { get; } = new();
 
+    /// <summary>
+    /// Number of times <see cref="GetCategoryTotalsAsync"/> was invoked.
+    /// Used by <c>GetBudgetVsActualQuery</c> tests to assert the
+    /// aggregation query is skipped when a month has no budgets (S-4).
+    /// </summary>
+    public int GetCategoryTotalsCallCount { get; private set; }
+
     /// <inheritdoc />
     public Task<IReadOnlyList<CurrencyTotal>> GetPeriodTotalsAsync(DateRange period, CancellationToken ct = default)
     {
@@ -175,6 +182,7 @@ public sealed class FakeExpenseRepository : IExpenseRepository
     public Task<IReadOnlyList<CategoryCurrencyTotal>> GetCategoryTotalsAsync(DateRange period, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(period);
+        GetCategoryTotalsCallCount++;
 
         IReadOnlyList<CategoryCurrencyTotal> totals = _addedExpenses
             .Where(e => e.Date >= period.Start && e.Date <= period.End)
