@@ -19,6 +19,10 @@ using ControlDeFinanzasIA.Application.UseCases.Debts.SkipDebtPayment;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.GetTransactions;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.RegisterExpense;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.UpdateExpense;
+using ControlDeFinanzasIA.Application.UseCases.Goals.ContributeToGoal;
+using ControlDeFinanzasIA.Application.UseCases.Goals.CreateGoal;
+using ControlDeFinanzasIA.Application.UseCases.Goals.DeleteGoal;
+using ControlDeFinanzasIA.Application.UseCases.Goals.GetGoals;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.GetIncomes;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.RegisterIncome;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.UpdateIncome;
@@ -160,6 +164,16 @@ public static class Bootstrap
         services.AddTransient<GetBudgetsForMonthQuery>();
         services.AddTransient<GetBudgetVsActualQuery>();
         services.AddTransient<IValidator<CreateOrUpdateBudgetCommand>, CreateOrUpdateBudgetValidator>();
+
+        // Metas de ahorro (F-011 Phase 11, slice 2): los 4 use cases/queries de
+        // Application. GoalsViewModel se registrará en slice 3 junto con las demás
+        // pantallas.
+        services.AddTransient<CreateGoalUseCase>();
+        services.AddTransient<ContributeToGoalUseCase>();
+        services.AddTransient<GetGoalsQuery>();
+        services.AddTransient<DeleteGoalUseCase>();
+        services.AddTransient<IValidator<CreateGoalCommand>, CreateGoalValidator>();
+        services.AddTransient<IValidator<ContributeToGoalCommand>, ContributeToGoalValidator>();
 
         // Multi-moneda F-501/F-502/F-511: provider stub + cache + converter.
         services.AddExchangeRates(configuration);
