@@ -338,6 +338,54 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                     b.ToTable("DebtPayments", (string)null);
                 });
 
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Goals.Goal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Currency")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("TargetDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("Goals", (string)null);
+                });
+
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Goals.GoalContribution", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("GoalId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GoalId");
+
+                    b.ToTable("GoalContributions", (string)null);
+                });
+
             modelBuilder.Entity("ControlDeFinanzasIA.Domain.Recurring.RecurringRule", b =>
                 {
                     b.Property<Guid>("Id")
@@ -681,6 +729,68 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("DebtPaymentId");
+                        });
+
+                    b.Navigation("Amount")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Goals.Goal", b =>
+                {
+                    b.OwnsOne("ControlDeFinanzasIA.Domain.ValueObjects.Money", "TargetAmount", b1 =>
+                        {
+                            b1.Property<Guid>("GoalId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("TargetAmount");
+
+                            b1.Property<int>("Currency")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("TargetAmountCurrency");
+
+                            b1.HasKey("GoalId");
+
+                            b1.ToTable("Goals");
+
+                            b1.WithOwner()
+                                .HasForeignKey("GoalId");
+                        });
+
+                    b.Navigation("TargetAmount")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Goals.GoalContribution", b =>
+                {
+                    b.HasOne("ControlDeFinanzasIA.Domain.Goals.Goal", null)
+                        .WithMany()
+                        .HasForeignKey("GoalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("ControlDeFinanzasIA.Domain.ValueObjects.Money", "Amount", b1 =>
+                        {
+                            b1.Property<Guid>("GoalContributionId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("Amount");
+
+                            b1.Property<int>("Currency")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("AmountCurrency");
+
+                            b1.HasKey("GoalContributionId");
+
+                            b1.ToTable("GoalContributions");
+
+                            b1.WithOwner()
+                                .HasForeignKey("GoalContributionId");
                         });
 
                     b.Navigation("Amount")

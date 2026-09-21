@@ -54,4 +54,15 @@ public interface IGoalContributionRepository
     /// </summary>
     /// <param name="ct">Token de cancelación opcional.</param>
     Task<IReadOnlyList<GoalContribution>> GetAllAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Obtiene todos los aportes de una meta especifica, ordenados por
+    /// <see cref="GoalContribution.Date"/>. Analogo directo de
+    /// <c>IDebtPaymentRepository.GetByDebtIdAsync</c>. Obligatorio, no
+    /// opcional: el progreso de una meta (R-5) se computa sumando esta
+    /// coleccion, nunca se almacena.
+    /// </summary>
+    /// <param name="goalId">Identificador de la meta.</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    Task<IReadOnlyList<GoalContribution>> GetByGoalIdAsync(Guid goalId, CancellationToken ct = default);
 }

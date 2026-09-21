@@ -1,6 +1,7 @@
 using ControlDeFinanzasIA.Domain.Budgets;
 using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Debts;
+using ControlDeFinanzasIA.Domain.Goals;
 using ControlDeFinanzasIA.Domain.Recurring;
 using ControlDeFinanzasIA.Domain.Transactions;
 using ControlDeFinanzasIA.Domain.Views;
@@ -89,6 +90,12 @@ public class AppDbContext : DbContext
 
     /// <summary>Conjunto de presupuestos mensuales por categoria.</summary>
     public DbSet<Budget> Budgets => Set<Budget>();
+
+    /// <summary>Conjunto de metas de ahorro.</summary>
+    public DbSet<Goal> Goals => Set<Goal>();
+
+    /// <summary>Conjunto de aportes a metas de ahorro.</summary>
+    public DbSet<GoalContribution> GoalContributions => Set<GoalContribution>();
 
     /// <summary>
     /// Configura el modelo de EF Core aplicando las configuraciones de

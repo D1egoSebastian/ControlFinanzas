@@ -81,6 +81,8 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence;
         services.AddScoped<IDebtRepository, DebtRepository>();
         services.AddScoped<IDebtPaymentRepository, DebtPaymentRepository>();
         services.AddScoped<IBudgetRepository, BudgetRepository>();
+        services.AddScoped<IGoalRepository, GoalRepository>();
+        services.AddScoped<IGoalContributionRepository, GoalContributionRepository>();
 
         return services;
     }
