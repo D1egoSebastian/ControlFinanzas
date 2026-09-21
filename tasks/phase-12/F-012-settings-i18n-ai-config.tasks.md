@@ -64,18 +64,18 @@ No consumers exist yet for `Setting`; safe to land tightened validation now.
 
 Depends on 1 (`ISettingsStore`/`AppSettings`/`SettingKeys`).
 
-- [ ] 2.1 Create `Application/UseCases/Settings/GetAppSettings/GetAppSettingsQuery.cs`: ctor `ISettingsStore`; `ExecuteAsync` → `Result.Success(await _store.GetAppSettingsAsync(ct))`. (D-9)
-- [ ] 2.2 Create `Application/UseCases/Settings/UpdateTheme/UpdateThemeUseCase.cs`: `Enum.IsDefined` guard → `Result.Failure("Validation", ...)`; else `SetAsync(SettingKeys.Theme, theme)`. (D-9)
-- [ ] 2.3 Create `Application/UseCases/Settings/UpdateLocale/UpdateLocaleUseCase.cs`: `!SupportedLocales.IsSupported(locale)` → `Result.Failure("UnsupportedLocale", ...)`; else `SetAsync(SettingKeys.Locale, locale)`. (D-4, D-9)
-- [ ] 2.4 Create `Application/UseCases/Settings/UpdateAiSettings/UpdateAiSettingsCommand.cs`: record with `Provider`, `ApiKey`, `Model`, `BaseUrl`, `Temperature`, `MaxTokensPerRequest`. (D-9)
-- [ ] 2.5 Create `Application/UseCases/Settings/UpdateAiSettings/UpdateAiSettingsValidator.cs`: `Provider Must(Enum.IsDefined)`; `ApiKey`/`Model` `MaximumLength(Setting.MaxValueLength)` (no `NotEmpty` — clearing is legal); `BaseUrl` absolute http/https URI `When` non-empty; `Temperature InclusiveBetween(0.0, 2.0)`; `MaxTokensPerRequest InclusiveBetween(1, 128000)`. (R-5, D-2, D-9)
-- [ ] 2.6 Create `Application/UseCases/Settings/UpdateAiSettings/UpdateAiSettingsUseCase.cs`: ctor `ISettingsStore`, `IValidator<UpdateAiSettingsCommand>`, `ILogger` — NO `HttpClient`/`IHttpClientFactory`/`ILLMClient`. Validate-all-then-write-all: six sequential `SetAsync` calls, return first non-success immediately; `BaseUrl` normalized to `null` when null/whitespace before write. (R-5, D-9)
-- [ ] 2.7 Modify `UI/Composition/Bootstrap.cs`: `AddTransient<GetAppSettingsQuery>()`, `AddTransient<UpdateThemeUseCase>()`, `AddTransient<UpdateLocaleUseCase>()`, `AddTransient<UpdateAiSettingsUseCase>()`, `AddTransient<IValidator<UpdateAiSettingsCommand>, UpdateAiSettingsValidator>()`. (D-11)
-- [ ] 2.8 Unit tests for `GetAppSettingsQuery`: returns `Result.Success` carrying the store's `AppSettings`; delegates, never re-derives a default.
-- [ ] 2.9 Unit tests for `UpdateThemeUseCase`: `(AppTheme)99` → `Validation` failure; `Light` IS persisted (Q1: persisted even though not rendered); persisted value is the string `"Light"`, not `"1"`. (S-1)
-- [ ] 2.10 Unit tests for `UpdateLocaleUseCase`: `"fr-FR"` → `UnsupportedLocale`, no write; `"es-DO"`/`"en"` → written. (S-3)
-- [ ] 2.11 Unit tests for `UpdateAiSettingsUseCase`: `Temperature` -0.1/2.1 → `Validation`, `SetAsync` never called; 0.0/2.0 accepted (inclusive); `MaxTokens` 0/-1/128001 → failure, 1/128000 accepted; non-URI `BaseUrl` → failure; null/empty `BaseUrl` → accepted, normalized `null`; empty `ApiKey` accepted; valid command → exactly 6 `SetAsync` calls with the 6 expected keys. (R-5, S-6, S-7)
-- [ ] 2.12 Unit test: `UpdateAiSettingsUseCase` ctor has no `HttpClient`/`IHttpClientFactory`/`ILLMClient` dependency (reflection assertion). (R-5, S-6)
+- [x] 2.1 Create `Application/UseCases/Settings/GetAppSettings/GetAppSettingsQuery.cs`: ctor `ISettingsStore`; `ExecuteAsync` → `Result.Success(await _store.GetAppSettingsAsync(ct))`. (D-9)
+- [x] 2.2 Create `Application/UseCases/Settings/UpdateTheme/UpdateThemeUseCase.cs`: `Enum.IsDefined` guard → `Result.Failure("Validation", ...)`; else `SetAsync(SettingKeys.Theme, theme)`. (D-9)
+- [x] 2.3 Create `Application/UseCases/Settings/UpdateLocale/UpdateLocaleUseCase.cs`: `!SupportedLocales.IsSupported(locale)` → `Result.Failure("UnsupportedLocale", ...)`; else `SetAsync(SettingKeys.Locale, locale)`. (D-4, D-9)
+- [x] 2.4 Create `Application/UseCases/Settings/UpdateAiSettings/UpdateAiSettingsCommand.cs`: record with `Provider`, `ApiKey`, `Model`, `BaseUrl`, `Temperature`, `MaxTokensPerRequest`. (D-9)
+- [x] 2.5 Create `Application/UseCases/Settings/UpdateAiSettings/UpdateAiSettingsValidator.cs`: `Provider Must(Enum.IsDefined)`; `ApiKey`/`Model` `MaximumLength(Setting.MaxValueLength)` (no `NotEmpty` — clearing is legal); `BaseUrl` absolute http/https URI `When` non-empty; `Temperature InclusiveBetween(0.0, 2.0)`; `MaxTokensPerRequest InclusiveBetween(1, 128000)`. (R-5, D-2, D-9)
+- [x] 2.6 Create `Application/UseCases/Settings/UpdateAiSettings/UpdateAiSettingsUseCase.cs`: ctor `ISettingsStore`, `IValidator<UpdateAiSettingsCommand>`, `ILogger` — NO `HttpClient`/`IHttpClientFactory`/`ILLMClient`. Validate-all-then-write-all: six sequential `SetAsync` calls, return first non-success immediately; `BaseUrl` normalized to `null` when null/whitespace before write. (R-5, D-9)
+- [x] 2.7 Modify `UI/Composition/Bootstrap.cs`: `AddTransient<GetAppSettingsQuery>()`, `AddTransient<UpdateThemeUseCase>()`, `AddTransient<UpdateLocaleUseCase>()`, `AddTransient<UpdateAiSettingsUseCase>()`, `AddTransient<IValidator<UpdateAiSettingsCommand>, UpdateAiSettingsValidator>()`. (D-11)
+- [x] 2.8 Unit tests for `GetAppSettingsQuery`: returns `Result.Success` carrying the store's `AppSettings`; delegates, never re-derives a default.
+- [x] 2.9 Unit tests for `UpdateThemeUseCase`: `(AppTheme)99` → `Validation` failure; `Light` IS persisted (Q1: persisted even though not rendered); persisted value is the string `"Light"`, not `"1"`. (S-1)
+- [x] 2.10 Unit tests for `UpdateLocaleUseCase`: `"fr-FR"` → `UnsupportedLocale`, no write; `"es-DO"`/`"en"` → written. (S-3)
+- [x] 2.11 Unit tests for `UpdateAiSettingsUseCase`: `Temperature` -0.1/2.1 → `Validation`, `SetAsync` never called; 0.0/2.0 accepted (inclusive); `MaxTokens` 0/-1/128001 → failure, 1/128000 accepted; non-URI `BaseUrl` → failure; null/empty `BaseUrl` → accepted, normalized `null`; empty `ApiKey` accepted; valid command → exactly 6 `SetAsync` calls with the 6 expected keys. (R-5, S-6, S-7)
+- [x] 2.12 Unit test: `UpdateAiSettingsUseCase` ctor has no `HttpClient`/`IHttpClientFactory`/`ILLMClient` dependency (reflection assertion). (R-5, S-6)
 
 ## 3. Startup culture read
 

@@ -38,6 +38,10 @@ using ControlDeFinanzasIA.Application.UseCases.SavedViews.ApplySavedView;
 using ControlDeFinanzasIA.Application.UseCases.SavedViews.DeleteSavedView;
 using ControlDeFinanzasIA.Application.UseCases.SavedViews.GetSavedViews;
 using ControlDeFinanzasIA.Application.UseCases.SavedViews.SaveCurrentFilter;
+using ControlDeFinanzasIA.Application.UseCases.Settings.GetAppSettings;
+using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateAiSettings;
+using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateLocale;
+using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateTheme;
 using ControlDeFinanzasIA.Application.UseCases.Transactions.DeleteTransaction;
 using ControlDeFinanzasIA.Infrastructure.ExchangeRates;
 using ControlDeFinanzasIA.Infrastructure.Persistence;
@@ -178,6 +182,15 @@ public static class Bootstrap
 
         // Multi-moneda F-501/F-502/F-511: provider stub + cache + converter.
         services.AddExchangeRates(configuration);
+
+        // Configuracion: tema, idioma, IA (F-012 Phase 12, slice 2): los 4
+        // use cases/query de Application. SettingsViewModel se registra en
+        // slice 4a junto con las demás pantallas.
+        services.AddTransient<GetAppSettingsQuery>();
+        services.AddTransient<UpdateThemeUseCase>();
+        services.AddTransient<UpdateLocaleUseCase>();
+        services.AddTransient<UpdateAiSettingsUseCase>();
+        services.AddTransient<IValidator<UpdateAiSettingsCommand>, UpdateAiSettingsValidator>();
 
         ServiceProvider tempProvider = services.BuildServiceProvider();
         try
