@@ -137,8 +137,17 @@ La solución `ControlDeFinanzasIA.sln` contiene **seis proyectos** C#:
   - **`Subscription : RecurringRule`** (lista editable de suscripciones, una por servicio).
   - **`FixedExpense : RecurringRule`** (alquiler, internet, etc.).
   - Las **cuotas de deuda** se modelan como `DebtPayment`, no como `RecurringRule`, porque tienen una cantidad finita y un plan.
-- **`Goal`** — `Id`, `Name`, `TargetAmount` (Money), `Currency`, `TargetDate`, `CreatedAt`, `Note?`.
-- **`GoalContribution`** — `Id`, `GoalId`, `Date`, `Amount` (Money), `Source` (Manual | AutoFromUnspentIncome), `PeriodYear`, `PeriodMonth`.
+- **`Goal`** (Fase 11, implementado) — `Id`, `Name`, `TargetAmount` (Money), `Currency` (denormalizado
+  de `TargetAmount.Currency`), `TargetDate` (sin restricción — una fecha pasada es un estado legal),
+  `Note?`, `Status` (Active/Completed). Clase con setters privados y factory estático `Create` que
+  valida las invariantes (mismo patrón que `Debt`/`Budget`), no un record con setters públicos.
+  `CreatedAt` fue eliminado del stub original (sin consumidores, mismo criterio que Fase 10 con
+  `Budget`). El progreso (`CalculateProgress`) siempre se calcula sumando `GoalContribution`, nunca se
+  almacena un saldo corriente.
+- **`GoalContribution`** (Fase 11, implementado) — `Id`, `GoalId`, `Date`, `Amount` (Money). `Create`
+  es un factory **público** (a diferencia de `DebtPayment`, cuyo constructor es `internal`): los
+  aportes son manuales y ad-hoc, no generados en bloque por un calendario. El campo `Source` del stub
+  original fue eliminado (un solo valor posible en v1, ver `docs/roadmap.md` §Fase 11).
 - **`Budget`** (Fase 10, implementado) — `Id`, `Year`, `Month`, `CategoryId` (nullable en el esquema
   para futuros presupuestos globales, pero `Create` exige un valor no nulo en v1), `Amount` (Money),
   `Currency` (denormalizado de `Amount.Currency`). Clase con setters privados y factory estático

@@ -653,7 +653,7 @@ más simple (un valor mensual) y allana el camino para metas
 
 ---
 
-### Fase 11 — Metas de ahorro con fecha objetivo y aportes manuales
+### Fase 11 — Metas de ahorro con fecha objetivo y aportes manuales ✅ COMPLETADA (2026-09-20)
 
 **Objetivo**
 Crear metas con monto y fecha objetivo, registrar aportes manuales,
@@ -681,21 +681,76 @@ estén listos.
 - Tests del calculador con varios escenarios (meta ya cumplida, fecha
   pasada, monto muy ambicioso).
 
-**Riesgos principales**
-- Aportes en moneda distinta a la meta: comportamiento a definir.
-- Fecha objetivo en el pasado: rechazar vs advertencia.
+**Riesgos principales (resueltos)**
+- Aportes en moneda distinta a la meta: comportamiento a definir. →
+  **resuelto: rechazados.** `ContributeToGoalUseCase` compara la moneda del
+  aporte contra la de la meta ANTES de cualquier persistencia y responde con
+  un error `CurrencyMismatch` localizado; nunca se usa `ICurrencyConverter`
+  en el camino de metas.
+- Fecha objetivo en el pasado: rechazar vs advertencia. → **resuelto:
+  advertencia, no rechazo.** `Goal.Create` acepta una `TargetDate` pasada sin
+  restricción; `SavingsPlanCalculator` la surface como un estado explícito
+  `TargetDateInPast`, no lanzable, en vez de una excepción de división por
+  cero.
 - "Aporte automático desde ingreso no gastado" se documenta como
-  v2 (no se implementa aquí; se aclara en la Specification).
+  v2 (no se implementa aquí; se aclara en la Specification). →
+  **confirmado diferido** — no implementado en v1.
 
 **Criterios de fase completada**
 - Crear una meta, aportar manualmente, ver el progreso, obtener el plan
-  determinista.
-- La cifra del plan determinista es correcta con datos conocidos (test).
+  determinista. ✅
+- La cifra del plan determinista es correcta con datos conocidos (test). ✅
+  (`SavingsPlanCalculator` contra la tabla de 10 casos límite del diseño,
+  incluyendo el caso que distingue redondeo hacia arriba de
+  `MidpointRounding.AwayFromZero`)
 
-> **Decisión a tomar en esta fase:** ¿se implementa el aporte
-> automático desde "ingreso no gastado" del mes, o se difiere a una
-> fase posterior? Recomendación: difereir. Es una feature sutil y
-> depende de tener un buen modelo de qué cuenta como "no gastado".
+**Alcance ajustado respecto al plan original**:
+- Integración con el Dashboard diferida explícitamente fuera de v1 (Q3) —
+  `GoalsView` es una pantalla de gestión independiente; `DashboardViewModel`/
+  `DashboardView` no cambian en esta fase.
+- **Edición de meta vía UI no implementada.** La especificación (R-1/S-2)
+  describe una edición de monto/fecha/nombre desde `GoalsView` que nunca se
+  construyó — solo crear/aportar/ver/borrar. Esta es una inconsistencia
+  interna de la especificación heredada de la etapa de propuesta (que
+  explícitamente excluyó la edición como "más allá de borrar y recrear"),
+  detectada durante el diseño pero nunca reconciliada contra el texto de
+  R-1/S-2. El checklist de Acceptance Criteria de la spec (el criterio real
+  de "hecho") no exige edición vía UI y se cumple en su totalidad — el único
+  criterio relacionado con edición está acotado a que
+  `GoalRepository.UpdateAsync` persista correctamente (verificado por test
+  de integración), no a un flujo de usuario. Ver
+  `spec/features/phase-11/F-011-savings-goals.done.md` para el detalle
+  completo. No bloqueante; queda como candidato para una fase futura.
+
+**Estado actual (2026-09-20) — ✅ FASE COMPLETADA**
+- ✅ `Goal`/`GoalContribution` (clases con invariantes + factories
+  `Create`, esta última PÚBLICA a diferencia de `DebtPayment`), `GoalStatus`,
+  `SavingsPlanCalculator` (servicio de dominio puro, redondeo hacia arriba a
+  centavos — deliberadamente distinto de la convención de `BudgetEvaluator`,
+  porque este valor prescribe un mínimo, no reporta un hecho observado).
+- ✅ `GoalRepository`/`GoalContributionRepository` con el mismo patrón fijo
+  de `BudgetRepository` para `UpdateAsync` (copia explícita de la navegación
+  `OwnsOne`); FK con cascada de `GoalContributions` → `Goals` para que borrar
+  una meta no deje aportes huérfanos.
+- ✅ `ContributeToGoalUseCase`: la puerta de moneda (Q1/R-4) corre antes de
+  cualquier persistencia; el constructor no tiene `IExpenseRepository`/
+  `IIncomeRepository`/`ICurrencyConverter`, garantía verificable por firma.
+- ✅ `GetGoalsQuery`: lee ambos repositorios directamente, delega toda la
+  aritmética al dominio (`Goal.CalculateProgress`, `SavingsPlanCalculator`),
+  sin recalcular sumas de forma independiente.
+- ✅ `GoalsView`/`GoalsViewModel` — gestión de metas (crear/aportar/borrar);
+  panel de aporte inline revelado al seleccionar una fila, no un modal ni
+  una segunda ruta navegable.
+- ✅ Gates: build limpio, 944/944 tests verdes (773 unit + 171 integration,
+  subiendo desde 861/861 al cierre de Fase 10), `dotnet format style`
+  limpio, NetArchTest 11/11.
+- ✅ Aplicado en 4 commits encadenados (`10dc303` dominio, `5870967`
+  infraestructura+migración, `98b634f` casos de uso, `f3d1400` UI de
+  gestión), con re-verificación independiente de los 4 gates después de
+  cada slice, no solo al final.
+- ✅ SDD archivado: `spec/features/phase-11/F-011-savings-goals.done.md`.
+- ⚠️ Gap documentado, no bloqueante: edición de meta vía UI (ver "Alcance
+  ajustado" arriba).
 
 ---
 

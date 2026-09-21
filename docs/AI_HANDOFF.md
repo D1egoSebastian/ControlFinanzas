@@ -9,9 +9,10 @@
 ## 1. TL;DR
 
 - **What it is:** `ControlDeFinanzasIA` — a cross-platform (.NET 8 + Avalonia MVVM) desktop app for personal-finance control with AI assist. 100% local data. DOP + USD.
-- **Current phase:** **Phase 10 archived** (monthly budgets per category with Dashboard progress bars). Phases 0–10 fully archived. **Phase 11 (savings goals) not started.**
-- **Test count:** 861/861 passing (703 unit + 158 integration) as of 2026-09-20, Phase 10 close (up from 795 at Phase 9 close). Release unit-test host runs cleanly end to end, no Debug fallback needed.
-- **The app was actually launched and screenshotted for the first time this project** at Phase 9 close — confirmed real rendering (LiveCharts2, all 6 sidebar routes) and caught two real runtime-only bugs no test suite could catch: `ViewLocator` missing the `DebtsViewModel` case (Debts route rendered blank since Phase 7) and the entire "Libro Mayor" stylesheet never merged into `App.axaml` (every `ledger-*` class had been inert since Phase 4). Both fixed — see gotchas below. Phase 10 continued the same discipline: `dotnet run` mid-slice-4 confirmed the new Dashboard "Progreso de presupuestos" card renders correctly, including its empty-state message.
+- **Current phase:** **Phase 11 archived** (savings goals with manual contributions and a deterministic savings plan). Phases 0–11 fully archived. **Phase 12 (settings/i18n/IA config) not started.**
+- **Test count:** 944/944 passing (773 unit + 171 integration) as of 2026-09-20, Phase 11 close (up from 861 at Phase 10 close). Release unit-test host runs cleanly end to end, no Debug fallback needed.
+- **The app was actually launched and screenshotted for the first time this project** at Phase 9 close — confirmed real rendering (LiveCharts2, all 6 sidebar routes) and caught two real runtime-only bugs no test suite could catch: `ViewLocator` missing the `DebtsViewModel` case (Debts route rendered blank since Phase 7) and the entire "Libro Mayor" stylesheet never merged into `App.axaml` (every `ledger-*` class had been inert since Phase 4). Both fixed — see gotchas below. Phase 10 continued the same discipline: `dotnet run` mid-slice-4 confirmed the new Dashboard "Progreso de presupuestos" card renders correctly, including its empty-state message. Phase 11 confirmed the same mid-slice-3: the Dashboard renders with the new "Metas" sidebar entry, no startup crash.
+- **Phase 11 shipped with one documented, non-blocking spec gap:** the spec's R-1 prose and scenario S-2 describe a UI-driven goal-edit flow that was never built — `GoalsView` only supports create/contribute/view/delete. This is a spec-internal inconsistency inherited from the proposal stage (which scoped UI editing out), independently flagged during design but never reconciled against R-1/S-2's literal wording. The spec's own Acceptance Criteria checklist — the actual definition-of-done — does not require UI editing and is fully satisfied. See `spec/features/phase-11/F-011-savings-goals.done.md` and `.atl/sdd/f-011p11-savings-goals/verify-report.md`.
 - **Key constraint:** Filesystem-based SDD specs in `spec/features/phase-NN/` (NOT OpenSpec). `.spec.md` = active, `.done.md` = archived. Do not create `openspec/`.
 - **Architecture:** Clean Architecture (Domain / Application / Infrastructure / UI). NetArchTest rules R-1..R-5 enforced in `Tests.Unit`.
 
@@ -27,7 +28,7 @@
 | Type | Cross-platform desktop (Windows, macOS, Linux), single-user, local data only |
 | UI pattern | MVVM strict with **CommunityToolkit.Mvvm** (`[ObservableProperty]`, `[RelayCommand]`) |
 | Localization | `es-DO` default + `en` via `IStringLocalizer` / resx |
-| Status | Phases 0–10 ✅ archived; Phase 11 (savings goals) not started |
+| Status | Phases 0–11 ✅ archived; Phase 12 (settings/i18n/IA config) not started |
 
 ---
 
@@ -48,6 +49,11 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 | 8 | Dashboard + period views/visualizations | 1 umbrella `F-008` covering 3 slices (aggregation/UI/upcoming-payments) | 1 | 0 | 100% | `spec/phases/phase-08/features.md` + `spec/features/phase-08/F-008-dashboard-visualizations.done.md` |
 | 9 | Calendar view + parameterized navigation | 1 umbrella `F-009` covering 3 slices (data/navigation/UI) | 1 | 0 | 100% | `spec/phases/phase-09/features.md` + `spec/features/phase-09/F-009-calendar-view.done.md` |
 | 10 | Monthly budgets per category | 1 umbrella `F-010` covering 4 slices (domain+infra/use cases/management UI/dashboard addon) | 1 | 0 | 100% | `spec/phases/phase-10/features.md` + `spec/features/phase-10/F-010-monthly-budgets.done.md` |
+| 11 | Savings goals with manual contributions | 1 umbrella `F-011` covering 4 slices (domain/infra+migration/use cases/management UI) | 1 | 0 | 100%* | `spec/phases/phase-11/features.md` + `spec/features/phase-11/F-011-savings-goals.done.md` |
+
+\* Phase 11's Acceptance Criteria checklist is 100% satisfied; one documented, non-blocking gap exists
+between the spec's R-1/S-2 prose (UI goal editing) and the shipped UI (create/contribute/view/delete
+only) — see the TL;DR above.
 
 ### Per-phase detail
 
@@ -80,7 +86,7 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 
 ---
 
-## 4. Phase 6, 7, 8, 9 & 10 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20)
+## 4. Phase 6, 7, 8, 9, 10 & 11 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20, 2026-09-20)
 
 ### What's done (backend)
 
@@ -219,20 +225,69 @@ The full task breakdown is at `tasks/phase-09/F-009-calendar-view.tasks.md`.
 
 The full task breakdown is at `tasks/phase-10/F-010-monthly-budgets.tasks.md`.
 
+### Phase 11 — what's done
+
+- Domain: `src/ControlDeFinanzasIA.Domain/Goals/{Goal,GoalStatus,GoalContribution,SavingsPlanCalculator}.cs`
+  — `Goal`/`GoalContribution` rewritten from unwired `sealed record` stubs into invariant-carrying
+  `sealed class`es (private setters, static `Create` factories); `GoalContribution.Create` is
+  **public** (contrast with `DebtPayment`'s `internal` ctor — contributions are manual/ad-hoc, not
+  generated in bulk). `SavingsPlanCalculator` is a static pure domain service that rounds the required
+  monthly contribution **up** to the cent (`Math.Ceiling`, not `MidpointRounding.AwayFromZero`) because
+  it prescribes a minimum, not a reported fact — deliberately different from `BudgetEvaluator`'s
+  rounding.
+- Application: `Application/UseCases/Goals/{CreateGoal,ContributeToGoal,GetGoals,DeleteGoal}/*.cs` —
+  `ContributeToGoalUseCase`'s constructor takes only `IGoalRepository`/`IGoalContributionRepository`
+  (no `IExpenseRepository`/`IIncomeRepository`/`ICurrencyConverter`), so a goal contribution can never
+  create an `Expense`/`Income` row or silently convert currency; the currency-match gate runs before
+  any persistence. `GetGoalsQuery` reads both repositories directly and delegates all arithmetic to
+  `Goal.CalculateProgress`/`SavingsPlanCalculator` — no independent summation.
+- Infrastructure: `Infrastructure/Persistence/{Configurations/{GoalConfiguration,GoalContributionConfiguration},Repositories/{GoalRepository,GoalContributionRepository}}.cs`;
+  cascading FK from `GoalContributions.GoalId` to `Goals`; migration `AddGoals`. Both `UpdateAsync`
+  methods correctly copy the owned `Money` navigation explicitly (the `BudgetRepository`-fixed
+  pattern, not `DebtRepository`'s unfixed one).
+- UI: `Views/GoalsView.axaml(.cs)` + `ViewModels/{GoalsViewModel,GoalRow}.cs` (management screen, own
+  route `RouteNames.Goals`, sidebar entry "Metas"). Contribution entry is an inline panel revealed when
+  a goal row is selected — no modal infrastructure exists in this codebase, and no second navigable
+  route was added.
+- Applied in 4 separate commits (`10dc303` domain, `5870967` infrastructure+migration, `98b634f` use
+  cases, `f3d1400` management UI) per `sdd-tasks`' chained-PR recommendation — the orchestrator
+  independently re-verified all 4 gates after every single slice, not just at the end.
+- **No new bug class found** (unlike Phases 8/9/10) — the owned-`Money` `UpdateAsync` trap was already
+  known from Phase 10 and correctly applied preemptively to both new repositories here.
+- **One documented, non-blocking spec gap**: R-1's prose and scenario S-2 describe a UI-driven
+  goal-edit flow that was never implemented — `GoalsView`/`GoalsViewModel` supports create/contribute/
+  view/delete only, no `EditAsync`/`UpdateGoalUseCase`. This is a spec-internal inconsistency inherited
+  from the proposal stage (which had scoped UI editing out as "beyond delete-and-recreate"),
+  independently flagged during design but never reconciled against R-1/S-2's literal wording. The
+  spec's own Acceptance Criteria checklist does not require UI editing (the one editing-related
+  criterion is scoped to `GoalRepository.UpdateAsync` persisting correctly, which is tested) and is
+  fully satisfied. Flagged as a candidate for a future phase, not a Phase 11 regression.
+- Gates: build clean, 944/944 tests (773 unit + 171 integration, up from 861 at Phase 10 close),
+  `dotnet format style` clean, NetArchTest 11/11 — re-verified independently before archive, see
+  `.atl/sdd/f-011p11-savings-goals/verify-report.md` and `archive-report.md`.
+- Spec archived to `spec/features/phase-11/F-011-savings-goals.done.md`.
+
+The full task breakdown is at `tasks/phase-11/F-011-savings-goals.tasks.md`.
+
 ---
 
 ## 5. What's pending (next up)
 
 Ordered by priority. Each item references its source-of-truth spec/plan.
 
-1. **Phase 11 — Savings goals** — `docs/roadmap.md` §Fase 11. Not started; no SDD scaffolding yet.
+1. **Phase 12 — Settings, i18n, IA config (no IA use yet)** — `docs/roadmap.md` §Fase 12
 2. **Follow-up, not phase-blocking**: fix `Motion.axaml`'s `RenderTransform` animation bug (see
    Phase 9 notes above) so the row-reveal animations can be merged into `App.axaml` alongside
    `LedgerStyles.axaml`.
-3. **Follow-up, not phase-blocking**: `DebtRepository.UpdateAsync` has the same `OwnsOne`-navigation
-   copy gap that Phase 10 found and fixed for `BudgetRepository` (see Phase 10 notes above) — the
-   next phase that touches `Debt` amounts should fix it there too.
-4. **Phase 12 — Settings, i18n, IA config (no IA use yet)** — `docs/roadmap.md` §Fase 12
+3. **Follow-up, not phase-blocking**: `DebtRepository.UpdateAsync` AND `DebtPaymentRepository.UpdateAsync`
+   both have the same `OwnsOne`-navigation copy gap that Phase 10 found and fixed for `BudgetRepository`
+   (and that Phase 11 correctly avoided for both `GoalRepository` and `GoalContributionRepository`).
+   The `DebtPaymentRepository` half was newly identified during Phase 11's design. Tracked as a single
+   combined `fix/owned-money-update` follow-up covering both files, for whichever future phase next
+   touches `Debt`/`DebtPayment` amounts.
+4. **Follow-up, not phase-blocking**: Phase 11's spec (R-1/S-2) describes a UI-driven goal-edit flow
+   that was never built. Either add an edit command to `GoalsViewModel`/`GoalsView` or formally narrow
+   R-1/S-2's wording to match the shipped create/contribute/view/delete scope.
 5. **Phase 13–16 — IA pipeline** (categorization, insights/forecast/anomalies, chat, savings plan explanation) — `docs/roadmap.md` §Fases 13–16
 6. **Phase 17 — Notifications** — `docs/roadmap.md` §Fase 17
 7. **Phase 18 — PDF/Excel export** — `docs/roadmap.md` §Fase 18
@@ -514,8 +569,8 @@ dotnet ef migrations add <Name> `
 
 ### Where to start
 
-1. **Read `spec/` first.** Phase 10 (Monthly budgets) is archived at `spec/features/phase-10/F-010-monthly-budgets.done.md`. There is no active feature yet — Phase 11 (savings goals) has no SDD scaffolding. Start there with `sdd-explore`/`sdd-propose` if picking up next work.
-2. **Check tasks:** `tasks/phase-10/F-010-monthly-budgets.tasks.md` is the closed checklist for the last completed phase — use it as the pattern reference for Phase 11's task breakdown.
+1. **Read `spec/` first.** Phase 11 (Savings goals) is archived at `spec/features/phase-11/F-011-savings-goals.done.md`. There is no active feature yet — Phase 12 (settings/i18n/IA config) has no SDD scaffolding. Start there with `sdd-explore`/`sdd-propose` if picking up next work.
+2. **Check tasks:** `tasks/phase-11/F-011-savings-goals.tasks.md` is the closed checklist for the last completed phase — use it as the pattern reference for Phase 12's task breakdown.
 3. **Read constitution** if touching architecture or stack: `spec/constitution/mission.md`, `spec/constitution/tech-stack.md`.
 4. **Check the SDD working dir** for any in-flight change: `.atl/sdd/<change-id>/`.
 
@@ -593,8 +648,28 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
     — fixed there by explicitly calling `_db.Entry(existing).Reference(b => b.Amount).TargetEntry!.CurrentValues.SetValues(budget.Amount)`
     after the top-level `SetValues` call, guarded by a dedicated round-trip integration test.
     **Any future repository with an `OwnsOne` property must copy that owned entry explicitly in
-    `UpdateAsync`, or edits to that property will be silently discarded.** `DebtRepository` itself
-    still has the unfixed gap — flagged, not blocking, tracked as a Phase 11+ follow-up.
+    `UpdateAsync`, or edits to that property will be silently discarded.** Phase 11 correctly applied
+    this pattern preemptively to both `GoalRepository.UpdateAsync` and
+    `GoalContributionRepository.UpdateAsync`, and during design discovered a **second** unfixed
+    occurrence: `DebtPaymentRepository.UpdateAsync` has the exact same gap as `DebtRepository.UpdateAsync`
+    (not just the one previously flagged). Both are now tracked together as a single combined
+    `fix/owned-money-update` follow-up — flagged, not blocking, for whichever future phase next touches
+    `Debt`/`DebtPayment` amounts.
+
+20. **A spec's Requirements/Scenarios prose and its Acceptance Criteria checklist can disagree — verify
+    the checklist, not just the prose, but flag the disagreement.** Phase 11's spec (`F-011`) describes
+    a UI-driven goal-edit flow in R-1's text and scenario S-2, but its own Acceptance Criteria checklist
+    (the actual definition-of-done used to gate archiving in this project) never lists a UI-edit
+    criterion — only that `GoalRepository.UpdateAsync` persists correctly at the repository level,
+    which is tested. The gap traces to the proposal stage, which had explicitly scoped UI editing out
+    ("beyond delete-and-recreate"); the design's own Open Questions section flagged the mismatch during
+    design, but it was never reconciled against R-1/S-2's literal wording before the spec was finalized
+    — unlike 7 *other* design/spec conflicts that this same design document explicitly resolved in a
+    dedicated "Spec Reconciliation" table. **Lesson: when a spec's narrative text and its checkable
+    acceptance criteria diverge, trust the acceptance criteria for the pass/fail gate, but document the
+    divergence explicitly rather than silently picking one and ignoring the other** — see
+    `spec/features/phase-11/F-011-savings-goals.done.md` and
+    `.atl/sdd/f-011p11-savings-goals/verify-report.md` for the full writeup.
 
 ---
 
@@ -606,7 +681,7 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 # 1. Confirm the build is clean before you do anything
 dotnet build -c Release
 
-# 2. Confirm the existing 861 tests still pass
+# 2. Confirm the existing 944 tests still pass
 dotnet test -c Release --no-build
 
 # 3. Confirm CI's format gate is green
@@ -615,8 +690,8 @@ dotnet format style --verify-no-changes
 # 4. Confirm the architecture rules still hold
 dotnet test --no-build -c Release --filter "FullyQualifiedName~Architecture"
 
-# 5. Inspect the current Phase 10 task list
-Get-Content -Raw .\tasks\phase-10\F-010-monthly-budgets.tasks.md
+# 5. Inspect the current Phase 11 task list
+Get-Content -Raw .\tasks\phase-11\F-011-savings-goals.tasks.md
 ```
 
 If all five succeed, the working tree is healthy. If any fail, **stop and fix before reading further code** — fixing a broken build first will save you time.

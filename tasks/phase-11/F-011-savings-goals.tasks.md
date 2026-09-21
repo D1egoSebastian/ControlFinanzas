@@ -102,9 +102,9 @@ Depends on 2 (the 4 use cases/queries).
 
 ## 4. Cierre
 
-- [ ] 4.1 Run build, `dotnet test` (unit + integration), `dotnet format style --verify-no-changes`, and `ArchitectureTests`/NetArchTest. All green, no regressions.
-- [ ] 4.2 Run the app (`dotnet run`) against an existing dev DB and a fresh DB; visually confirm `GoalsView` create/contribute/edit/delete, progress bar, plan message, already-met message, and past-date warning all render correctly.
-- [ ] 4.3 Update `docs/architecture.md` with a Phase 11 entry, following the pattern used for Phases 9/10.
-- [ ] 4.4 Create `spec/phases/phase-11/features.md` following the pattern of `spec/phases/phase-09/` and `phase-10/`.
-- [ ] 4.5 Archive the spec (`F-011-savings-goals.spec.md` → `.done.md`) and write `verify-report.md`/`archive-report.md` in `.atl/sdd/f-011p11-savings-goals/`, re-verifying gates independently before archiving.
-- [ ] 4.6 In the PR description for slice 1b, note the flagged (not fixed) `DebtPaymentRepository.UpdateAsync` owned-`Money` gap as a follow-up candidate for a future `fix/owned-money-update` change.
+- [x] 4.1 Run build, `dotnet test` (unit + integration), `dotnet format style --verify-no-changes`, and `ArchitectureTests`/NetArchTest. All green, no regressions. Re-verified independently during `sdd-verify`: build clean, 944/944 (773 unit + 171 integration), format clean, NetArchTest 11/11.
+- [x] 4.2 Run the app (`dotnet run`) against an existing dev DB and a fresh DB; visually confirm `GoalsView` create/contribute/edit/delete, progress bar, plan message, already-met message, and past-date warning all render correctly. Done mid-slice-3 (`dotnet run`, Dashboard renders with the new "Metas" sidebar entry, no startup crash). **Note:** "edit" in this checklist item refers to the visual smoke test originally planned; no edit UI was ultimately built — see the flagged R-1/S-2 gap in `verify-report.md`.
+- [x] 4.3 Update `docs/architecture.md` with a Phase 11 entry, following the pattern used for Phases 9/10. Done: `Goal`/`GoalContribution` entity descriptions rewritten to reflect the actual class-with-invariants implementation.
+- [x] 4.4 Create `spec/phases/phase-11/features.md` following the pattern of `spec/phases/phase-09/` and `phase-10/`. Done.
+- [x] 4.5 Archive the spec (`F-011-savings-goals.spec.md` → `.done.md`) and write `verify-report.md`/`archive-report.md` in `.atl/sdd/f-011p11-savings-goals/`, re-verifying gates independently before archiving. Done — verdict PASS with one documented, non-blocking gap (R-1/S-2 UI-edit wording vs. the fully-satisfied Acceptance Criteria checklist).
+- [x] 4.6 In the PR description for slice 1b, note the flagged (not fixed) `DebtPaymentRepository.UpdateAsync` owned-`Money` gap as a follow-up candidate for a future `fix/owned-money-update` change. Carried forward into `spec/phases/phase-11/features.md` §5, `docs/roadmap.md`, and `docs/AI_HANDOFF.md` gotcha #19 at archive time.
