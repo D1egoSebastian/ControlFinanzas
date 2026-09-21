@@ -113,10 +113,10 @@ Depends on 4a's `SettingsViewModel`/`SettingsView.axaml` skeleton (extends the s
 
 ## 5. Cierre
 
-- [ ] 5.1 Run build, `dotnet test` (unit + integration), `dotnet format style --verify-no-changes`, and `ArchitectureTests`/NetArchTest. All green, no regressions.
-- [ ] 5.2 Run the app (`dotnet run`) against an existing dev DB and a fresh DB; visually confirm `SettingsView`'s four sections, the theme Light "not yet functional" note, the locale restart-required notice, and the AI cleartext warning all render correctly.
-- [ ] 5.3 Update `docs/architecture.md` with a Phase 12 entry, following the pattern used for Phases 9–11.
-- [ ] 5.4 Create `spec/phases/phase-12/features.md` following the pattern of `spec/phases/phase-10/` and `phase-11/`.
-- [ ] 5.5 Archive the spec (`F-012-settings-i18n-ai-config.spec.md` → `.done.md`) and write `verify-report.md`/`archive-report.md` in `.atl/sdd/f-012p12-settings-i18n/`, re-verifying gates independently before archiving.
-- [ ] 5.6 Carry forward the design's three non-blocking Open Questions into the archive/PR notes as documented-not-fixed follow-ups: (a) whether the startup locale read should move to `Program.Main` alongside relocating `Bootstrap.ApplyMigrations`; (b) no headless Avalonia harness exists, so slice 3's launch scenarios stayed manual; (c) `UpdateAiSettingsUseCase`'s six non-transactional writes are accepted as-is.
-- [ ] 5.7 Note the recurring `Strings.Designer.cs` hand-editing (4th phase running) as a candidate for a future standalone change (restore codegen or a generated wrapper), per design D-12's Open Question.
+- [x] 5.1 Run build, `dotnet test` (unit + integration), `dotnet format style --verify-no-changes`, and `ArchitectureTests`/NetArchTest. All green, no regressions. (Release: 1033/1033, format clean, 11/11 architecture)
+- [x] 5.2 Run the app (`dotnet run`) against an existing dev DB and a fresh DB; visually confirm `SettingsView`'s four sections, the theme Light "not yet functional" note, the locale restart-required notice, and the AI cleartext warning all render correctly. (Fresh DB verified by temporarily moving aside `%APPDATA%\ControlDeFinanzasIA\data.db*` and restoring it afterward — see verify-report.md)
+- [x] 5.3 Update `docs/architecture.md` with a Phase 12 entry, following the pattern used for Phases 9–11.
+- [x] 5.4 Create `spec/phases/phase-12/features.md` following the pattern of `spec/phases/phase-10/` and `phase-11/`.
+- [x] 5.5 Archive the spec (`F-012-settings-i18n-ai-config.spec.md` → `.done.md`) and write `verify-report.md`/`archive-report.md` in `.atl/sdd/f-012p12-settings-i18n/`, re-verifying gates independently before archiving.
+- [x] 5.6 Carry forward the design's three non-blocking Open Questions into the archive/PR notes as documented-not-fixed follow-ups: (a) whether the startup locale read should move to `Program.Main` alongside relocating `Bootstrap.ApplyMigrations`; (b) no headless Avalonia harness exists, so slice 3's launch scenarios stayed manual; (c) `UpdateAiSettingsUseCase`'s six non-transactional writes are accepted as-is.
+- [x] 5.7 Note the recurring `Strings.Designer.cs` hand-editing (4th phase running) as a candidate for a future standalone change (restore codegen or a generated wrapper), per design D-12's Open Question.

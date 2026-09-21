@@ -158,7 +158,13 @@ La solución `ControlDeFinanzasIA.sln` contiene **seis proyectos** C#:
 - **`PaymentMethod`** — `Id`, `Name`, `IsSystem`.
 - **`SavedView`** — `Id`, `Name`, `FilterJson` (filtro serializado para reutilizar).
 - **`AnomalyAlert`** — `Id`, `Date`, `TransactionId`, `Message`, `Severity` (Info/Warning/Critical), `AcknowledgedAt?`.
-- **`Setting`** — `Key`, `Value` (clave-valor para preferencias y config de IA).
+- **`Setting`** (Fase 12, implementado) — `Key`, `Value` (clave-valor para preferencias y config de IA).
+  `sealed record` (no clase con factory, a diferencia de `Goal`/`Budget`): sin consumidores previos,
+  fue seguro endurecer su validación in situ (`Key` no vacío, se recorta; `MaxKeyLength = 128`,
+  `MaxValueLength = 2048`) sin migrar un patrón existente. Persistido vía `ISettingsStore`, que expone
+  el POCO tipado `AppSettings` (nunca las filas crudas) y nunca lanza ni devuelve `null` — ante fila
+  ausente, valor corrupto o excepción del repositorio, degrada a `AppSettings.Defaults` con
+  `LogWarning`.
 
 ### Value objects
 
@@ -453,18 +459,31 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 | Capa | Almacenamiento | Quién la edita |
 | --- | --- | --- |
 | **App defaults** | Empaquetado en el binario (recursos `.resx`, JSON) | Nadie. Define defaults: monedas, categorías iniciales, métodos de pago iniciales, lista de proveedores soportados. |
-| **User settings** | Tabla `Setting` en SQLite | El usuario, desde `SettingsView`. Incluye: API key de IA, proveedor, modelo, tema, locale, categorías personalizadas, métodos personalizados, tags, vistas guardadas. |
+| **User settings** | Tabla `Setting` en SQLite | El usuario, desde `SettingsView`. Ocho claves (`theme`, `locale`, `ai.provider`, `ai.apiKey`, `ai.model`, `ai.baseUrl`, `ai.temperature`, `ai.maxTokensPerRequest`) — categorías, métodos de pago, tags y vistas guardadas viven en sus propias tablas, no aquí. |
 | **App config de runtime** | JSON al lado del binario (appsettings.json) | Desarrollador. Log level por defecto, rutas de log, lista blanca de proveedores, version del schema. No se shippea lógica sensible. |
 
 ### Settings tipados
 
-- Una clase `AppSettings` (POCO) con propiedades como `AiProvider`, `AiApiKey`, `Locale`, `Theme`, etc.
-- `ISettingsStore` devuelve `AppSettings` y permite actualizaciones granulares.
+- `AppSettings` (record, 8 campos): `Theme` (`AppTheme`: `Dark`/`Light`), `Locale`, `AiProvider`
+  (`OpenAI`/`Anthropic`/`OpenRouter`/`Custom`), `AiApiKey`, `AiModel`, `AiBaseUrl`, `AiTemperature`
+  (0.0–2.0), `AiMaxTokensPerRequest` (1–128000). `Defaults` estático documenta los valores por
+  defecto de cada campo.
+- `ISettingsStore.GetAppSettingsAsync` devuelve el `AppSettings` completo; `SetAsync<T>` persiste una
+  clave a la vez (upsert), serializando enums por **nombre** (no ordinal) y todo valor numérico con
+  `CultureInfo.InvariantCulture` — evita que `AiTemperature` se corrompa si el locale de la UI cambia
+  entre escritura y lectura (`es-DO` usa coma decimal).
+- El tema `Light` se persiste aunque **todavía no se aplique** visualmente en v1 (nota siempre visible
+  en el picker); el cambio de idioma requiere reiniciar la app (aviso post-guardado, no ambiente).
 
 ### API key
 
-- Se guarda en claro en v1. **Advertencia visible** en la UI de Settings: "Este archivo de datos contiene secrets en claro. Protégelo con cifrado de disco (BitLocker, FileVault, LUKS)".
+- Se guarda en texto plano en v1. **Advertencia siempre visible** en la sección IA (no condicionada a
+  si ya hay una key cargada): "Este archivo de datos guarda tu API key en texto plano. Protégela con
+  cifrado de disco (BitLocker, FileVault, LUKS)".
 - Cifrado en reposo por SO: **ADR pendiente** (DPAPI en Windows, Keychain en macOS, libsecret en Linux).
+- No hay `HttpClient`/`ILLMClient` en `UpdateAiSettingsUseCase` ni en `SettingsStore` — Fase 12 solo
+  persiste la configuración; el consumo real de IA es una fase futura, verificado con un assert por
+  reflexión en tests (ningún tipo `*LLMClient*` en la solución todavía).
 
 ---
 

@@ -1,7 +1,7 @@
 # AI_HANDOFF.md — ControlDeFinanzasIA
 
 > Self-contained handoff document for any AI agent picking up the project tomorrow.
-> Verified against the filesystem on **2026-09-20**. All claims are sourced from
+> Verified against the filesystem on **2026-09-21**. All claims are sourced from
 > `AGENTS.md`, `spec/`, `docs/`, or the repo's actual state.
 
 ---
@@ -9,9 +9,10 @@
 ## 1. TL;DR
 
 - **What it is:** `ControlDeFinanzasIA` — a cross-platform (.NET 8 + Avalonia MVVM) desktop app for personal-finance control with AI assist. 100% local data. DOP + USD.
-- **Current phase:** **Phase 11 archived** (savings goals with manual contributions and a deterministic savings plan). Phases 0–11 fully archived. **Phase 12 (settings/i18n/IA config) not started.**
-- **Test count:** 944/944 passing (773 unit + 171 integration) as of 2026-09-20, Phase 11 close (up from 861 at Phase 10 close). Release unit-test host runs cleanly end to end, no Debug fallback needed.
+- **Current phase:** **Phase 12 archived** (Settings: theme, language, AI config — persistence only, no AI use yet). Phases 0–12 fully archived. **Phase 13 (AI pipeline + auto-categorization) not started.**
+- **Test count:** 1033/1033 passing (854 unit + 179 integration) as of 2026-09-21, Phase 12 close (up from 944 at Phase 11 close). Release unit-test host runs cleanly end to end, no Debug fallback needed.
 - **The app was actually launched and screenshotted for the first time this project** at Phase 9 close — confirmed real rendering (LiveCharts2, all 6 sidebar routes) and caught two real runtime-only bugs no test suite could catch: `ViewLocator` missing the `DebtsViewModel` case (Debts route rendered blank since Phase 7) and the entire "Libro Mayor" stylesheet never merged into `App.axaml` (every `ledger-*` class had been inert since Phase 4). Both fixed — see gotchas below. Phase 10 continued the same discipline: `dotnet run` mid-slice-4 confirmed the new Dashboard "Progreso de presupuestos" card renders correctly, including its empty-state message. Phase 11 confirmed the same mid-slice-3: the Dashboard renders with the new "Metas" sidebar entry, no startup crash.
+- **Phase 12's smoke test found and fixed a significant cross-phase regression, unrelated to Settings itself:** `MainWindow.axaml`'s `ContentControl` resolves navigation content through `CurrentViewConverter.cs`, NOT `ViewLocator.cs`. `CurrentViewConverter` was never updated past Phase 6 (`RecurringRulesViewModel`) — every route added since (Debts, Calendar, Budgets, Goals, and Settings itself) rendered a **solid black, completely empty content pane** in the real app, despite 1033 passing tests and a `ViewLocator` that was diligently kept current every phase. No exception was ever thrown, so it went undetected across 5 phases. Fixed in commit `4f8e423` by making `CurrentViewConverter` delegate to `ViewLocator` instead of keeping a second parallel map. See gotcha #21 below.
 - **Phase 11 shipped with one documented, non-blocking spec gap:** the spec's R-1 prose and scenario S-2 describe a UI-driven goal-edit flow that was never built — `GoalsView` only supports create/contribute/view/delete. This is a spec-internal inconsistency inherited from the proposal stage (which scoped UI editing out), independently flagged during design but never reconciled against R-1/S-2's literal wording. The spec's own Acceptance Criteria checklist — the actual definition-of-done — does not require UI editing and is fully satisfied. See `spec/features/phase-11/F-011-savings-goals.done.md` and `.atl/sdd/f-011p11-savings-goals/verify-report.md`.
 - **Key constraint:** Filesystem-based SDD specs in `spec/features/phase-NN/` (NOT OpenSpec). `.spec.md` = active, `.done.md` = archived. Do not create `openspec/`.
 - **Architecture:** Clean Architecture (Domain / Application / Infrastructure / UI). NetArchTest rules R-1..R-5 enforced in `Tests.Unit`.
@@ -28,7 +29,7 @@
 | Type | Cross-platform desktop (Windows, macOS, Linux), single-user, local data only |
 | UI pattern | MVVM strict with **CommunityToolkit.Mvvm** (`[ObservableProperty]`, `[RelayCommand]`) |
 | Localization | `es-DO` default + `en` via `IStringLocalizer` / resx |
-| Status | Phases 0–11 ✅ archived; Phase 12 (settings/i18n/IA config) not started |
+| Status | Phases 0–12 ✅ archived; Phase 13 (AI pipeline + auto-categorization) not started |
 
 ---
 
@@ -50,6 +51,7 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 | 9 | Calendar view + parameterized navigation | 1 umbrella `F-009` covering 3 slices (data/navigation/UI) | 1 | 0 | 100% | `spec/phases/phase-09/features.md` + `spec/features/phase-09/F-009-calendar-view.done.md` |
 | 10 | Monthly budgets per category | 1 umbrella `F-010` covering 4 slices (domain+infra/use cases/management UI/dashboard addon) | 1 | 0 | 100% | `spec/phases/phase-10/features.md` + `spec/features/phase-10/F-010-monthly-budgets.done.md` |
 | 11 | Savings goals with manual contributions | 1 umbrella `F-011` covering 4 slices (domain/infra+migration/use cases/management UI) | 1 | 0 | 100%* | `spec/phases/phase-11/features.md` + `spec/features/phase-11/F-011-savings-goals.done.md` |
+| 12 | Settings: theme, language, AI config (persistence only) | 1 umbrella `F-012` covering 5 slices (domain+infra+migration/use cases/startup culture read/settings UI 4a/settings UI 4b) | 1 | 0 | 100% | `spec/phases/phase-12/features.md` + `spec/features/phase-12/F-012-settings-i18n-ai-config.done.md` |
 
 \* Phase 11's Acceptance Criteria checklist is 100% satisfied; one documented, non-blocking gap exists
 between the spec's R-1/S-2 prose (UI goal editing) and the shipped UI (create/contribute/view/delete
@@ -86,7 +88,7 @@ only) — see the TL;DR above.
 
 ---
 
-## 4. Phase 6, 7, 8, 9, 10 & 11 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20, 2026-09-20)
+## 4. Phase 6, 7, 8, 9, 10, 11 & 12 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20, 2026-09-20, 2026-09-21)
 
 ### What's done (backend)
 
@@ -269,13 +271,56 @@ The full task breakdown is at `tasks/phase-10/F-010-monthly-budgets.tasks.md`.
 
 The full task breakdown is at `tasks/phase-11/F-011-savings-goals.tasks.md`.
 
+### Phase 12 — what's done
+
+- Domain: `src/ControlDeFinanzasIA.Domain/Settings/Setting.cs` — tightened in place (guarded `Key`
+  init accessor: non-empty, trimmed, `MaxKeyLength=128`, `MaxValueLength=2048`). Stays a `sealed
+  record`, no factory — unlike `Goal`/`Budget`'s stub rewrites, `Setting` had zero consumers before
+  this phase, so hardening it in place was safe.
+- Application: `Application/Settings/{AppSettings,SettingKeys,SupportedLocales}.cs`;
+  `Application/Abstractions/ISettingsStore.cs`; `Application/UseCases/Settings/{GetAppSettings,
+  UpdateTheme,UpdateLocale,UpdateAiSettings}/*.cs`. `UpdateAiSettingsUseCase` validates all 6 AI
+  fields before writing any of them (validate-all-then-write-all); its constructor has no
+  `HttpClient`/`IHttpClientFactory`, verified by a reflection-assertion unit test that also confirms
+  no `*LLMClient*` type exists anywhere in the solution yet.
+- Infrastructure: `Infrastructure/Persistence/Configurations/SettingConfiguration.cs` (unique index on
+  `Key`); `Infrastructure/Persistence/Repositories/SettingRepository.cs`;
+  `Infrastructure/Settings/SettingsStore.cs` (never throws/returns null — degrades to
+  `AppSettings.Defaults` + `LogWarning`; every numeric field serialized/parsed with
+  `CultureInfo.InvariantCulture`; enums by name, not ordinal); migration `AddSettings`.
+- UI: `UI/App.axaml.cs`'s `ApplyPersistedUiCulture` replaces the hardcoded
+  `new CultureInfo("es-DO")` with a scoped `ISettingsStore` read at startup, falling back to
+  `SupportedLocales.Default` on an empty table or `CultureNotFoundException`.
+  `Views/SettingsView.axaml(.cs)` + `ViewModels/SettingsViewModel.cs` (own route
+  `RouteNames.Settings`, sidebar entry "Configuración") — four sections (Apariencia, Idioma, IA,
+  Acerca de), one save command per section, zero Avalonia-specific type in the ViewModel constructor
+  (testable without a headless harness). The IA section's cleartext-API-key warning has no
+  `IsVisible` binding — always rendered, per the spec's explicit "never conditional" requirement.
+- Applied in 5 separate commits (`3fc1a52` domain+infra+migration, `34c890e` use cases, `9ef0922`
+  startup culture read, `8c86405` settings UI 4a, `f2e08a8` settings UI 4b) per `sdd-tasks`'
+  chained-PR recommendation.
+- **A significant regression found and fixed, unrelated to Settings itself**: see the TL;DR's
+  `CurrentViewConverter` finding and gotcha #21 below. Fixed in commit `4f8e423`, landed separately
+  from this phase's own 5 commits.
+- **Two documented, non-blocking gaps**: the persisted-`en`-locale and corrupt-locale-fallback launch
+  scenarios (tasks 3.3/3.4) remain manual-only — no headless Avalonia harness exists in this repo yet;
+  `UpdateAiSettingsUseCase`'s six writes are non-transactional (accepted — all validation runs before
+  the first write).
+- Gates: build clean, 1033/1033 tests (854 unit + 179 integration, up from 944 at Phase 11 close),
+  `dotnet format style` clean, NetArchTest 11/11 — re-verified independently before archive, see
+  `.atl/sdd/f-012p12-settings-i18n/verify-report.md` and `archive-report.md`.
+- Spec archived to `spec/features/phase-12/F-012-settings-i18n-ai-config.done.md`.
+
+The full task breakdown is at `tasks/phase-12/F-012-settings-i18n-ai-config.tasks.md`.
+
 ---
 
 ## 5. What's pending (next up)
 
 Ordered by priority. Each item references its source-of-truth spec/plan.
 
-1. **Phase 12 — Settings, i18n, IA config (no IA use yet)** — `docs/roadmap.md` §Fase 12
+1. **Phase 13 — AI pipeline + auto-categorization** — `docs/roadmap.md` §Fase 13. `ILLMClientFactory`
+   reads the settings keys Phase 12 wrote; this is the first phase that will make a real network call.
 2. **Follow-up, not phase-blocking**: fix `Motion.axaml`'s `RenderTransform` animation bug (see
    Phase 9 notes above) so the row-reveal animations can be merged into `App.axaml` alongside
    `LedgerStyles.axaml`.
@@ -288,14 +333,21 @@ Ordered by priority. Each item references its source-of-truth spec/plan.
 4. **Follow-up, not phase-blocking**: Phase 11's spec (R-1/S-2) describes a UI-driven goal-edit flow
    that was never built. Either add an edit command to `GoalsViewModel`/`GoalsView` or formally narrow
    R-1/S-2's wording to match the shipped create/contribute/view/delete scope.
-5. **Phase 13–16 — IA pipeline** (categorization, insights/forecast/anomalies, chat, savings plan explanation) — `docs/roadmap.md` §Fases 13–16
-6. **Phase 17 — Notifications** — `docs/roadmap.md` §Fase 17
-7. **Phase 18 — PDF/Excel export** — `docs/roadmap.md` §Fase 18
-8. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19
-9. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20
-10. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
+5. **Follow-up, not phase-blocking**: `Strings.Designer.cs` has now been hand-edited for 4 consecutive
+   phases (9, 10, 11, 12). Consider a standalone change to restore code generation or replace `Strings`
+   with a generated wrapper before the key count grows further.
+6. **Follow-up, not phase-blocking**: no headless Avalonia test harness exists yet. Phase 12's
+   startup-culture-read scenarios (persisted `en`, corrupt locale) had to stay manual-only as a result
+   — worth revisiting if a future phase needs to automate a launch-time scenario.
+7. **Phase 14–16 — IA pipeline continued** (insights/forecast/anomalies, chat, savings plan
+   explanation) — `docs/roadmap.md` §Fases 14–16
+8. **Phase 17 — Notifications** — `docs/roadmap.md` §Fase 17
+9. **Phase 18 — PDF/Excel export** — `docs/roadmap.md` §Fase 18
+10. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19
+11. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20
+12. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
 
-**MVP (no IA) = phases 0–12.** Phases 13+ are IA + polish.
+**MVP (no IA) = phases 0–12, now fully complete.** Phases 13+ are IA + polish.
 
 ---
 
@@ -569,8 +621,8 @@ dotnet ef migrations add <Name> `
 
 ### Where to start
 
-1. **Read `spec/` first.** Phase 11 (Savings goals) is archived at `spec/features/phase-11/F-011-savings-goals.done.md`. There is no active feature yet — Phase 12 (settings/i18n/IA config) has no SDD scaffolding. Start there with `sdd-explore`/`sdd-propose` if picking up next work.
-2. **Check tasks:** `tasks/phase-11/F-011-savings-goals.tasks.md` is the closed checklist for the last completed phase — use it as the pattern reference for Phase 12's task breakdown.
+1. **Read `spec/` first.** Phase 12 (Settings: theme, language, AI config) is archived at `spec/features/phase-12/F-012-settings-i18n-ai-config.done.md`. There is no active feature yet — Phase 13 (AI pipeline + auto-categorization) has no SDD scaffolding. Start there with `sdd-explore`/`sdd-propose` if picking up next work.
+2. **Check tasks:** `tasks/phase-12/F-012-settings-i18n-ai-config.tasks.md` is the closed checklist for the last completed phase — use it as the pattern reference for Phase 13's task breakdown.
 3. **Read constitution** if touching architecture or stack: `spec/constitution/mission.md`, `spec/constitution/tech-stack.md`.
 4. **Check the SDD working dir** for any in-flight change: `.atl/sdd/<change-id>/`.
 
@@ -671,6 +723,24 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
     `spec/features/phase-11/F-011-savings-goals.done.md` and
     `.atl/sdd/f-011p11-savings-goals/verify-report.md` for the full writeup.
 
+21. **`MainWindow.axaml`'s `ContentControl` resolves navigation content through
+    `Converters/CurrentViewConverter.cs`, NOT `Views/ViewLocator.cs`** — despite both existing and both
+    looking like "the" view-model-to-view map. `ViewLocator` is registered in `App.axaml`'s
+    `Application.DataTemplates` and IS kept up to date every phase (it correctly lists all 9
+    navigation view-models today), but it is effectively **dead code for main-window navigation**: an
+    implicit `DataTemplate` only kicks in when `ContentControl.Content` is still a raw view-model, and
+    here `CurrentViewConverter` already converts it to a concrete `Control` (or `null`) first.
+    `CurrentViewConverter`'s own switch was last touched in its only-ever commit (`6caae70`, Phase 6)
+    and was never extended past `RecurringRulesViewModel` — so Debts, Calendar, Budgets, Goals, and
+    Settings all rendered a **solid black, completely empty content pane** in the real app for 5
+    phases, with zero exceptions thrown (a `null` converter result just renders as blank) and zero
+    test failures (nothing in the test suite exercises `MainWindow.axaml`'s binding path). Found only
+    by manually clicking into a route during Phase 12's smoke test and looking at the screenshot.
+    **Fixed in commit `4f8e423`**: `CurrentViewConverter.Convert` now delegates to a shared
+    `ViewLocator` instance instead of keeping a second parallel switch, so only one map has to stay
+    current from here on. **If you add a new route, verify it renders by actually clicking into it —
+    adding it to `ViewLocator` alone is not sufficient proof it works, and was not for 5 phases.**
+
 ---
 
 ## 12. First 5 commands a new agent should run
@@ -681,7 +751,7 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 # 1. Confirm the build is clean before you do anything
 dotnet build -c Release
 
-# 2. Confirm the existing 944 tests still pass
+# 2. Confirm the existing 1033 tests still pass
 dotnet test -c Release --no-build
 
 # 3. Confirm CI's format gate is green
@@ -690,8 +760,8 @@ dotnet format style --verify-no-changes
 # 4. Confirm the architecture rules still hold
 dotnet test --no-build -c Release --filter "FullyQualifiedName~Architecture"
 
-# 5. Inspect the current Phase 11 task list
-Get-Content -Raw .\tasks\phase-11\F-011-savings-goals.tasks.md
+# 5. Inspect the current Phase 12 task list
+Get-Content -Raw .\tasks\phase-12\F-012-settings-i18n-ai-config.tasks.md
 ```
 
 If all five succeed, the working tree is healthy. If any fail, **stop and fix before reading further code** — fixing a broken build first will save you time.

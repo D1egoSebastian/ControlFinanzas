@@ -1,7 +1,8 @@
 # F-012 — Settings: Theme, Language, AI Config (Unused)
 
 > **Phase:** 12 — Configuración: tema, idioma, IA (sin uso)
-> **Status:** 📝 Spec drafted (2026-09-20) — ready for design
+> **Status:** ✅ Archived (2026-09-21) — all acceptance criteria met, see
+> `.atl/sdd/f-012p12-settings-i18n/verify-report.md` and `archive-report.md`
 > **SDD:** `.atl/sdd/f-012p12-settings-i18n/`
 > **Blocks:** Phase 13 (`ILLMClientFactory` reads the settings keys this phase writes)
 
@@ -240,35 +241,72 @@ categories/payment methods/tags/saved views.
 
 ## Acceptance Criteria
 
-- [ ] `SettingsView` is reachable from the sidebar via `RouteNames.Settings`
-  and renders four sections: Apariencia, Idioma, IA, Acerca de.
-- [ ] Changing the theme persists and survives an app restart.
-- [ ] Only Dark actually renders; Light carries an explicit, localized "not
-  yet functional" note and is never a silent no-op.
-- [ ] Changing the language persists; the UI translates on the next launch,
-  with a clear restart-required notice shown on save.
-- [ ] `App.axaml.cs` no longer contains a hardcoded `new
+- [x] `SettingsView` is reachable from the sidebar via `RouteNames.Settings`
+  and renders four sections: Apariencia, Idioma, IA, Acerca de. **Evidence:**
+  confirmed both by direct source read and by re-running the app and
+  screenshotting all four sections during `sdd-verify` (see
+  `verify-report.md`).
+- [x] Changing the theme persists and survives an app restart. **Evidence:**
+  `SettingRepository` + real SQLite integration test, fresh-`DbContext`
+  round-trip (task 1.19).
+- [x] Only Dark actually renders; Light carries an explicit, localized "not
+  yet functional" note and is never a silent no-op. **Evidence:** the notice
+  `TextBlock` in `SettingsView.axaml` has no `IsVisible` binding — always
+  rendered, not conditional on the current selection.
+- [x] Changing the language persists; the UI translates on the next launch,
+  with a clear restart-required notice shown on save. **Evidence:**
+  `SaveLocaleAsync` sets `IsRestartRequired = true` only in the success
+  branch (unit test, task 4a.9).
+- [x] `App.axaml.cs` no longer contains a hardcoded `new
   CultureInfo("es-DO")`; it reads the persisted locale and falls back to
-  `es-DO` when absent.
-- [ ] Saving the AI API key persists and survives an app restart.
-- [ ] All six AI fields (provider, key, model, base URL, temperature, max
-  tokens) persist and round-trip.
-- [ ] `UpdateAiSettingsUseCase` rejects out-of-range temperature and
-  max-tokens values.
-- [ ] Zero calls to any AI provider are made anywhere in the app after
+  `es-DO` when absent. **Evidence:** `ApplyPersistedUiCulture`, commit
+  `9ef0922`. Persisted-`en` and corrupt-locale fallback paths verified
+  manually (tasks 3.3/3.4) — no headless Avalonia harness exists yet to
+  automate them; see `verify-report.md` §5/Open Questions.
+- [x] Saving the AI API key persists and survives an app restart. **Evidence:**
+  same round-trip integration test as theme, covering all `Setting` keys.
+- [x] All six AI fields (provider, key, model, base URL, temperature, max
+  tokens) persist and round-trip. **Evidence:** `SaveAiAsync` unit tests
+  (task 4b.4) + the integration round-trip test.
+- [x] `UpdateAiSettingsUseCase` rejects out-of-range temperature and
+  max-tokens values. **Evidence:** `UpdateAiSettingsValidator` boundary
+  tests (task 2.11), validate-all-then-write-all confirmed by direct read.
+- [x] Zero calls to any AI provider are made anywhere in the app after
   saving a key — asserted by test; no `ILLMClient`, adapter, or
-  test-connection button exists in the codebase.
-- [ ] `GetAppSettingsAsync()` returns documented defaults on an empty
-  `Setting` table and never throws or returns null.
-- [ ] Saving the same key twice updates the existing row; the unique index
-  on `Key` holds.
-- [ ] `Setting` rejects an empty `Key`.
-- [ ] `ISettingRepository` keeps its raw-CRUD shape; use cases depend only
-  on `ISettingsStore`.
-- [ ] No hardcoded user-facing strings; all new copy resolves through
+  test-connection button exists in the codebase. **Evidence:**
+  reflection-assertion tests (tasks 1.18, 2.12); `grep -rn "LLMClient" src/`
+  returns no matches, re-confirmed during `sdd-verify`.
+- [x] `GetAppSettingsAsync()` returns documented defaults on an empty
+  `Setting` table and never throws or returns null. **Evidence:**
+  `SettingsStoreTests` empty-table and throwing-repository cases (task 1.16).
+- [x] Saving the same key twice updates the existing row; the unique index
+  on `Key` holds. **Evidence:** integration test asserting exactly one row
+  after a second `SetAsync` for the same key, plus a direct-duplicate-insert
+  test confirming the unique index (task 1.19).
+- [x] `Setting` rejects an empty `Key`. **Evidence:** `Setting` unit tests,
+  empty/whitespace/null all throw (task 1.13).
+- [x] `ISettingRepository` keeps its raw-CRUD shape; use cases depend only
+  on `ISettingsStore`. **Evidence:** `ISettingRepository.cs` unchanged
+  (confirmed via `git diff` across all 5 phase commits); every use case
+  constructor takes `ISettingsStore`, never `ISettingRepository` directly.
+- [x] No hardcoded user-facing strings; all new copy resolves through
   `Strings.resx` / `Strings.es-DO.resx`, with `Strings.Designer.cs`
-  accessors added.
-- [ ] `App.axaml`, `Tokens.axaml`, `LedgerStyles.axaml`, and all
-  pre-existing views are unchanged.
-- [ ] `AppDbContextModelSnapshot.cs` matches the `AddSettings` migration.
-- [ ] Full test suite green, no regressions.
+  accessors added. **Evidence:** `SettingsView.axaml` read in full, zero
+  hardcoded literals found; 26 new keys added across all three resource
+  files.
+- [x] `App.axaml`, `Tokens.axaml`, `LedgerStyles.axaml`, and all
+  pre-existing views are unchanged. **Evidence:** `git diff` across all 5
+  phase commits touches no file under `Styles/` and no pre-existing view.
+- [x] `AppDbContextModelSnapshot.cs` matches the `AddSettings` migration.
+  **Evidence:** confirmed by direct read during task 1.11 and re-confirmed
+  by the clean `dotnet build`/integration-test run in `sdd-verify`.
+- [x] Full test suite green, no regressions. **Evidence:** 1033/1033 (854
+  unit + 179 integration), re-run independently in `sdd-verify` under both
+  Debug and Release.
+
+**Note (2026-09-21, added during `sdd-verify`):** a significant regression
+unrelated to this spec's own scope was found and fixed while verifying the
+first acceptance criterion above (actually clicking into the rendered
+`SettingsView`) — see `verify-report.md` for the full writeup of the
+`CurrentViewConverter` finding (fixed in commit `4f8e423`, landed separately
+from this phase's own commits).

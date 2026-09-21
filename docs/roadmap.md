@@ -754,7 +754,7 @@ estén listos.
 
 ---
 
-### Fase 12 — Configuración: tema, idioma, IA (sin uso)
+### Fase 12 — Configuración: tema, idioma, IA (sin uso) ✅ COMPLETADA (2026-09-21)
 
 **Objetivo**
 Pantalla de configuración editable para tema, idioma y parámetros de IA
@@ -793,6 +793,54 @@ no se le debería pedir otra al activar las features.
 - Cambiar idioma traduce la UI completa y persiste.
 - Guardar API key funciona, se persiste, sobrevive al reinicio.
 - Una vez guardada la key, sigue sin haber **ninguna** llamada a la IA.
+
+**Alcance ajustado respecto al plan original**:
+- **Sin tema claro funcional ni detección del sistema.** Decisión confirmada: `Theme` se persiste
+  (incluyendo `Light`) pero solo `Dark` se aplica de verdad a `RequestedThemeVariant` en v1;
+  seleccionar `Light` muestra una nota localizada "aún no funcional", nunca un no-op silencioso. Sin
+  `ThemeDictionaries` ni detección de tema del SO.
+- **Sin traducción en vivo.** Decisión confirmada: guardar el idioma requiere reiniciar la app para que
+  aplique — cada vista bindea su copy vía `{x:Static resources:Strings.X}`, que resuelve una sola vez
+  al cargar el XAML y no puede re-bindearse en caliente. La UI muestra un aviso de "reinicio requerido"
+  tras guardar, en vez de re-renderizar de inmediato.
+- Ambos ajustes estaban ya en la spec original (R-3/R-4) como decisiones de producto confirmadas antes
+  de diseñar, no descubiertos durante el desarrollo.
+
+**Estado actual (2026-09-21) — ✅ FASE COMPLETADA**
+- ✅ `Setting` (record, sin factory — sin consumidores previos fue seguro endurecer su validación in
+  situ: `Key` no vacío y recortado, `MaxKeyLength=128`, `MaxValueLength=2048`); `AppSettings` (record,
+  8 campos) + `Defaults`; `SettingKeys`; `SupportedLocales` (allowlist `es-DO`/`en`).
+- ✅ `ISettingsStore`/`SettingsStore`: nunca lanza ni devuelve null (degrada a `Defaults` +
+  `LogWarning`); todo campo numérico serializa/parsea con `CultureInfo.InvariantCulture` (evita que
+  `AiTemperature` se corrompa entre locales con coma/punto decimal); enums por nombre, no ordinal.
+- ✅ `GetAppSettingsQuery`, `UpdateThemeUseCase`, `UpdateLocaleUseCase`, `UpdateAiSettingsUseCase`
+  (validar-todo-antes-de-escribir-todo; sin `HttpClient`/`ILLMClient` en el constructor, verificado por
+  test de reflexión).
+- ✅ `App.axaml.cs`: reemplazado el `new CultureInfo("es-DO")` fijo por una lectura de
+  `ISettingsStore` al arrancar, con fallback a `es-DO` ante tabla vacía o `CultureNotFoundException`.
+- ✅ `SettingsView`/`SettingsViewModel`: cuatro secciones (Apariencia, Idioma, IA, Acerca de), un
+  comando de guardado por sección, sin ningún tipo de Avalonia en el ViewModel (testable sin harness
+  headless). Advertencia de API key en texto plano siempre visible, no condicionada a si ya hay una key
+  cargada.
+- ✅ Gates: build limpio, 1033/1033 tests verdes (854 unit + 179 integration, subiendo desde 944/944 al
+  cierre de Fase 11), `dotnet format style` limpio, NetArchTest 11/11.
+- ✅ Aplicado en 5 commits encadenados de la fase (`3fc1a52` dominio+infra+migración, `34c890e` casos
+  de uso, `9ef0922` lectura de cultura al arrancar, `8c86405` Apariencia+Idioma, `f2e08a8` IA+Acerca
+  de), con re-verificación independiente de los gates durante `sdd-verify`.
+- ✅ SDD archivado: `spec/features/phase-12/F-012-settings-i18n-ai-config.done.md`.
+- ⚠️ Bug real, no relacionado con esta fase, encontrado y arreglado durante el smoke test manual: desde
+  la Fase 6, `CurrentViewConverter.cs` — el converter que `MainWindow.axaml` realmente usa para
+  resolver la vista activa, no `ViewLocator.cs` — nunca se actualizó con las rutas agregadas después
+  (Deudas, Calendario, Presupuestos, Metas, y esta fase). Esas pantallas renderizaban un panel
+  completamente negro en la app real pese a que las pruebas pasaban 1033/1033 — `ViewLocator` se
+  mantuvo al día cada fase pero resultó ser código muerto para la navegación principal. Arreglado en el
+  commit `4f8e423` (separado de los commits propios de esta fase): `CurrentViewConverter` ahora delega
+  en `ViewLocator` en vez de mantener su propio switch paralelo. Ver
+  `spec/features/phase-12/F-012-settings-i18n-ai-config.done.md` para el detalle completo.
+- ⚠️ Gaps documentados, no bloqueantes: los escenarios de arranque con locale `en` persistido y con
+  locale corrupto (tareas 3.3/3.4) quedan como verificación manual — no existe un harness de Avalonia
+  headless en este repo todavía; `UpdateAiSettingsUseCase` hace seis escrituras no transaccionales,
+  aceptado porque toda la validación corre antes de la primera escritura.
 
 ---
 
