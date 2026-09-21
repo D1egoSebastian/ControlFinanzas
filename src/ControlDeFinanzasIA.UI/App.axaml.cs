@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using ControlDeFinanzasIA.Application.Abstractions;
+using ControlDeFinanzasIA.Application.Settings;
 using ControlDeFinanzasIA.UI.Composition;
 using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.ViewModels;
@@ -61,8 +62,6 @@ public partial class App : Avalonia.Application
             return;
         }
 
-        CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("es-DO");
-
         ILogger<App> logger = Services.GetRequiredService<ILogger<App>>();
         IClock clock = Services.GetRequiredService<IClock>();
         IPathResolver pathResolver = Services.GetRequiredService<IPathResolver>();
@@ -74,6 +73,8 @@ public partial class App : Avalonia.Application
             pathResolver.DataDirectory);
 
         Bootstrap.ApplyMigrations(Services);
+
+        ApplyPersistedUiCulture(Services, logger);
 
         ShellViewModel shellViewModel = Services.GetRequiredService<ShellViewModel>();
         INavigationService navigationService = Services.GetRequiredService<INavigationService>();
@@ -91,5 +92,105 @@ public partial class App : Avalonia.Application
         desktop.MainWindow = mainWindow;
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>
+    /// Reads the persisted locale from <see cref="ISettingsStore"/> and sets the
+    /// process' UI culture accordingly.
+    /// </summary>
+    /// <remarks>
+    /// F-012 D-7: this MUST run AFTER <see cref="Bootstrap.ApplyMigrations(IServiceProvider)"/>
+    /// (the <c>Settings</c> table may not exist yet on a first launch) and BEFORE
+    /// <see cref="ShellViewModel"/> is resolved or <see cref="MainWindow"/> is constructed
+    /// (both materialize localized strings once, at that point, and cannot live-rebind).
+    /// <para>
+    /// <see cref="OnFrameworkInitializationCompleted"/> is <see langword="void"/> and runs
+    /// before Avalonia's dispatcher starts pumping, so a naked
+    /// <c>store.GetAppSettingsAsync().GetAwaiter().GetResult()</c> risks a startup hang under
+    /// the captured <c>AvaloniaSynchronizationContext</c>. Wrapping the call in
+    /// <see cref="Task.Run(Func{Task})"/> schedules the async chain on the thread pool,
+    /// escaping that synchronization context before the blocking wait.
+    /// </para>
+    /// </remarks>
+    private static void ApplyPersistedUiCulture(IServiceProvider services, ILogger logger)
+    {
+        AppSettings settings = AppSettings.Defaults;
+
+        try
+        {
+            // ISettingsStore and its dependencies are Scoped (AddPersistence), the same
+            // lifetime Bootstrap.ApplyMigrations already scopes five lines above. Never
+            // resolve a Scoped service from the root provider.
+            using IServiceScope scope = services.CreateScope();
+            ISettingsStore store = scope.ServiceProvider.GetRequiredService<ISettingsStore>();
+
+            settings = Task
+                .Run(() => store.GetAppSettingsAsync(CancellationToken.None))
+                .GetAwaiter()
+                .GetResult();
+        }
+        catch (Exception ex)
+        {
+            // GetAppSettingsAsync already degrades internally to AppSettings.Defaults
+            // (SettingsStore's own broad catch); this covers a DI resolution or
+            // scope-creation failure instead. Startup must never block on a preference read.
+            logger.LogWarning(ex, "Persisted settings could not be read; using defaults.");
+        }
+
+        CultureInfo culture = ResolveUiCulture(settings, logger);
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+        CultureInfo.CurrentUICulture = culture;
+    }
+
+    /// <summary>
+    /// Resolves the <see cref="CultureInfo"/> to apply from a settings snapshot, falling
+    /// back to <see cref="SupportedLocales.Default"/> when <see cref="AppSettings.Locale"/>
+    /// is missing/blank or not a known culture.
+    /// </summary>
+    /// <remarks>
+    /// Extracted as a pure, side-effect-free (besides logging) helper so the fallback
+    /// behaviour is unit testable without a running Avalonia application or DI container —
+    /// there is no headless Avalonia test harness in this repo to exercise
+    /// <see cref="OnFrameworkInitializationCompleted"/> end-to-end.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <see langword="null"/>.</exception>
+    public static CultureInfo ResolveUiCulture(AppSettings settings, ILogger? logger = null)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+
+        string requestedLocale = settings.Locale;
+
+        // Primary guard: the allowlist (D-4), not just exception handling. .NET's
+        // CultureInfo constructor does not reliably throw CultureNotFoundException for
+        // malformed input — e.g. "not-a-real-culture" silently resolves to a custom
+        // culture named "not" instead of throwing — so checking SupportedLocales first is
+        // load-bearing, not redundant with the try/catch below.
+        string locale = SupportedLocales.IsSupported(requestedLocale)
+            ? requestedLocale
+            : SupportedLocales.Default;
+
+        if (locale != requestedLocale && !string.IsNullOrWhiteSpace(requestedLocale))
+        {
+            logger?.LogWarning(
+                "Locale {Locale} is not supported; using {Default}.",
+                requestedLocale,
+                SupportedLocales.Default);
+        }
+
+        try
+        {
+            return new CultureInfo(locale);
+        }
+        catch (CultureNotFoundException ex)
+        {
+            // Defense-in-depth (D-4/D-7): reachable only if SupportedLocales.Default
+            // itself were ever misconfigured to a non-existent culture.
+            logger?.LogWarning(
+                ex,
+                "Locale {Locale} is not a known culture; using {Default}.",
+                locale,
+                SupportedLocales.Default);
+            return new CultureInfo(SupportedLocales.Default);
+        }
     }
 }
