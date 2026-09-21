@@ -10,4 +10,21 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!--
+      F-013 (slice 2, D-4): prompt templates shipped as embedded resources.
+      WithCulture=false + an explicit LogicalName are required: the file
+      names carry a locale segment ("...en.txt", "...es-DO.txt") that
+      MSBuild's default AssignCulture heuristic mistakes for a satellite
+      -resource culture suffix, which silently routes the two locale
+      variants into separate satellite assemblies under the SAME
+      collapsed logical name instead of embedding both, distinctly named,
+      in the main assembly.
+    -->
+    <EmbeddedResource Include="Llm\Prompts\*.txt">
+      <WithCulture>false</WithCulture>
+      <LogicalName>ControlDeFinanzasIA.Infrastructure.Llm.Prompts.%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

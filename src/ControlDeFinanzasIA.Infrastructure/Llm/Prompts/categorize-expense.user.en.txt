@@ -1,0 +1,6 @@
+Expense description: "{{description}}"
+
+Available categories:
+{{categories}}
+
+Respond only with the JSON described in the instructions, with no other text.

@@ -38,6 +38,12 @@ framework's documented default retry predicate — an acceptance criterion with 
 behind it, which is the exact failure mode Phase 11 shipped and `docs/AI_HANDOFF.md` gotcha #20
 records. Task 4.8 asserts attempt counts against the really-registered pipeline instead.
 
+Task 4.9 was added for the same reason after slice 2 landed. `LlmFailureKind.CircuitOpen` exists as an
+enum member from slice 1, but slice 2 could not wire Polly's `BrokenCircuitException` to it because the
+resilience package is not referenced until slice 4 — so nothing in the original breakdown ever mapped
+it, leaving a dead enum member and an exception type that would escape unmapped when the breaker
+opens, against R-4's "no exception escapes to the UI".
+
 ### Suggested Work Units
 
 | Unit | Goal | Likely PR | Notes |
@@ -72,14 +78,14 @@ Depends on nothing. Goal: CI proves the contract is HTTP-free before any adapter
 
 Depends on 1. Goal: one adapter provably speaking the OpenAI wire format, no DI, no resilience yet.
 
-- [ ] 2.1 Extend `Tests.Unit/TestDoubles/RecordingLogger.cs` additively: `Messages`, `Properties` alongside the existing `Levels`. No existing test changes. (D-8)
-- [ ] 2.2 Create `Tests.Integration/TestDoubles/FakeHttpMessageHandler.cs`: canned-response ctor + responder-delegate ctor; buffers each request's method/URI/headers/body into a `CapturedRequest` record. (D-14)
-- [ ] 2.3 Write failing `Tests.Integration/Llm/EmbeddedPromptProviderTests.cs`: every `PromptNames` constant resolves in `es-DO` and `en`; unknown locale falls back to default; the system template literally contains `{{categories}}` and the "exactly one name…or null" instruction. (D-4)
-- [ ] 2.4 Create 4 embedded resources `Infrastructure/Llm/Prompts/categorize-expense.{system,user}.{es-DO,en}.txt` with D-4's non-negotiable content (closed list, "never invent, never explain", `{"category":"<name>"}` output shape). (D-4)
-- [ ] 2.5 Create `Infrastructure/Llm/Prompts/EmbeddedPromptProvider.cs`: resource reader, locale fallback, `ConcurrentDictionary` cache, throws `InvalidOperationException` for a missing known name. Modify `Infrastructure.csproj` to add `<EmbeddedResource Include="Llm\Prompts\*.txt" />`. Run 2.3 green. (D-4)
-- [ ] 2.6 Write failing `Tests.Integration/Llm/OpenAICompatibleClientTests.cs`: absolute `{baseUrl}/chat/completions` URI; `Authorization: Bearer`; body has `model`, system message, user message, `temperature:0`, `max_tokens`; `response_format` present only for `OpenAI`; reads `choices[0].message.content` and `usage.total_tokens`; `LatencyMs>0`; 401→`InvalidCredentials`, 429→`RateLimited`, 500→`ServerError`, delayed-past-token→`Timeout`, no-`choices` 200→`Malformed`. (R-2, D-10)
-- [ ] 2.7 Create `Infrastructure/Llm/OpenAICompatibleClient.cs`: implements `ILLMClient` via `IHttpClientFactory`, `SnakeCaseLower` JSON, status-mapping table. Run 2.6 green. (R-2, D-10)
-- [ ] 2.8 Run all four gates. All green before opening PR 2.
+- [x] 2.1 Extend `Tests.Unit/TestDoubles/RecordingLogger.cs` additively: `Messages`, `Properties` alongside the existing `Levels`. No existing test changes. (D-8)
+- [x] 2.2 Create `Tests.Integration/TestDoubles/FakeHttpMessageHandler.cs`: canned-response ctor + responder-delegate ctor; buffers each request's method/URI/headers/body into a `CapturedRequest` record. (D-14)
+- [x] 2.3 Write failing `Tests.Integration/Llm/EmbeddedPromptProviderTests.cs`: every `PromptNames` constant resolves in `es-DO` and `en`; unknown locale falls back to default; the system template literally contains `{{categories}}` and the "exactly one name…or null" instruction. (D-4)
+- [x] 2.4 Create 4 embedded resources `Infrastructure/Llm/Prompts/categorize-expense.{system,user}.{es-DO,en}.txt` with D-4's non-negotiable content (closed list, "never invent, never explain", `{"category":"<name>"}` output shape). (D-4)
+- [x] 2.5 Create `Infrastructure/Llm/Prompts/EmbeddedPromptProvider.cs`: resource reader, locale fallback, `ConcurrentDictionary` cache, throws `InvalidOperationException` for a missing known name. Modify `Infrastructure.csproj` to add `<EmbeddedResource Include="Llm\Prompts\*.txt" />`. Run 2.3 green. (D-4)
+- [x] 2.6 Write failing `Tests.Integration/Llm/OpenAICompatibleClientTests.cs`: absolute `{baseUrl}/chat/completions` URI; `Authorization: Bearer`; body has `model`, system message, user message, `temperature:0`, `max_tokens`; `response_format` present only for `OpenAI`; reads `choices[0].message.content` and `usage.total_tokens`; `LatencyMs>0`; 401→`InvalidCredentials`, 429→`RateLimited`, 500→`ServerError`, delayed-past-token→`Timeout`, no-`choices` 200→`Malformed`. (R-2, D-10)
+- [x] 2.7 Create `Infrastructure/Llm/OpenAICompatibleClient.cs`: implements `ILLMClient` via `IHttpClientFactory`, `SnakeCaseLower` JSON, status-mapping table. Run 2.6 green. (R-2, D-10)
+- [x] 2.8 Run all four gates. All green before opening PR 2.
 
 ## 3. Anthropic adapter
 
@@ -101,10 +107,11 @@ Depends on 1, 2, 3. Highest risk to revert in the phase — review and smoke-lau
 - [ ] 4.6 Write failing `Tests.Integration/Llm/AddLlmClientsTests.cs`: `ILLMClientFactory`/`IPromptProvider` resolve; all **8** named `HttpClient`s resolve distinct instances; provider builds with `ValidateOnBuild=true`. (R-9, D-9)
 - [ ] 4.7 Create `Infrastructure/Llm/LlmServiceCollectionExtensions.cs`: `AddLlmClients()` — 8 named clients (`llm-{provider}` + `llm-{provider}-diagnostic` × 4 providers); main clients get every D-4/D-9 knob explicit (15s total, 6s attempt, 1 retry jittered exponential @1s, breaker ratio 0.5/throughput 4/sample 30s/break 15s, default retry predicate skips 401/403/400); diagnostic clients get timeout only, no retry, no breaker; `AddSingleton<ILLMClientFactory>`, `AddSingleton<IPromptProvider>`; returns `IServiceCollection`, no `Action<HttpClient>`/`IHttpClientBuilder` in the signature. Run 4.6 green. (R-2, R-8, R-9, D-9)
 - [ ] 4.8 Write `Tests.Integration/Llm/ResiliencePipelineTests.cs` asserting attempt **counts** against the real `AddLlmClients` pipeline (not the framework's documented defaults): resolve the named `llm-{provider}` client from a real `ServiceCollection`, back it with a counting `FakeHttpMessageHandler`, and assert (a) a 401 and a 403 each produce **exactly 1** attempt, and (b) a retryable 500 produces **2** attempts. Assertion (b) is what stops (a) from passing vacuously — without it, a pipeline where retry was never configured at all would also report 1 attempt for a 401. Then assert the diagnostic client produces exactly 1 attempt for the 500 too, proving it is genuinely retry-free. (R-9, S-12, D-9)
-- [ ] 4.9 Modify `UI/Composition/Bootstrap.cs`: add exactly one line, `services.AddLlmClients();`, under a `// Fase 13 (F-013, slice 4)` banner next to `AddExchangeRates`. Never call `AddHttpClient` directly in `Bootstrap.cs` — `Bootstrap`'s R-4 exemption covers only the Infrastructure-reference rule. (D-9)
-- [ ] 4.10 Write/extend an architecture regression assertion confirming `R4_UI_No_Depende_De_Paquetes_Prohibidos_EfCore_HttpClient` stays green after the new `Bootstrap.cs` line. (D-9)
-- [ ] 4.11 Create `Tests.Integration/Llm/External/OpenRouterRoundTripTests.cs`: opt-in `[Fact]` guarded by `CONTROL_FINANZAS_RUN_EXTERNAL_AI_TESTS` + `CONTROL_FINANZAS_OPENROUTER_API_KEY` env vars, returning immediately when either is unset; one real round trip through `OpenAICompatibleClient` against an OpenRouter free-tier model; asserts a response returned and `Parse(...).Kind != Unparseable` only — never asserts which category; skipped by default, not part of the normal suite. (R-2, D-14)
-- [ ] 4.12 Run all four gates; smoke-launch the app (`dotnet run`) against an existing dev DB to confirm no DI startup failure. All green before opening PR 4.
+- [ ] 4.9 Map the open-breaker case into `LlmFailureKind.CircuitOpen` in **both** adapters (`OpenAICompatibleClient`, `AnthropicClient`): catch Polly's `BrokenCircuitException`/`IsolatedCircuitException` and throw `LlmException(LlmFailureKind.CircuitOpen)`, with a test per adapter driving the breaker open through the real pipeline. Slice 2 deliberately left this unmapped because Polly is not a package reference until this slice — without it `CircuitOpen` is a dead enum member and an open breaker escapes as an unmapped exception type, violating R-4's "every pipeline failure is translated, no exception escapes to the UI". (R-4, D-1, D-10)
+- [ ] 4.10 Modify `UI/Composition/Bootstrap.cs`: add exactly one line, `services.AddLlmClients();`, under a `// Fase 13 (F-013, slice 4)` banner next to `AddExchangeRates`. Never call `AddHttpClient` directly in `Bootstrap.cs` — `Bootstrap`'s R-4 exemption covers only the Infrastructure-reference rule. (D-9)
+- [ ] 4.11 Write/extend an architecture regression assertion confirming `R4_UI_No_Depende_De_Paquetes_Prohibidos_EfCore_HttpClient` stays green after the new `Bootstrap.cs` line. (D-9)
+- [ ] 4.12 Create `Tests.Integration/Llm/External/OpenRouterRoundTripTests.cs`: opt-in `[Fact]` guarded by `CONTROL_FINANZAS_RUN_EXTERNAL_AI_TESTS` + `CONTROL_FINANZAS_OPENROUTER_API_KEY` env vars, returning immediately when either is unset; one real round trip through `OpenAICompatibleClient` against an OpenRouter free-tier model; asserts a response returned and `Parse(...).Kind != Unparseable` only — never asserts which category; skipped by default, not part of the normal suite. (R-2, D-14)
+- [ ] 4.13 Run all four gates; smoke-launch the app (`dotnet run`) against an existing dev DB to confirm no DI startup failure. All green before opening PR 4.
 
 ## 5a. Tolerant parser
 
