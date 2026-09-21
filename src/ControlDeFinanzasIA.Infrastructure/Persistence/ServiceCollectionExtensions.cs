@@ -1,5 +1,6 @@
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Infrastructure.Persistence.Repositories;
+using ControlDeFinanzasIA.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -83,6 +84,8 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence;
         services.AddScoped<IBudgetRepository, BudgetRepository>();
         services.AddScoped<IGoalRepository, GoalRepository>();
         services.AddScoped<IGoalContributionRepository, GoalContributionRepository>();
+        services.AddScoped<ISettingRepository, SettingRepository>();
+        services.AddScoped<ISettingsStore, SettingsStore>();
 
         return services;
     }

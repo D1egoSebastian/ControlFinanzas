@@ -3,6 +3,7 @@ using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Debts;
 using ControlDeFinanzasIA.Domain.Goals;
 using ControlDeFinanzasIA.Domain.Recurring;
+using ControlDeFinanzasIA.Domain.Settings;
 using ControlDeFinanzasIA.Domain.Transactions;
 using ControlDeFinanzasIA.Domain.Views;
 using Microsoft.EntityFrameworkCore;
@@ -96,6 +97,9 @@ public class AppDbContext : DbContext
 
     /// <summary>Conjunto de aportes a metas de ahorro.</summary>
     public DbSet<GoalContribution> GoalContributions => Set<GoalContribution>();
+
+    /// <summary>Conjunto de preferencias clave-valor del usuario.</summary>
+    public DbSet<Setting> Settings => Set<Setting>();
 
     /// <summary>
     /// Configura el modelo de EF Core aplicando las configuraciones de
