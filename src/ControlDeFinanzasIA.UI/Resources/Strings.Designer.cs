@@ -576,4 +576,154 @@ public class Strings
     /// Gets the localized error message shown when the budget list fails to load.
     /// </summary>
     public static string BudgetsLoadErrorMessage => ResourceManager.GetString("BudgetsLoadErrorMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized string for the savings goals sidebar item.
+    /// </summary>
+    public static string SidebarGoals => ResourceManager.GetString("SidebarGoals", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the savings goal create-form panel.
+    /// </summary>
+    public static string GoalsFormTitle => ResourceManager.GetString("GoalsFormTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the savings goals list column.
+    /// </summary>
+    public static string GoalsListTitle => ResourceManager.GetString("GoalsListTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized watermark for the goal name field.
+    /// </summary>
+    public static string GoalsNameWatermark => ResourceManager.GetString("GoalsNameWatermark", Culture)!;
+
+    /// <summary>
+    /// Gets the localized watermark for the goal target amount field.
+    /// </summary>
+    public static string GoalsTargetAmountWatermark => ResourceManager.GetString("GoalsTargetAmountWatermark", Culture)!;
+
+    /// <summary>
+    /// Gets the localized placeholder for the goal currency picker.
+    /// </summary>
+    public static string GoalsCurrencyPlaceholder => ResourceManager.GetString("GoalsCurrencyPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the localized watermark for the goal target date field.
+    /// </summary>
+    public static string GoalsTargetDateWatermark => ResourceManager.GetString("GoalsTargetDateWatermark", Culture)!;
+
+    /// <summary>
+    /// Gets the localized watermark for the goal note field.
+    /// </summary>
+    public static string GoalsNoteWatermark => ResourceManager.GetString("GoalsNoteWatermark", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the create-goal button.
+    /// </summary>
+    public static string GoalsCreateButton => ResourceManager.GetString("GoalsCreateButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the contribution sub-form panel.
+    /// </summary>
+    public static string GoalsContributeFormTitle => ResourceManager.GetString("GoalsContributeFormTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized watermark for the contribution amount field.
+    /// </summary>
+    public static string GoalsContributionAmountWatermark => ResourceManager.GetString("GoalsContributionAmountWatermark", Culture)!;
+
+    /// <summary>
+    /// Gets the localized watermark for the contribution date field.
+    /// </summary>
+    public static string GoalsContributionDateWatermark => ResourceManager.GetString("GoalsContributionDateWatermark", Culture)!;
+
+    /// <summary>
+    /// Gets the localized, format-composite label showing the pinned contribution currency.
+    /// </summary>
+    public static string GoalsContributionCurrencyLabel => ResourceManager.GetString("GoalsContributionCurrencyLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the add-contribution button.
+    /// </summary>
+    public static string GoalsContributeButton => ResourceManager.GetString("GoalsContributeButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for a goal row's target amount.
+    /// </summary>
+    public static string GoalsTargetLabel => ResourceManager.GetString("GoalsTargetLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for a goal row's contributed amount.
+    /// </summary>
+    public static string GoalsProgressLabel => ResourceManager.GetString("GoalsProgressLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for a goal row's remaining amount.
+    /// </summary>
+    public static string GoalsRemainingLabel => ResourceManager.GetString("GoalsRemainingLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized, format-composite message describing the suggested monthly savings plan.
+    /// </summary>
+    public static string GoalsPlanMessage => ResourceManager.GetString("GoalsPlanMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized message shown when a goal has already reached its target.
+    /// </summary>
+    public static string GoalsAlreadyMetMessage => ResourceManager.GetString("GoalsAlreadyMetMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized warning shown when a goal's target date has elapsed.
+    /// </summary>
+    public static string GoalsPastDateWarning => ResourceManager.GetString("GoalsPastDateWarning", Culture)!;
+
+    /// <summary>
+    /// Gets the localized badge text for a completed goal.
+    /// </summary>
+    public static string GoalsCompletedBadge => ResourceManager.GetString("GoalsCompletedBadge", Culture)!;
+
+    /// <summary>
+    /// Gets the localized status message shown after a goal is created.
+    /// </summary>
+    public static string GoalsCreatedMessage => ResourceManager.GetString("GoalsCreatedMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized status message shown after a contribution is added.
+    /// </summary>
+    public static string GoalsContributedMessage => ResourceManager.GetString("GoalsContributedMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized status message shown after a goal is deleted.
+    /// </summary>
+    public static string GoalsDeletedMessage => ResourceManager.GetString("GoalsDeletedMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized fallback message shown when a goal operation fails.
+    /// </summary>
+    public static string GoalsErrorMessage => ResourceManager.GetString("GoalsErrorMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized error message shown when the goal list fails to load.
+    /// </summary>
+    public static string GoalsLoadErrorMessage => ResourceManager.GetString("GoalsLoadErrorMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized empty-state message for the goal list.
+    /// </summary>
+    public static string GoalsEmptyMessage => ResourceManager.GetString("GoalsEmptyMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized currency-mismatch message substituted by
+    /// <see cref="ControlDeFinanzasIA.UI.ViewModels.GoalsViewModel"/> for
+    /// <c>ContributeToGoalUseCase</c>'s internal error message whenever
+    /// the failure's error code is <c>"CurrencyMismatch"</c> (spec R-4
+    /// reconciliation note — a new, narrow convention scoped to this one
+    /// message).
+    /// </summary>
+    public static string GoalsCurrencyMismatchMessage => ResourceManager.GetString("GoalsCurrencyMismatchMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the button that selects a goal row to reveal its contribution panel.
+    /// </summary>
+    public static string GoalsSelectButton => ResourceManager.GetString("GoalsSelectButton", Culture)!;
 }

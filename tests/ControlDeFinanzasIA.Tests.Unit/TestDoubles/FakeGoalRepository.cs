@@ -35,6 +35,17 @@ public sealed class FakeGoalRepository : IGoalRepository
     /// <summary>True once <see cref="RemoveAsync"/> has been called.</summary>
     public bool RemoveAsyncCalled { get; private set; }
 
+    /// <summary>
+    /// Optional override for <see cref="GetByIdAsync"/>: when set, this
+    /// goal is always returned regardless of the requested id. Used by
+    /// <c>GoalsViewModelTests</c> to simulate a stale-currency race
+    /// (a <see cref="Goal"/> instance backing a use case that diverges
+    /// from the one that produced the currently displayed row) without
+    /// needing to forge a specific <see cref="Goal.Id"/> through the
+    /// public <c>Create</c> factory.
+    /// </summary>
+    public Goal? GetByIdOverride { get; set; }
+
     public void Seed(Goal goal) => _goals.Add(goal);
 
     /// <inheritdoc />
@@ -79,7 +90,7 @@ public sealed class FakeGoalRepository : IGoalRepository
 
     /// <inheritdoc />
     public Task<Goal?> GetByIdAsync(Guid id, CancellationToken ct = default)
-        => Task.FromResult(_goals.FirstOrDefault(g => g.Id == id));
+        => Task.FromResult(GetByIdOverride ?? _goals.FirstOrDefault(g => g.Id == id));
 
     /// <inheritdoc />
     public Task<IReadOnlyList<Goal>> GetAllAsync(CancellationToken ct = default)

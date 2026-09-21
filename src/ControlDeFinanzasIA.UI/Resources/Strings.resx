@@ -367,4 +367,91 @@ Showing approximate conversions only.
   <data name="BudgetsLoadErrorMessage" xml:space="preserve">
     <value>The budgets could not be loaded.</value>
   </data>
+  <data name="SidebarGoals" xml:space="preserve">
+    <value>Goals</value>
+  </data>
+  <data name="GoalsFormTitle" xml:space="preserve">
+    <value>New savings goal</value>
+  </data>
+  <data name="GoalsListTitle" xml:space="preserve">
+    <value>Your savings goals</value>
+  </data>
+  <data name="GoalsNameWatermark" xml:space="preserve">
+    <value>Goal name</value>
+  </data>
+  <data name="GoalsTargetAmountWatermark" xml:space="preserve">
+    <value>Target amount</value>
+  </data>
+  <data name="GoalsCurrencyPlaceholder" xml:space="preserve">
+    <value>Currency</value>
+  </data>
+  <data name="GoalsTargetDateWatermark" xml:space="preserve">
+    <value>Target date</value>
+  </data>
+  <data name="GoalsNoteWatermark" xml:space="preserve">
+    <value>Note (optional)</value>
+  </data>
+  <data name="GoalsCreateButton" xml:space="preserve">
+    <value>Create goal</value>
+  </data>
+  <data name="GoalsContributeFormTitle" xml:space="preserve">
+    <value>Add a contribution</value>
+  </data>
+  <data name="GoalsContributionAmountWatermark" xml:space="preserve">
+    <value>Contribution amount</value>
+  </data>
+  <data name="GoalsContributionDateWatermark" xml:space="preserve">
+    <value>Contribution date</value>
+  </data>
+  <data name="GoalsContributionCurrencyLabel" xml:space="preserve">
+    <value>Currency: {0}</value>
+  </data>
+  <data name="GoalsContributeButton" xml:space="preserve">
+    <value>Add contribution</value>
+  </data>
+  <data name="GoalsTargetLabel" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="GoalsProgressLabel" xml:space="preserve">
+    <value>Saved</value>
+  </data>
+  <data name="GoalsRemainingLabel" xml:space="preserve">
+    <value>Remaining</value>
+  </data>
+  <data name="GoalsPlanMessage" xml:space="preserve">
+    <value>Contribute {0} per month for {1} months.</value>
+  </data>
+  <data name="GoalsAlreadyMetMessage" xml:space="preserve">
+    <value>Target reached.</value>
+  </data>
+  <data name="GoalsPastDateWarning" xml:space="preserve">
+    <value>The target date has passed.</value>
+  </data>
+  <data name="GoalsCompletedBadge" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="GoalsCreatedMessage" xml:space="preserve">
+    <value>Goal created successfully.</value>
+  </data>
+  <data name="GoalsContributedMessage" xml:space="preserve">
+    <value>Contribution added successfully.</value>
+  </data>
+  <data name="GoalsDeletedMessage" xml:space="preserve">
+    <value>Goal deleted successfully.</value>
+  </data>
+  <data name="GoalsErrorMessage" xml:space="preserve">
+    <value>The operation could not be completed.</value>
+  </data>
+  <data name="GoalsLoadErrorMessage" xml:space="preserve">
+    <value>The goals could not be loaded.</value>
+  </data>
+  <data name="GoalsEmptyMessage" xml:space="preserve">
+    <value>You have no savings goals yet.</value>
+  </data>
+  <data name="GoalsCurrencyMismatchMessage" xml:space="preserve">
+    <value>The contribution currency must match the goal's currency.</value>
+  </data>
+  <data name="GoalsSelectButton" xml:space="preserve">
+    <value>Select</value>
+  </data>
 </root>

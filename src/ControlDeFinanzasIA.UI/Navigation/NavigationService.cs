@@ -33,7 +33,8 @@ public sealed class NavigationService : ObservableObject, INavigationService
             { RouteNames.Recurring, typeof(RecurringRulesViewModel) },
             { RouteNames.Debts, typeof(DebtsViewModel) },
             { RouteNames.Calendar, typeof(CalendarViewModel) },
-            { RouteNames.Budgets, typeof(BudgetsViewModel) }
+            { RouteNames.Budgets, typeof(BudgetsViewModel) },
+            { RouteNames.Goals, typeof(GoalsViewModel) }
         };
     }
 

@@ -367,4 +367,91 @@ Mostrando conversiones aproximadas.
   <data name="BudgetsLoadErrorMessage" xml:space="preserve">
     <value>No se pudieron cargar los presupuestos.</value>
   </data>
+  <data name="SidebarGoals" xml:space="preserve">
+    <value>Metas</value>
+  </data>
+  <data name="GoalsFormTitle" xml:space="preserve">
+    <value>Nueva meta de ahorro</value>
+  </data>
+  <data name="GoalsListTitle" xml:space="preserve">
+    <value>Tus metas de ahorro</value>
+  </data>
+  <data name="GoalsNameWatermark" xml:space="preserve">
+    <value>Nombre de la meta</value>
+  </data>
+  <data name="GoalsTargetAmountWatermark" xml:space="preserve">
+    <value>Monto objetivo</value>
+  </data>
+  <data name="GoalsCurrencyPlaceholder" xml:space="preserve">
+    <value>Moneda</value>
+  </data>
+  <data name="GoalsTargetDateWatermark" xml:space="preserve">
+    <value>Fecha objetivo</value>
+  </data>
+  <data name="GoalsNoteWatermark" xml:space="preserve">
+    <value>Nota (opcional)</value>
+  </data>
+  <data name="GoalsCreateButton" xml:space="preserve">
+    <value>Crear meta</value>
+  </data>
+  <data name="GoalsContributeFormTitle" xml:space="preserve">
+    <value>Agregar un aporte</value>
+  </data>
+  <data name="GoalsContributionAmountWatermark" xml:space="preserve">
+    <value>Monto del aporte</value>
+  </data>
+  <data name="GoalsContributionDateWatermark" xml:space="preserve">
+    <value>Fecha del aporte</value>
+  </data>
+  <data name="GoalsContributionCurrencyLabel" xml:space="preserve">
+    <value>Moneda: {0}</value>
+  </data>
+  <data name="GoalsContributeButton" xml:space="preserve">
+    <value>Agregar aporte</value>
+  </data>
+  <data name="GoalsTargetLabel" xml:space="preserve">
+    <value>Objetivo</value>
+  </data>
+  <data name="GoalsProgressLabel" xml:space="preserve">
+    <value>Ahorrado</value>
+  </data>
+  <data name="GoalsRemainingLabel" xml:space="preserve">
+    <value>Restante</value>
+  </data>
+  <data name="GoalsPlanMessage" xml:space="preserve">
+    <value>Aporta {0} por mes durante {1} meses.</value>
+  </data>
+  <data name="GoalsAlreadyMetMessage" xml:space="preserve">
+    <value>Meta alcanzada.</value>
+  </data>
+  <data name="GoalsPastDateWarning" xml:space="preserve">
+    <value>La fecha objetivo ya pasó.</value>
+  </data>
+  <data name="GoalsCompletedBadge" xml:space="preserve">
+    <value>Completada</value>
+  </data>
+  <data name="GoalsCreatedMessage" xml:space="preserve">
+    <value>Meta creada correctamente.</value>
+  </data>
+  <data name="GoalsContributedMessage" xml:space="preserve">
+    <value>Aporte agregado correctamente.</value>
+  </data>
+  <data name="GoalsDeletedMessage" xml:space="preserve">
+    <value>Meta eliminada correctamente.</value>
+  </data>
+  <data name="GoalsErrorMessage" xml:space="preserve">
+    <value>No se pudo completar la operación.</value>
+  </data>
+  <data name="GoalsLoadErrorMessage" xml:space="preserve">
+    <value>No se pudieron cargar las metas.</value>
+  </data>
+  <data name="GoalsEmptyMessage" xml:space="preserve">
+    <value>Todavía no tienes metas de ahorro.</value>
+  </data>
+  <data name="GoalsCurrencyMismatchMessage" xml:space="preserve">
+    <value>La moneda del aporte debe coincidir con la moneda de la meta.</value>
+  </data>
+  <data name="GoalsSelectButton" xml:space="preserve">
+    <value>Seleccionar</value>
+  </data>
 </root>

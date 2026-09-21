@@ -106,6 +106,7 @@ public static class Bootstrap
         services.AddTransient<DebtsViewModel>();
         services.AddTransient<CalendarViewModel>();
         services.AddTransient<BudgetsViewModel>();
+        services.AddTransient<GoalsViewModel>();
 
         services.AddTransient<RegisterExpenseUseCase>();
         services.AddTransient<UpdateExpenseUseCase>();
@@ -166,8 +167,8 @@ public static class Bootstrap
         services.AddTransient<IValidator<CreateOrUpdateBudgetCommand>, CreateOrUpdateBudgetValidator>();
 
         // Metas de ahorro (F-011 Phase 11, slice 2): los 4 use cases/queries de
-        // Application. GoalsViewModel se registrará en slice 3 junto con las demás
-        // pantallas.
+        // Application. GoalsViewModel se registra arriba junto con las demás
+        // pantallas (slice 3).
         services.AddTransient<CreateGoalUseCase>();
         services.AddTransient<ContributeToGoalUseCase>();
         services.AddTransient<GetGoalsQuery>();

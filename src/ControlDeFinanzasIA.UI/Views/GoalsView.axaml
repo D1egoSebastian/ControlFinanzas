@@ -1,0 +1,130 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+             xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
+             xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
+             xmlns:avaloniaConverters="using:Avalonia.Data.Converters"
+             x:Class="ControlDeFinanzasIA.UI.Views.GoalsView"
+             x:DataType="vm:GoalsViewModel"
+             x:Name="Root"
+             Background="{StaticResource InkBrush}">
+    <UserControl.Resources>
+        <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
+    </UserControl.Resources>
+    <Grid ColumnDefinitions="360,*" Margin="24">
+        <ScrollViewer Grid.Column="0">
+            <StackPanel Spacing="10">
+                <TextBlock Text="{x:Static resources:Strings.GoalsFormTitle}" Classes="ledger-title" />
+
+                <TextBox Text="{Binding Name}"
+                         Watermark="{x:Static resources:Strings.GoalsNameWatermark}"
+                         Classes="ledger-input" />
+                <TextBox Text="{Binding TargetAmount}"
+                         Watermark="{x:Static resources:Strings.GoalsTargetAmountWatermark}"
+                         Classes="ledger-input" />
+                <ComboBox ItemsSource="{Binding Currencies}"
+                          SelectedItem="{Binding Currency}"
+                          PlaceholderText="{x:Static resources:Strings.GoalsCurrencyPlaceholder}"
+                          Classes="ledger-input"
+                          HorizontalAlignment="Stretch" />
+                <DatePicker SelectedDate="{Binding TargetDate, Converter={StaticResource DateOnlyConverter}}"
+                            Classes="ledger-input" />
+                <TextBox Text="{Binding Note}"
+                         Watermark="{x:Static resources:Strings.GoalsNoteWatermark}"
+                         Classes="ledger-input" />
+
+                <TextBlock Text="{Binding FormError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+                <Button Content="{x:Static resources:Strings.GoalsCreateButton}"
+                        Command="{Binding CreateCommand}"
+                        Classes="ledger-btn-primary" />
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+
+                <!-- Contribution sub-flow: inline panel revealed when a goal row is selected (D-10). -->
+                <StackPanel Spacing="10"
+                            Margin="0,16,0,0"
+                            IsVisible="{Binding SelectedGoal, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}">
+                    <TextBlock Text="{x:Static resources:Strings.GoalsContributeFormTitle}" Classes="ledger-section" />
+                    <TextBox Text="{Binding ContributionAmount}"
+                             Watermark="{x:Static resources:Strings.GoalsContributionAmountWatermark}"
+                             Classes="ledger-input" />
+                    <DatePicker SelectedDate="{Binding ContributionDate, Converter={StaticResource DateOnlyConverter}}"
+                                Classes="ledger-input" />
+                    <TextBlock Text="{Binding ContributionCurrency, StringFormat={x:Static resources:Strings.GoalsContributionCurrencyLabel}}"
+                               Foreground="{StaticResource PaperDimBrush}" />
+                    <Button Content="{x:Static resources:Strings.GoalsContributeButton}"
+                            Command="{Binding ContributeCommand}"
+                            Classes="ledger-btn-primary" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <ScrollViewer Grid.Column="1" Margin="24,0,0,0">
+            <StackPanel Spacing="12">
+                <TextBlock Text="{x:Static resources:Strings.GoalsListTitle}" Classes="ledger-title" />
+                <ItemsControl ItemsSource="{Binding Goals}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:GoalRow">
+                            <Border Classes="ledger-row" Padding="12">
+                                <StackPanel Spacing="6">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding Name}"
+                                                   Classes="ledger-section"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding PercentComplete, StringFormat={}{0:N2}%}"
+                                                   Classes="ledger-amount"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                    <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressValue}" />
+                                    <TextBlock Foreground="{StaticResource PaperDimBrush}">
+                                        <Run Text="{x:Static resources:Strings.GoalsProgressLabel}" />
+                                        <Run Text="{Binding ContributedAmount, StringFormat={}{0:N2}}" />
+                                        <Run Text="/" />
+                                        <Run Text="{Binding TargetAmount, StringFormat={}{0:N2}}" />
+                                        <Run Text="{Binding Currency}" />
+                                    </TextBlock>
+                                    <TextBlock Foreground="{StaticResource PaperDimBrush}">
+                                        <Run Text="{x:Static resources:Strings.GoalsRemainingLabel}" />
+                                        <Run Text="{Binding RemainingAmount, StringFormat={}{0:N2}}" />
+                                    </TextBlock>
+
+                                    <TextBlock Text="{x:Static resources:Strings.GoalsAlreadyMetMessage}"
+                                               IsVisible="{Binding ShowAlreadyMetMessage}"
+                                               Foreground="{StaticResource SageBrush}" />
+                                    <TextBlock Text="{x:Static resources:Strings.GoalsPastDateWarning}"
+                                               IsVisible="{Binding ShowPastDateWarning}"
+                                               Foreground="{StaticResource TerracottaBrush}" />
+                                    <TextBlock IsVisible="{Binding ShowPlan}"
+                                               Foreground="{StaticResource PaperDimBrush}"
+                                               TextWrapping="Wrap">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{x:Static resources:Strings.GoalsPlanMessage}">
+                                                <Binding Path="MonthlyContributionRequired" StringFormat="{}{0:N2}" />
+                                                <Binding Path="MonthsRemaining" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Content="{x:Static resources:Strings.GoalsSelectButton}"
+                                                Command="{Binding #Root.((vm:GoalsViewModel)DataContext).SelectCommand}"
+                                                CommandParameter="{Binding}"
+                                                Classes="ledger-btn" />
+                                        <Button Content="{x:Static resources:Strings.DeleteButton}"
+                                                Command="{Binding #Root.((vm:GoalsViewModel)DataContext).DeleteCommand}"
+                                                CommandParameter="{Binding}"
+                                                Classes="ledger-btn" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="{x:Static resources:Strings.GoalsEmptyMessage}"
+                           IsVisible="{Binding !Goals.Count}"
+                           Foreground="{StaticResource PaperDimBrush}" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -41,6 +41,10 @@ public sealed class ViewLocator : IDataTemplate
             {
                 DataContext = viewModel,
             },
+            GoalsViewModel viewModel => new GoalsView
+            {
+                DataContext = viewModel,
+            },
             _ => null,
         };
 
@@ -52,5 +56,6 @@ public sealed class ViewLocator : IDataTemplate
             or RecurringRulesViewModel
             or DebtsViewModel
             or CalendarViewModel
-            or BudgetsViewModel;
+            or BudgetsViewModel
+            or GoalsViewModel;
 }

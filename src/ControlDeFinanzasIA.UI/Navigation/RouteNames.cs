@@ -43,4 +43,12 @@ public static class RouteNames
     /// current view-model's type name, so this must stay <c>"Budgets"</c>.
     /// </summary>
     public const string Budgets = "Budgets";
+
+    /// <summary>
+    /// The savings goals management route (consumed by F-011 of Phase 11).
+    /// The literal value matters: <see cref="UI.ViewModels.ShellViewModel"/>
+    /// derives the sidebar highlight by stripping "ViewModel" from the
+    /// current view-model's type name, so this must stay <c>"Goals"</c>.
+    /// </summary>
+    public const string Goals = "Goals";
 }
