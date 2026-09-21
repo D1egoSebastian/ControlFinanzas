@@ -726,4 +726,81 @@ public class Strings
     /// Gets the localized label for the button that selects a goal row to reveal its contribution panel.
     /// </summary>
     public static string GoalsSelectButton => ResourceManager.GetString("GoalsSelectButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized string for the settings sidebar item.
+    /// </summary>
+    public static string SidebarSettings => ResourceManager.GetString("SidebarSettings", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the Apariencia (theme) section of the settings screen.
+    /// </summary>
+    public static string SettingsAppearanceTitle => ResourceManager.GetString("SettingsAppearanceTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the theme picker.
+    /// </summary>
+    public static string SettingsThemeLabel => ResourceManager.GetString("SettingsThemeLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized display value for <c>AppTheme.Dark</c>.
+    /// </summary>
+    public static string SettingsThemeDark => ResourceManager.GetString("SettingsThemeDark", Culture)!;
+
+    /// <summary>
+    /// Gets the localized display value for <c>AppTheme.Light</c>.
+    /// </summary>
+    public static string SettingsThemeLight => ResourceManager.GetString("SettingsThemeLight", Culture)!;
+
+    /// <summary>
+    /// Gets the localized, always-visible notice stating that only Dark
+    /// renders in v1 (R-3, S-1 — must never be a silent no-op).
+    /// </summary>
+    public static string SettingsThemeLightNotice => ResourceManager.GetString("SettingsThemeLightNotice", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the Idioma (language) section of the settings screen.
+    /// </summary>
+    public static string SettingsLanguageTitle => ResourceManager.GetString("SettingsLanguageTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the language picker.
+    /// </summary>
+    public static string SettingsLanguageLabel => ResourceManager.GetString("SettingsLanguageLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized display value for the <c>es-DO</c> locale.
+    /// </summary>
+    public static string SettingsLanguageSpanish => ResourceManager.GetString("SettingsLanguageSpanish", Culture)!;
+
+    /// <summary>
+    /// Gets the localized display value for the <c>en</c> locale.
+    /// </summary>
+    public static string SettingsLanguageEnglish => ResourceManager.GetString("SettingsLanguageEnglish", Culture)!;
+
+    /// <summary>
+    /// Gets the localized restart-required notice shown after a successful
+    /// language save (R-4, S-3, Q2).
+    /// </summary>
+    public static string SettingsRestartRequiredNotice => ResourceManager.GetString("SettingsRestartRequiredNotice", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the per-section save buttons on the settings screen.
+    /// </summary>
+    public static string SettingsSaveButton => ResourceManager.GetString("SettingsSaveButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized message shown after a successful settings save.
+    /// </summary>
+    public static string SettingsSavedMessage => ResourceManager.GetString("SettingsSavedMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized fallback message shown when a settings save fails.
+    /// </summary>
+    public static string SettingsErrorMessage => ResourceManager.GetString("SettingsErrorMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized error message shown when the settings screen fails to load.
+    /// </summary>
+    public static string SettingsLoadErrorMessage => ResourceManager.GetString("SettingsLoadErrorMessage", Culture)!;
 }

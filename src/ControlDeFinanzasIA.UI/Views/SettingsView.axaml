@@ -1,0 +1,70 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+             xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
+             x:Class="ControlDeFinanzasIA.UI.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel"
+             Background="{StaticResource InkBrush}">
+    <ScrollViewer>
+        <StackPanel Spacing="24" Margin="24" MaxWidth="720">
+
+            <!-- Apariencia (R-3, S-1, S-2) -->
+            <Border Classes="ledger-row" Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Static resources:Strings.SettingsAppearanceTitle}" Classes="ledger-title" />
+
+                    <ComboBox ItemsSource="{Binding ThemeOptions}"
+                              DisplayMemberBinding="{Binding Label}"
+                              SelectedValue="{Binding Theme}"
+                              SelectedValueBinding="{Binding Value}"
+                              PlaceholderText="{x:Static resources:Strings.SettingsThemeLabel}"
+                              Classes="ledger-input"
+                              HorizontalAlignment="Stretch" />
+
+                    <!--
+                        Always visible, never conditional on the current
+                        selection (R-3, S-1, D-10): a selectable Light
+                        option that silently does nothing is a defect,
+                        not an acceptable v1 cut.
+                    -->
+                    <TextBlock Text="{x:Static resources:Strings.SettingsThemeLightNotice}"
+                               Foreground="{StaticResource AmberBrush}"
+                               TextWrapping="Wrap" />
+
+                    <Button Content="{x:Static resources:Strings.SettingsSaveButton}"
+                            Command="{Binding SaveThemeCommand}"
+                            Classes="ledger-btn-primary" />
+                </StackPanel>
+            </Border>
+
+            <!-- Idioma (R-4, S-3, S-4, S-5) -->
+            <Border Classes="ledger-row" Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Static resources:Strings.SettingsLanguageTitle}" Classes="ledger-title" />
+
+                    <ComboBox ItemsSource="{Binding LocaleOptions}"
+                              DisplayMemberBinding="{Binding Label}"
+                              SelectedValue="{Binding Locale}"
+                              SelectedValueBinding="{Binding Value}"
+                              PlaceholderText="{x:Static resources:Strings.SettingsLanguageLabel}"
+                              Classes="ledger-input"
+                              HorizontalAlignment="Stretch" />
+
+                    <Button Content="{x:Static resources:Strings.SettingsSaveButton}"
+                            Command="{Binding SaveLocaleCommand}"
+                            Classes="ledger-btn-primary" />
+
+                    <TextBlock Text="{x:Static resources:Strings.SettingsRestartRequiredNotice}"
+                               IsVisible="{Binding IsRestartRequired}"
+                               Foreground="{StaticResource AmberBrush}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!-- IA and Acerca de sections land in slice 4b. -->
+
+            <TextBlock Text="{Binding FormError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -111,6 +111,7 @@ public static class Bootstrap
         services.AddTransient<CalendarViewModel>();
         services.AddTransient<BudgetsViewModel>();
         services.AddTransient<GoalsViewModel>();
+        services.AddTransient<SettingsViewModel>();
 
         services.AddTransient<RegisterExpenseUseCase>();
         services.AddTransient<UpdateExpenseUseCase>();

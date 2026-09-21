@@ -454,4 +454,49 @@ Showing approximate conversions only.
   <data name="GoalsSelectButton" xml:space="preserve">
     <value>Select</value>
   </data>
+  <data name="SidebarSettings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsAppearanceTitle" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="SettingsThemeLabel" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="SettingsThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="SettingsThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="SettingsThemeLightNotice" xml:space="preserve">
+    <value>Light theme is not available yet. Only Dark renders in v1; your choice is saved for a future release.</value>
+  </data>
+  <data name="SettingsLanguageTitle" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="SettingsLanguageLabel" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="SettingsLanguageSpanish" xml:space="preserve">
+    <value>Español (Dominican Republic)</value>
+  </data>
+  <data name="SettingsLanguageEnglish" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="SettingsRestartRequiredNotice" xml:space="preserve">
+    <value>Language saved. Restart the app to apply it.</value>
+  </data>
+  <data name="SettingsSaveButton" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="SettingsSavedMessage" xml:space="preserve">
+    <value>Settings saved successfully.</value>
+  </data>
+  <data name="SettingsErrorMessage" xml:space="preserve">
+    <value>The settings could not be saved.</value>
+  </data>
+  <data name="SettingsLoadErrorMessage" xml:space="preserve">
+    <value>The settings could not be loaded.</value>
+  </data>
 </root>

@@ -454,4 +454,49 @@ Mostrando conversiones aproximadas.
   <data name="GoalsSelectButton" xml:space="preserve">
     <value>Seleccionar</value>
   </data>
+  <data name="SidebarSettings" xml:space="preserve">
+    <value>Configuración</value>
+  </data>
+  <data name="SettingsAppearanceTitle" xml:space="preserve">
+    <value>Apariencia</value>
+  </data>
+  <data name="SettingsThemeLabel" xml:space="preserve">
+    <value>Tema</value>
+  </data>
+  <data name="SettingsThemeDark" xml:space="preserve">
+    <value>Oscuro</value>
+  </data>
+  <data name="SettingsThemeLight" xml:space="preserve">
+    <value>Claro</value>
+  </data>
+  <data name="SettingsThemeLightNotice" xml:space="preserve">
+    <value>El tema claro todavía no está disponible. Solo el oscuro se aplica en v1; tu selección se guarda para una futura versión.</value>
+  </data>
+  <data name="SettingsLanguageTitle" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
+  <data name="SettingsLanguageLabel" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
+  <data name="SettingsLanguageSpanish" xml:space="preserve">
+    <value>Español (República Dominicana)</value>
+  </data>
+  <data name="SettingsLanguageEnglish" xml:space="preserve">
+    <value>Inglés</value>
+  </data>
+  <data name="SettingsRestartRequiredNotice" xml:space="preserve">
+    <value>Idioma guardado. Reinicia la aplicación para aplicarlo.</value>
+  </data>
+  <data name="SettingsSaveButton" xml:space="preserve">
+    <value>Guardar</value>
+  </data>
+  <data name="SettingsSavedMessage" xml:space="preserve">
+    <value>Configuración guardada correctamente.</value>
+  </data>
+  <data name="SettingsErrorMessage" xml:space="preserve">
+    <value>No se pudo guardar la configuración.</value>
+  </data>
+  <data name="SettingsLoadErrorMessage" xml:space="preserve">
+    <value>No se pudo cargar la configuración.</value>
+  </data>
 </root>

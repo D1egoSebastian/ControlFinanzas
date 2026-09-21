@@ -51,4 +51,12 @@ public static class RouteNames
     /// current view-model's type name, so this must stay <c>"Goals"</c>.
     /// </summary>
     public const string Goals = "Goals";
+
+    /// <summary>
+    /// The settings route (consumed by F-012 of Phase 12).
+    /// The literal value matters: <see cref="UI.ViewModels.ShellViewModel"/>
+    /// derives the sidebar highlight by stripping "ViewModel" from the
+    /// current view-model's type name, so this must stay <c>"Settings"</c>.
+    /// </summary>
+    public const string Settings = "Settings";
 }
