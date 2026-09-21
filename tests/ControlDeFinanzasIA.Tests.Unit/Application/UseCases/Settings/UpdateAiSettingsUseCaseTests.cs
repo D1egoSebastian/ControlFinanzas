@@ -206,15 +206,20 @@ public sealed class UpdateAiSettingsUseCaseTests
         // Reflection assertion (R-5, S-6): the ctor signature IS the "zero AI
         // network calls" guarantee for this use case. No HttpClient,
         // IHttpClientFactory, or ILLMClient-anything is reachable from here.
+        //
+        // F-013 slice 1 note: this originally also asserted no type named
+        // "*LLMClient*" existed anywhere in the Application assembly, as a
+        // trip wire against Phase 13 starting early. F-013 slice 1 has now
+        // legitimately introduced `ILLMClientFactory` (a zero-HTTP-surface
+        // abstraction — see Tests.Unit/Llm/LlmContractPurityTests), so that
+        // assembly-wide scan is retired. The guarantee that actually matters
+        // here — this use case's own constructor never takes an HTTP or LLM
+        // client dependency — is unchanged and still asserted below.
         ConstructorInfo ctor = typeof(UpdateAiSettingsUseCase).GetConstructors().Single();
         ParameterInfo[] parameters = ctor.GetParameters();
 
         Assert.DoesNotContain(parameters, p => p.ParameterType.Namespace == typeof(HttpClient).Namespace);
         Assert.DoesNotContain(parameters, p => p.ParameterType.Name.Contains("LLMClient", StringComparison.Ordinal));
         Assert.DoesNotContain(parameters, p => p.ParameterType.Name.Contains("HttpClientFactory", StringComparison.Ordinal));
-
-        bool anyLlmClientTypeExists = typeof(UpdateAiSettingsUseCase).Assembly.GetTypes()
-            .Any(t => t.Name.Contains("LLMClient", StringComparison.Ordinal));
-        Assert.False(anyLlmClientTypeExists);
     }
 }

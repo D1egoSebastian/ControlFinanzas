@@ -210,15 +210,20 @@ public sealed class SettingsStoreTests
     {
         // Reflection assertion (R-5, S-6): the ctor signature IS the "zero AI
         // calls" guarantee for this phase.
+        //
+        // F-013 slice 1 note: this originally also asserted no type named
+        // "*LLMClient*" existed anywhere in the Application/Infrastructure
+        // assemblies, as a trip wire against Phase 13 starting early. F-013
+        // slice 1 has now legitimately introduced `ILLMClientFactory` (a
+        // zero-HTTP-surface abstraction — see
+        // Tests.Unit/Llm/LlmContractPurityTests), so that
+        // assembly-wide scan is retired. The guarantee that actually matters
+        // here — SettingsStore's own constructor never takes an HTTP or LLM
+        // client dependency — is unchanged and still asserted below.
         ConstructorInfo ctor = typeof(SettingsStore).GetConstructors().Single();
         ParameterInfo[] parameters = ctor.GetParameters();
 
         Assert.DoesNotContain(parameters, p => p.ParameterType.Namespace == typeof(HttpClient).Namespace);
         Assert.DoesNotContain(parameters, p => p.ParameterType.Name.Contains("LLMClient", StringComparison.Ordinal));
-
-        bool anyLlmClientTypeExists = typeof(SettingsStore).Assembly.GetTypes()
-            .Concat(typeof(AppSettings).Assembly.GetTypes())
-            .Any(t => t.Name.Contains("LLMClient", StringComparison.Ordinal));
-        Assert.False(anyLlmClientTypeExists);
     }
 }
