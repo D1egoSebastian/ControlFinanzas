@@ -146,6 +146,131 @@ public sealed class SettingsViewModelTests
     }
 
     [Fact]
+    public async Task SaveAiAsync_Success_BuildsCommandFromFormFieldsAndSetsStatusMessage()
+    {
+        var store = new FakeSettingsStore();
+        SettingsViewModel viewModel = CreateViewModel(store);
+        await Task.Delay(1);
+        viewModel.AiProvider = AiProvider.Anthropic;
+        viewModel.AiApiKey = "sk-live-test";
+        viewModel.AiModel = "claude-sonnet";
+        viewModel.AiBaseUrl = "https://api.example.com/v1";
+        viewModel.AiTemperature = 0.9;
+        viewModel.AiMaxTokensPerRequest = 4096;
+
+        await viewModel.SaveAiCommand.ExecuteAsync(null);
+
+        Assert.Equal(string.Empty, viewModel.FormError);
+        Assert.NotEqual(string.Empty, viewModel.StatusMessage);
+        Assert.False(viewModel.IsRestartRequired);
+        Assert.Equal(6, store.SetCalls.Count);
+        Assert.Contains(store.SetCalls, c => c.Key == SettingKeys.AiProvider && c.Value == "Anthropic");
+        Assert.Contains(store.SetCalls, c => c.Key == SettingKeys.AiApiKey && c.Value == "sk-live-test");
+        Assert.Contains(store.SetCalls, c => c.Key == SettingKeys.AiModel && c.Value == "claude-sonnet");
+        Assert.Contains(store.SetCalls, c => c.Key == SettingKeys.AiBaseUrl && c.Value == "https://api.example.com/v1");
+        Assert.Contains(store.SetCalls, c => c.Key == SettingKeys.AiTemperature && c.Value == "0.9");
+        Assert.Contains(store.SetCalls, c => c.Key == SettingKeys.AiMaxTokensPerRequest && c.Value == "4096");
+    }
+
+    [Theory]
+    [InlineData(2.01)]
+    [InlineData(-0.1)]
+    public async Task SaveAiAsync_OutOfRangeTemperature_SetsFormErrorAndWritesNothing(double temperature)
+    {
+        var store = new FakeSettingsStore();
+        SettingsViewModel viewModel = CreateViewModel(store);
+        await Task.Delay(1);
+        viewModel.AiTemperature = temperature;
+
+        await viewModel.SaveAiCommand.ExecuteAsync(null);
+
+        Assert.NotEqual(string.Empty, viewModel.FormError);
+        Assert.Empty(store.SetCalls);
+    }
+
+    [Fact]
+    public async Task SaveAiAsync_BoundaryTemperature_IsAccepted()
+    {
+        var store = new FakeSettingsStore();
+        SettingsViewModel viewModel = CreateViewModel(store);
+        await Task.Delay(1);
+        viewModel.AiTemperature = 2.0;
+
+        await viewModel.SaveAiCommand.ExecuteAsync(null);
+
+        Assert.Equal(string.Empty, viewModel.FormError);
+        Assert.NotEmpty(store.SetCalls);
+    }
+
+    [Theory]
+    [InlineData(128001)]
+    [InlineData(0)]
+    public async Task SaveAiAsync_OutOfRangeMaxTokens_SetsFormErrorAndWritesNothing(int maxTokens)
+    {
+        var store = new FakeSettingsStore();
+        SettingsViewModel viewModel = CreateViewModel(store);
+        await Task.Delay(1);
+        viewModel.AiMaxTokensPerRequest = maxTokens;
+
+        await viewModel.SaveAiCommand.ExecuteAsync(null);
+
+        Assert.NotEqual(string.Empty, viewModel.FormError);
+        Assert.Empty(store.SetCalls);
+    }
+
+    [Fact]
+    public async Task SaveAiAsync_BoundaryMaxTokens_IsAccepted()
+    {
+        var store = new FakeSettingsStore();
+        SettingsViewModel viewModel = CreateViewModel(store);
+        await Task.Delay(1);
+        viewModel.AiMaxTokensPerRequest = 128000;
+
+        await viewModel.SaveAiCommand.ExecuteAsync(null);
+
+        Assert.Equal(string.Empty, viewModel.FormError);
+        Assert.NotEmpty(store.SetCalls);
+    }
+
+    [Fact]
+    public async Task SaveAiAsync_NeverSetsIsRestartRequired()
+    {
+        var store = new FakeSettingsStore();
+        SettingsViewModel viewModel = CreateViewModel(store);
+        await Task.Delay(1);
+
+        await viewModel.SaveAiCommand.ExecuteAsync(null);
+
+        Assert.False(viewModel.IsRestartRequired);
+    }
+
+    [Fact]
+    public void AppVersion_IsNonEmpty()
+    {
+        var store = new FakeSettingsStore();
+        SettingsViewModel viewModel = CreateViewModel(store);
+
+        Assert.NotEqual(string.Empty, viewModel.AppVersion);
+    }
+
+    [Fact]
+    public async Task IsAiApiKeyWarningVisible_AlwaysTrue_RegardlessOfApiKeyValue()
+    {
+        // R-5, S-8: the cleartext-storage warning MUST be visible whether
+        // AiApiKey is empty or populated — never conditional on the field.
+        var store = new FakeSettingsStore();
+        SettingsViewModel viewModel = CreateViewModel(store);
+        await Task.Delay(1);
+
+        Assert.Equal(string.Empty, viewModel.AiApiKey);
+        Assert.True(viewModel.IsAiApiKeyWarningVisible);
+
+        viewModel.AiApiKey = "sk-now-populated";
+
+        Assert.True(viewModel.IsAiApiKeyWarningVisible);
+    }
+
+    [Fact]
     public void Constructor_TakesNoAvaloniaType()
     {
         // Reflection assertion mirroring D-8: the view-model's constructor

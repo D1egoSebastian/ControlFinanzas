@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -17,10 +18,7 @@ namespace ControlDeFinanzasIA.UI.ViewModels;
 /// preferences form, not a list-CRUD screen. Each section (Apariencia,
 /// Idioma, IA, Acerca de) has its own save affordance mapping 1:1 to its
 /// own update use case — there is no single global "Save all" command.
-/// This slice (4a) implements Apariencia and Idioma; the IA section's
-/// <c>SaveAiCommand</c> is wired in slice 4b even though the use case is
-/// already constructor-injected here so the constructor signature lands
-/// once (task 4a.6).
+/// Acerca de has no save command; it only displays <see cref="AppVersion"/>.
 /// </summary>
 /// <remarks>
 /// Deliberately free of any Avalonia-specific type (D-8): the theme
@@ -135,6 +133,9 @@ public sealed partial class SettingsViewModel : ViewModelBase
     /// <summary>Gets the informational version of the application assembly.</summary>
     public string AppVersion { get; }
 
+    /// <summary>Gets the localized "Version {0}" label shown in the Acerca de section.</summary>
+    public string AppVersionLabel => string.Format(CultureInfo.InvariantCulture, Strings.SettingsAboutVersionLabel, AppVersion);
+
     // --- shared chrome, BudgetsViewModel's shape ---
 
     /// <summary>Gets or sets the error message shown when a save or load operation fails.</summary>
@@ -155,8 +156,17 @@ public sealed partial class SettingsViewModel : ViewModelBase
     /// <summary>Gets the locale values available in the Idioma picker.</summary>
     public IReadOnlyList<string> Locales { get; }
 
-    /// <summary>Gets the AI provider values available in the IA picker (wired in slice 4b).</summary>
+    /// <summary>Gets the AI provider values available in the IA picker.</summary>
     public IReadOnlyList<AiProvider> AiProviders { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the cleartext-API-key warning is
+    /// visible. Always <see langword="true"/> — the warning is NOT
+    /// conditional on <see cref="AiApiKey"/> having a value (R-5, S-8):
+    /// the cleartext-storage risk exists whether or not a key has been
+    /// entered yet.
+    /// </summary>
+    public bool IsAiApiKeyWarningVisible => true;
 
     /// <summary>
     /// Gets the localized (value, label) projection of <see cref="Themes"/>
@@ -217,6 +227,37 @@ public sealed partial class SettingsViewModel : ViewModelBase
 
         StatusMessage = Strings.SettingsSavedMessage;
         IsRestartRequired = true;
+    }
+
+    /// <summary>
+    /// Builds an <see cref="UpdateAiSettingsCommand"/> verbatim from the
+    /// six IA form fields and persists it via
+    /// <see cref="UpdateAiSettingsUseCase"/> (R-5, D-10). Never touches
+    /// <see cref="IsRestartRequired"/> — the AI section has no post-save
+    /// affordance beyond the status message.
+    /// </summary>
+    [RelayCommand]
+    private async Task SaveAiAsync()
+    {
+        FormError = string.Empty;
+        StatusMessage = string.Empty;
+
+        var command = new UpdateAiSettingsCommand(
+            AiProvider,
+            AiApiKey,
+            AiModel,
+            AiBaseUrl,
+            AiTemperature,
+            AiMaxTokensPerRequest);
+
+        Result result = await _updateAiSettingsUseCase.ExecuteAsync(command).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            FormError = result.Error?.Message ?? Strings.SettingsErrorMessage;
+            return;
+        }
+
+        StatusMessage = Strings.SettingsSavedMessage;
     }
 
     private async Task LoadAsync()

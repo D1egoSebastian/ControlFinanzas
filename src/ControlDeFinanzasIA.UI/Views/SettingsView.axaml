@@ -61,7 +61,69 @@
                 </StackPanel>
             </Border>
 
-            <!-- IA and Acerca de sections land in slice 4b. -->
+            <!-- IA (R-5, R-6, S-6, S-7, S-8) -->
+            <Border Classes="ledger-row" Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Static resources:Strings.SettingsAiTitle}" Classes="ledger-title" />
+
+                    <!--
+                        Always visible, never conditional on whether a key
+                        has been entered (R-5, S-8): the cleartext-storage
+                        risk exists either way.
+                    -->
+                    <TextBlock Text="{x:Static resources:Strings.SettingsAiApiKeyWarning}"
+                               Foreground="{StaticResource TerracottaBrush}"
+                               TextWrapping="Wrap" />
+
+                    <ComboBox ItemsSource="{Binding AiProviders}"
+                              SelectedItem="{Binding AiProvider}"
+                              PlaceholderText="{x:Static resources:Strings.SettingsAiProviderLabel}"
+                              Classes="ledger-input"
+                              HorizontalAlignment="Stretch" />
+
+                    <TextBox Text="{Binding AiModel}"
+                             Watermark="{x:Static resources:Strings.SettingsAiModelWatermark}"
+                             Classes="ledger-input" />
+
+                    <TextBox Text="{Binding AiApiKey}"
+                             Watermark="{x:Static resources:Strings.SettingsAiApiKeyWatermark}"
+                             PasswordChar="●"
+                             Classes="ledger-input" />
+
+                    <TextBox Text="{Binding AiBaseUrl}"
+                             Watermark="{x:Static resources:Strings.SettingsAiBaseUrlWatermark}"
+                             Classes="ledger-input" />
+
+                    <TextBlock Text="{x:Static resources:Strings.SettingsAiTemperatureLabel}" />
+                    <NumericUpDown Value="{Binding AiTemperature}"
+                                   Minimum="0"
+                                   Maximum="2"
+                                   Increment="0.1"
+                                   Classes="ledger-input"
+                                   HorizontalAlignment="Stretch" />
+
+                    <TextBlock Text="{x:Static resources:Strings.SettingsAiMaxTokensLabel}" />
+                    <NumericUpDown Value="{Binding AiMaxTokensPerRequest}"
+                                   Minimum="1"
+                                   Maximum="128000"
+                                   Classes="ledger-input"
+                                   HorizontalAlignment="Stretch" />
+
+                    <Button Content="{x:Static resources:Strings.SettingsSaveButton}"
+                            Command="{Binding SaveAiCommand}"
+                            Classes="ledger-btn-primary" />
+                </StackPanel>
+            </Border>
+
+            <!-- Acerca de — no controls, no save (D-10) -->
+            <Border Classes="ledger-row" Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Static resources:Strings.SettingsAboutTitle}" Classes="ledger-title" />
+                    <TextBlock Text="{x:Static resources:Strings.WindowTitle}" />
+                    <TextBlock Text="{Binding AppVersionLabel}" />
+                    <TextBlock Text="{x:Static resources:Strings.SettingsAboutDescription}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
 
             <TextBlock Text="{Binding FormError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
             <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />

@@ -803,4 +803,61 @@ public class Strings
     /// Gets the localized error message shown when the settings screen fails to load.
     /// </summary>
     public static string SettingsLoadErrorMessage => ResourceManager.GetString("SettingsLoadErrorMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the IA (AI configuration) section of the settings screen.
+    /// </summary>
+    public static string SettingsAiTitle => ResourceManager.GetString("SettingsAiTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized, always-visible warning stating that the API key
+    /// is stored in cleartext with no encryption in v1 (R-5, S-8). Must
+    /// never be conditional on whether an API key has been entered.
+    /// </summary>
+    public static string SettingsAiApiKeyWarning => ResourceManager.GetString("SettingsAiApiKeyWarning", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the AI provider picker.
+    /// </summary>
+    public static string SettingsAiProviderLabel => ResourceManager.GetString("SettingsAiProviderLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized watermark for the AI model text box.
+    /// </summary>
+    public static string SettingsAiModelWatermark => ResourceManager.GetString("SettingsAiModelWatermark", Culture)!;
+
+    /// <summary>
+    /// Gets the localized watermark for the AI API key text box.
+    /// </summary>
+    public static string SettingsAiApiKeyWatermark => ResourceManager.GetString("SettingsAiApiKeyWatermark", Culture)!;
+
+    /// <summary>
+    /// Gets the localized watermark for the AI base URL text box.
+    /// </summary>
+    public static string SettingsAiBaseUrlWatermark => ResourceManager.GetString("SettingsAiBaseUrlWatermark", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the AI temperature numeric field.
+    /// </summary>
+    public static string SettingsAiTemperatureLabel => ResourceManager.GetString("SettingsAiTemperatureLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the AI max-tokens-per-request numeric field.
+    /// </summary>
+    public static string SettingsAiMaxTokensLabel => ResourceManager.GetString("SettingsAiMaxTokensLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the Acerca de (about) section of the settings screen.
+    /// </summary>
+    public static string SettingsAboutTitle => ResourceManager.GetString("SettingsAboutTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized "Version {0}" format string for the Acerca de section.
+    /// </summary>
+    public static string SettingsAboutVersionLabel => ResourceManager.GetString("SettingsAboutVersionLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized app description shown in the Acerca de section.
+    /// </summary>
+    public static string SettingsAboutDescription => ResourceManager.GetString("SettingsAboutDescription", Culture)!;
 }

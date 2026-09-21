@@ -499,4 +499,37 @@ Showing approximate conversions only.
   <data name="SettingsLoadErrorMessage" xml:space="preserve">
     <value>The settings could not be loaded.</value>
   </data>
+  <data name="SettingsAiTitle" xml:space="preserve">
+    <value>AI</value>
+  </data>
+  <data name="SettingsAiApiKeyWarning" xml:space="preserve">
+    <value>This data file stores your API key in plain text. Protect it with disk encryption (BitLocker, FileVault, LUKS).</value>
+  </data>
+  <data name="SettingsAiProviderLabel" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="SettingsAiModelWatermark" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="SettingsAiApiKeyWatermark" xml:space="preserve">
+    <value>API key</value>
+  </data>
+  <data name="SettingsAiBaseUrlWatermark" xml:space="preserve">
+    <value>Base URL (optional)</value>
+  </data>
+  <data name="SettingsAiTemperatureLabel" xml:space="preserve">
+    <value>Temperature</value>
+  </data>
+  <data name="SettingsAiMaxTokensLabel" xml:space="preserve">
+    <value>Max tokens per request</value>
+  </data>
+  <data name="SettingsAboutTitle" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="SettingsAboutVersionLabel" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="SettingsAboutDescription" xml:space="preserve">
+    <value>ControlDeFinanzasIA — local personal finance management.</value>
+  </data>
 </root>
