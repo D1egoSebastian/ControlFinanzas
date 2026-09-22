@@ -11,6 +11,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- F-013 (slice 4, D-9): AddLlmClients + the resilience pipeline. -->
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!--
       F-013 (slice 2, D-4): prompt templates shipped as embedded resources.
       WithCulture=false + an explicit LogicalName are required: the file

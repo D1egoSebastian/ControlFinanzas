@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using ControlDeFinanzasIA.Application.Abstractions.Llm;
 using ControlDeFinanzasIA.Application.Settings;
 using Microsoft.Extensions.Logging;
+using Polly.CircuitBreaker;
 
 namespace ControlDeFinanzasIA.Infrastructure.Llm;
 
@@ -108,6 +109,16 @@ public sealed class AnthropicClient : ILLMClient
                 stopwatch.ElapsedMilliseconds);
 
             return new LlmResponse(content, tokensUsed, stopwatch.ElapsedMilliseconds);
+        }
+        catch (BrokenCircuitException ex)
+        {
+            // Catches both BrokenCircuitException and its subtype
+            // IsolatedCircuitException (F-013, slice 4, Task 4.9, D-1,
+            // D-10). Without this mapping, an open breaker would escape as
+            // an unmapped Polly exception type, violating R-4's "every
+            // pipeline failure is translated, no exception escapes to the
+            // UI".
+            throw new LlmException(LlmFailureKind.CircuitOpen, "The circuit breaker is open for this provider.", ex);
         }
         catch (OperationCanceledException ex) when (!ct.IsCancellationRequested)
         {

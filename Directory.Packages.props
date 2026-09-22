@@ -101,6 +101,20 @@
          ============================================================ -->
     <PackageVersion Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.5" />
 
+    <!-- ============================================================
+         Microsoft.Extensions.Http + Microsoft.Extensions.Http.Resilience
+         (F-013 Phase 13, slice 4). Infrastructure-only: the two provider
+         adapters are constructed by LLMClientFactory via
+         IHttpClientFactory, and AddLlmClients wires the D-9 resilience
+         pipeline (timeout/retry/circuit-breaker) on top of the standard
+         resilience handler. Never referenced by UI (R-4) — Bootstrap.cs
+         only calls the Infrastructure-owned AddLlmClients() extension.
+         Pinned to the same 8.x line as the other Microsoft.Extensions.*
+         packages above.
+         ============================================================ -->
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="8.10.0" />
+
   </ItemGroup>
 
   <!--

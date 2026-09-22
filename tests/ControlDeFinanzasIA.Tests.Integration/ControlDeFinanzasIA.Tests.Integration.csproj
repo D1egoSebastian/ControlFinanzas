@@ -11,6 +11,8 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="NetArchTest.Rules" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <!-- F-013 (slice 4, D-9): resolves AddLlmClients() against a real ServiceCollection. -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
   </ItemGroup>
 
   <ItemGroup>

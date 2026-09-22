@@ -71,7 +71,16 @@ public sealed class ArchitectureTests
     private static readonly string[] _forbiddenPackagesForUi =
     [
         "Microsoft.EntityFrameworkCore",
-        "System.Net.Http"
+        "System.Net.Http",
+
+        // F-013 (slice 4, D-9): Bootstrap.cs may only call the
+        // Infrastructure-owned AddLlmClients() extension, which returns
+        // IServiceCollection. A stray AddHttpClient/IHttpClientBuilder
+        // call in Bootstrap.cs (or any other UI type) would put a
+        // Microsoft.Extensions.Http type in UI IL — this is exactly the
+        // mistake R4_UI_No_Depende_De_Paquetes_Prohibidos_EfCore_HttpClient
+        // exists to catch, extended to also catch it here.
+        "Microsoft.Extensions.Http"
     ];
 
     /// <summary>

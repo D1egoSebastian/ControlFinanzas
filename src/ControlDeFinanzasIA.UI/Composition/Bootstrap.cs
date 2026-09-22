@@ -44,6 +44,7 @@ using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateLocale;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateTheme;
 using ControlDeFinanzasIA.Application.UseCases.Transactions.DeleteTransaction;
 using ControlDeFinanzasIA.Infrastructure.ExchangeRates;
+using ControlDeFinanzasIA.Infrastructure.Llm;
 using ControlDeFinanzasIA.Infrastructure.Persistence;
 using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.System;
@@ -183,6 +184,9 @@ public static class Bootstrap
 
         // Multi-moneda F-501/F-502/F-511: provider stub + cache + converter.
         services.AddExchangeRates(configuration);
+
+        // Fase 13: pipeline de IA (F-013, slice 4)
+        services.AddLlmClients();
 
         // Configuracion: tema, idioma, IA (F-012 Phase 12, slice 2): los 4
         // use cases/query de Application. SettingsViewModel se registra en
