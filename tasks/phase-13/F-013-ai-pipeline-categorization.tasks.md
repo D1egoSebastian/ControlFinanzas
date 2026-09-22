@@ -91,9 +91,9 @@ Depends on 1. Goal: one adapter provably speaking the OpenAI wire format, no DI,
 
 Depends on 1, 2 (`FakeHttpMessageHandler`). Goal: prove the abstraction is not OpenAI-shaped.
 
-- [ ] 3.1 Write failing `Tests.Integration/Llm/AnthropicClientTests.cs`: `x-api-key` present, `Authorization` **absent**; `anthropic-version` header present; body has a top-level `system` field and **no** `role:"system"` message; reads `content[0].text`; `usage.input_tokens+output_tokens`; the same five failure mappings as slice 2. (R-2, D-10)
-- [ ] 3.2 Create `Infrastructure/Llm/AnthropicClient.cs`: Messages API adapter, written from the wire spec — not by copy-pasting `OpenAICompatibleClient` and swapping a URL. Run 3.1 green. (R-2, D-10)
-- [ ] 3.3 Run all four gates. All green before opening PR 3.
+- [x] 3.1 Write failing `Tests.Integration/Llm/AnthropicClientTests.cs`: `x-api-key` present, `Authorization` **absent**; `anthropic-version` header present; body has a top-level `system` field and **no** `role:"system"` message; reads `content[0].text`; `usage.input_tokens+output_tokens`; the same five failure mappings as slice 2. (R-2, D-10)
+- [x] 3.2 Create `Infrastructure/Llm/AnthropicClient.cs`: Messages API adapter, written from the wire spec — not by copy-pasting `OpenAICompatibleClient` and swapping a URL. Run 3.1 green. (R-2, D-10)
+- [x] 3.3 Run all four gates. All green before opening PR 3.
 
 ## 4. Factory + DI + resilience
 
