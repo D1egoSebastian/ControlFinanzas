@@ -71,6 +71,10 @@ public sealed class ExpensesViewModelSuggestionTests
         FakeCategorizeExpenseUseCase fake = new();
         ExpensesViewModel viewModel = CreateViewModel(categorizeExpenseUseCase: fake);
 
+        // Windows timer resolution (~15.6 ms) stretches Task.Delay(20) past the shared 25 ms
+        // debounce, which let an intermediate keystroke fire. A wide window keeps every gap inside it.
+        viewModel.SuggestionDebounceDelay = TimeSpan.FromMilliseconds(400);
+
         // Act
         viewModel.Description = "p";
         await Task.Delay(20);
