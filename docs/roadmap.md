@@ -945,7 +945,7 @@ una feature grande. Lo que se valida aquí se reutiliza en las fases 14,
 
 ---
 
-### Fase 14 — IA: insights, predicción de fin de mes, anomalías
+### Fase 14 — IA: insights, predicción de fin de mes, anomalías ✅ COMPLETADA (2026-09-23)
 
 **Objetivo**
 Las tres features restantes de IA orientadas al dashboard: insights
@@ -979,9 +979,58 @@ agrupan aquí porque se muestran juntas en el dashboard.
 
 **Criterios de fase completada**
 - El dashboard muestra insights, forecast y anomalías cuando hay
-  suficiente histórico.
+  suficiente histórico. ✅
 - Si la IA no responde, el dashboard muestra "IA no disponible" sin
-  perder los datos numéricos.
+  perder los datos numéricos. ✅
+
+**Estado actual (2026-09-23) — ✅ FASE COMPLETADA**
+- ✅ `Domain/Alerts/AnomalyDetector` (z-score robusto mediana/MAD, elegibilidad `count>=8 &&
+  distinctMonths>=3`, fallback de razón cuando `MAD=0` — nunca divide por cero, unilateral, umbral
+  sobre el score redondeado) y `Domain/Forecasting/MonthEndForecaster` (blend run-rate/histórico,
+  estados explícitos `Projected`/`InsufficientData`/`ClosedMonth`/`FutureMonth`) — servicios de dominio
+  puros, cero dependencia de `ILLMClient`.
+- ✅ `AnomalyAlert` endurecida (`sealed class`, setters privados, factory `Create`, `Refresh`/
+  `Acknowledge` idempotente, sin FK a `Expense`); persistida con `Severity` como `TEXT` (desviación
+  deliberada de la convención int-enum del resto del proyecto — contrato de la Fase 17); migración
+  `AddAnomalyAlerts` con guardia permanente de deriva de snapshot (`ModelSnapshotConsistencyTests`,
+  la 5ta fase consecutiva con este riesgo, ahora atrapado automáticamente en vez de a mano).
+- ✅ `DetectAnomaliesUseCase`: reconciliación idempotente en cada carga (índice único sobre
+  `TransactionId`), una alerta reconocida nunca se modifica ni se recrea, una alerta cuyo gasto falló
+  conversión de moneda se conserva (no se elimina) — "no se puede evaluar" no es "ya no califica".
+  `GetMonthEndForecastUseCase`: comparación contra presupuesto vía `BudgetEvaluator` cuando existe.
+  Ambos con **cero** dependencia de `ILLMClient`.
+- ✅ `GetInsightsUseCase`/`GetAnomalyNarrativeUseCase`: copian el esqueleto de guardas de
+  `CategorizeExpenseUseCase` de la Fase 13 línea por línea, con una diferencia deliberada — todo camino
+  no-feliz (no configurado, `LlmException`, timeout, respuesta no parseable) es `Result.Success` con un
+  payload de repliegue, nunca `Result.Failure` ni una excepción sin capturar. Narración de anomalías en
+  UNA sola llamada por lote (máx. 5 por puntaje, claves ordinales — el GUID real nunca llega al
+  modelo); `AnomalyNarrationParser` tolerante (arreglo o `items`-wrapped, primera ocurrencia de un id
+  gana, cap de 280 caracteres) — un lote parcialmente malformado narra lo que puede y conserva la
+  plantilla determinística para el resto.
+- ✅ `GetDashboardInsightsQuery`: única query compuesta nueva, con `GetDeterministicAsync`
+  (pronóstico + anomalías, secuencial, cero LLM) separado de `GetNarrationAsync` (insights + narración
+  de anomalías, `WhenAll`, máx. 2 llamadas concurrentes). `DashboardViewModel` gana un único parámetro
+  de constructor nuevo; `LoadAsync` nunca espera la narración — se dispara sin `await` y se aplica solo
+  si el token de generación sigue vigente, descartando en silencio cualquier resultado supersedido por
+  un cambio de mes.
+- ✅ Gates: build limpio, 1344/1344 tests verdes (1079 unit + 265 integration, subiendo desde 1184/1184
+  al cierre de Fase 13), re-verificado 3 veces consecutivas sin flakiness, `dotnet format style`
+  limpio, NetArchTest 11/11.
+- ✅ Aplicado en 10 commits encadenados (`a4f6002` matemática de dominio, `cb3867d` entidad+persistencia,
+  `eef654e` caso de uso de pronóstico, `b827a10` detección+reconocimiento, `cc8d123` plomería de IA,
+  `7819575` casos de uso de IA, `325cae4` composite+DI, `fd6c891` VM paso determinístico, `1ae4b3b` VM
+  paso de narración, `497b9f1` vista), cada uno re-verificado de forma independiente por el
+  orquestador antes de encadenar el siguiente. Sin commit de fix — el pase adversarial de
+  `sdd-verify` (lente confiabilidad+riesgo) sobre el diff completo de la fase no encontró defectos
+  confirmados.
+- ✅ SDD archivado: `spec/features/phase-14/F-014-ai-insights-forecast-anomalies.done.md`.
+- ⚠️ Hallazgos no bloqueantes trasladados como follow-up (ver
+  `spec/phases/phase-14/features.md` §5 y `docs/AI_HANDOFF.md`): `AnomalySeverity` persistida como
+  string (desviación deliberada); prompt tuning contra respuestas de un modelo real pendiente (mismo
+  patrón que la Fase 13); dos hallazgos preexistentes **no relacionados con esta fase** — la etiqueta
+  del mes del dashboard sigue en inglés bajo `es-DO` (limitación aceptada de la Fase 12, solo
+  `CurrentUICulture` se fija desde el locale persistido) y un posible desajuste de resaltado en el
+  sidebar visto en una captura de pantalla (sin confirmar, podría ser solo el hover del mouse).
 
 ---
 

@@ -11,16 +11,17 @@ the project state changes, update this file.
   **Entity Framework Core** (Code First, versioned migrations),
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
-- **Status (today):** Phases 0–13 fully archived. Phase 14 (AI insights, month-end
-  forecast, and anomaly detection) has all ten feature slices (S1–S8c) implemented —
-  the dashboard now shows a month-end forecast card, a persisted anomaly-alerts list
-  with per-row dismiss, and an AI-written insights card, all deterministic-first
-  (zero `ILLMClient` calls for the numeric sections). Pending: phase closure
-  (`sdd-verify`/`sdd-archive` — full gate re-run, `docs/architecture.md` /
-  `docs/roadmap.md` / `docs/AI_HANDOFF.md` updates, spec archived to `.done.md`).
-  Spec and task breakdown at
-  `spec/features/phase-14/F-014-ai-insights-forecast-anomalies.{spec,tasks}.md`.
-  Phase 13 shipped the app's first outbound network dependency: `ILLMClient` +
+- **Status (today):** Phases 0–14 fully archived. Phase 15 (chat with AI about
+  your finances) is next, no spec/task breakdown drafted yet. Phase 14 (AI
+  insights, month-end forecast, and anomaly detection) shipped three AI-facing
+  dashboard sections — a month-end forecast card, a persisted anomaly-alerts
+  list with per-row dismiss, and an AI-written insights card — while keeping
+  every number deterministic: two pure Domain services (`AnomalyDetector`,
+  `MonthEndForecaster`) compute all figures with zero `ILLMClient` dependency,
+  and the LLM only narrates figures it is handed via two success-shaped use
+  cases that never fail (not configured/offline/error all resolve to a
+  fallback payload, never an exception or `Result.Failure`). Phase 13 shipped
+  the app's first outbound network dependency: `ILLMClient` +
   `OpenAICompatibleClient`/`AnthropicClient` adapters + a
   `Microsoft.Extensions.Http.Resilience`-backed pipeline (15s total timeout,
   1 retry, circuit breaker), spent on automatic expense categorization — typing
@@ -29,9 +30,10 @@ the project state changes, update this file.
   AI output. Every failure mode (no key, no network, bad key, timeout,
   unparseable response) leaves the form fully usable with an honest status
   message, never an exception. 1344/1344 tests verde (1079 unit + 265
-  integration). See `docs/AI_HANDOFF.md` and `spec/phases/phase-13/features.md`
-  for the full phase-13 detail and `spec/phases/phase-05/features.md` through
-  `spec/phases/phase-12/features.md` for earlier phases.
+  integration). See `docs/AI_HANDOFF.md`, `spec/phases/phase-14/features.md`,
+  and `spec/phases/phase-13/features.md` for the full phase-13/14 detail and
+  `spec/phases/phase-05/features.md` through `spec/phases/phase-12/features.md`
+  for earlier phases.
 - **Roadmap / architecture / vision:** `docs/roadmap.md`,
   `docs/architecture.md`, `docs/vision.md`.
 - **Mission / stack constitution:** `spec/constitution/mission.md`,

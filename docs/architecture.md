@@ -363,12 +363,13 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 
 ## 11. Integración de IA — `ILLMClient`
 
-**Fase 13, implementado.** Lo que sigue documenta el contrato y los adapters realmente shippeados —
-`Application/Abstractions/Llm/`, `Infrastructure/Llm/OpenAICompatibleClient.cs`,
+**Fases 13 y 14, implementado.** Lo que sigue documenta el contrato y los adapters realmente
+shippeados — `Application/Abstractions/Llm/`, `Infrastructure/Llm/OpenAICompatibleClient.cs`,
 `Infrastructure/Llm/AnthropicClient.cs`, `Infrastructure/Llm/LLMClientFactory.cs` — no un plan a
-futuro. El primer (y único, en v1) consumidor es `CategorizeExpenseUseCase` (sugerencia de categoría al
-tipear la descripción de un gasto); Fase 14 reutiliza el mismo `ILLMClient` para insights/forecast/
-anomalías narrativas.
+futuro. El primer consumidor (Fase 13) es `CategorizeExpenseUseCase` (sugerencia de categoría al
+tipear la descripción de un gasto); Fase 14 reutiliza el mismo `ILLMClient`, sin ninguna
+modificación, para `GetInsightsUseCase`/`GetAnomalyNarrativeUseCase` (ver §11a). Ningún archivo bajo
+`Infrastructure/Llm/` cambió en Fase 14 salvo la adición aditiva de 8 nuevos recursos de prompt.
 
 ### Contrato
 
@@ -426,6 +427,75 @@ anomalías narrativas.
 - Los SDKs oficiales cambian de versión y rompen compatibilidad. Un contrato interno desacoplado nos da control total.
 - Modelos gratuitos en OpenRouter no siempre tienen SDK oficial; usar HTTP directo cubre esos casos.
 - Mockear `ILLMClient` en tests es trivial; mockear SDKs concretos es más frágil.
+
+---
+
+## 11a. IA en el dashboard — insights, forecast y anomalías (Fase 14)
+
+**Fase 14, implementado.** El principio arquitectónico de esta fase, que gobierna cada decisión de
+abajo: **los números los calculan servicios de Dominio puros y use cases determinísticos de
+Application; la IA recibe cifras ya formateadas y devuelve prosa. Ningún número que se muestre en el
+dashboard sale nunca de texto generado por un LLM.**
+
+### Detección determinística de anomalías
+
+`Domain/Alerts/AnomalyDetector.cs` — servicio estático puro, cero I/O, cero conocimiento de DI. Para
+cada gasto candidato de una categoría elegible (`count >= 8` gastos históricos Y `distinctMonths >= 3`
+en los 6 meses completos previos), calcula el z-score robusto de Iglewicz-Hoaglin
+(`0.6745·(x−median)/MAD`) sobre montos ya normalizados a DOP por el caller. Umbral `>= 3.5`
+(redondeado, nunca sobre el valor crudo) con severidad `Info`/`Warning`/`Critical` en
+`[3.5,5)`/`[5,8)`/`[8,∞)`. Cuando `MAD = 0` (historial con montos idénticos), cae a una regla de razón
+(`x >= 3·median → Warning`) que nunca divide por cero. Unilateral: un gasto barato nunca se marca.
+
+### Pronóstico de fin de mes determinístico
+
+`Domain/Forecasting/MonthEndForecaster.cs` — servicio estático puro. `proyectado = gastado_a_la_fecha +
+días_restantes × tasa_diaria`, donde `tasa_diaria` mezcla el run-rate del mes actual con el promedio
+diario histórico de los 3 meses completos previos, ponderado por `elapsed/daysInMonth`. Sin historial
+y `elapsed < 3` expone un estado explícito `InsufficientData` en vez de una cifra engañosa. Estados
+adicionales `ClosedMonth` (mes pasado: proyectado = real) y `FutureMonth` (proyectado = null). La
+comparación contra presupuesto reutiliza `BudgetEvaluator.Evaluate` de la Fase 10 — una sola fuente de
+verdad para los umbrales Cerca/Excedido.
+
+### Persistencia idempotente de alertas
+
+`AnomalyAlert` (endurecida: `sealed class`, setters privados, factory `Create`, `Refresh`,
+`Acknowledge` idempotente) se persiste con un índice único sobre `TransactionId` — la clave de
+idempotencia — y **sin FK** a `Expense`, para que la alerta sobreviva al borrado del gasto que la
+originó hasta la siguiente reconciliación de su mes. `DetectAnomaliesUseCase` reconcilia en cada carga
+del dashboard: agrega hallazgos nuevos, refresca los que cambiaron (preservando el `Id` estable, para
+que la Fase 17 pueda anclar "ya notificado"), elimina los que ya no califican, y **nunca modifica ni
+recrea una alerta reconocida**. `Severity` se persiste como `TEXT` (`HasConversion<string>()`), una
+desviación deliberada de la convención int-enum del resto del proyecto — ver gotcha #23 en
+`docs/AI_HANDOFF.md`. `AnomalyAlertRepository.ApplyReconciliationAsync` aplica el plan completo
+(agregar/actualizar/eliminar) en un único `SaveChangesAsync` atómico, y ante un `DbUpdateException`
+desengancha solo las entradas que él mismo adjuntó (`Entry(x).State = Detached`) — nunca
+`ChangeTracker.Clear()`, que envenenaría el `AppDbContext` compartido y process-wide (`DashboardViewModel`
+es transient, resuelto desde el root provider).
+
+### Narración de IA: éxito garantizado, nunca una excepción
+
+`GetInsightsUseCase`/`GetAnomalyNarrativeUseCase` copian el esqueleto de guardas de
+`CategorizeExpenseUseCase` (Fase 13) línea por línea — `ISettingsStore` → `ILLMClientFactory.Resolve`,
+CTS enlazado de 15 s, correlation id — con una diferencia deliberada: **todo camino no-feliz es
+`Result.Success` con un payload de repliegue, nunca `Result.Failure`.** Una tarjeta del dashboard
+siempre debe renderizar algo. No configurado → cero llamadas HTTP (verificado estructuralmente: la
+rama de "no configurado" retorna antes de construir el `LlmRequest`). Narración de anomalías en UNA
+sola llamada por lote (`AnomalyNarrationParser`, tolerante, independiente del parser de la Fase 13 —
+R-9 prohíbe tocarlo), narrando como máximo las 5 anomalías de mayor puntaje con claves ordinales — el
+GUID real nunca llega al modelo.
+
+### Composición del dashboard: paso determinístico separado del paso de narración
+
+`GetDashboardInsightsQuery` es la única query compuesta nueva, con dos operaciones separadamente
+esperables: `GetDeterministicAsync` (pronóstico + detección de anomalías + cifras de insights,
+**secuencial**, cero `ILLMClient`/`ISettingsStore`) y `GetNarrationAsync` (insights + narración de
+anomalías, `Task.WhenAll`, como máximo 2 llamadas concurrentes por carga). El paso determinístico corre
+secuencialmente y no en paralelo porque la detección escribe (vía `ApplyReconciliationAsync`) y el
+`AppDbContext` compartido no debe ver una escritura solaparse con una lectura. `DashboardViewModel`
+gana un único parámetro de constructor nuevo; `LoadAsync` nunca espera la narración — la dispara sin
+`await` después de aplicar el paso determinístico, protegida por un token de generación que descarta en
+silencio cualquier resultado supersedido por un cambio de mes.
 
 ---
 
@@ -580,6 +650,7 @@ Result<T> = Success(T) | Failure(code, message, details?)
 ### Fallback de IA
 
 - La IA **nunca** es el único camino para una función. Si la IA no responde, el detector de anomalías base igual produce alertas; el plan de ahorro se calcula determinísticamente; la categorización automática simplemente no sugiere y deja la categoría en null/pendiente.
+- **Fase 14 formaliza este principio como un contrato de tipo, no solo una guía de diseño**: `GetInsightsUseCase`/`GetAnomalyNarrativeUseCase` nunca devuelven `Result.Failure` por una razón de IA — todo camino no-feliz (no configurado, `LlmException`, timeout, respuesta no parseable) es `Result.Success` con un `NarrativeStatus` de repliegue. El pronóstico y las anomalías del dashboard se calculan en un paso completamente separado (`GetDashboardInsightsQuery.GetDeterministicAsync`) que no referencia `ILLMClient`/`ISettingsStore` en absoluto — no es que la IA "falle silenciosamente", es que las secciones numéricas nunca dependen de ella para existir.
 
 ---
 

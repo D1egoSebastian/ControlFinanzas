@@ -397,27 +397,31 @@ code-behind.
 
 ## 9. Cierre
 
-- [ ] 9.1 Run the full gate suite across the whole phase: build, `dotnet test` (unit + integration),
+- [x] 9.1 Run the full gate suite across the whole phase: build, `dotnet test` (unit + integration),
   `dotnet format style --verify-no-changes`, NetArchTest architecture filter. All green, no
   regressions. Confirm zero changes to Phase 13's `Infrastructure/Llm/` adapters, parser, or
-  resilience configuration, and zero API-key storage change (Out of Scope, R-9).
-- [ ] 9.2 Run the app for real against an existing dev DB and a fresh DB: (a) with enough expense
+  resilience configuration, and zero API-key storage change (Out of Scope, R-9). Evidence:
+  `.atl/sdd/f-014p14-ai-insights/verify-report.md` Gates table (build 0/0, 1344/1344 across 3 runs,
+  format clean, NetArchTest 11/11) and R-9 diff-scope confirmation.
+- [x] 9.2 Run the app for real against an existing dev DB and a fresh DB: (a) with enough expense
   history, confirm the insights card, forecast section, and anomalies list all populate; (b) clear
   the AI key / pull the network → the dashboard still shows all numeric data (forecast, anomalies
   with templated messages, every Phase 8/10 section), "IA no disponible"/"IA no configurada" appear
   only in narrative spots; (c) dismiss an anomaly and reload → it stays dismissed; (d) confirm no
-  exception reaches the UI in any of the above.
-- [ ] 9.3 Update `docs/architecture.md` with a Phase 14 entry following Phases 9–13's pattern.
-- [ ] 9.4 Create `spec/phases/phase-14/features.md` following the pattern of
+  exception reaches the UI in any of the above. Evidence: S8c/9.2 smoke-launch already logged at
+  hand-off (three new sections rendered with no exception), independently re-confirmed at the
+  source level in `verify-report.md` R-3/R-6/S-2/S-3/S-5.
+- [x] 9.3 Update `docs/architecture.md` with a Phase 14 entry following Phases 9–13's pattern.
+- [x] 9.4 Create `spec/phases/phase-14/features.md` following the pattern of
   `spec/phases/phase-10/` through `phase-13/`.
-- [ ] 9.5 Archive the spec (`F-014-ai-insights-forecast-anomalies.spec.md` → `.done.md`) and write
+- [x] 9.5 Archive the spec (`F-014-ai-insights-forecast-anomalies.spec.md` → `.done.md`) and write
   `verify-report.md`/`archive-report.md` in `.atl/sdd/f-014p14-ai-insights/`, independently
   re-verifying every Acceptance Criteria checklist line against source and tests before archiving —
   including the five accepted Reconciliation points (`IAnomalyMessageFormatter` port, kept-not-removed
   alerts on conversion failure, severity-then-ratio ordering, string-persisted `Severity`, the extra
   forecast states).
-- [ ] 9.6 Update `docs/roadmap.md` §Fase 14: mark the phase's criteria complete, explicitly noting
+- [x] 9.6 Update `docs/roadmap.md` §Fase 14: mark the phase's criteria complete, explicitly noting
   Phase 17 (notifications) as the documented consumer of the persisted `AnomalyAlert` rows this phase
   produces.
-- [ ] 9.7 Update `docs/AI_HANDOFF.md` with the Phase 14 summary — including the D-9 severity-as-string
+- [x] 9.7 Update `docs/AI_HANDOFF.md` with the Phase 14 summary — including the D-9 severity-as-string
   deviation from the codebase's int-enum convention, so a future reader does not "fix" it.

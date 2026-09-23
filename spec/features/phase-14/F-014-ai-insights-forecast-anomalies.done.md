@@ -1,7 +1,7 @@
 # F-014 — AI Insights, Month-End Forecast, and Anomaly Detection
 
 > **Phase:** 14 — IA: insights, predicción de fin de mes, anomalías
-> **Status:** Draft — ready for design
+> **Status:** ✅ Archived (2026-09-23) — see `.atl/sdd/f-014p14-ai-insights/{verify-report,archive-report}.md`
 > **SDD:** `.atl/sdd/f-014p14-ai-insights/`
 > **Input:** `.atl/sdd/f-014p14-ai-insights/proposal.md`, `.atl/sdd/f-014p14-ai-insights/exploration.md`
 > **Depends on:** Phase 13 (AI pipeline — must be CLOSED before apply), Phase 8 (dashboard), Phase 10 (budgets), Phase 5 (`ICurrencyConverter`)
@@ -309,32 +309,62 @@ conversation history, and prompt caching.
 
 ## Acceptance Criteria
 
-- [ ] With enough history, the dashboard shows the insights card, the
-  month-end forecast section, and the anomalies list.
-- [ ] AI down or not configured → the dashboard still shows all numeric data
+- [x] With enough history, the dashboard shows the insights card, the
+  month-end forecast section, and the anomalies list. Evidence: S8c
+  smoke-launch (`DashboardView.axaml` three new sections bound to
+  `DashboardViewModel`'s S8a/S8b properties), confirmed rendering with no
+  exception at hand-off and re-confirmed by the source-level trace in
+  `verify-report.md` R-7/S-9.
+- [x] AI down or not configured → the dashboard still shows all numeric data
   (forecast, anomalies with templated messages, all Phase 8/10 sections) and
   shows "IA no disponible" / "IA no configurada" only in narrative spots.
-- [ ] Forecast and anomalies render without waiting on any LLM call
-  (asserted with a never-completing fake `ILLMClient`).
-- [ ] AI not configured → zero `ILLMClient` calls. Every AI failure →
+  Evidence: `verify-report.md` R-6/S-5 — `DashboardViewModel.ApplyNarrationFallback`/
+  `ApplyInsightsNarrative` write only to `InsightsStatusText`/
+  `AnomalyNarrationStatusText`, never to a numeric-bearing property.
+- [x] Forecast and anomalies render without waiting on any LLM call
+  (asserted with a never-completing fake `ILLMClient`). Evidence:
+  `verify-report.md` R-7/S-9 — `GetDeterministicAsync` has zero reference to
+  `ILLMClient`/`ISettingsStore`/`ILLMClientFactory` (grep-confirmed);
+  `DashboardViewModelNarrationTests` cover the never-completing-client case.
+- [x] AI not configured → zero `ILLMClient` calls. Every AI failure →
   `Result.Success` with fallback plus a Warning log with correlation id. No
-  exception reaches the UI.
-- [ ] At most 2 LLM calls per dashboard load; anomaly narration is one
-  batched call narrating the top 5 by score.
-- [ ] A partially parsed batch narrates the parsed items; unparsed items keep
-  their templated `Message`.
-- [ ] No anomaly is flagged for a category below the minimum-history
+  exception reaches the UI. Evidence: `verify-report.md` R-4/R-5/R-6 —
+  `GetInsightsUseCase`/`GetAnomalyNarrativeUseCase` read in full; the
+  not-configured branch returns before any client construction/use.
+- [x] At most 2 LLM calls per dashboard load; anomaly narration is one
+  batched call narrating the top 5 by score. Evidence: `verify-report.md`
+  R-5/R-7 — `GetNarrationAsync`'s `Task.WhenAll(insightsTask, anomalyTask)`;
+  `GetAnomalyNarrativeUseCase.MaxNarratedAnomalies = 5`.
+- [x] A partially parsed batch narrates the parsed items; unparsed items keep
+  their templated `Message`. Evidence: `verify-report.md` R-5/S-6 —
+  `AnomalyNarrationParser` omits unresolved ids; `ApplyNarration`'s
+  per-item `TryGetValue` only overwrites resolved rows.
+- [x] No anomaly is flagged for a category below the minimum-history
   threshold. Detection is idempotent; acknowledged alerts are never
-  recreated.
-- [ ] Persisted `AnomalyAlert.Message` is always the deterministic template.
-- [ ] `AnomalyAlert` is hardened (class, private setters, `Create`,
+  recreated. Evidence: `verify-report.md` R-2/R-3/S-1/S-2/S-3 —
+  `CategoryStats.IsEligible`, `DetectAnomaliesUseCase`'s `unchanged`/
+  `IsAcknowledged` guards.
+- [x] Persisted `AnomalyAlert.Message` is always the deterministic template.
+  Evidence: `verify-report.md` R-3 — `Message` is only ever set via
+  `_messageFormatter.Format(...)` in `DetectAnomaliesUseCase`, never from
+  LLM output.
+- [x] `AnomalyAlert` is hardened (class, private setters, `Create`,
   `Severity` enum). The `AddAnomalyAlerts` migration and
-  `AppDbContextModelSnapshot.cs` are consistent.
-- [ ] `AnomalyDetector` and `MonthEndForecaster` are pure static services
+  `AppDbContextModelSnapshot.cs` are consistent. Evidence: `verify-report.md`
+  R-3 — `AnomalyAlert.cs` read in full; `ModelSnapshotConsistencyTests`
+  (`IMigrationsModelDiffer` drift guard) passing in all 3 gate runs.
+- [x] `AnomalyDetector` and `MonthEndForecaster` are pure static services
   with tabular tests covering thresholds, `MAD = 0`, minimum history, and
-  currency normalization.
-- [ ] Forecast blend, day-1 behavior, no-history fallback, and
-  budget/no-budget paths are covered by tests.
-- [ ] No hardcoded UI strings; `Strings.Designer.cs` accessors added by hand.
-- [ ] Build clean, full suite green, `dotnet format style --verify-no-changes`
-  exit 0, NetArchTest R-1..R-5 green.
+  currency normalization. Evidence: `verify-report.md` R-1/R-2/S-10/S-11 —
+  both Domain services read in full, zero I/O/DI references.
+- [x] Forecast blend, day-1 behavior, no-history fallback, and
+  budget/no-budget paths are covered by tests. Evidence: `verify-report.md`
+  R-1/S-7/S-8 — `GetMonthEndForecastUseCase` traced; `MonthEndForecasterTests`/
+  `GetMonthEndForecastUseCaseTests` per tasks.md 1.3/3.4.
+- [x] No hardcoded UI strings; `Strings.Designer.cs` accessors added by hand.
+  Evidence: `verify-report.md` R-8 — all new bound text routes through
+  `Strings.*`; `ResxAnomalyMessageFormatter` resolves the D-9 template port.
+- [x] Build clean, full suite green, `dotnet format style --verify-no-changes`
+  exit 0, NetArchTest R-1..R-5 green. Evidence: `verify-report.md` Gates
+  table — build 0/0, 1344/1344 (1079 unit + 265 integration) across 3
+  consecutive runs with zero flakiness, format clean, NetArchTest 11/11.

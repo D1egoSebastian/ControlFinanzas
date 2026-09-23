@@ -9,8 +9,9 @@
 ## 1. TL;DR
 
 - **What it is:** `ControlDeFinanzasIA` — a cross-platform (.NET 8 + Avalonia MVVM) desktop app for personal-finance control with AI assist. 100% local data. DOP + USD.
-- **Current phase:** **Phase 13 archived** (AI pipeline + automatic expense categorization — the app's first outbound network dependency). Phases 0–13 fully archived. **Phase 14 (AI insights, month-end forecast, anomalies) in progress.**
-- **Test count:** 1184/1184 passing (936 unit + 248 integration) as of 2026-09-23, Phase 13 close (up from 1033 at Phase 12 close). Re-run 3 consecutive times independently during `sdd-verify` with zero flakiness. Release unit-test host runs cleanly end to end, no Debug fallback needed.
+- **Current phase:** **Phase 14 archived** (AI insights, month-end forecast, and anomaly detection on the dashboard). Phases 0–14 fully archived. **Phase 15 (chat with AI about your finances) next.**
+- **Test count:** 1344/1344 passing (1079 unit + 265 integration) as of 2026-09-23, Phase 14 close (up from 1184 at Phase 13 close). Re-run 3 consecutive times independently during `sdd-verify` with zero flakiness. Release unit-test host runs cleanly end to end, no Debug fallback needed.
+- **Phase 14 shipped three AI-facing dashboard sections while keeping every number deterministic**: a month-end forecast, persisted anomaly alerts, and an AI-written insight summary. Two new pure Domain services — `AnomalyDetector` (robust median/MAD z-score, `MAD=0` ratio fallback, never divides by zero) and `MonthEndForecaster` (run-rate/history blend with explicit `InsufficientData`/`ClosedMonth`/`FutureMonth` states) — compute every figure with **zero** `ILLMClient` dependency. The LLM only narrates figures it is handed, via two success-shaped use cases (`GetInsightsUseCase`, `GetAnomalyNarrativeUseCase`) that copy Phase 13's guard skeleton but never fail — not-configured, offline, and every AI error all resolve to a fallback payload plus a correlation-id Warning log, never an exception or `Result.Failure`. One new composite query (`GetDashboardInsightsQuery`) splits a deterministic step (forecast + reconciled anomalies, sequential, zero LLM) from a non-blocking narration step (insights + one batched anomaly-narration call, `WhenAll`, at most 2 concurrent calls) — the dashboard's numeric sections render immediately regardless of AI state. See gotcha #23 below for the `AnomalySeverity`-as-string persistence deviation and gotcha #22 for Phase 13's flaky-test lesson this phase's own timing-sensitive tests followed.
 - **Phase 13 shipped a real AI feature end to end**: typing an expense description (4+ chars, 600ms debounce) suggests an existing category via a dismissable chip; accepting the chip is the *only* code path in the entire feature that writes `SelectedCategoryId` from AI output. Every failure mode (no key, no network, bad key, timeout, unparseable response, no matching category) leaves the form fully usable with an honest `AiStatusMessage`, never an exception or a dialog. `ILLMClient` + two provider adapters (`OpenAICompatibleClient` for OpenAI/OpenRouter/Custom, `AnthropicClient`) + `Microsoft.Extensions.Http.Resilience`-backed pipeline (15s total timeout, 1 retry, circuit breaker) ship in `Application`/`Infrastructure`, with zero `System.Net.*` leak into `Application`/`UI` enforced by a reflection test stricter than the existing NetArchTest rules. See gotcha #22 below for a real flaky-test root cause found and fixed during this phase.
 - **The app was actually launched and screenshotted for the first time this project** at Phase 9 close — confirmed real rendering (LiveCharts2, all 6 sidebar routes) and caught two real runtime-only bugs no test suite could catch: `ViewLocator` missing the `DebtsViewModel` case (Debts route rendered blank since Phase 7) and the entire "Libro Mayor" stylesheet never merged into `App.axaml` (every `ledger-*` class had been inert since Phase 4). Both fixed — see gotchas below. Phase 10 continued the same discipline: `dotnet run` mid-slice-4 confirmed the new Dashboard "Progreso de presupuestos" card renders correctly, including its empty-state message. Phase 11 confirmed the same mid-slice-3: the Dashboard renders with the new "Metas" sidebar entry, no startup crash. Phase 13's slices 6 and 7 both smoke-launched the app with no DI startup failure — the first phase to register `AddHttpClient` calls anywhere in the solution.
 - **Phase 12's smoke test found and fixed a significant cross-phase regression, unrelated to Settings itself:** `MainWindow.axaml`'s `ContentControl` resolves navigation content through `CurrentViewConverter.cs`, NOT `ViewLocator.cs`. `CurrentViewConverter` was never updated past Phase 6 (`RecurringRulesViewModel`) — every route added since (Debts, Calendar, Budgets, Goals, and Settings itself) rendered a **solid black, completely empty content pane** in the real app, despite 1033 passing tests and a `ViewLocator` that was diligently kept current every phase. No exception was ever thrown, so it went undetected across 5 phases. Fixed in commit `4f8e423` by making `CurrentViewConverter` delegate to `ViewLocator` instead of keeping a second parallel map. See gotcha #21 below.
@@ -30,7 +31,7 @@
 | Type | Cross-platform desktop (Windows, macOS, Linux), single-user, local data only |
 | UI pattern | MVVM strict with **CommunityToolkit.Mvvm** (`[ObservableProperty]`, `[RelayCommand]`) |
 | Localization | `es-DO` default + `en` via `IStringLocalizer` / resx |
-| Status | Phases 0–13 ✅ archived; Phase 14 (AI insights, forecast, anomalies) in progress |
+| Status | Phases 0–14 ✅ archived; Phase 15 (chat with AI about your finances) next |
 
 ---
 
@@ -54,6 +55,7 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 | 11 | Savings goals with manual contributions | 1 umbrella `F-011` covering 4 slices (domain/infra+migration/use cases/management UI) | 1 | 0 | 100%* | `spec/phases/phase-11/features.md` + `spec/features/phase-11/F-011-savings-goals.done.md` |
 | 12 | Settings: theme, language, AI config (persistence only) | 1 umbrella `F-012` covering 5 slices (domain+infra+migration/use cases/startup culture read/settings UI 4a/settings UI 4b) | 1 | 0 | 100% | `spec/phases/phase-12/features.md` + `spec/features/phase-12/F-012-settings-i18n-ai-config.done.md` |
 | 13 | AI pipeline + automatic expense categorization | 1 umbrella `F-013` covering 8 work units (contracts/OpenAI adapter+prompts/Anthropic adapter/factory+DI+resilience/parser/categorization use case/expense-entry UI/Probar conexión) | 1 | 0 | 100% | `spec/phases/phase-13/features.md` + `spec/features/phase-13/F-013-ai-pipeline-categorization.done.md` |
+| 14 | AI insights, month-end forecast, anomaly detection | 1 umbrella `F-014` covering 10 work units (domain math/alert entity+persistence/forecast use case/detection+acknowledge/AI plumbing/AI use cases/composite+DI/VM deterministic pass/VM narration pass/view) | 1 | 0 | 100% | `spec/phases/phase-14/features.md` + `spec/features/phase-14/F-014-ai-insights-forecast-anomalies.done.md` |
 
 \* Phase 11's Acceptance Criteria checklist is 100% satisfied; one documented, non-blocking gap exists
 between the spec's R-1/S-2 prose (UI goal editing) and the shipped UI (create/contribute/view/delete
@@ -94,9 +96,18 @@ only) — see the TL;DR above.
   `LLMClientFactory` + resilience pipeline, tolerant JSON parser, `CategorizeExpenseUseCase`,
   expense-entry suggestion chip, `TestAiConnectionUseCase` + "Probar conexión" button.
 
+**Phase 14** — `spec/features/phase-14/` (1 done, archived 2026-09-23)
+- `F-014-ai-insights-forecast-anomalies.done.md` (umbrella). All 10 work units complete:
+  `AnomalyDetector`/`MonthEndForecaster` pure Domain services, hardened `AnomalyAlert` +
+  idempotent reconciliation, `GetMonthEndForecastUseCase`/`DetectAnomaliesUseCase`/
+  `AcknowledgeAnomalyUseCase` (zero LLM), `GetInsightsUseCase`/`GetAnomalyNarrativeUseCase`
+  (success-shaped for every AI failure), `AnomalyNarrationParser` (tolerant batch parsing),
+  `GetDashboardInsightsQuery` composite, non-blocking `DashboardViewModel` narration pass, three
+  new `DashboardView.axaml` sections.
+
 ---
 
-## 4. Phase 6, 7, 8, 9, 10, 11, 12 & 13 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20, 2026-09-20, 2026-09-21, 2026-09-23)
+## 4. Phase 6, 7, 8, 9, 10, 11, 12, 13 & 14 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20, 2026-09-20, 2026-09-21, 2026-09-23, 2026-09-23)
 
 ### What's done (backend)
 
@@ -363,17 +374,72 @@ The full task breakdown is at `tasks/phase-12/F-012-settings-i18n-ai-config.task
 
 The full task breakdown is at `tasks/phase-13/F-013-ai-pipeline-categorization.tasks.md`.
 
+### Phase 14 — what's done
+
+- Domain: `src/ControlDeFinanzasIA.Domain/Alerts/{AnomalyDetector,AnomalyAlert,AnomalySeverity}.cs`
+  (+ `AnomalySample`/`AnomalyCandidate`/`AnomalyFinding`/`AnomalyRule`) — `AnomalyDetector` is a pure
+  static service (robust median/MAD z-score, `0.6745·(x−median)/MAD`, eligibility gate `count>=8 &&
+  distinctMonths>=3`, `MAD=0` ratio fallback that never divides by zero, one-sided, threshold on the
+  *rounded* score); `AnomalyAlert` rewritten from an unwired record stub into an invariant-carrying
+  `sealed class` (private setters, `Create` factory, `Refresh`/`Acknowledge`, no FK to `Expense`).
+  `src/ControlDeFinanzasIA.Domain/Forecasting/MonthEndForecaster.cs` — run-rate/trailing-3-month blend
+  with explicit `Projected`/`InsufficientData`/`ClosedMonth`/`FutureMonth` states.
+- Application: `Application/UseCases/Dashboard/{GetMonthEndForecast,DetectAnomalies,AcknowledgeAnomaly,
+  GetInsights,GetAnomalyNarrative,GetDashboardInsights}/*.cs` — the first three have **zero**
+  `ILLMClient` dependency; `GetInsightsUseCase`/`GetAnomalyNarrativeUseCase` copy
+  `CategorizeExpenseUseCase`'s guard skeleton line for line with one deliberate difference — every
+  non-happy path (not configured, `LlmException`, timeout, unparseable reply) is `Result.Success` with
+  a fallback payload, never `Result.Failure`. `Application/Llm/AnomalyNarrationParser.cs` — an
+  independent tolerant batch parser (deliberately duplicated from `LlmCategoryAnswerParser`, not
+  shared — Phase 13's parser is out of scope per R-9). `Application/UseCases/Dashboard/Common/
+  DashboardNarrationCache.cs` — session-only, only `Generated` results cached.
+- Infrastructure: `Infrastructure/Persistence/{Configurations/AnomalyAlertConfiguration,
+  Repositories/AnomalyAlertRepository}.cs` — `Severity` persisted as `TEXT` (deliberate deviation
+  from the codebase's int-enum convention, documented inline — this table is Phase 17's contract);
+  `ApplyReconciliationAsync` applies add/update/remove in one `SaveChangesAsync`, and on
+  `DbUpdateException` detaches only the entries it attached (never `ChangeTracker.Clear()`, which
+  would poison the shared process-wide `AppDbContext`). Migration `20260923052536_AddAnomalyAlerts`
+  + a new permanent `ModelSnapshotConsistencyTests` (`IMigrationsModelDiffer` drift guard — EF Core 8
+  has no `HasPendingModelChanges`, so this reimplements the comparison directly; the 5th consecutive
+  phase with snapshot-drift risk, now caught automatically instead of by hand). 8 new embedded prompt
+  resources under `Infrastructure/Llm/Prompts/`.
+- UI: `UI/Formatting/ResxAnomalyMessageFormatter.cs` (implements the Application-layer
+  `IAnomalyMessageFormatter` port over `Strings.resx` — resolves the tension between "no hardcoded
+  UI strings" and "the persisted alert message is a deterministic template"). `DashboardViewModel`
+  gained exactly one new 8th constructor parameter; the deterministic apply runs **after** the
+  existing `WhenAll` block, in its own `try/catch`; narration loads via a separate, non-blocking
+  `LoadNarrationAsync` guarded by a generation token + its own `CancellationTokenSource`, mirroring
+  `LoadUpcomingPaymentsAsync`'s fire-and-forget shape. `UI/ViewModels/AnomalyListItem.cs` (new).
+  `DashboardView.axaml` gained three sections (forecast, anomalies with severity chip + dismiss,
+  insights card).
+- Applied in 10 chained commits (`a4f6002` domain math, `cb3867d` alert entity+persistence,
+  `eef654e` forecast use case, `b827a10` detection+acknowledge, `cc8d123` AI plumbing, `7819575` AI
+  use cases, `325cae4` composite+DI, `fd6c891` VM deterministic pass, `1ae4b3b` VM narration pass,
+  `497b9f1` view) — the largest chain yet in this project. S2, S7, S8a, and S8c each carried a
+  mandatory app smoke-launch before their gate-run closed (DI/startup risk for S2/S7, ctor-arity
+  breaking change for S8a, live render surface for S8c). Each slice was independently re-verified by
+  the orchestrator after landing.
+- **No fix commit required** — the `sdd-verify` adversarial reliability+risk review pass over the
+  full phase diff found no confirmed defects: no exception escapes to the UI, the shared
+  `AppDbContext` is never poisoned by a failed reconcile, the deterministic and narration passes
+  never race on the same context, cancellation is correctly distinguished from a genuine 15s timeout,
+  and no secret or raw prompt/response content reaches the logs.
+- Gates: build clean, 1344/1344 tests (1079 unit + 265 integration, up from 1184 at Phase 13 close),
+  re-verified independently 3 consecutive times with zero flakiness, `dotnet format style` clean,
+  NetArchTest 11/11 — see `.atl/sdd/f-014p14-ai-insights/verify-report.md` and `archive-report.md`.
+- Spec archived to `spec/features/phase-14/F-014-ai-insights-forecast-anomalies.done.md`.
+
+The full task breakdown is at `tasks/phase-14/F-014-ai-insights-forecast-anomalies.tasks.md`.
+
 ---
 
 ## 5. What's pending (next up)
 
 Ordered by priority. Each item references its source-of-truth spec/plan.
 
-1. **Phase 14 — AI insights, month-end forecast, anomalies** — `docs/roadmap.md` §Fase 14. Reuses
-   `ILLMClient`/`ILLMClientFactory` from Phase 13; spec and task breakdown already exist
-   (`spec/features/phase-14/`, `tasks/phase-14/`) — **in progress**, started concurrently with Phase
-   13's `sdd-verify`/`sdd-archive` (Domain-layer slice 1 files under `src/ControlDeFinanzasIA.Domain/`
-   and `tests/`).
+1. **Phase 15 — Chat with AI about your finances** — `docs/roadmap.md` §Fase 15. Reuses
+   `ILLMClient`/`ILLMClientFactory` from Phase 13 and the dashboard queries Phase 14 built; no spec/task
+   breakdown drafted yet — start with `sdd-propose`.
 2. **Follow-up, not phase-blocking**: fix `Motion.axaml`'s `RenderTransform` animation bug (see
    Phase 9 notes above) so the row-reveal animations can be merged into `App.axaml` alongside
    `LedgerStyles.axaml`.
@@ -386,8 +452,8 @@ Ordered by priority. Each item references its source-of-truth spec/plan.
 4. **Follow-up, not phase-blocking**: Phase 11's spec (R-1/S-2) describes a UI-driven goal-edit flow
    that was never built. Either add an edit command to `GoalsViewModel`/`GoalsView` or formally narrow
    R-1/S-2's wording to match the shipped create/contribute/view/delete scope.
-5. **Follow-up, not phase-blocking**: `Strings.Designer.cs` has now been hand-edited for 4 consecutive
-   phases (9, 10, 11, 12) — Phase 13 needed no new accessors (`SettingsView`'s 6 new keys reused the
+5. **Follow-up, not phase-blocking**: `Strings.Designer.cs` has now been hand-edited for 5 consecutive
+   phases (9, 10, 11, 12, 14) — Phase 13 was the one exception (`SettingsView`'s 6 new keys reused the
    existing pattern; `ExpensesView`'s new keys route through `IStringLocalizer` instead). Consider a
    standalone change to restore code generation or replace `Strings` with a generated wrapper before the
    key count grows further.
@@ -397,17 +463,28 @@ Ordered by priority. Each item references its source-of-truth spec/plan.
 7. **Follow-up, not phase-blocking**: Phase 13's roadmap criterion (a) is gated on a deterministic fake
    `ILLMClient` response, not a live model — the opt-in `CONTROL_FINANZAS_RUN_EXTERNAL_AI_TESTS`
    OpenRouter round trip proves the wire format works, not real-model suggestion quality. Prompt tuning
-   against logged `RawModelAnswer` values is tracked as a follow-up, not a phase blocker.
-8. **Phase 15–16 — IA pipeline continued** (chat, savings plan explanation) — `docs/roadmap.md` §Fases
-   15–16
-9. **Phase 17 — Notifications** — `docs/roadmap.md` §Fase 17
-10. **Phase 18 — PDF/Excel export** — `docs/roadmap.md` §Fase 18
-11. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19
-12. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20
-13. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
+   against logged `RawModelAnswer` values is tracked as a follow-up, not a phase blocker. **Phase 14
+   inherits the exact same caveat** for the insights/anomaly-narration prompts — also gated on a
+   deterministic fake `ILLMClient` in tests, not a live model.
+8. **Follow-up, not phase-blocking**: the dashboard month label still renders in English (e.g.
+   "September 2026") under the `es-DO` locale. Pre-existing, not introduced by Phase 14 — Phase 12
+   only sets `CurrentUICulture` from the persisted locale, not `CurrentCulture`, so `DateTime`-formatting
+   APIs that read `CurrentCulture` (month names) fall back to the OS/thread default. Re-surfaced during
+   Phase 14 because the forecast section shows a month label on the same screen.
+9. **Follow-up, not phase-blocking, unconfirmed**: a possible sidebar highlight mismatch was observed in
+   a screenshot during Phase 14's own smoke-launch checks. Not reproduced deliberately — may simply be
+   mouse hover state captured mid-screenshot rather than a real navigation-highlight bug. Worth a clean
+   re-check (mouse away from the sidebar) before treating it as a defect.
+10. **Phase 16 — IA savings-plan explanation** — `docs/roadmap.md` §Fase 16
+11. **Phase 17 — Notifications** — `docs/roadmap.md` §Fase 17 (consumes the `AnomalyAlert` rows Phase
+    14 persists)
+12. **Phase 18 — PDF/Excel export** — `docs/roadmap.md` §Fase 18
+13. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19
+14. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20
+15. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
 
-**MVP (no IA) = phases 0–12, fully complete. Phase 13 = first shipped AI feature.** Phases 14+ continue
-the AI pipeline and polish.
+**MVP (no IA) = phases 0–12, fully complete. Phases 13–14 = first two shipped AI features.** Phase 15+
+continues the AI pipeline and polish.
 
 ---
 
@@ -681,8 +758,8 @@ dotnet ef migrations add <Name> `
 
 ### Where to start
 
-1. **Read `spec/` first.** Phase 13 (AI pipeline + automatic expense categorization) is archived at `spec/features/phase-13/F-013-ai-pipeline-categorization.done.md`. Phase 14 (AI insights, forecast, anomalies) already has a drafted spec and task breakdown at `spec/features/phase-14/F-014-ai-insights-forecast-anomalies.{spec,tasks}.md` and is in progress — check `tasks/phase-14/...tasks.md` for which tasks are already checked off before starting new work.
-2. **Check tasks:** `tasks/phase-13/F-013-ai-pipeline-categorization.tasks.md` is the closed checklist for the last fully completed phase — use it as the pattern reference for an 8-work-unit chained-PR breakdown.
+1. **Read `spec/` first.** Phase 14 (AI insights, month-end forecast, anomaly detection) is archived at `spec/features/phase-14/F-014-ai-insights-forecast-anomalies.done.md`. Phase 15 (chat with AI about your finances) has no spec/task breakdown drafted yet — start with `sdd-propose`.
+2. **Check tasks:** `tasks/phase-14/F-014-ai-insights-forecast-anomalies.tasks.md` is the closed checklist for the last fully completed phase — use it as the pattern reference for a 10-work-unit chained-PR breakdown (the largest yet in this project).
 3. **Read constitution** if touching architecture or stack: `spec/constitution/mission.md`, `spec/constitution/tech-stack.md`.
 4. **Check the SDD working dir** for any in-flight change: `.atl/sdd/<change-id>/`.
 
@@ -815,6 +892,23 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
     that needs the same fake-by-subclassing treatment, follow this precedent rather than introducing a
     new pattern.
 
+23. **`AnomalyAlert.Severity` is the first enum in this codebase persisted as a string, not an int.**
+    Every other of the 8 `HasConversion<int>()` enum configurations (`Budget.Status`, `Goal.Status`,
+    `Debt.Status`, etc.) uses the codebase's default int-enum convention. `AnomalyAlertConfiguration.cs`
+    deliberately deviates with `HasConversion<string>().HasMaxLength(16)` because this table is Phase
+    17's notification contract — a string column survives an enum reordering and is readable in a raw
+    DB inspection, both properties a future notification-delivery phase needs and an int column
+    doesn't give for free. **Do not "fix" this back to int as a consistency cleanup** — it is
+    intentional, documented inline in the configuration file and in
+    `spec/features/phase-14/F-014-ai-insights-forecast-anomalies.done.md`'s Spec Reconciliation
+    section. Separately, Phase 14's `DetectAnomaliesUseCase` is the first write path in this codebase
+    that shares a process-wide `AppDbContext` on a *read* path (the dashboard load) — its
+    `AnomalyAlertRepository.ApplyReconciliationAsync` catches `DbUpdateException` and detaches only the
+    entries it attached (`Entry(x).State = Detached`), never `ChangeTracker.Clear()`, which would
+    silently poison every other tracked entity on the same shared context. **Any future use case that
+    writes on a read-heavy path via the same shared `AppDbContext` should follow this detach-only
+    pattern, not `ChangeTracker.Clear()`.**
+
 ---
 
 ## 12. First 5 commands a new agent should run
@@ -825,7 +919,7 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 # 1. Confirm the build is clean before you do anything
 dotnet build -c Release
 
-# 2. Confirm the existing 1184 tests still pass
+# 2. Confirm the existing 1344 tests still pass
 dotnet test -c Release --no-build
 
 # 3. Confirm CI's format gate is green
@@ -834,8 +928,8 @@ dotnet format style --verify-no-changes
 # 4. Confirm the architecture rules still hold
 dotnet test --no-build -c Release --filter "FullyQualifiedName~Architecture"
 
-# 5. Inspect the current Phase 14 task list (in progress)
-Get-Content -Raw .\tasks\phase-14\F-014-ai-insights-forecast-anomalies.tasks.md
+# 5. Phase 14 is archived; there is no in-progress task list. Read the roadmap for what's next.
+Get-Content -Raw .\docs\roadmap.md | Select-String -Pattern "Fase 15" -Context 0,40
 ```
 
 If all five succeed, the working tree is healthy. If any fail, **stop and fix before reading further code** — fixing a broken build first will save you time.
