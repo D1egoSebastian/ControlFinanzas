@@ -1,0 +1,4 @@
+Gastos marcados como inusuales este mes:
+{{anomalies}}
+
+Responde unicamente con el arreglo JSON descrito en las instrucciones, sin ningun otro texto.

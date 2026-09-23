@@ -196,36 +196,36 @@ acknowledged alert, plus its dismiss use case.
 Depends on 4. Goal: the tolerant batch parser, the session-only narration cache, and all 8 prompt
 resources exist and are provably wired, with zero live LLM calls in this slice.
 
-- [ ] 5.1 Write failing `tests/…Unit/Llm/AnomalyNarrationParserTests.cs`: S-6's table (3 parsed / 1
+- [x] 5.1 Write failing `tests/…Unit/Llm/AnomalyNarrationParserTests.cs`: S-6's table (3 parsed / 1
   malformed / 1 missing → a 3-entry dictionary, the other two untouched by the caller), an
   `items`-wrapped payload, a code-fenced reply, a preamble before the JSON, string-typed ids that
   parse as ints, duplicate ids (first occurrence wins), out-of-range ids ignored, message length
   capped at 280 with a `…` suffix. (R-5, D-9, S-6)
-- [ ] 5.2 Create `src/…Application/Llm/AnomalyNarrationParser.cs`: static, balanced-region scanner
+- [x] 5.2 Create `src/…Application/Llm/AnomalyNarrationParser.cs`: static, balanced-region scanner
   (string/escape-aware, starts at the first `[` or `{`), array-or-`items`-object root, per-item
   tolerant parsing, `RegexOptions.None` + 500 ms timeout. Deliberately duplicated from
   `LlmCategoryAnswerParser` rather than shared — Phase 13's parser is out of scope (R-9). Run 5.1
   green. (R-5, R-9, D-9)
-- [ ] 5.3 Write failing `tests/…Unit/UseCases/Dashboard/DashboardNarrationCacheTests.cs`: a cache hit
+- [x] 5.3 Write failing `tests/…Unit/UseCases/Dashboard/DashboardNarrationCacheTests.cs`: a cache hit
   makes zero recompute; only `Generated`-status results are ever stored (a fallback is never cached);
   the key includes locale/provider/model so a language or model switch does not serve stale prose;
   capacity-32 overflow clears the whole cache. (D-11)
-- [ ] 5.4 Create `src/…Application/UseCases/Dashboard/Common/{NarrativeStatus,
+- [x] 5.4 Create `src/…Application/UseCases/Dashboard/Common/{NarrativeStatus,
   DashboardNarrationCache}.cs`: `ConcurrentDictionary<string, object>`, key =
   `promptName + locale + provider + model + renderedUserPrompt`. Run 5.3 green. (D-11)
-- [ ] 5.5 Create 8 embedded prompt resources
+- [x] 5.5 Create 8 embedded prompt resources
   `src/…Infrastructure/Llm/Prompts/{generate-insights,explain-anomalies}.{system,user}.{es-DO,en}.txt`
   with D-14's non-negotiable content — insights: "use ONLY the figures provided, copied exactly as
   written; never compute/round/estimate/introduce a number, no markdown, no lists, no greeting";
   anomalies: "return ONLY `[{"id":n,"message":"…"}]`, one item per input id, ≤ 200 chars each, never
   invent ids". Already globbed by the existing `<EmbeddedResource>` pattern — no `.csproj` change.
   (R-4, R-5, D-14)
-- [ ] 5.6 Modify `src/…Application/Llm/PromptNames.cs`: add `GenerateInsightsSystem`,
+- [x] 5.6 Modify `src/…Application/Llm/PromptNames.cs`: add `GenerateInsightsSystem`,
   `GenerateInsightsUser`, `ExplainAnomaliesSystem`, `ExplainAnomaliesUser`. (D-14)
-- [ ] 5.7 Modify `tests/…Integration/Llm/EmbeddedPromptProviderTests.cs`: add the 4 new names to the
+- [x] 5.7 Modify `tests/…Integration/Llm/EmbeddedPromptProviderTests.cs`: add the 4 new names to the
   hardcoded `_allPromptNames` array so the "resolves in both locales" guarantee covers them; confirm
   green. (D-14)
-- [ ] 5.8 Run all four gates. All green before opening PR S5.
+- [x] 5.8 Run all four gates. All green before opening PR S5.
 
 ## 6. AI use cases
 

@@ -12,4 +12,16 @@ public static class PromptNames
 
     /// <summary>Prompt de usuario para categorización automática de gastos.</summary>
     public const string CategorizeExpenseUser = "categorize-expense.user";
+
+    /// <summary>Prompt de sistema para el resumen de insights del dashboard (F-014).</summary>
+    public const string GenerateInsightsSystem = "generate-insights.system";
+
+    /// <summary>Prompt de usuario para el resumen de insights del dashboard (F-014).</summary>
+    public const string GenerateInsightsUser = "generate-insights.user";
+
+    /// <summary>Prompt de sistema para la narración por lotes de anomalías (F-014).</summary>
+    public const string ExplainAnomaliesSystem = "explain-anomalies.system";
+
+    /// <summary>Prompt de usuario para la narración por lotes de anomalías (F-014).</summary>
+    public const string ExplainAnomaliesUser = "explain-anomalies.user";
 }

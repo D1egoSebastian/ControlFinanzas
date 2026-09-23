@@ -16,6 +16,10 @@ public class EmbeddedPromptProviderTests
     [
         PromptNames.CategorizeExpenseSystem,
         PromptNames.CategorizeExpenseUser,
+        PromptNames.GenerateInsightsSystem,
+        PromptNames.GenerateInsightsUser,
+        PromptNames.ExplainAnomaliesSystem,
+        PromptNames.ExplainAnomaliesUser,
     ];
 
     [Theory]
@@ -82,5 +86,37 @@ public class EmbeddedPromptProviderTests
 
         Assert.Throws<InvalidOperationException>(
             () => provider.GetTemplate("not-a-real-prompt-name", SupportedLocales.Default));
+    }
+
+    [Theory]
+    [InlineData(SupportedLocales.SpanishDominican, "introduzcas")]
+    [InlineData(SupportedLocales.English, "introduce")]
+    public void GetTemplate_InsightsSystemPrompt_ContainsFactsPlaceholderAndNeverIntroduceNumberGuard(
+        string locale, string introduceKeyword)
+    {
+        var provider = new EmbeddedPromptProvider();
+
+        string template = provider.GetTemplate(PromptNames.GenerateInsightsUser, locale);
+        string systemTemplate = provider.GetTemplate(PromptNames.GenerateInsightsSystem, locale);
+
+        Assert.Contains("{{facts}}", template, StringComparison.Ordinal);
+        Assert.Contains(introduceKeyword, systemTemplate, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData(SupportedLocales.SpanishDominican, "inventes")]
+    [InlineData(SupportedLocales.English, "invent")]
+    public void GetTemplate_ExplainAnomaliesPrompt_ContainsAnomaliesPlaceholderAndBatchJsonGuard(
+        string locale, string inventKeyword)
+    {
+        var provider = new EmbeddedPromptProvider();
+
+        string userTemplate = provider.GetTemplate(PromptNames.ExplainAnomaliesUser, locale);
+        string systemTemplate = provider.GetTemplate(PromptNames.ExplainAnomaliesSystem, locale);
+
+        Assert.Contains("{{anomalies}}", userTemplate, StringComparison.Ordinal);
+        Assert.Contains("\"id\"", systemTemplate, StringComparison.Ordinal);
+        Assert.Contains("\"message\"", systemTemplate, StringComparison.Ordinal);
+        Assert.Contains(inventKeyword, systemTemplate, StringComparison.OrdinalIgnoreCase);
     }
 }

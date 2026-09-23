@@ -1,0 +1,4 @@
+Expenses flagged as unusual this month:
+{{anomalies}}
+
+Respond only with the JSON array described in the instructions, with no other text.

@@ -1,0 +1,4 @@
+Cifras del mes:
+{{facts}}
+
+Responde unicamente con el resumen en prosa descrito en las instrucciones, sin ningun otro texto.

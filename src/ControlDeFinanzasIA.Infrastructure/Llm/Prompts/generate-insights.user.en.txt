@@ -1,0 +1,4 @@
+Month figures:
+{{facts}}
+
+Respond only with the prose summary described in the instructions, with no other text.
