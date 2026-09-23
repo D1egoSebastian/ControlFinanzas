@@ -89,50 +89,50 @@ tabular-tested Domain services before any persistence or LLM code exists.
 Depends on 1. Goal: `AnomalyAlert` hardened, persisted, idempotent, and drift-checked forever — the
 first slice that can break app startup.
 
-- [ ] 2.1 Write failing `Tests.Unit/Domain/Alerts/AnomalyAlertTests.cs`: `Create` invariants (empty
+- [x] 2.1 Write failing `Tests.Unit/Domain/Alerts/AnomalyAlertTests.cs`: `Create` invariants (empty
   `transactionId`/`categoryId`, undefined `Severity`, whitespace or `> 500`-char `Message` after
   trim, `detectedAtUtc == default`); `Refresh` throws `InvalidOperationException` once acknowledged;
   `Acknowledge` is idempotent (a second call keeps the first timestamp). (R-3, D-3)
-- [ ] 2.2 Modify `src/…Domain/Alerts/AnomalyAlert.cs`: record stub → `sealed class`, private setters,
+- [x] 2.2 Modify `src/…Domain/Alerts/AnomalyAlert.cs`: record stub → `sealed class`, private setters,
   `Create` factory, `Refresh`, `Acknowledge`, `IsAcknowledged`, `CategoryId`/`DetectedAt` added,
   `Date` as `DateOnly`. No FK to `Expense`. Run 2.1 green. (R-3, D-3)
-- [ ] 2.3 Modify `src/…Application/Abstractions/IAnomalyAlertRepository.cs`: add `GetByMonthAsync`,
+- [x] 2.3 Modify `src/…Application/Abstractions/IAnomalyAlertRepository.cs`: add `GetByMonthAsync`,
   `GetByTransactionIdsAsync`, `ApplyReconciliationAsync` + the `AnomalyReconciliationPlan` record
   (`ToAdd`/`ToUpdate`/`ToRemove`, `IsEmpty`). (R-3, D-4)
-- [ ] 2.4 Create `tests/…Unit/TestDoubles/FakeAnomalyAlertRepository.cs` implementing the extended
+- [x] 2.4 Create `tests/…Unit/TestDoubles/FakeAnomalyAlertRepository.cs` implementing the extended
   interface — additive, no existing test changes. (D-13)
-- [ ] 2.5 Write failing `tests/…Integration/Persistence/AnomalyAlertRepositoryTests.cs`: round-trip
+- [x] 2.5 Write failing `tests/…Integration/Persistence/AnomalyAlertRepositoryTests.cs`: round-trip
   `Create`/read, a unique-`TransactionId` violation returns `Result.Failure` **and** leaves the shared
   `AppDbContext` unpoisoned (a following unrelated save still succeeds — the D-4 detach-not-clear
   gotcha), `GetByMonthAsync`, `ApplyReconciliationAsync` applies all three lists in exactly one
   `SaveChangesAsync`. (R-3, D-4)
-- [ ] 2.6 Create `src/…Infrastructure/Persistence/Configurations/AnomalyAlertConfiguration.cs`:
+- [x] 2.6 Create `src/…Infrastructure/Persistence/Configurations/AnomalyAlertConfiguration.cs`:
   `Severity` as `HasConversion<string>().HasMaxLength(16)` (deliberate deviation from the codebase's
   int-enum convention, per D-4), unique index on `TransactionId`, non-unique index on `Date`, no
   `HasOne<Expense>()`. (R-3, D-4)
-- [ ] 2.7 Create `src/…Infrastructure/Persistence/Repositories/AnomalyAlertRepository.cs`: all reads
+- [x] 2.7 Create `src/…Infrastructure/Persistence/Repositories/AnomalyAlertRepository.cs`: all reads
   `AsNoTracking`, SQL ordering only on `Date`/`Id` (never a `decimal` column), catches
   `DbUpdateException` on reconcile and detaches exactly the entries it attached
   (`Entry(x).State = Detached`, never `ChangeTracker.Clear()`) before returning
   `Result.Failure("AnomalyReconcileConflict", …)`. Run 2.5 green. (R-3, D-4)
-- [ ] 2.8 Modify `src/…Infrastructure/Persistence/AppDbContext.cs`: add `DbSet<AnomalyAlert>
+- [x] 2.8 Modify `src/…Infrastructure/Persistence/AppDbContext.cs`: add `DbSet<AnomalyAlert>
   AnomalyAlerts => Set<AnomalyAlert>();` (14th `DbSet`). (D-4)
-- [ ] 2.9 Modify `src/…Infrastructure/Persistence/ServiceCollectionExtensions.cs`:
+- [x] 2.9 Modify `src/…Infrastructure/Persistence/ServiceCollectionExtensions.cs`:
   `services.AddScoped<IAnomalyAlertRepository, AnomalyAlertRepository>();`. (D-4)
-- [ ] 2.10 Generate the migration: `dotnet ef migrations add AddAnomalyAlerts --project
+- [x] 2.10 Generate the migration: `dotnet ef migrations add AddAnomalyAlerts --project
   src/ControlDeFinanzasIA.Infrastructure --startup-project src/ControlDeFinanzasIA.UI`. Hand-verify
   `AppDbContextModelSnapshot.cs` contains the `AnomalyAlert` entity block with both indexes and
   `HasConversion<string>` severity — do not trust the tool. `Down()` = `DropTable("AnomalyAlerts")`.
   (D-5)
-- [ ] 2.11 Write `tests/…Integration/Persistence/ModelSnapshotConsistencyTests.cs`: the EF 8
+- [x] 2.11 Write `tests/…Integration/Persistence/ModelSnapshotConsistencyTests.cs`: the EF 8
   `IMigrationsModelDiffer` drift-detection recipe (no `HasPendingModelChanges` in EF 8) — a permanent
   regression guard, not a one-off check. Confirm it passes against 2.10's migration. Add a clean
   in-memory SQLite `MigrateAsync()` round-trip test alongside it (existing `CategoryRepositoryTests`
   pattern). (D-5)
-- [ ] 2.12 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) against an
+- [x] 2.12 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) against an
   existing dev DB and a fresh DB: confirm the migration applies cleanly and
   `IAnomalyAlertRepository` resolves from DI with no startup failure.
-- [ ] 2.13 Run all four gates. All green before opening PR S2.
+- [x] 2.13 Run all four gates. All green before opening PR S2.
 
 ## 3. Forecast use case
 

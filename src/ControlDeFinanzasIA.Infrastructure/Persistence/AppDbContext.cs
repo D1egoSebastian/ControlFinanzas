@@ -1,3 +1,4 @@
+using ControlDeFinanzasIA.Domain.Alerts;
 using ControlDeFinanzasIA.Domain.Budgets;
 using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Debts;
@@ -100,6 +101,9 @@ public class AppDbContext : DbContext
 
     /// <summary>Conjunto de preferencias clave-valor del usuario.</summary>
     public DbSet<Setting> Settings => Set<Setting>();
+
+    /// <summary>Conjunto de alertas de anomalías detectadas (F-014).</summary>
+    public DbSet<AnomalyAlert> AnomalyAlerts => Set<AnomalyAlert>();
 
     /// <summary>
     /// Configura el modelo de EF Core aplicando las configuraciones de
