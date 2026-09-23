@@ -165,18 +165,18 @@ dependency.
 Depends on 3. Goal: idempotent, currency-normalized anomaly detection that never touches an
 acknowledged alert, plus its dismiss use case.
 
-- [ ] 4.1 Create `src/…Application/Abstractions/IAnomalyMessageFormatter.cs` (+
+- [x] 4.1 Create `src/…Application/Abstractions/IAnomalyMessageFormatter.cs` (+
   `AnomalyMessageFacts` record) — the port only; the UI-layer `Strings.resx` implementation ships in
   S7 (design's Spec Reconciliation #3, `IAnomalyMessageFormatter` is binding). (R-8, D-7)
-- [ ] 4.2 Create `tests/…Unit/TestDoubles/FakeAnomalyMessageFormatter.cs`: returns
+- [x] 4.2 Create `tests/…Unit/TestDoubles/FakeAnomalyMessageFormatter.cs`: returns
   `"{Category}|{Amount}|{Severity}"` so tests assert structure, not copy. (D-13)
-- [ ] 4.3 Write failing `tests/…Unit/UseCases/Dashboard/DetectAnomaliesUseCaseTests.cs`: S-1 (thin
+- [x] 4.3 Write failing `tests/…Unit/UseCases/Dashboard/DetectAnomaliesUseCaseTests.cs`: S-1 (thin
   history → no alert), S-2 (two loads → exactly one row for the `TransactionId`), S-3 (acknowledged
   alert untouched and never recreated even though its expense still scores as an outlier), a
   re-dated expense moved into the month, a deleted expense's unacknowledged alert removed, an
   unconverted (rate-outage) expense's existing alert **kept** — not removed (Spec Reconciliation
   #2), S-10 (mixed DOP/USD history normalized before scoring). (R-2, R-3, D-7, S-1, S-2, S-3, S-10)
-- [ ] 4.4 Create `src/…Application/UseCases/Dashboard/DetectAnomalies/*.cs`: ctor
+- [x] 4.4 Create `src/…Application/UseCases/Dashboard/DetectAnomalies/*.cs`: ctor
   `IExpenseRepository, ICategoryRepository, IAnomalyAlertRepository, ICurrencyConverter,
   IAnomalyMessageFormatter, IClock, ILogger<DetectAnomaliesUseCase>`; flow per D-7 (7-month
   `GetAmountRowsAsync` window, DOP conversion with `unconvertedExpenseIds` tracking, history/candidate
@@ -184,12 +184,12 @@ acknowledged alert, plus its dismiss use case.
   `GetByTransactionIdsAsync`, the D-7 reconciliation table, `ApplyReconciliationAsync` with
   log-and-continue on failure, return unacknowledged items in detector order). Run 4.3 green. (R-2,
   R-3, D-7)
-- [ ] 4.5 Write failing `tests/…Unit/UseCases/Dashboard/AcknowledgeAnomalyUseCaseTests.cs`: unknown
+- [x] 4.5 Write failing `tests/…Unit/UseCases/Dashboard/AcknowledgeAnomalyUseCaseTests.cs`: unknown
   id → `Failure("NotFound")`; already-acknowledged → idempotent `Success`; happy path →
   `Acknowledge` + `UpdateAsync`. (R-3, D-7)
-- [ ] 4.6 Create `src/…Application/UseCases/Dashboard/AcknowledgeAnomaly/*.cs`. Run 4.5 green. (R-3,
+- [x] 4.6 Create `src/…Application/UseCases/Dashboard/AcknowledgeAnomaly/*.cs`. Run 4.5 green. (R-3,
   D-7)
-- [ ] 4.7 Run all four gates. All green before opening PR S4.
+- [x] 4.7 Run all four gates. All green before opening PR S4.
 
 ## 5. AI plumbing
 
