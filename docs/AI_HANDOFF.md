@@ -758,7 +758,7 @@ dotnet ef migrations add <Name> `
 
 ### Where to start
 
-1. **Read `spec/` first.** Phase 14 (AI insights, month-end forecast, anomaly detection) is archived at `spec/features/phase-14/F-014-ai-insights-forecast-anomalies.done.md`. Phase 15 (chat with AI about your finances) has no spec/task breakdown drafted yet — start with `sdd-propose`.
+1. **Read `spec/` first.** Phase 14 (AI insights, month-end forecast, anomaly detection) is archived at `spec/features/phase-14/F-014-ai-insights-forecast-anomalies.done.md`. Phase 15 (chat with AI about your finances) is already fully planned — spec at `spec/features/phase-15/F-015-ai-finance-chat.spec.md`, tasks at `tasks/phase-15/F-015-ai-finance-chat.tasks.md`, exploration/proposal/design under `.atl/sdd/f-015p15-ai-chat/` — start directly with `sdd-apply` slice 1. Phase 16 is planned the same way (`spec/features/phase-16/`, `tasks/phase-16/`).
 2. **Check tasks:** `tasks/phase-14/F-014-ai-insights-forecast-anomalies.tasks.md` is the closed checklist for the last fully completed phase — use it as the pattern reference for a 10-work-unit chained-PR breakdown (the largest yet in this project).
 3. **Read constitution** if touching architecture or stack: `spec/constitution/mission.md`, `spec/constitution/tech-stack.md`.
 4. **Check the SDD working dir** for any in-flight change: `.atl/sdd/<change-id>/`.
