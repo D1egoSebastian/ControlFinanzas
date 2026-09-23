@@ -890,4 +890,11 @@ public class Strings
     /// Gets the localized app description shown in the Acerca de section.
     /// </summary>
     public static string SettingsAboutDescription => ResourceManager.GetString("SettingsAboutDescription", Culture)!;
+
+    /// <summary>
+    /// Gets the localized deterministic anomaly message template
+    /// (F-014, R-8, D-7): <c>{0}</c> category, <c>{1}</c> amount,
+    /// <c>{2}</c> ratio-to-median, <c>{3}</c> usual (median) amount.
+    /// </summary>
+    public static string DashboardAnomalyMessageFormat => ResourceManager.GetString("DashboardAnomalyMessageFormat", Culture)!;
 }

@@ -34,6 +34,13 @@ public sealed class RecordingLogger<T> : ILogger<T>
     /// <summary>True if <see cref="LogLevel.Warning"/> was logged at least once.</summary>
     public bool HasWarning => _levels.Contains(LogLevel.Warning);
 
+    /// <summary>
+    /// True if <see cref="LogLevel.Error"/> was logged at least once
+    /// (F-014, slice S7). Added additively so no existing test needed to
+    /// change.
+    /// </summary>
+    public bool HasError => _levels.Contains(LogLevel.Error);
+
     public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
 
     public bool IsEnabled(LogLevel logLevel) => true;

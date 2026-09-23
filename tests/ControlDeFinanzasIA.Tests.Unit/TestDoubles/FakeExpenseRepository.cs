@@ -16,6 +16,7 @@ public sealed class FakeExpenseRepository : IExpenseRepository
     private readonly List<Expense> _addedExpenses = new();
     private Result _addResult = Result.Success(null!);
     private Exception? _getByFilterException;
+    private Exception? _getAmountRowsException;
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateAsync"/>.
@@ -85,6 +86,16 @@ public sealed class FakeExpenseRepository : IExpenseRepository
     /// </summary>
     /// <param name="exception">The exception to throw.</param>
     public void SetThrowOnGetFilter(Exception exception) => _getByFilterException = exception;
+
+    /// <summary>
+    /// Configures <see cref="GetAmountRowsAsync"/> to throw the given
+    /// exception (F-014, slice S7 — isolates a single failing step of
+    /// <c>GetDashboardInsightsQuery.GetDeterministicAsync</c> without
+    /// affecting <see cref="GetPeriodTotalsAsync"/>/<see cref="GetCategoryTotalsAsync"/>,
+    /// which the forecast and facts steps use instead).
+    /// </summary>
+    /// <param name="exception">The exception to throw.</param>
+    public void SetThrowOnGetAmountRows(Exception exception) => _getAmountRowsException = exception;
 
     /// <inheritdoc />
     public Task<Result> AddAsync(Expense expense, CancellationToken ct = default)
@@ -229,6 +240,11 @@ public sealed class FakeExpenseRepository : IExpenseRepository
     public Task<IReadOnlyList<ExpenseAmountRow>> GetAmountRowsAsync(DateRange period, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(period);
+
+        if (_getAmountRowsException is not null)
+        {
+            return Task.FromException<IReadOnlyList<ExpenseAmountRow>>(_getAmountRowsException);
+        }
 
         IReadOnlyList<ExpenseAmountRow> rows = _addedExpenses
             .Where(e => e.Date >= period.Start && e.Date <= period.End)

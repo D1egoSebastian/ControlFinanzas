@@ -34,10 +34,24 @@ public sealed class FakeLlmClientFactory : ILLMClientFactory
     /// </summary>
     public Exception? ThrowOnResolveDiagnostic { get; set; }
 
+    /// <summary>
+    /// When set, <see cref="Resolve"/> throws this exception instead of
+    /// returning <see cref="ResolveResult"/> (F-014, slice S7). Lets a test
+    /// prove a consumer never even attempts to resolve a client (spec S-9:
+    /// the deterministic dashboard step must not touch <c>ILLMClient</c>).
+    /// </summary>
+    public Exception? ThrowOnResolve { get; set; }
+
     /// <inheritdoc />
     public LlmClientResolution Resolve(AppSettings settings)
     {
         ResolveCalls.Add(settings);
+
+        if (ThrowOnResolve is not null)
+        {
+            throw ThrowOnResolve;
+        }
+
         return ResolveResult;
     }
 

@@ -568,4 +568,7 @@ Showing approximate conversions only.
   <data name="SettingsAboutDescription" xml:space="preserve">
     <value>ControlDeFinanzasIA — local personal finance management.</value>
   </data>
+  <data name="DashboardAnomalyMessageFormat" xml:space="preserve">
+    <value>Unusual expense in {0}: {1} (≈{2}x the usual {3})</value>
+  </data>
 </root>

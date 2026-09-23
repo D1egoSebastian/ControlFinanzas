@@ -7,7 +7,14 @@ using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
 using ControlDeFinanzasIA.Application.UseCases.Calendar.GetCalendarMonth;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.CreateTag;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.AcknowledgeAnomaly;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.Common;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.DetectAnomalies;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetAnomalyNarrative;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetDashboardInsights;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetInsights;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthEndForecast;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
@@ -48,6 +55,7 @@ using ControlDeFinanzasIA.Application.UseCases.Transactions.DeleteTransaction;
 using ControlDeFinanzasIA.Infrastructure.ExchangeRates;
 using ControlDeFinanzasIA.Infrastructure.Llm;
 using ControlDeFinanzasIA.Infrastructure.Persistence;
+using ControlDeFinanzasIA.UI.Formatting;
 using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.System;
 using ControlDeFinanzasIA.UI.ViewModels;
@@ -207,6 +215,16 @@ public static class Bootstrap
 
         // Fase 13: "Probar conexión" en Settings (F-013, slice 7)
         services.AddTransient<TestAiConnectionUseCase>();
+
+        // Fase 14: insights, pronóstico y anomalías (F-014)
+        services.AddTransient<GetMonthEndForecastUseCase>();
+        services.AddTransient<DetectAnomaliesUseCase>();
+        services.AddTransient<AcknowledgeAnomalyUseCase>();
+        services.AddTransient<GetInsightsUseCase>();
+        services.AddTransient<GetAnomalyNarrativeUseCase>();
+        services.AddTransient<GetDashboardInsightsQuery>();
+        services.AddSingleton<DashboardNarrationCache>();
+        services.AddSingleton<IAnomalyMessageFormatter, ResxAnomalyMessageFormatter>();
 
         ServiceProvider tempProvider = services.BuildServiceProvider();
         try

@@ -267,7 +267,7 @@ configured, failing, or timing out never surfaces as an exception or a `Result.F
 Depends on 6. Goal: the one new composite query exists, the deterministic step provably never
 resolves an `ILLMClient`, and the whole vertical wires into DI without breaking startup.
 
-- [ ] 7.1 Write failing `tests/…Unit/UseCases/Dashboard/GetDashboardInsightsQueryTests.cs`: an
+- [x] 7.1 Write failing `tests/…Unit/UseCases/Dashboard/GetDashboardInsightsQueryTests.cs`: an
   `ILLMClientFactory` whose `Resolve` throws does not affect `GetDeterministicAsync` (proves the
   deterministic step never even attempts to resolve a client); one throwing step (forecast, detect,
   or a facts query) does not blank the other sections — each has its own `try/catch` →
@@ -275,28 +275,30 @@ resolves an `ILLMClient`, and the whole vertical wires into DI without breaking 
   `Task.WhenAll` (D11); the deterministic step's internal queries run sequentially, not
   `WhenAll` — the shared `AppDbContext` must not see a write (detection) overlap a read. (R-7, D-10,
   S-9)
-- [ ] 7.2 Create `src/…Application/UseCases/Dashboard/GetDashboardInsights/*.cs`: `InsightFacts`,
+- [x] 7.2 Create `src/…Application/UseCases/Dashboard/GetDashboardInsights/*.cs`: `InsightFacts`,
   `DashboardInsightsSnapshot`, `DashboardNarration` records; `GetDashboardInsightsQuery` with
   `GetDeterministicAsync` (forecast → detection → summary → breakdown → budget-vs-actual, in that
   order), `GetNarrationAsync` (`WhenAll` insights + anomaly narrative), `DismissAnomalyAsync`
   (delegates to `AcknowledgeAnomalyUseCase`). Run 7.1 green. (R-7, D-10)
-- [ ] 7.3 Write failing `tests/…Unit/UI/Formatting/ResxAnomalyMessageFormatterTests.cs`: `Format`
+- [x] 7.3 Write failing `tests/…Unit/UI/Formatting/ResxAnomalyMessageFormatterTests.cs`: `Format`
   resolves `DashboardAnomalyMessageFormat` + `MoneyFormat.ApproximateDop`, pure, no LLM call. (R-8,
   D-7)
-- [ ] 7.4 Add the `DashboardAnomalyMessageFormat` key to `Strings.resx`/`Strings.es-DO.resx`; create
+- [x] 7.4 Add the `DashboardAnomalyMessageFormat` key to `Strings.resx`/`Strings.es-DO.resx`; create
   `src/…UI/Formatting/ResxAnomalyMessageFormatter.cs` implementing `IAnomalyMessageFormatter`. Run
   7.3 green. (R-8, D-7)
-- [ ] 7.5 Modify `src/…UI/Composition/Bootstrap.cs`: add a `// Fase 14: insights, pronóstico y
+- [x] 7.5 Modify `src/…UI/Composition/Bootstrap.cs`: add a `// Fase 14: insights, pronóstico y
   anomalías (F-014)` banner block — `AddTransient` for the three deterministic use cases, the two AI
   use cases, and the composite; `AddSingleton<DashboardNarrationCache>()`;
   `AddSingleton<IAnomalyMessageFormatter, ResxAnomalyMessageFormatter>()`. (D-14)
-- [ ] 7.6 Write/extend an architecture regression assertion confirming NetArchTest R-1..R-5 (in
+- [x] 7.6 Write/extend an architecture regression assertion confirming NetArchTest R-1..R-5 (in
   particular R-4 — UI must not reference Infrastructure) stay green after the new `Bootstrap.cs`
-  block and the UI-side formatter.
-- [ ] 7.7 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) against an
+  block and the UI-side formatter. (Covered by the existing assembly-wide `ArchitectureTests` R-1..R-5,
+  which already re-scan `Bootstrap.cs`/the UI assembly on every run — no new assertion needed; the
+  11/11 architecture filter run below is the confirmation.)
+- [x] 7.7 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) against an
   existing dev DB to confirm no DI startup failure — this is the first point the entire phase's
   service graph is wired together.
-- [ ] 7.8 Run all four gates. All green before opening PR S7.
+- [x] 7.8 Run all four gates. All green before opening PR S7.
 
 ## 8a. VM deterministic pass
 
