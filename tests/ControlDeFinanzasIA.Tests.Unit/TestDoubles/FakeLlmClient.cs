@@ -32,6 +32,17 @@ public sealed class FakeLlmClient : ILLMClient
     public int CompleteCallCount => CompleteRequests.Count;
 
     /// <summary>
+    /// When set, <see cref="CompleteAsync"/> delegates to this callback
+    /// instead of <see cref="ResponseToReturn"/>/<see cref="ExceptionToThrow"/>
+    /// (F-014, slice 6, D-13). Lets a test build a never-completing client
+    /// (via a <see cref="TaskCompletionSource{TResult}"/>, for spec S-9) or
+    /// route a response by inspecting the request content, so one fake can
+    /// answer the insights call and the anomaly-narration batch call
+    /// differently.
+    /// </summary>
+    public Func<LlmRequest, CancellationToken, Task<LlmResponse>>? OnCompleteAsync { get; set; }
+
+    /// <summary>
     /// Number of times <see cref="TestConnectionAsync"/> was called (F-013,
     /// slice 7). Zero means the use case never made a diagnostic round
     /// trip — the assertion the "not configured" outcome relies on.
@@ -51,6 +62,11 @@ public sealed class FakeLlmClient : ILLMClient
     public Task<LlmResponse> CompleteAsync(LlmRequest request, CancellationToken ct = default)
     {
         CompleteRequests.Add(request);
+
+        if (OnCompleteAsync is not null)
+        {
+            return OnCompleteAsync(request, ct);
+        }
 
         if (ExceptionToThrow is not null)
         {

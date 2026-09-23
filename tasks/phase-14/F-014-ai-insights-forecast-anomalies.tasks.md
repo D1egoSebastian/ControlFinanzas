@@ -232,35 +232,35 @@ resources exist and are provably wired, with zero live LLM calls in this slice.
 Depends on 5. Goal: both narration use cases are success-shaped for every non-happy path — not
 configured, failing, or timing out never surfaces as an exception or a `Result.Failure`.
 
-- [ ] 6.1 Modify `tests/…Unit/TestDoubles/FakeLlmClient.cs` additively:
+- [x] 6.1 Modify `tests/…Unit/TestDoubles/FakeLlmClient.cs` additively:
   `Func<LlmRequest, CancellationToken, Task<LlmResponse>>? OnCompleteAsync`, used instead of
   `ResponseToReturn` when set — enables a never-completing client (via a `TaskCompletionSource`, for
   S-9) and per-prompt-content routing so one fake can answer insights and the batch differently. No
   existing test changes. (D-13)
-- [ ] 6.2 Modify `tests/…Unit/TestDoubles/FakePromptProvider.cs` additively: `Dictionary<string,
+- [x] 6.2 Modify `tests/…Unit/TestDoubles/FakePromptProvider.cs` additively: `Dictionary<string,
   string> Templates` override consulted first; the existing two-branch fallback stays for Phase 13
   tests. (D-13)
-- [ ] 6.3 Write failing `tests/…Unit/UseCases/Dashboard/GetInsightsUseCaseTests.cs`: not configured →
+- [x] 6.3 Write failing `tests/…Unit/UseCases/Dashboard/GetInsightsUseCaseTests.cs`: not configured →
   zero `ILLMClient` calls + `Success(NotConfigured)` (S-4); `LlmException`/timeout/unparseable reply →
   `Success(Unavailable)` + Warning carrying a correlation id; `Skipped` when expenses and incomes are
   both 0, checked **before** settings; caller-initiated cancellation rethrows; `MaxTokens` capped at
   400; output cleanup (strip fences, trim, collapse 3+ newlines, 800-char cap); the narrative never
   introduces a number absent from the supplied `InsightFacts` (S-12). (R-4, R-6, D-8, S-4, S-5, S-12)
-- [ ] 6.4 Create `src/…Application/UseCases/Dashboard/GetInsights/*.cs` (+ `InsightsNarrative`
+- [x] 6.4 Create `src/…Application/UseCases/Dashboard/GetInsights/*.cs` (+ `InsightsNarrative`
   record): copies `CategorizeExpenseUseCase`'s guard skeleton line for line, with the one deliberate
   difference — `Result.Success(fallback)` for every non-happy path, never `Result.Failure`. Run 6.3
   green. (R-4, R-6, D-8)
-- [ ] 6.5 Write failing `tests/…Unit/UseCases/Dashboard/GetAnomalyNarrativeUseCaseTests.cs`: empty
+- [x] 6.5 Write failing `tests/…Unit/UseCases/Dashboard/GetAnomalyNarrativeUseCaseTests.cs`: empty
   anomaly list → `Skipped`, zero calls; not configured → zero calls + `NotConfigured`; a throwing
   client → `Unavailable` + Warning with correlation id; top-5 cap (`MaxNarratedAnomalies = 5`, items
   already detector-ordered); the ordinal-to-`AlertId` map never leaks a GUID into the prompt; a
   second identical load hits the cache with zero extra calls; a fallback result is never cached. (R-5,
   R-6, D-8, D-9, D-11, S-4, S-5, S-6)
-- [ ] 6.6 Create `src/…Application/UseCases/Dashboard/GetAnomalyNarrative/*.cs` (+ `AnomalyNarration`
+- [x] 6.6 Create `src/…Application/UseCases/Dashboard/GetAnomalyNarrative/*.cs` (+ `AnomalyNarration`
   record): batch prompt built with short ordinal keys and sanitized text (80-char description
   truncation, newlines/`"` stripped), `AnomalyNarrationParser` integration, `MaxTokens = 600`. Run 6.5
   green. (R-5, R-6, D-8, D-9)
-- [ ] 6.7 Run all four gates. All green before opening PR S6.
+- [x] 6.7 Run all four gates. All green before opening PR S6.
 
 ## 7. Composite + DI
 
