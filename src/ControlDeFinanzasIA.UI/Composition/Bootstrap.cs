@@ -16,6 +16,7 @@ using ControlDeFinanzasIA.Application.UseCases.Debts.GetDebts;
 using ControlDeFinanzasIA.Application.UseCases.Debts.GetDebtSchedule;
 using ControlDeFinanzasIA.Application.UseCases.Debts.RegisterDebtPayment;
 using ControlDeFinanzasIA.Application.UseCases.Debts.SkipDebtPayment;
+using ControlDeFinanzasIA.Application.UseCases.Expenses.CategorizeExpense;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.GetTransactions;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.RegisterExpense;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.UpdateExpense;
@@ -116,6 +117,12 @@ public static class Bootstrap
 
         services.AddTransient<RegisterExpenseUseCase>();
         services.AddTransient<UpdateExpenseUseCase>();
+
+        // Fase 13: categorización automática de gastos (F-013, slice 5b).
+        // Esta es exactamente la registración que el kill-switch del
+        // slice 6 elimina para probar que la funcionalidad es inerte sin
+        // ella (D-12).
+        services.AddTransient<CategorizeExpenseUseCase>();
         services.AddTransient<RegisterIncomeUseCase>();
         services.AddTransient<UpdateIncomeUseCase>();
         services.AddTransient<CreateSubscriptionUseCase>();
