@@ -7,6 +7,7 @@
              xmlns:dashboard="using:ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments"
              x:Class="ControlDeFinanzasIA.UI.Views.DashboardView"
              x:DataType="vm:DashboardViewModel"
+             x:Name="Root"
              Background="{StaticResource InkBrush}">
     <ScrollViewer>
         <StackPanel Margin="32" Spacing="20">
@@ -162,6 +163,102 @@
                     <TextBlock Text="{x:Static resources:Strings.DashboardEmptyBudgetProgressMessage}"
                                IsVisible="{Binding !BudgetProgress.Count}"
                                Foreground="{StaticResource PaperDimBrush}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Month-end forecast card (F-014, R-1, R-9): zero LLM, always -->
+            <!-- numeric; ForecastStateMessage/ForecastBudgetDisplay follow the -->
+            <!-- LoadError pattern above (bound directly, blank when empty). -->
+            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Static resources:Strings.DashboardForecastTitle}" Classes="ledger-section" />
+                    <Grid ColumnDefinitions="*,*" IsVisible="{Binding HasForecast}">
+                        <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,8,0">
+                            <TextBlock Text="{x:Static resources:Strings.DashboardForecastSpentToDateLabel}"
+                                       Foreground="{StaticResource PaperDimBrush}" />
+                            <TextBlock Text="{Binding ForecastSpentToDateDisplay}" Classes="ledger-amount" FontSize="20" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="4" Margin="8,0,0,0">
+                            <TextBlock Text="{x:Static resources:Strings.DashboardForecastProjectedLabel}"
+                                       Foreground="{StaticResource PaperDimBrush}" />
+                            <TextBlock Text="{Binding ForecastProjectedDisplay}" Classes="ledger-amount" FontSize="20" />
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Text="{Binding ForecastBudgetDisplay}"
+                               Foreground="{Binding ForecastBudgetStatus, Converter={x:Static converters:BudgetStatusBrushConverter.Instance}}" />
+                    <TextBlock Text="{Binding ForecastStateMessage}"
+                               Foreground="{StaticResource PaperDimBrush}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!-- Anomalies list (F-014, R-2, R-3, R-9): severity chip + per-row -->
+            <!-- dismiss; Message shows the deterministic template until narration -->
+            <!-- (S8b) replaces it in place. AnomalyNarrationStatusText mirrors the -->
+            <!-- LoadError pattern — bound directly, blank when narration succeeded. -->
+            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Static resources:Strings.DashboardAnomaliesTitle}" Classes="ledger-section" />
+                    <ItemsControl ItemsSource="{Binding Anomalies}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:AnomalyListItem">
+                                <Border Classes="ledger-row" Padding="12">
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                        <Border Grid.Column="0"
+                                                Background="{Binding Severity, Converter={x:Static converters:AnomalySeverityBrushConverter.Instance}}"
+                                                CornerRadius="{StaticResource RadiusSmall}"
+                                                Padding="8,2"
+                                                VerticalAlignment="Center"
+                                                Margin="0,0,12,0">
+                                            <TextBlock Text="{Binding SeverityLabel}" Foreground="{StaticResource InkBrush}" FontWeight="SemiBold" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Spacing="2">
+                                            <TextBlock Text="{Binding CategoryName}" Classes="ledger-section" />
+                                            <TextBlock Text="{Binding Description}" Foreground="{StaticResource PaperDimBrush}" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding DateDisplay}" Foreground="{StaticResource PaperDimBrush}" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding AmountDisplay}"
+                                                   Classes="ledger-amount"
+                                                   Margin="12,0"
+                                                   VerticalAlignment="Center" />
+                                        <Button Grid.Column="3"
+                                                Content="{x:Static resources:Strings.DashboardAnomalyDismissButton}"
+                                                Command="{Binding #Root.((vm:DashboardViewModel)DataContext).DismissAnomalyCommand}"
+                                                CommandParameter="{Binding}"
+                                                Classes="ledger-btn"
+                                                VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{x:Static resources:Strings.DashboardEmptyAnomaliesMessage}"
+                               IsVisible="{Binding !Anomalies.Count}"
+                               Foreground="{StaticResource PaperDimBrush}" />
+                    <TextBlock Text="{Binding AnomalyNarrationStatusText}"
+                               Foreground="{StaticResource AmberBrush}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!-- AI insights card (F-014, R-4, R-6, R-9): non-blocking narration; -->
+            <!-- InsightsStatusText mirrors the LoadError pattern — bound directly, -->
+            <!-- blank when InsightsText has content. -->
+            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Static resources:Strings.DashboardInsightsTitle}" Classes="ledger-section" />
+                    <TextBlock Text="{x:Static resources:Strings.DashboardInsightsLoading}"
+                               IsVisible="{Binding IsInsightsLoading}"
+                               Foreground="{StaticResource PaperDimBrush}" />
+                    <TextBlock Text="{Binding InsightsText}"
+                               IsVisible="{Binding !IsInsightsLoading}"
+                               TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding InsightsStatusText}"
+                               IsVisible="{Binding !IsInsightsLoading}"
+                               Foreground="{StaticResource AmberBrush}"
+                               TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 

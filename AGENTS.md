@@ -12,8 +12,14 @@ the project state changes, update this file.
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
 - **Status (today):** Phases 0–13 fully archived. Phase 14 (AI insights, month-end
-  forecast, and anomaly detection) is in progress — spec and task breakdown
-  already drafted at `spec/features/phase-14/F-014-ai-insights-forecast-anomalies.{spec,tasks}.md`.
+  forecast, and anomaly detection) has all ten feature slices (S1–S8c) implemented —
+  the dashboard now shows a month-end forecast card, a persisted anomaly-alerts list
+  with per-row dismiss, and an AI-written insights card, all deterministic-first
+  (zero `ILLMClient` calls for the numeric sections). Pending: phase closure
+  (`sdd-verify`/`sdd-archive` — full gate re-run, `docs/architecture.md` /
+  `docs/roadmap.md` / `docs/AI_HANDOFF.md` updates, spec archived to `.done.md`).
+  Spec and task breakdown at
+  `spec/features/phase-14/F-014-ai-insights-forecast-anomalies.{spec,tasks}.md`.
   Phase 13 shipped the app's first outbound network dependency: `ILLMClient` +
   `OpenAICompatibleClient`/`AnthropicClient` adapters + a
   `Microsoft.Extensions.Http.Resilience`-backed pipeline (15s total timeout,
@@ -22,7 +28,7 @@ the project state changes, update this file.
   accepting the chip as the only code path that ever writes the category from
   AI output. Every failure mode (no key, no network, bad key, timeout,
   unparseable response) leaves the form fully usable with an honest status
-  message, never an exception. 1184/1184 tests verde (936 unit + 248
+  message, never an exception. 1344/1344 tests verde (1079 unit + 265
   integration). See `docs/AI_HANDOFF.md` and `spec/phases/phase-13/features.md`
   for the full phase-13 detail and `spec/phases/phase-05/features.md` through
   `spec/phases/phase-12/features.md` for earlier phases.

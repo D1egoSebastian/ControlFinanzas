@@ -378,22 +378,22 @@ the deterministic sections are proven to render even against a never-completing 
 Depends on 8b. Goal: the three new dashboard sections render on tokens, with no logic in
 code-behind.
 
-- [ ] 8c.1 Invoke the `.claude/skills/frontend-design` skill for the three new sections (forecast,
+- [x] 8c.1 Invoke the `.claude/skills/frontend-design` skill for the three new sections (forecast,
   anomalies list with per-row dismiss + severity chip, insights card) before touching XAML — design
   tokens only: `SurfaceBrush` + `RadiusMedium` + `ledger-section`, `ledger-amount`, `ledger-row`;
   severity chips `Info → SageBrush`, `Warning → AmberBrush`, `Critical → TerracottaBrush`; the
   forecast-vs-budget line reuses the Phase 10 `budget-progress`/`.near`/`.exceeded` classes. (R-8,
   D-14)
-- [ ] 8c.2 Modify `src/…UI/Views/DashboardView.axaml`: add the forecast section, the anomalies list
+- [x] 8c.2 Modify `src/…UI/Views/DashboardView.axaml`: add the forecast section, the anomalies list
   (severity chip + dismiss button per row), and the insights card, all bound to the S8a/S8b
   ViewModel properties — no logic in code-behind. (R-8)
-- [ ] 8c.3 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) and visually
+- [x] 8c.3 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) and visually
   confirm all three sections render with real data, both with AI unconfigured (fallback labels
   appear only in narrative spots) and, if a key is available, with AI configured — confirm no
   numeric section is ever blank or replaced by a label.
-- [ ] 8c.4 Modify `AGENTS.md`: update the Status line to record Phase 14 complete, mirroring the
+- [x] 8c.4 Modify `AGENTS.md`: update the Status line to record Phase 14 complete, mirroring the
   existing Phase 5/6 status-line pattern.
-- [ ] 8c.5 Run all four gates. All green before opening PR S8c.
+- [x] 8c.5 Run all four gates. All green before opening PR S8c.
 
 ## 9. Cierre
 
