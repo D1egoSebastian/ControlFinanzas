@@ -118,6 +118,24 @@
   <data name="FormErrorMessage" xml:space="preserve">
     <value>An error occurred while saving the expense.</value>
   </data>
+  <data name="ExpensesAiSuggestionPrefix" xml:space="preserve">
+    <value>Suggested:</value>
+  </data>
+  <data name="ExpensesAiSuggestionAcceptHint" xml:space="preserve">
+    <value>Click to use this category</value>
+  </data>
+  <data name="ExpensesAiSuggestionDismissHint" xml:space="preserve">
+    <value>Dismiss suggestion</value>
+  </data>
+  <data name="ExpensesAiNotConfiguredMessage" xml:space="preserve">
+    <value>AI is not configured</value>
+  </data>
+  <data name="ExpensesAiUnavailableMessage" xml:space="preserve">
+    <value>AI is unavailable right now</value>
+  </data>
+  <data name="ExpensesAiSuggestionLoading" xml:space="preserve">
+    <value>Asking the AI…</value>
+  </data>
   <data name="CurrencyDOP" xml:space="preserve">
     <value>DOP</value>
   </data>

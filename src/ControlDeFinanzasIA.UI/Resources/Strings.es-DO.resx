@@ -118,6 +118,24 @@
   <data name="FormErrorMessage" xml:space="preserve">
     <value>Ha ocurrido un error al guardar el gasto.</value>
   </data>
+  <data name="ExpensesAiSuggestionPrefix" xml:space="preserve">
+    <value>Sugerido:</value>
+  </data>
+  <data name="ExpensesAiSuggestionAcceptHint" xml:space="preserve">
+    <value>Toca para usar esta categoría</value>
+  </data>
+  <data name="ExpensesAiSuggestionDismissHint" xml:space="preserve">
+    <value>Descartar sugerencia</value>
+  </data>
+  <data name="ExpensesAiNotConfiguredMessage" xml:space="preserve">
+    <value>La IA no está configurada</value>
+  </data>
+  <data name="ExpensesAiUnavailableMessage" xml:space="preserve">
+    <value>La IA no está disponible en este momento</value>
+  </data>
+  <data name="ExpensesAiSuggestionLoading" xml:space="preserve">
+    <value>Consultando a la IA…</value>
+  </data>
   <data name="CurrencyDOP" xml:space="preserve">
     <value>DOP</value>
   </data>

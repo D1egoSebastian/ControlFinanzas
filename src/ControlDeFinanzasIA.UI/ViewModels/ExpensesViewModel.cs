@@ -9,6 +9,7 @@ using ControlDeFinanzasIA.Application.DTOs;
 using ControlDeFinanzasIA.Application.Services;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.CreateTag;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
+using ControlDeFinanzasIA.Application.UseCases.Expenses.CategorizeExpense;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.GetTransactions;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.RegisterExpense;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.UpdateExpense;
@@ -50,6 +51,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
     private readonly IClock _clock;
     private readonly ILogger<ExpensesViewModel> _logger;
     private readonly IStringLocalizer<Strings> _localizer;
+    private readonly CategorizeExpenseUseCase? _categorizeExpenseUseCase;
 
     /// <summary>
     /// Monotonically increasing token used by <see cref="RefreshAsync"/> to discard the result of a
@@ -60,6 +62,25 @@ public sealed partial class ExpensesViewModel : ViewModelBase
     /// makes it safe under any caller, not only calendar drill-down.
     /// </summary>
     private int _refreshGeneration;
+
+    /// <summary>
+    /// AI-suggested-category results already returned for a given normalized description in this form
+    /// session (F-013, slice 6, D-12). Makes delete-and-retype free of extra calls.
+    /// </summary>
+    private readonly Dictionary<string, CategorySuggestionDto> _suggestionCache = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Cancellation source owned by the currently in-flight <see cref="RequestSuggestionAsync"/>
+    /// invocation, if any. Cancelled (never disposed) by a newer invocation or a manual supersede;
+    /// each invocation disposes only its own instance in its own <c>finally</c> (D-12).
+    /// </summary>
+    private CancellationTokenSource? _suggestionCts;
+
+    /// <summary>
+    /// Monotonically increasing token that lets a superseded suggestion request detect it has been
+    /// superseded and discard its result instead of rendering it (F-013, slice 6, D-12).
+    /// </summary>
+    private int _suggestionGeneration;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExpensesViewModel"/> class.
@@ -80,7 +101,8 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         ICurrencyConverter currencyConverter,
         IClock clock,
         ILogger<ExpensesViewModel> logger,
-        IStringLocalizer<Strings> localizer)
+        IStringLocalizer<Strings> localizer,
+        CategorizeExpenseUseCase? categorizeExpenseUseCase = null)
     {
         ArgumentNullException.ThrowIfNull(registerUseCase);
         ArgumentNullException.ThrowIfNull(getTransactionsQuery);
@@ -115,6 +137,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         _clock = clock;
         _logger = logger;
         _localizer = localizer;
+        _categorizeExpenseUseCase = categorizeExpenseUseCase;
 
         _date = _clock.Today;
         _currentFilter = new ExpenseFilter { Page = 1, PageSize = 20 };
@@ -161,6 +184,73 @@ public sealed partial class ExpensesViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     private string? _note;
+
+    /// <summary>
+    /// Debounce interval before an AI category suggestion request fires (F-013, slice 6, D-12).
+    /// Public and settable — not a constant — because there is no <c>InternalsVisibleTo</c> in this
+    /// repo (so <c>internal</c> would be untestable) and a hardcoded 600 ms would make the suggestion
+    /// test suite take seconds of pure sleeping. A test seam, documented as such.
+    /// </summary>
+    public TimeSpan SuggestionDebounceDelay { get; set; } = TimeSpan.FromMilliseconds(600);
+
+    /// <summary>
+    /// Gets or sets the category identifier suggested by the AI for the current <see cref="Description"/>.
+    /// <c>null</c> when there is no suggestion to show. Only <see cref="AcceptSuggestionCommand"/> may
+    /// copy this value into <see cref="SelectedCategoryId"/> (F-013, slice 6, R-5, D-12).
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSuggestionVisible))]
+    [NotifyPropertyChangedFor(nameof(SuggestedCategoryChipLabel))]
+    private Guid? _suggestedCategoryId;
+
+    /// <summary>
+    /// Gets or sets the display name of the category suggested by the AI, matching <see cref="SuggestedCategoryId"/>.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SuggestedCategoryChipLabel))]
+    private string? _suggestedCategoryName;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether a suggestion request is currently in flight.
+    /// Dims the chip area — there is no loading spinner (D-12, D-13).
+    /// </summary>
+    [ObservableProperty]
+    private bool _isSuggestionLoading;
+
+    /// <summary>
+    /// Gets or sets the non-blocking status label shown when a suggestion could not be produced
+    /// (e.g. "IA no configurada" / "IA no disponible"). <c>null</c> when there is nothing to show.
+    /// </summary>
+    [ObservableProperty]
+    private string? _aiStatusMessage;
+
+    /// <summary>
+    /// Gets a value indicating whether the suggestion chip should be rendered.
+    /// </summary>
+    public bool IsSuggestionVisible => SuggestedCategoryId is not null;
+
+    /// <summary>
+    /// Gets the localized chip label, e.g. "Suggested: Comida".
+    /// </summary>
+    public string SuggestedCategoryChipLabel =>
+        $"{_localizer["ExpensesAiSuggestionPrefix"]} {SuggestedCategoryName}";
+
+    /// <summary>
+    /// Gets the localized accept-hint tooltip for the suggestion chip.
+    /// </summary>
+    public string SuggestedCategoryAcceptHint => _localizer["ExpensesAiSuggestionAcceptHint"];
+
+    /// <summary>
+    /// Gets the localized dismiss-hint tooltip for the suggestion chip's dismiss button.
+    /// </summary>
+    public string SuggestedCategoryDismissHint => _localizer["ExpensesAiSuggestionDismissHint"];
+
+    /// <summary>
+    /// Gets the localized "asking the AI…" label shown, in place of the chip, only while
+    /// <see cref="IsSuggestionLoading"/> is <see langword="true"/> and no chip is displayed yet.
+    /// There is no spinner (D-13) — this text is the only in-flight affordance.
+    /// </summary>
+    public string SuggestionLoadingLabel => _localizer["ExpensesAiSuggestionLoading"];
 
     /// <summary>
     /// Gets or sets the expenses displayed on the current page.
@@ -436,6 +526,13 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         FormError = null;
         StatusMessage = null;
 
+        // Fase 13 (F-013, slice 6, D-12): stop any pending/in-flight suggestion before touching the
+        // form. SelectedCategoryId is assigned BEFORE Description below — load-bearing ordering: it
+        // makes OnSelectedCategoryIdChanged's guard true before OnDescriptionChanged fires, so opening
+        // an already-categorized expense for editing never triggers an AI call (S-6, R-e).
+        CancelSuggestion();
+        ClearSuggestion();
+
         Date = dto.Date;
         Amount = dto.Amount;
         Currency = dto.Currency;
@@ -552,6 +649,34 @@ public sealed partial class ExpensesViewModel : ViewModelBase
                 result.Error?.Code,
                 result.Error?.Message);
         }
+    }
+
+    /// <summary>
+    /// Accepts the currently displayed AI suggestion, writing it into <see cref="SelectedCategoryId"/>.
+    /// This is the ONLY code path in the feature that writes <see cref="SelectedCategoryId"/> from AI
+    /// output (F-013, slice 6, R-5, S-5, D-12).
+    /// </summary>
+    [RelayCommand]
+    private void AcceptSuggestion()
+    {
+        if (SuggestedCategoryId is not { } id)
+        {
+            return;
+        }
+
+        SelectedCategoryId = id;
+        ClearSuggestion();
+    }
+
+    /// <summary>
+    /// Dismisses the currently displayed or in-flight AI suggestion without touching
+    /// <see cref="SelectedCategoryId"/> (F-013, slice 6, R-5, S-7, D-12).
+    /// </summary>
+    [RelayCommand]
+    private void DismissSuggestion()
+    {
+        CancelSuggestion();
+        ClearSuggestion();
     }
 
     /// <summary>
@@ -983,6 +1108,9 @@ public sealed partial class ExpensesViewModel : ViewModelBase
     /// </summary>
     private void ClearForm()
     {
+        CancelSuggestion();
+        ClearSuggestion();
+
         Date = _clock.Today;
         Amount = null;
         Description = null;
@@ -991,6 +1119,173 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         SelectedPaymentMethodId = null;
         ValidationErrors.Clear();
         FormError = null;
+    }
+
+    /// <summary>
+    /// Discards the currently displayed/pending suggestion (chip and status message untouched by
+    /// design — callers that need to clear <see cref="AiStatusMessage"/> too do so explicitly).
+    /// Does NOT cancel any in-flight request — see <see cref="CancelSuggestion"/> for that (F-013,
+    /// slice 6, D-12).
+    /// </summary>
+    private void ClearSuggestion()
+    {
+        SuggestedCategoryId = null;
+        SuggestedCategoryName = null;
+    }
+
+    /// <summary>
+    /// Invalidates the currently in-flight suggestion request, if any: bumps the generation token so
+    /// its eventual completion is recognized as superseded and discarded even if cancellation itself
+    /// races past a completed response, and cancels its <see cref="CancellationTokenSource"/> (F-013,
+    /// slice 6, D-12).
+    /// </summary>
+    private void CancelSuggestion()
+    {
+        // Bumping the generation here (rather than only inside RequestSuggestionAsync) means a
+        // request that is invalidated by a manual pick/dismiss/form reset will never pass its own
+        // "generation still current" check again — so it must not be the one responsible for
+        // resetting IsSuggestionLoading either; that would leave it stuck true forever whenever
+        // CancelSuggestion() runs without a fresh RequestSuggestionAsync starting right behind it
+        // (e.g. a manual category pick while a request is in flight, R-c).
+        Interlocked.Increment(ref _suggestionGeneration);
+        IsSuggestionLoading = false;
+
+        try
+        {
+            _suggestionCts?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // The owning invocation already completed and disposed its own CTS (see the
+            // CompareExchange in RequestSuggestionAsync's finally) between the null-check above and
+            // this call — nothing left to cancel.
+        }
+    }
+
+    /// <summary>
+    /// Applies the outcome of a <see cref="CategorizeExpenseUseCase"/> round trip to the observable
+    /// suggestion state (F-013, slice 6, R-5, R-6, D-12).
+    /// </summary>
+    private void ApplySuggestionResult(Result result)
+    {
+        if (result.IsSuccess && result.Value is CategorySuggestionDto dto)
+        {
+            if (dto.Matched)
+            {
+                SuggestedCategoryId = dto.CategoryId;
+                SuggestedCategoryName = dto.CategoryName;
+            }
+            else
+            {
+                ClearSuggestion();
+            }
+
+            AiStatusMessage = null;
+            return;
+        }
+
+        ClearSuggestion();
+        AiStatusMessage = result.Error?.Code == "AiNotConfigured"
+            ? _localizer["ExpensesAiNotConfiguredMessage"]
+            : _localizer["ExpensesAiUnavailableMessage"];
+    }
+
+    /// <summary>
+    /// Debounces, guards, and executes an AI category suggestion request for <paramref name="text"/>
+    /// (F-013, slice 6, R-5, R-6, D-12). Fire-and-forget from <see cref="OnDescriptionChanged"/>; the
+    /// entire body is wrapped so no exception — including a superseding cancellation — ever escapes
+    /// as an unobserved task exception or reaches the UI as a crash.
+    /// </summary>
+    private async Task RequestSuggestionAsync(string? text)
+    {
+        int generation = Interlocked.Increment(ref _suggestionGeneration);
+
+        var fresh = new CancellationTokenSource();
+        CancellationTokenSource? previous = Interlocked.Exchange(ref _suggestionCts, fresh);
+        previous?.Cancel();
+        CancellationToken token = fresh.Token;
+
+        try
+        {
+            if (_categorizeExpenseUseCase is null || SelectedCategoryId is not null)
+            {
+                return;
+            }
+
+            if ((text ?? string.Empty).Trim().Length < CategorizeExpenseUseCase.MinimumDescriptionLength)
+            {
+                ClearSuggestion();
+                return;
+            }
+
+            await Task.Delay(SuggestionDebounceDelay, token);
+
+            // State can and does change during the debounce window; a guard checked only before the
+            // delay is a guard that is not checked (D-12).
+            if (generation != Volatile.Read(ref _suggestionGeneration)
+                || _categorizeExpenseUseCase is null
+                || SelectedCategoryId is not null)
+            {
+                return;
+            }
+
+            string normalized = (Description ?? string.Empty).Trim();
+            if (normalized.Length < CategorizeExpenseUseCase.MinimumDescriptionLength)
+            {
+                ClearSuggestion();
+                return;
+            }
+
+            if (_suggestionCache.TryGetValue(normalized, out CategorySuggestionDto? cached))
+            {
+                ApplySuggestionResult(Result.Success(cached));
+                return;
+            }
+
+            IsSuggestionLoading = true;
+            AiStatusMessage = null;
+
+            Result result = await _categorizeExpenseUseCase.ExecuteAsync(
+                new CategorizeExpenseCommand(normalized), token);
+
+            // A superseded response must never render.
+            if (generation != Volatile.Read(ref _suggestionGeneration))
+            {
+                return;
+            }
+
+            if (result.IsSuccess && result.Value is CategorySuggestionDto dto)
+            {
+                _suggestionCache[normalized] = dto;
+            }
+
+            ApplySuggestionResult(result);
+        }
+        catch (OperationCanceledException)
+        {
+            // Superseded by a newer keystroke or a manual pick — swallowed, nothing renders (D-12).
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "AI suggestion request failed unexpectedly.");
+            if (generation == Volatile.Read(ref _suggestionGeneration))
+            {
+                AiStatusMessage = _localizer["ExpensesAiUnavailableMessage"];
+            }
+        }
+        finally
+        {
+            if (generation == Volatile.Read(ref _suggestionGeneration))
+            {
+                IsSuggestionLoading = false;
+            }
+
+            // Only clear the shared field if a newer invocation hasn't already replaced it with its
+            // own CTS — otherwise a later CancelSuggestion() call (e.g. Accept/Dismiss/manual pick,
+            // with nothing new typed afterwards) would try to Cancel() this now-disposed instance.
+            Interlocked.CompareExchange(ref _suggestionCts, null, fresh);
+            fresh.Dispose();
+        }
     }
 
     /// <summary>
@@ -1018,6 +1313,25 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         if (value is not null)
         {
             _ = ApplySavedViewAsync();
+        }
+    }
+
+    /// <summary>
+    /// Debounced AI category suggestion entry point (F-013, slice 6, D-12). Fire-and-forget:
+    /// <see cref="RequestSuggestionAsync"/> owns its own generation/cancellation bookkeeping and
+    /// never lets an exception escape.
+    /// </summary>
+    partial void OnDescriptionChanged(string? value) => _ = RequestSuggestionAsync(value);
+
+    /// <summary>
+    /// Manually picking a category supersedes any pending/in-flight suggestion (D1: manual pick wins).
+    /// </summary>
+    partial void OnSelectedCategoryIdChanged(Guid? value)
+    {
+        if (value is not null)
+        {
+            CancelSuggestion();
+            ClearSuggestion();
         }
     }
 }

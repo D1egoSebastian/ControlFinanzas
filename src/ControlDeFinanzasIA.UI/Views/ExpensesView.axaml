@@ -3,6 +3,7 @@
              xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
              xmlns:dto="using:ControlDeFinanzasIA.Application.DTOs"
              xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
+             xmlns:avaloniaConverters="using:Avalonia.Data.Converters"
              x:Class="ControlDeFinanzasIA.UI.Views.ExpensesView"
              x:DataType="vm:ExpensesViewModel"
              x:Name="Root"
@@ -17,7 +18,22 @@
                     <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
                         <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding Description}" Watermark="Descripción" />
                         <TextBox Grid.Row="0" Grid.Column="1" Margin="12,0,0,0" Text="{Binding Amount}" Watermark="Monto" />
-                        <ComboBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Categories}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedCategoryId}" SelectedValueBinding="{Binding Id}" PlaceholderText="Categoría" />
+                        <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4">
+                            <ComboBox ItemsSource="{Binding Categories}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedCategoryId}" SelectedValueBinding="{Binding Id}" PlaceholderText="Categoría" />
+                            <!-- F-013 slice 6 (R-5, D-13): AI suggestion chip. Accepting it is the ONLY code path that writes SelectedCategoryId from AI output. -->
+                            <StackPanel Orientation="Horizontal" Spacing="6" Opacity="{Binding IsSuggestionLoading, Converter={x:Static converters:BoolToOpacityConverter.Instance}}" IsVisible="{Binding IsSuggestionVisible}">
+                                <Button Command="{Binding AcceptSuggestionCommand}"
+                                        Content="{Binding SuggestedCategoryChipLabel}"
+                                        ToolTip.Tip="{Binding SuggestedCategoryAcceptHint}"
+                                        Background="#242932" Foreground="#E8A33D" Padding="8,2" CornerRadius="10" FontSize="12" />
+                                <Button Command="{Binding DismissSuggestionCommand}" Content="✕"
+                                        ToolTip.Tip="{Binding SuggestedCategoryDismissHint}"
+                                        Background="Transparent" Foreground="#A9AFB8" Padding="4,2" FontSize="12" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding SuggestionLoadingLabel}" Foreground="#A9AFB8" FontSize="11" IsVisible="{Binding IsSuggestionLoading}" />
+                            <TextBlock Text="{Binding AiStatusMessage}" Foreground="#A9AFB8" FontSize="11" TextWrapping="Wrap"
+                                       IsVisible="{Binding AiStatusMessage, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
+                        </StackPanel>
                         <ComboBox Grid.Row="1" Grid.Column="1" Margin="12,0,0,0" ItemsSource="{Binding PaymentMethods}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedPaymentMethodId}" SelectedValueBinding="{Binding Id}" PlaceholderText="Método de pago" />
                         <ComboBox Grid.Row="2" Grid.Column="0" ItemsSource="{x:Static converters:EnumValues.Currencies}" SelectedItem="{Binding Currency}" PlaceholderText="Moneda" />
                         <DatePicker Grid.Row="2" Grid.Column="1" Margin="12,0,0,0" SelectedDate="{Binding Date}" />
