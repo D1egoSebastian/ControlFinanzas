@@ -62,26 +62,26 @@ dashboard's live render surface.
 Depends on nothing. Goal: the phase's entire numeric core exists as pure, static, fully
 tabular-tested Domain services before any persistence or LLM code exists.
 
-- [ ] 1.1 Write failing `Tests.Unit/Domain/Alerts/AnomalyDetectorTests.cs`: eligibility boundary at
+- [x] 1.1 Write failing `Tests.Unit/Domain/Alerts/AnomalyDetectorTests.cs`: eligibility boundary at
   count 7/8 and distinct months 2/3, one-sidedness (a negative z never flags), `MAD > 0` band edges
   `[3.5,5)`/`[5,8)`/`[8,∞)` evaluated on the *rounded* score, the `MAD = 0` ratio fallback (`≥ 3×
   median` → `Warning`, never divides by zero), output ordering (`Severity` desc → `RatioToMedian` desc
   → `Date` desc → `ExpenseId` asc), and the design's worked example (`[100,100,110,90,100,120,80,100]`
   → median 100, MAD 5 → 125 none / 130 Info / 145 Warning / 160 Critical) plus its MAD=0 table (eight
   ×500 → 1500 Warning, 1499 none). (R-2, D-1, S-1, S-11)
-- [ ] 1.2 Create `src/…Domain/Alerts/AnomalySeverity.cs`, `AnomalyDetector.cs` (+
+- [x] 1.2 Create `src/…Domain/Alerts/AnomalySeverity.cs`, `AnomalyDetector.cs` (+
   `AnomalySample`/`AnomalyCandidate`/`AnomalyFinding`/`AnomalyRule`): pure static `Detect`, decimal
   median/MAD, one-sided flagging, threshold on the rounded score, no `options` parameter (the design's
   rejected-alternative call). Run 1.1 green. (R-2, D-1)
-- [ ] 1.3 Write failing `Tests.Unit/Domain/Forecasting/MonthEndForecasterTests.cs`: day-1 blend
+- [x] 1.3 Write failing `Tests.Unit/Domain/Forecasting/MonthEndForecasterTests.cs`: day-1 blend
   worked example (`(1/30)·30000 + (29/30)·1000 = 1966.67` → projected `87,033.33`), no history + day 2
   → `InsufficientData`, no history + day 3 → pure run-rate, `ClosedMonth` (`projected = spentToDate`),
   `FutureMonth` (`projected` null), last day of month (`remaining = 0` → `projected == spent`),
   negative-input guards. (R-1, D-2, S-7, S-8)
-- [ ] 1.4 Create `src/…Domain/Forecasting/MonthEndForecaster.cs` (+ `ForecastState`,
+- [x] 1.4 Create `src/…Domain/Forecasting/MonthEndForecaster.cs` (+ `ForecastState`,
   `MonthEndForecast`): `AwayFromZero` rounding, current/closed/future branches exactly per D-2. Run
   1.3 green. (R-1, D-2)
-- [ ] 1.5 Run all four gates: `dotnet build -c Release`, `dotnet test -c Release --no-build`,
+- [x] 1.5 Run all four gates: `dotnet build -c Release`, `dotnet test -c Release --no-build`,
   `dotnet format style --verify-no-changes`, NetArchTest filter. All green before opening PR S1.
 
 ## 2. Alert entity + persistence
