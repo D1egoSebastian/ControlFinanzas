@@ -5,9 +5,11 @@ using CommunityToolkit.Mvvm.Input;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.Common;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.DetectAnomalies;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetDashboardInsights;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetInsights;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthEndForecast;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
@@ -41,6 +43,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
     private readonly ILogger<DashboardViewModel> _logger;
 
     private int _loadGeneration;
+    private CancellationTokenSource? _narrationCts;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DashboardViewModel"/> class.
@@ -213,6 +216,22 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// </summary>
     public ObservableCollection<AnomalyListItem> Anomalies { get; } = [];
 
+    /// <summary>Gets or sets a value indicating whether the narration pass (insights + anomaly narration) is in flight (D-12, S8b).</summary>
+    [ObservableProperty]
+    private bool _isInsightsLoading;
+
+    /// <summary>Gets or sets the AI-narrated insights text (2-4 sentences), or empty when not <see cref="NarrativeStatus.Generated"/>.</summary>
+    [ObservableProperty]
+    private string _insightsText = string.Empty;
+
+    /// <summary>Gets or sets the narrative-only fallback caption for the insights card ("IA no configurada"/"IA no disponible"), empty when narration succeeded.</summary>
+    [ObservableProperty]
+    private string _insightsStatusText = string.Empty;
+
+    /// <summary>Gets or sets the narrative-only fallback caption shown under the anomalies list when batch narration did not run/succeed and the list is non-empty (R-6).</summary>
+    [ObservableProperty]
+    private string _anomalyNarrationStatusText = string.Empty;
+
     /// <summary>Navigates to the month immediately before <see cref="SelectedMonth"/> and reloads.</summary>
     [RelayCommand]
     private async Task PreviousMonthAsync()
@@ -247,10 +266,19 @@ public sealed partial class DashboardViewModel : ViewModelBase
     {
         int generation = ++_loadGeneration;
 
+        _narrationCts?.Cancel();
+        _narrationCts?.Dispose();
+        _narrationCts = new CancellationTokenSource();
+        CancellationToken narrationToken = _narrationCts.Token;
+
         IsLoading = true;
         LoadError = string.Empty;
         HasMissingRates = false;
         SectionErrorMessage = string.Empty;
+        InsightsText = string.Empty;
+        InsightsStatusText = string.Empty;
+        AnomalyNarrationStatusText = string.Empty;
+        IsInsightsLoading = false;
         SelectedMonthLabel = FormatMonthLabel(SelectedMonth);
 
         try
@@ -273,9 +301,14 @@ public sealed partial class DashboardViewModel : ViewModelBase
             LoadError = Strings.DashboardLoadErrorMessage;
         }
 
-        await LoadDeterministicInsightsAsync(generation);
+        DashboardInsightsSnapshot? snapshot = await LoadDeterministicInsightsAsync(generation);
 
         IsLoading = false;
+
+        if (snapshot is not null && generation == _loadGeneration)
+        {
+            _ = LoadNarrationAsync(snapshot, generation, narrationToken);
+        }
     }
 
     /// <summary>
@@ -284,26 +317,30 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// <see cref="SectionErrorMessage"/> without ever touching <see cref="LoadError"/>
     /// or any Phase 8/10 section (R-3, R-9, D-12). Applies its result only
     /// when <paramref name="generation"/> is still the current load — a
-    /// superseded (stale) load is dropped silently.
+    /// superseded (stale) load is dropped silently. Returns the computed
+    /// snapshot (or <see langword="null"/> on failure/stale) so
+    /// <see cref="LoadAsync"/> can hand it to the separate, non-blocking
+    /// narration pass without recomputing it (R-7, D-12).
     /// </summary>
-    private async Task LoadDeterministicInsightsAsync(int generation)
+    private async Task<DashboardInsightsSnapshot?> LoadDeterministicInsightsAsync(int generation)
     {
         try
         {
             Result result = await _getDashboardInsightsQuery.GetDeterministicAsync(SelectedMonth);
             if (generation != _loadGeneration)
             {
-                return;
+                return null;
             }
 
             if (result.IsSuccess)
             {
-                ApplyDeterministicInsights((DashboardInsightsSnapshot)result.Value!);
+                var snapshot = (DashboardInsightsSnapshot)result.Value!;
+                ApplyDeterministicInsights(snapshot);
+                return snapshot;
             }
-            else
-            {
-                SectionErrorMessage = Strings.DashboardSectionErrorMessage;
-            }
+
+            SectionErrorMessage = Strings.DashboardSectionErrorMessage;
+            return null;
         }
         catch (Exception ex)
         {
@@ -312,8 +349,120 @@ public sealed partial class DashboardViewModel : ViewModelBase
             {
                 SectionErrorMessage = Strings.DashboardSectionErrorMessage;
             }
+
+            return null;
         }
     }
+
+    /// <summary>
+    /// Runs the non-blocking narration pass (<see cref="GetDashboardInsightsQuery.GetNarrationAsync"/>)
+    /// over an already-computed <paramref name="snapshot"/> (R-7, D-12).
+    /// Mirrors <see cref="LoadUpcomingPaymentsAsync"/>'s "own try/catch,
+    /// fire-and-forget" shape, but additionally guards every state mutation
+    /// with the generation token: a superseded narration pass (the user
+    /// navigated months before this one finished) is dropped silently,
+    /// including a caller-initiated cancellation from a superseding
+    /// <see cref="LoadAsync"/> call.
+    /// </summary>
+    private async Task LoadNarrationAsync(DashboardInsightsSnapshot snapshot, int generation, CancellationToken ct)
+    {
+        IsInsightsLoading = snapshot.Facts is not null;
+
+        try
+        {
+            Result result = await _getDashboardInsightsQuery.GetNarrationAsync(snapshot, ct);
+            if (generation != _loadGeneration)
+            {
+                return;
+            }
+
+            if (result.IsSuccess)
+            {
+                ApplyNarration((DashboardNarration)result.Value!);
+            }
+            else
+            {
+                ApplyNarrationFallback();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Superseded by a newer LoadAsync — silent, no LoadError/SectionErrorMessage (R-7).
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Dashboard narration failed for {Month}.", snapshot.Month);
+            if (generation == _loadGeneration)
+            {
+                ApplyNarrationFallback();
+            }
+        }
+        finally
+        {
+            if (generation == _loadGeneration)
+            {
+                IsInsightsLoading = false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Applies a <see cref="DashboardNarration"/> to the insights card and
+    /// the anomaly rows (D-12). <see cref="Anomalies"/> is never rebuilt
+    /// here — only rows already present get their <see cref="AnomalyListItem.Message"/>
+    /// replaced in place, and a templated message is never cleared for an
+    /// anomaly the parser could not resolve (spec S-6, R-6).
+    /// </summary>
+    private void ApplyNarration(DashboardNarration narration)
+    {
+        ApplyInsightsNarrative(narration.Insights);
+
+        AnomalyNarrationStatusText = narration.Anomalies.Status is NarrativeStatus.NotConfigured or NarrativeStatus.Unavailable
+            && Anomalies.Count > 0
+            ? NarrativeStatusLabel(narration.Anomalies.Status)
+            : string.Empty;
+
+        foreach (AnomalyListItem item in Anomalies)
+        {
+            if (narration.Anomalies.MessagesByAlertId.TryGetValue(item.AlertId, out string? narratedMessage))
+            {
+                item.Message = narratedMessage;
+                item.IsNarrated = true;
+            }
+        }
+    }
+
+    private void ApplyInsightsNarrative(InsightsNarrative insights)
+    {
+        InsightsText = insights.Status == NarrativeStatus.Generated ? insights.Text ?? string.Empty : string.Empty;
+        InsightsStatusText = insights.Status switch
+        {
+            NarrativeStatus.NotConfigured => Strings.DashboardAiNotConfigured,
+            NarrativeStatus.Unavailable => Strings.DashboardAiUnavailable,
+            NarrativeStatus.Skipped => Strings.DashboardInsightsNoData,
+            _ => string.Empty,
+        };
+    }
+
+    /// <summary>
+    /// Applies the "AI unavailable" fallback to both narrative spots when
+    /// the narration step itself fails unexpectedly (a defensive path
+    /// beyond the success-shaped use cases, R-6). Never clears a templated
+    /// anomaly <see cref="AnomalyListItem.Message"/>.
+    /// </summary>
+    private void ApplyNarrationFallback()
+    {
+        InsightsText = string.Empty;
+        InsightsStatusText = Strings.DashboardAiUnavailable;
+        AnomalyNarrationStatusText = Anomalies.Count > 0 ? Strings.DashboardAiUnavailable : string.Empty;
+    }
+
+    private static string NarrativeStatusLabel(NarrativeStatus status) => status switch
+    {
+        NarrativeStatus.NotConfigured => Strings.DashboardAiNotConfigured,
+        NarrativeStatus.Unavailable => Strings.DashboardAiUnavailable,
+        _ => string.Empty,
+    };
 
     /// <summary>
     /// Applies a <see cref="DashboardInsightsSnapshot"/> to the forecast and

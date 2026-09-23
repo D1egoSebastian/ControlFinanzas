@@ -382,6 +382,21 @@ Showing approximate conversions only.
   <data name="DashboardSectionErrorMessage" xml:space="preserve">
     <value>The forecast and unusual-expenses sections could not be loaded.</value>
   </data>
+  <data name="DashboardInsightsTitle" xml:space="preserve">
+    <value>AI insights</value>
+  </data>
+  <data name="DashboardInsightsLoading" xml:space="preserve">
+    <value>Generating insights…</value>
+  </data>
+  <data name="DashboardInsightsNoData" xml:space="preserve">
+    <value>Not enough data yet to generate insights.</value>
+  </data>
+  <data name="DashboardAiNotConfigured" xml:space="preserve">
+    <value>AI not configured</value>
+  </data>
+  <data name="DashboardAiUnavailable" xml:space="preserve">
+    <value>AI unavailable</value>
+  </data>
   <data name="CalendarTitle" xml:space="preserve">
     <value>Expense calendar</value>
   </data>

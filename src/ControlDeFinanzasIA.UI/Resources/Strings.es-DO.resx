@@ -382,6 +382,21 @@ Mostrando conversiones aproximadas.
   <data name="DashboardSectionErrorMessage" xml:space="preserve">
     <value>No se pudieron cargar las secciones de pronóstico y gastos inusuales.</value>
   </data>
+  <data name="DashboardInsightsTitle" xml:space="preserve">
+    <value>Insights de IA</value>
+  </data>
+  <data name="DashboardInsightsLoading" xml:space="preserve">
+    <value>Generando insights…</value>
+  </data>
+  <data name="DashboardInsightsNoData" xml:space="preserve">
+    <value>Aún no hay suficientes datos para generar insights.</value>
+  </data>
+  <data name="DashboardAiNotConfigured" xml:space="preserve">
+    <value>IA no configurada</value>
+  </data>
+  <data name="DashboardAiUnavailable" xml:space="preserve">
+    <value>IA no disponible</value>
+  </data>
   <data name="CalendarTitle" xml:space="preserve">
     <value>Calendario de gastos</value>
   </data>

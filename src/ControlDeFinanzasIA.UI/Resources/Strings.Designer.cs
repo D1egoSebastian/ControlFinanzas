@@ -573,6 +573,31 @@ public class Strings
     public static string DashboardSectionErrorMessage => ResourceManager.GetString("DashboardSectionErrorMessage", Culture)!;
 
     /// <summary>
+    /// Gets the localized title for the Dashboard's AI-insights card.
+    /// </summary>
+    public static string DashboardInsightsTitle => ResourceManager.GetString("DashboardInsightsTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized loading message shown while the Dashboard's AI-insights narration is in flight.
+    /// </summary>
+    public static string DashboardInsightsLoading => ResourceManager.GetString("DashboardInsightsLoading", Culture)!;
+
+    /// <summary>
+    /// Gets the localized message shown when there is not enough data to generate insights.
+    /// </summary>
+    public static string DashboardInsightsNoData => ResourceManager.GetString("DashboardInsightsNoData", Culture)!;
+
+    /// <summary>
+    /// Gets the localized caption shown in narrative-only spots when AI is not configured.
+    /// </summary>
+    public static string DashboardAiNotConfigured => ResourceManager.GetString("DashboardAiNotConfigured", Culture)!;
+
+    /// <summary>
+    /// Gets the localized caption shown in narrative-only spots when an AI call failed or timed out.
+    /// </summary>
+    public static string DashboardAiUnavailable => ResourceManager.GetString("DashboardAiUnavailable", Culture)!;
+
+    /// <summary>
     /// Gets the localized title for the expense calendar screen.
     /// </summary>
     public static string CalendarTitle => ResourceManager.GetString("CalendarTitle", Culture)!;

@@ -353,10 +353,10 @@ this is the breaking-change slice.
 Depends on 8a. Goal: the non-blocking narration pass loads via its own generation-guarded task, and
 the deterministic sections are proven to render even against a never-completing LLM client.
 
-- [ ] 8b.1 Add the narration-pass `Strings.resx`/`Strings.es-DO.resx` keys: `DashboardInsightsTitle`,
+- [x] 8b.1 Add the narration-pass `Strings.resx`/`Strings.es-DO.resx` keys: `DashboardInsightsTitle`,
   `DashboardInsightsLoading`, `DashboardInsightsNoData`, `DashboardAiNotConfigured`,
   `DashboardAiUnavailable`. (R-8, D-14)
-- [ ] 8b.2 Write failing tests (extend `DashboardViewModelTests.cs` or a new
+- [x] 8b.2 Write failing tests (extend `DashboardViewModelTests.cs` or a new
   `DashboardViewModelNarrationTests.cs`): S-9 — a never-completing `FakeLlmClient.OnCompleteAsync` —
   forecast and anomalies still render within the deterministic step's normal time budget,
   `IsInsightsLoading` stays `true`, `LoadAsync` itself never awaits narration; S-5 — AI down — every
@@ -365,13 +365,13 @@ the deterministic sections are proven to render even against a never-completing 
   `NextMonthCommand`) drops the first load's stale narration via the generation token; a
   cancellation from supersede is silent (`OperationCanceledException` swallowed, no `LoadError`).
   (R-4, R-6, R-7, D-12, S-4, S-5, S-6, S-9, S-12)
-- [ ] 8b.3 Modify `src/…UI/ViewModels/DashboardViewModel.cs`: `_narrationCts`; `IsInsightsLoading`,
+- [x] 8b.3 Modify `src/…UI/ViewModels/DashboardViewModel.cs`: `_narrationCts`; `IsInsightsLoading`,
   `InsightsText`, `InsightsStatusText`, `AnomalyNarrationStatusText`; `LoadNarrationAsync`
   (fire-and-forget from `LoadAsync`, cancels/disposes the prior CTS, applies only when
   `generation == _loadGeneration`, catches `OperationCanceledException` silently and any other
   exception into the fallback); `ApplyNarration` maps `Insights`/`Anomalies` per `NarrativeStatus`,
   never clearing a templated `Message`. Run 8b.2 green. (R-4, R-6, R-7, D-12)
-- [ ] 8b.4 Run all four gates. All green before opening PR S8b.
+- [x] 8b.4 Run all four gates. All green before opening PR S8b.
 
 ## 8c. View
 

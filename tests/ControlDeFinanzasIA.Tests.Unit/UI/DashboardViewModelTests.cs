@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Abstractions.Llm;
 using ControlDeFinanzasIA.Application.Common;
@@ -558,6 +559,212 @@ public sealed class DashboardViewModelTests
 
         public Task<IReadOnlyList<DayCurrencyTotal>> GetDailyTotalsAsync(DateRange period, CancellationToken ct = default)
             => _inner.GetDailyTotalsAsync(period, ct);
+    }
+
+    // ----- F-014, slice S8b: non-blocking narration pass -----
+
+    [Fact]
+    public async Task RefreshCommand_NarrationHangs_ForecastAndAnomaliesRenderWithoutWaiting()
+    {
+        FakeExpenseRepository expenseRepo = new();
+        expenseRepo.CategoryNames[_categoryId] = "Comida";
+        SeedWorkedExampleHistory(expenseRepo, _categoryId);
+        await expenseRepo.AddAsync(CreateExpense(new DateOnly(2026, 3, 5), 145m)); // z=6.07 -> Warning
+
+        FakeIncomeRepository incomeRepo = new();
+
+        TaskCompletionSource<LlmResponse> hangingTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        FakeLlmClient llmClient = new() { OnCompleteAsync = (_, _) => hangingTcs.Task };
+        FakeLlmClientFactory llmFactory = new() { ResolveResult = LlmClientResolution.Configured(llmClient) };
+
+        DashboardViewModel viewModel = CreateViewModel(expenseRepo, incomeRepo, _march, llmFactory: llmFactory);
+
+        await viewModel.RefreshCommand.ExecuteAsync(null);
+
+        Assert.False(viewModel.IsLoading);
+        Assert.True(viewModel.HasForecast);
+        Assert.False(string.IsNullOrEmpty(viewModel.ForecastProjectedDisplay));
+        Assert.Single(viewModel.Anomalies);
+        Assert.True(viewModel.IsInsightsLoading); // narration is still in flight; LoadAsync never awaited it
+    }
+
+    [Fact]
+    public async Task RefreshCommand_AiNotConfigured_ZeroCallsAndFallbackLabelsShownOnlyInNarrativeSpots()
+    {
+        FakeExpenseRepository expenseRepo = new();
+        expenseRepo.CategoryNames[_categoryId] = "Comida";
+        SeedWorkedExampleHistory(expenseRepo, _categoryId);
+        await expenseRepo.AddAsync(CreateExpense(new DateOnly(2026, 3, 5), 145m));
+
+        FakeIncomeRepository incomeRepo = new();
+
+        DashboardViewModel viewModel = CreateViewModel(expenseRepo, incomeRepo, _march);
+
+        await viewModel.RefreshCommand.ExecuteAsync(null);
+        await WaitForNarrationCompleteAsync(viewModel);
+
+        Assert.Equal(Strings.DashboardAiNotConfigured, viewModel.InsightsStatusText);
+        Assert.Equal(Strings.DashboardAiNotConfigured, viewModel.AnomalyNarrationStatusText);
+        Assert.Empty(viewModel.InsightsText);
+
+        AnomalyListItem anomaly = Assert.Single(viewModel.Anomalies);
+        Assert.False(string.IsNullOrEmpty(anomaly.Message)); // deterministic template, never cleared
+        Assert.False(anomaly.IsNarrated);
+        Assert.True(viewModel.HasForecast);
+    }
+
+    [Fact]
+    public async Task RefreshCommand_AiCallFails_NumericSectionsIntact_AndFallbackLabelsShownOnlyInNarrativeSpots()
+    {
+        FakeExpenseRepository expenseRepo = new();
+        expenseRepo.CategoryNames[_categoryId] = "Comida";
+        SeedWorkedExampleHistory(expenseRepo, _categoryId);
+        await expenseRepo.AddAsync(CreateExpense(new DateOnly(2026, 3, 5), 145m));
+
+        FakeIncomeRepository incomeRepo = new();
+
+        FakeLlmClient llmClient = new() { ExceptionToThrow = new LlmException(LlmFailureKind.Timeout, "boom") };
+        FakeLlmClientFactory llmFactory = new() { ResolveResult = LlmClientResolution.Configured(llmClient) };
+
+        DashboardViewModel viewModel = CreateViewModel(expenseRepo, incomeRepo, _march, llmFactory: llmFactory);
+
+        await viewModel.RefreshCommand.ExecuteAsync(null);
+        await WaitForNarrationCompleteAsync(viewModel);
+
+        Assert.True(viewModel.HasForecast);
+        Assert.False(string.IsNullOrEmpty(viewModel.ForecastProjectedDisplay));
+
+        AnomalyListItem anomaly = Assert.Single(viewModel.Anomalies);
+        Assert.False(string.IsNullOrEmpty(anomaly.Message)); // never cleared by a failed narration
+        Assert.False(anomaly.IsNarrated);
+
+        Assert.Equal(Strings.DashboardAiUnavailable, viewModel.InsightsStatusText);
+        Assert.Equal(Strings.DashboardAiUnavailable, viewModel.AnomalyNarrationStatusText);
+        Assert.Empty(viewModel.InsightsText);
+        Assert.False(viewModel.IsInsightsLoading);
+        Assert.Empty(viewModel.LoadError);
+        Assert.Empty(viewModel.SectionErrorMessage);
+    }
+
+    [Fact]
+    public async Task NextMonthCommand_DropsStaleNarration_ViaGenerationToken()
+    {
+        FakeExpenseRepository expenseRepo = new();
+        expenseRepo.CategoryNames[_categoryId] = "Comida";
+        await expenseRepo.AddAsync(CreateExpense(_march, 300m));
+        await expenseRepo.AddAsync(CreateExpense(new DateOnly(2026, 4, 10), 400m));
+
+        FakeIncomeRepository incomeRepo = new();
+
+        Queue<TaskCompletionSource<LlmResponse>> gates = new();
+        FakeLlmClient llmClient = new() { OnCompleteAsync = (_, _) => gates.Dequeue().Task };
+        FakeLlmClientFactory llmFactory = new() { ResolveResult = LlmClientResolution.Configured(llmClient) };
+
+        // The constructor's own fire-and-forget load fires a narration call
+        // against an empty queue; it fails synchronously (caught -> Unavailable)
+        // without consuming a gate, mirroring SequencedExpenseRepository's
+        // documented "completes synchronously" behavior for fallback fakes.
+        DashboardViewModel viewModel = CreateViewModel(expenseRepo, incomeRepo, _march, llmFactory: llmFactory);
+
+        // "Stale" load (March): its narration call consumes the first gate
+        // and is left hanging.
+        TaskCompletionSource<LlmResponse> staleTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        gates.Enqueue(staleTcs);
+        await viewModel.RefreshCommand.ExecuteAsync(null);
+        Assert.True(viewModel.IsInsightsLoading);
+
+        // "Fresh" load (April) supersedes it.
+        TaskCompletionSource<LlmResponse> freshTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        gates.Enqueue(freshTcs);
+        await viewModel.NextMonthCommand.ExecuteAsync(null);
+
+        freshTcs.SetResult(new LlmResponse("Insight de abril.", 10, 10));
+        await WaitForNarrationCompleteAsync(viewModel);
+
+        Assert.Equal(new DateOnly(2026, 4, 1), viewModel.SelectedMonth);
+        Assert.Equal("Insight de abril.", viewModel.InsightsText);
+
+        // The stale response finally arrives late; the generation guard
+        // must drop it silently and never overwrite the fresh narration.
+        staleTcs.SetResult(new LlmResponse("STALE - never should be shown.", 5, 5));
+        await Task.Yield();
+
+        Assert.Equal("Insight de abril.", viewModel.InsightsText);
+        Assert.False(viewModel.IsInsightsLoading);
+    }
+
+    [Fact]
+    public async Task NextMonthCommand_SupersedesInFlightNarration_CancellationIsSwallowedSilently()
+    {
+        FakeExpenseRepository expenseRepo = new();
+        expenseRepo.CategoryNames[_categoryId] = "Comida";
+        await expenseRepo.AddAsync(CreateExpense(_march, 300m));
+        await expenseRepo.AddAsync(CreateExpense(new DateOnly(2026, 4, 10), 400m));
+
+        FakeIncomeRepository incomeRepo = new();
+
+        FakeLlmClient llmClient = new()
+        {
+            OnCompleteAsync = async (_, ct) =>
+            {
+                await Task.Delay(Timeout.Infinite, ct);
+                return new LlmResponse(string.Empty, 0, 0); // unreachable: only completes via cancellation
+            },
+        };
+        FakeLlmClientFactory llmFactory = new() { ResolveResult = LlmClientResolution.Configured(llmClient) };
+
+        DashboardViewModel viewModel = CreateViewModel(expenseRepo, incomeRepo, _march, llmFactory: llmFactory);
+
+        await viewModel.RefreshCommand.ExecuteAsync(null);
+        Assert.True(viewModel.IsInsightsLoading);
+
+        Exception? thrown = await Record.ExceptionAsync(
+            () => viewModel.NextMonthCommand.ExecuteAsync(null));
+
+        Assert.Null(thrown);
+        Assert.Equal(new DateOnly(2026, 4, 1), viewModel.SelectedMonth);
+        Assert.Empty(viewModel.LoadError);
+        Assert.Empty(viewModel.SectionErrorMessage);
+    }
+
+    /// <summary>
+    /// Awaits <see cref="DashboardViewModel.IsInsightsLoading"/> becoming
+    /// <see langword="false"/> via its <see cref="INotifyPropertyChanged"/>
+    /// event rather than a fixed delay — the narration pass is fired via
+    /// <c>_ = LoadNarrationAsync(...)</c> and is not directly awaitable from
+    /// a test. The bounded <see cref="Task.WaitAsync(TimeSpan)"/> is only a
+    /// fail-fast safety net, never the actual synchronization signal.
+    /// </summary>
+    private static async Task WaitForNarrationCompleteAsync(DashboardViewModel viewModel)
+    {
+        if (!viewModel.IsInsightsLoading)
+        {
+            return;
+        }
+
+        TaskCompletionSource tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        void Handler(object? sender, PropertyChangedEventArgs e)
+        {
+            if (string.Equals(e.PropertyName, nameof(DashboardViewModel.IsInsightsLoading), StringComparison.Ordinal)
+                && !viewModel.IsInsightsLoading)
+            {
+                tcs.TrySetResult();
+            }
+        }
+
+        viewModel.PropertyChanged += Handler;
+        try
+        {
+            if (viewModel.IsInsightsLoading)
+            {
+                await tcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            }
+        }
+        finally
+        {
+            viewModel.PropertyChanged -= Handler;
+        }
     }
 
     private static DashboardViewModel CreateViewModel(
