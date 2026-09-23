@@ -340,6 +340,48 @@ Showing approximate conversions only.
   <data name="DashboardBudgetIndeterminateLabel" xml:space="preserve">
     <value>Rate unavailable</value>
   </data>
+  <data name="DashboardForecastTitle" xml:space="preserve">
+    <value>Month-end forecast</value>
+  </data>
+  <data name="DashboardForecastProjectedLabel" xml:space="preserve">
+    <value>Projected</value>
+  </data>
+  <data name="DashboardForecastSpentToDateLabel" xml:space="preserve">
+    <value>Spent to date</value>
+  </data>
+  <data name="DashboardForecastBudgetFormat" xml:space="preserve">
+    <value>{0} of budget</value>
+  </data>
+  <data name="DashboardForecastInsufficientData" xml:space="preserve">
+    <value>Not enough data yet to project this month.</value>
+  </data>
+  <data name="DashboardForecastClosedMonth" xml:space="preserve">
+    <value>This month is closed; the total shown is final.</value>
+  </data>
+  <data name="DashboardForecastFutureMonth" xml:space="preserve">
+    <value>This month has not started yet.</value>
+  </data>
+  <data name="DashboardAnomaliesTitle" xml:space="preserve">
+    <value>Unusual expenses</value>
+  </data>
+  <data name="DashboardEmptyAnomaliesMessage" xml:space="preserve">
+    <value>No unusual expenses detected this month.</value>
+  </data>
+  <data name="DashboardAnomalySeverityInfo" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="DashboardAnomalySeverityWarning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="DashboardAnomalySeverityCritical" xml:space="preserve">
+    <value>Critical</value>
+  </data>
+  <data name="DashboardAnomalyDismissButton" xml:space="preserve">
+    <value>Dismiss</value>
+  </data>
+  <data name="DashboardSectionErrorMessage" xml:space="preserve">
+    <value>The forecast and unusual-expenses sections could not be loaded.</value>
+  </data>
   <data name="CalendarTitle" xml:space="preserve">
     <value>Expense calendar</value>
   </data>

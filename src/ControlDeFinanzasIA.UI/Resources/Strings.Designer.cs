@@ -503,6 +503,76 @@ public class Strings
     public static string DashboardBudgetIndeterminateLabel => ResourceManager.GetString("DashboardBudgetIndeterminateLabel", Culture)!;
 
     /// <summary>
+    /// Gets the localized title for the Dashboard's month-end forecast card.
+    /// </summary>
+    public static string DashboardForecastTitle => ResourceManager.GetString("DashboardForecastTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the projected month-end amount.
+    /// </summary>
+    public static string DashboardForecastProjectedLabel => ResourceManager.GetString("DashboardForecastProjectedLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the amount spent to date.
+    /// </summary>
+    public static string DashboardForecastSpentToDateLabel => ResourceManager.GetString("DashboardForecastSpentToDateLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized "{0} of budget" format string for the forecast-vs-budget line.
+    /// </summary>
+    public static string DashboardForecastBudgetFormat => ResourceManager.GetString("DashboardForecastBudgetFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized message shown when the forecast has insufficient data.
+    /// </summary>
+    public static string DashboardForecastInsufficientData => ResourceManager.GetString("DashboardForecastInsufficientData", Culture)!;
+
+    /// <summary>
+    /// Gets the localized message shown when the selected month is already closed.
+    /// </summary>
+    public static string DashboardForecastClosedMonth => ResourceManager.GetString("DashboardForecastClosedMonth", Culture)!;
+
+    /// <summary>
+    /// Gets the localized message shown when the selected month has not started yet.
+    /// </summary>
+    public static string DashboardForecastFutureMonth => ResourceManager.GetString("DashboardForecastFutureMonth", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the Dashboard's unusual-expenses (anomalies) card.
+    /// </summary>
+    public static string DashboardAnomaliesTitle => ResourceManager.GetString("DashboardAnomaliesTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized empty-state message for the Dashboard's unusual-expenses card.
+    /// </summary>
+    public static string DashboardEmptyAnomaliesMessage => ResourceManager.GetString("DashboardEmptyAnomaliesMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized "Info" anomaly severity label.
+    /// </summary>
+    public static string DashboardAnomalySeverityInfo => ResourceManager.GetString("DashboardAnomalySeverityInfo", Culture)!;
+
+    /// <summary>
+    /// Gets the localized "Warning" anomaly severity label.
+    /// </summary>
+    public static string DashboardAnomalySeverityWarning => ResourceManager.GetString("DashboardAnomalySeverityWarning", Culture)!;
+
+    /// <summary>
+    /// Gets the localized "Critical" anomaly severity label.
+    /// </summary>
+    public static string DashboardAnomalySeverityCritical => ResourceManager.GetString("DashboardAnomalySeverityCritical", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the per-row anomaly dismiss button.
+    /// </summary>
+    public static string DashboardAnomalyDismissButton => ResourceManager.GetString("DashboardAnomalyDismissButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized message shown when the forecast/anomalies deterministic section fails to load.
+    /// </summary>
+    public static string DashboardSectionErrorMessage => ResourceManager.GetString("DashboardSectionErrorMessage", Culture)!;
+
+    /// <summary>
     /// Gets the localized title for the expense calendar screen.
     /// </summary>
     public static string CalendarTitle => ResourceManager.GetString("CalendarTitle", Culture)!;

@@ -340,6 +340,48 @@ Mostrando conversiones aproximadas.
   <data name="DashboardBudgetIndeterminateLabel" xml:space="preserve">
     <value>Tasa no disponible</value>
   </data>
+  <data name="DashboardForecastTitle" xml:space="preserve">
+    <value>Pronóstico de fin de mes</value>
+  </data>
+  <data name="DashboardForecastProjectedLabel" xml:space="preserve">
+    <value>Proyectado</value>
+  </data>
+  <data name="DashboardForecastSpentToDateLabel" xml:space="preserve">
+    <value>Gastado a la fecha</value>
+  </data>
+  <data name="DashboardForecastBudgetFormat" xml:space="preserve">
+    <value>{0} del presupuesto</value>
+  </data>
+  <data name="DashboardForecastInsufficientData" xml:space="preserve">
+    <value>Aún no hay suficientes datos para proyectar este mes.</value>
+  </data>
+  <data name="DashboardForecastClosedMonth" xml:space="preserve">
+    <value>Este mes está cerrado; el total mostrado es final.</value>
+  </data>
+  <data name="DashboardForecastFutureMonth" xml:space="preserve">
+    <value>Este mes aún no ha comenzado.</value>
+  </data>
+  <data name="DashboardAnomaliesTitle" xml:space="preserve">
+    <value>Gastos inusuales</value>
+  </data>
+  <data name="DashboardEmptyAnomaliesMessage" xml:space="preserve">
+    <value>No se detectaron gastos inusuales este mes.</value>
+  </data>
+  <data name="DashboardAnomalySeverityInfo" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="DashboardAnomalySeverityWarning" xml:space="preserve">
+    <value>Advertencia</value>
+  </data>
+  <data name="DashboardAnomalySeverityCritical" xml:space="preserve">
+    <value>Crítico</value>
+  </data>
+  <data name="DashboardAnomalyDismissButton" xml:space="preserve">
+    <value>Descartar</value>
+  </data>
+  <data name="DashboardSectionErrorMessage" xml:space="preserve">
+    <value>No se pudieron cargar las secciones de pronóstico y gastos inusuales.</value>
+  </data>
   <data name="CalendarTitle" xml:space="preserve">
     <value>Calendario de gastos</value>
   </data>

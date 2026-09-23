@@ -306,47 +306,47 @@ Depends on 7. Goal: `DashboardViewModel` gains its one new ctor parameter, the d
 sections render, and the three fixtures the ctor change breaks are fixed via one shared builder —
 this is the breaking-change slice.
 
-- [ ] 8a.1 Create `tests/…Unit/TestDoubles/DashboardInsightsQueryBuilder.cs` per D-13: builds a real
+- [x] 8a.1 Create `tests/…Unit/TestDoubles/DashboardInsightsQueryBuilder.cs` per D-13: builds a real
   `GetDashboardInsightsQuery` from fakes (`expenseRepo, incomeRepo, converter, clock`, optional
   `budgetRepo, categoryRepo, alertRepo, llmFactory` — default **not configured**, i.e. zero calls —
   `settings`). (D-13)
-- [ ] 8a.2 Modify `tests/…Unit/UI/DashboardViewModelTests.cs`: `CreateViewModel` gains optional
+- [x] 8a.2 Modify `tests/…Unit/UI/DashboardViewModelTests.cs`: `CreateViewModel` gains optional
   `alertRepo`/`llmFactory` params forwarding into the builder; update the `new DashboardViewModel(`
   call site (line ~330) to pass the new `GetDashboardInsightsQuery` argument — mechanical
   compile-fix only, no new assertions yet. (D-13)
-- [ ] 8a.3 Modify `tests/…Unit/UI/NavigationServiceTests.cs` and
+- [x] 8a.3 Modify `tests/…Unit/UI/NavigationServiceTests.cs` and
   `tests/…Unit/UI/ShellViewModelTests.cs`: pass their existing repos plus the builder's defaults at
   their `new DashboardViewModel(` call sites (lines ~205, ~84) — one added line each, no other
   change. (D-13)
-- [ ] 8a.4 Modify `src/…UI/ViewModels/DashboardViewModel.cs`: add the 8th ctor parameter
+- [x] 8a.4 Modify `src/…UI/ViewModels/DashboardViewModel.cs`: add the 8th ctor parameter
   `GetDashboardInsightsQuery getDashboardInsightsQuery`, positioned between `getBudgetVsActualQuery`
   and `clock` — compile-fix only, no new behavior yet. Run 8a.2/8a.3 green (fixtures compile,
   existing assertions unchanged). (R-7, D-12)
-- [ ] 8a.5 Create `src/…UI/ViewModels/AnomalyListItem.cs`: `partial class : ObservableObject` with
+- [x] 8a.5 Create `src/…UI/ViewModels/AnomalyListItem.cs`: `partial class : ObservableObject` with
   immutable `AlertId`/`CategoryName`/`Description`/`AmountDisplay`/`DateDisplay`/`Severity`/
   `SeverityLabel` and an observable `Message` + `IsNarrated`. (D-12)
-- [ ] 8a.6 Add the deterministic-pass `Strings.resx`/`Strings.es-DO.resx` keys:
+- [x] 8a.6 Add the deterministic-pass `Strings.resx`/`Strings.es-DO.resx` keys:
   `DashboardForecastTitle`, `DashboardForecastProjectedLabel`, `DashboardForecastSpentToDateLabel`,
   `DashboardForecastBudgetFormat`, `DashboardForecastInsufficientData`, `DashboardForecastClosedMonth`,
   `DashboardForecastFutureMonth`, `DashboardAnomaliesTitle`, `DashboardEmptyAnomaliesMessage`,
   `DashboardAnomalySeverityInfo`/`Warning`/`Critical`, `DashboardAnomalyDismissButton`,
   `DashboardSectionErrorMessage`. (R-8, D-14)
-- [ ] 8a.7 Write failing tests in `tests/…Unit/UI/DashboardViewModelTests.cs`: deterministic sections
+- [x] 8a.7 Write failing tests in `tests/…Unit/UI/DashboardViewModelTests.cs`: deterministic sections
   populate the forecast + anomalies fields; S-7/S-8 budget/no-budget display; a forecast or
   detection-step failure sets `SectionErrorMessage` without touching `LoadError` or any Phase 8/10
   section; `DismissAnomalyAsync` removes the row on success and logs-only on failure; a stale
   generation (superseded by a second `LoadAsync`) drops the deterministic apply. (R-3, R-7, R-9,
   D-12, S-2, S-3, S-7, S-8)
-- [ ] 8a.8 Modify `src/…UI/ViewModels/DashboardViewModel.cs`: `HasForecast`,
+- [x] 8a.8 Modify `src/…UI/ViewModels/DashboardViewModel.cs`: `HasForecast`,
   `ForecastProjectedDisplay`, `ForecastSpentToDateDisplay`, `ForecastBudgetDisplay`,
   `ForecastStateMessage`, `ForecastBudgetStatus`; `Anomalies` `ObservableCollection<AnomalyListItem>`;
   `SectionErrorMessage`; `GetDeterministicAsync` awaited **after** the existing `WhenAll` block, in
   its own `try/catch`, applied only when `generation == _loadGeneration`;
   `[RelayCommand] DismissAnomalyAsync`. Run 8a.7 green. (R-3, R-7, R-9, D-12)
-- [ ] 8a.9 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) against an
+- [x] 8a.9 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) against an
   existing dev DB to confirm the dashboard renders the forecast/anomalies sections with no
   DI/startup failure.
-- [ ] 8a.10 Run all four gates. All green before opening PR S8a.
+- [x] 8a.10 Run all four gates. All green before opening PR S8a.
 
 ## 8b. VM narration pass
 

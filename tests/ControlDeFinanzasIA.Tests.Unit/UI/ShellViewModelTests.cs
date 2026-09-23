@@ -81,14 +81,17 @@ public sealed class ShellViewModelTests
         FakeCurrencyConverter converter = new();
         FakeClock clock = new() { Today = new DateOnly(2026, 3, 15) };
 
+        FakeBudgetRepository budgetRepo = new();
+        FakeCategoryRepository categoryRepo = new();
+
         return new DashboardViewModel(
             new GetMonthSummaryQuery(expenseRepo, incomeRepo, converter),
             new GetCategoryBreakdownQuery(expenseRepo, converter),
             new GetMonthlyEvolutionQuery(expenseRepo, incomeRepo, converter),
             new GetUpcomingPaymentsQuery(
                 new FakeDebtPaymentRepository(), new FakeDebtRepository(), new FakeRecurringRuleRepository(), clock),
-            new GetBudgetVsActualQuery(
-                new FakeBudgetRepository(), expenseRepo, new FakeCategoryRepository(), converter),
+            new GetBudgetVsActualQuery(budgetRepo, expenseRepo, categoryRepo, converter),
+            DashboardInsightsQueryBuilder.Build(expenseRepo, incomeRepo, converter, clock, budgetRepo, categoryRepo),
             clock,
             NullLogger<DashboardViewModel>.Instance);
     }

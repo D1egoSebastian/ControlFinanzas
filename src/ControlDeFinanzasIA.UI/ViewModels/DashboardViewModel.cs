@@ -5,10 +5,16 @@ using CommunityToolkit.Mvvm.Input;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.DetectAnomalies;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetDashboardInsights;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthEndForecast;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
+using ControlDeFinanzasIA.Domain.Alerts;
+using ControlDeFinanzasIA.Domain.Budgets;
+using ControlDeFinanzasIA.Domain.Forecasting;
 using ControlDeFinanzasIA.UI.Formatting;
 using ControlDeFinanzasIA.UI.Resources;
 using LiveChartsCore;
@@ -30,8 +36,11 @@ public sealed partial class DashboardViewModel : ViewModelBase
     private readonly GetMonthlyEvolutionQuery _getMonthlyEvolutionQuery;
     private readonly GetUpcomingPaymentsQuery _getUpcomingPaymentsQuery;
     private readonly GetBudgetVsActualQuery _getBudgetVsActualQuery;
+    private readonly GetDashboardInsightsQuery _getDashboardInsightsQuery;
     private readonly IClock _clock;
     private readonly ILogger<DashboardViewModel> _logger;
+
+    private int _loadGeneration;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DashboardViewModel"/> class.
@@ -48,6 +57,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
         GetMonthlyEvolutionQuery getMonthlyEvolutionQuery,
         GetUpcomingPaymentsQuery getUpcomingPaymentsQuery,
         GetBudgetVsActualQuery getBudgetVsActualQuery,
+        GetDashboardInsightsQuery getDashboardInsightsQuery,
         IClock clock,
         ILogger<DashboardViewModel> logger)
     {
@@ -56,6 +66,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
         ArgumentNullException.ThrowIfNull(getMonthlyEvolutionQuery);
         ArgumentNullException.ThrowIfNull(getUpcomingPaymentsQuery);
         ArgumentNullException.ThrowIfNull(getBudgetVsActualQuery);
+        ArgumentNullException.ThrowIfNull(getDashboardInsightsQuery);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(logger);
 
@@ -64,6 +75,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
         _getMonthlyEvolutionQuery = getMonthlyEvolutionQuery;
         _getUpcomingPaymentsQuery = getUpcomingPaymentsQuery;
         _getBudgetVsActualQuery = getBudgetVsActualQuery;
+        _getDashboardInsightsQuery = getDashboardInsightsQuery;
         _clock = clock;
         _logger = logger;
 
@@ -167,6 +179,40 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// </summary>
     public ObservableCollection<BudgetProgressItem> BudgetProgress { get; } = [];
 
+    /// <summary>Gets or sets a value indicating whether a month-end forecast was computed for <see cref="SelectedMonth"/>.</summary>
+    [ObservableProperty]
+    private bool _hasForecast;
+
+    /// <summary>Gets or sets the pre-formatted, DOP-normalized projected month-end total.</summary>
+    [ObservableProperty]
+    private string _forecastProjectedDisplay = string.Empty;
+
+    /// <summary>Gets or sets the pre-formatted, DOP-normalized amount spent to date.</summary>
+    [ObservableProperty]
+    private string _forecastSpentToDateDisplay = string.Empty;
+
+    /// <summary>Gets or sets the pre-formatted "{percent} of budget" line, or empty when no budget applies (S-8).</summary>
+    [ObservableProperty]
+    private string _forecastBudgetDisplay = string.Empty;
+
+    /// <summary>Gets or sets the localized state message for a non-<see cref="ForecastState.Projected"/> forecast.</summary>
+    [ObservableProperty]
+    private string _forecastStateMessage = string.Empty;
+
+    /// <summary>Gets or sets the budget status of the projected-vs-budget comparison, for the shared budget-progress color classes.</summary>
+    [ObservableProperty]
+    private BudgetStatus? _forecastBudgetStatus;
+
+    /// <summary>Gets or sets the error message shown when the forecast or anomaly-detection section fails to load (R-3, D-12).</summary>
+    [ObservableProperty]
+    private string _sectionErrorMessage = string.Empty;
+
+    /// <summary>
+    /// Gets the active (unacknowledged) anomalies for <see cref="SelectedMonth"/>, in detector
+    /// order (severity desc, then ratio-to-median desc). Rebuilt on every <see cref="LoadAsync"/>.
+    /// </summary>
+    public ObservableCollection<AnomalyListItem> Anomalies { get; } = [];
+
     /// <summary>Navigates to the month immediately before <see cref="SelectedMonth"/> and reloads.</summary>
     [RelayCommand]
     private async Task PreviousMonthAsync()
@@ -199,9 +245,12 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// </summary>
     private async Task LoadAsync()
     {
+        int generation = ++_loadGeneration;
+
         IsLoading = true;
         LoadError = string.Empty;
         HasMissingRates = false;
+        SectionErrorMessage = string.Empty;
         SelectedMonthLabel = FormatMonthLabel(SelectedMonth);
 
         try
@@ -223,9 +272,170 @@ public sealed partial class DashboardViewModel : ViewModelBase
             _logger.LogError(ex, "Unable to load the dashboard for {Month}.", SelectedMonth);
             LoadError = Strings.DashboardLoadErrorMessage;
         }
-        finally
+
+        await LoadDeterministicInsightsAsync(generation);
+
+        IsLoading = false;
+    }
+
+    /// <summary>
+    /// Runs the deterministic forecast/anomalies step (<see cref="GetDashboardInsightsQuery.GetDeterministicAsync"/>),
+    /// in its own <c>try/catch</c> so a forecast or detection failure sets
+    /// <see cref="SectionErrorMessage"/> without ever touching <see cref="LoadError"/>
+    /// or any Phase 8/10 section (R-3, R-9, D-12). Applies its result only
+    /// when <paramref name="generation"/> is still the current load — a
+    /// superseded (stale) load is dropped silently.
+    /// </summary>
+    private async Task LoadDeterministicInsightsAsync(int generation)
+    {
+        try
         {
-            IsLoading = false;
+            Result result = await _getDashboardInsightsQuery.GetDeterministicAsync(SelectedMonth);
+            if (generation != _loadGeneration)
+            {
+                return;
+            }
+
+            if (result.IsSuccess)
+            {
+                ApplyDeterministicInsights((DashboardInsightsSnapshot)result.Value!);
+            }
+            else
+            {
+                SectionErrorMessage = Strings.DashboardSectionErrorMessage;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unable to load the forecast/anomalies sections for {Month}.", SelectedMonth);
+            if (generation == _loadGeneration)
+            {
+                SectionErrorMessage = Strings.DashboardSectionErrorMessage;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Applies a <see cref="DashboardInsightsSnapshot"/> to the forecast and
+    /// anomalies sections. Each section is independent: a <see langword="null"/>
+    /// <see cref="DashboardInsightsSnapshot.Forecast"/> or
+    /// <see cref="DashboardInsightsSnapshot.Anomalies"/> (its step threw,
+    /// already logged as Error by the composite) sets <see cref="SectionErrorMessage"/>
+    /// without blanking the other section (D-12).
+    /// </summary>
+    private void ApplyDeterministicInsights(DashboardInsightsSnapshot snapshot)
+    {
+        bool sectionFailed = false;
+
+        if (snapshot.Forecast is not null)
+        {
+            ApplyForecast(snapshot.Forecast);
+        }
+        else
+        {
+            HasForecast = false;
+            sectionFailed = true;
+        }
+
+        Anomalies.Clear();
+        if (snapshot.Anomalies is not null)
+        {
+            foreach (AnomalyItemDto item in snapshot.Anomalies)
+            {
+                Anomalies.Add(ToAnomalyListItem(item));
+            }
+        }
+        else
+        {
+            sectionFailed = true;
+        }
+
+        SectionErrorMessage = sectionFailed ? Strings.DashboardSectionErrorMessage : string.Empty;
+        HasMissingRates |= snapshot.HasMissingRates;
+    }
+
+    /// <summary>
+    /// Projects a <see cref="MonthEndForecastDto"/> into UI-ready display
+    /// text (D-12): <see cref="ForecastStateMessage"/> carries the
+    /// non-<see cref="ForecastState.Projected"/> explanation, and
+    /// <see cref="ForecastBudgetDisplay"/> stays empty when no budget
+    /// applies (S-8) or the projection is not numeric.
+    /// </summary>
+    private void ApplyForecast(MonthEndForecastDto forecast)
+    {
+        HasForecast = true;
+        ForecastSpentToDateDisplay = FormatDop(forecast.SpentToDateDop);
+        ForecastBudgetStatus = forecast.ProjectedBudgetStatus;
+
+        ForecastBudgetDisplay = forecast.BudgetTotalDop is not null && forecast.ProjectedPercentOfBudget is decimal percent
+            ? string.Format(
+                CultureInfo.CurrentCulture,
+                Strings.DashboardForecastBudgetFormat,
+                $"{percent.ToString("0.0", CultureInfo.CurrentCulture)}%")
+            : string.Empty;
+
+        ForecastProjectedDisplay = forecast.ProjectedDop is decimal projected ? FormatDop(projected) : string.Empty;
+
+        ForecastStateMessage = forecast.State switch
+        {
+            ForecastState.InsufficientData => Strings.DashboardForecastInsufficientData,
+            ForecastState.ClosedMonth => Strings.DashboardForecastClosedMonth,
+            ForecastState.FutureMonth => Strings.DashboardForecastFutureMonth,
+            _ => string.Empty,
+        };
+    }
+
+    /// <summary>Maps an <see cref="AnomalyItemDto"/> into its display row, with the deterministic template as the initial <see cref="AnomalyListItem.Message"/>.</summary>
+    private static AnomalyListItem ToAnomalyListItem(AnomalyItemDto item) =>
+        new(
+            item.AlertId,
+            item.CategoryName,
+            item.Description,
+            FormatDop(item.AmountDop),
+            item.Date.ToString("d MMM", CultureInfo.CurrentCulture),
+            item.Severity,
+            SeverityLabel(item.Severity),
+            item.Message);
+
+    private static string SeverityLabel(AnomalySeverity severity) => severity switch
+    {
+        AnomalySeverity.Info => Strings.DashboardAnomalySeverityInfo,
+        AnomalySeverity.Warning => Strings.DashboardAnomalySeverityWarning,
+        AnomalySeverity.Critical => Strings.DashboardAnomalySeverityCritical,
+        _ => string.Empty,
+    };
+
+    /// <summary>
+    /// Dismisses (acknowledges) a single anomaly row (R-9: the only
+    /// discard action in this phase). On success the row is removed from
+    /// <see cref="Anomalies"/>; on failure the row stays and the failure
+    /// is logged only — never surfaced as <see cref="LoadError"/> or
+    /// <see cref="SectionErrorMessage"/> (D-12).
+    /// </summary>
+    [RelayCommand]
+    private async Task DismissAnomalyAsync(AnomalyListItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        try
+        {
+            Result result = await _getDashboardInsightsQuery.DismissAnomalyAsync(item.AlertId);
+            if (result.IsSuccess)
+            {
+                Anomalies.Remove(item);
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Unable to dismiss anomaly {AlertId}: {ErrorCode} {ErrorMessage}",
+                    item.AlertId,
+                    result.Error?.Code,
+                    result.Error?.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unable to dismiss anomaly {AlertId}.", item.AlertId);
         }
     }
 
