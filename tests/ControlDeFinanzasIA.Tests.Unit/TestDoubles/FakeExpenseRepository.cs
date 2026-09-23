@@ -224,4 +224,19 @@ public sealed class FakeExpenseRepository : IExpenseRepository
 
         return Task.FromResult(totals);
     }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<ExpenseAmountRow>> GetAmountRowsAsync(DateRange period, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(period);
+
+        IReadOnlyList<ExpenseAmountRow> rows = _addedExpenses
+            .Where(e => e.Date >= period.Start && e.Date <= period.End)
+            .OrderBy(e => e.Date)
+            .ThenBy(e => e.Id)
+            .Select(e => new ExpenseAmountRow(e.Id, e.CategoryId, e.Date, e.Amount.Amount, e.Amount.Currency, e.Description))
+            .ToList();
+
+        return Task.FromResult(rows);
+    }
 }

@@ -500,6 +500,9 @@ public sealed class ExpensesViewModelTests
 
         public Task<IReadOnlyList<DayCurrencyTotal>> GetDailyTotalsAsync(DateRange period, CancellationToken ct = default)
             => _inner.GetDailyTotalsAsync(period, ct);
+
+        public Task<IReadOnlyList<ExpenseAmountRow>> GetAmountRowsAsync(DateRange period, CancellationToken ct = default)
+            => _inner.GetAmountRowsAsync(period, ct);
     }
 
     [Fact]

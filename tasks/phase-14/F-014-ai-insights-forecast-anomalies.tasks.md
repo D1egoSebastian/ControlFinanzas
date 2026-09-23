@@ -139,26 +139,26 @@ first slice that can break app startup.
 Depends on 2. Goal: the month-end forecast renders correct numbers with **zero** `ILLMClient`
 dependency.
 
-- [ ] 3.1 Write failing `tests/…Integration/Persistence/ExpenseRepositoryAmountRowsTests.cs`: the new
+- [x] 3.1 Write failing `tests/…Integration/Persistence/ExpenseRepositoryAmountRowsTests.cs`: the new
   `GetAmountRowsAsync` projection is `AsNoTracking`, ordered by `Date` then `Id`, correctly filtered
   by `DateRange`. (D-7)
-- [ ] 3.2 Create `src/…Application/DTOs/Aggregates/ExpenseAmountRow.cs`; modify
+- [x] 3.2 Create `src/…Application/DTOs/Aggregates/ExpenseAmountRow.cs`; modify
   `IExpenseRepository.cs` / `ExpenseRepository.cs` to add `GetAmountRowsAsync(DateRange, …)`. Run 3.1
   green. (D-7)
-- [ ] 3.3 Modify `tests/…Unit/TestDoubles/FakeExpenseRepository.cs`: implement
+- [x] 3.3 Modify `tests/…Unit/TestDoubles/FakeExpenseRepository.cs`: implement
   `GetAmountRowsAsync` additively — no existing test changes. (D-7, D-13)
-- [ ] 3.4 Write failing `tests/…Unit/UseCases/Dashboard/GetMonthEndForecastUseCaseTests.cs`: S-7
+- [x] 3.4 Write failing `tests/…Unit/UseCases/Dashboard/GetMonthEndForecastUseCaseTests.cs`: S-7
   (budget present → projected-vs-budget comparison via `BudgetEvaluator`), S-8 (no budget → budget
   fields null), a budget-conversion failure poisons `BudgetTotalDop` to null + sets
   `HasMissingRates` (never a silently-partial sum), spent-to-date excludes future-dated expenses,
   `FutureMonth`/`ClosedMonth` states, no-history + `elapsed < 3` → `InsufficientData`, zero-spend
   history months excluded from the trailing-3-month average. (R-1, D-6, S-7, S-8)
-- [ ] 3.5 Create `src/…Application/UseCases/Dashboard/GetMonthEndForecast/{MonthEndForecastDto,
+- [x] 3.5 Create `src/…Application/UseCases/Dashboard/GetMonthEndForecast/{MonthEndForecastDto,
   GetMonthEndForecastUseCase}.cs`: ctor `IExpenseRepository, IBudgetRepository, ICurrencyConverter,
   IClock`; flow exactly per D-6 (future/closed branch, spent-to-date range, trailing-3-month history
   average, `MonthEndForecaster.Project`, budget conversion + `BudgetEvaluator.Evaluate`); never
   `Result.Failure` for data reasons. Run 3.4 green. (R-1, D-6)
-- [ ] 3.6 Run all four gates. All green before opening PR S3.
+- [x] 3.6 Run all four gates. All green before opening PR S3.
 
 ## 4. Detection + acknowledge
 

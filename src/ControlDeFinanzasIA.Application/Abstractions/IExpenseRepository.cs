@@ -111,4 +111,21 @@ public interface IExpenseRepository
     /// <param name="period">Rango de fechas, inclusivo en ambos extremos.</param>
     /// <param name="ct">Token de cancelación opcional.</param>
     Task<IReadOnlyList<DayCurrencyTotal>> GetDailyTotalsAsync(DateRange period, CancellationToken ct = default);
+
+    /// <summary>
+    /// Obtiene una fila por cada <see cref="Expense"/> dentro de
+    /// <paramref name="period"/>, sin agregar (F-014, D-7). A diferencia de
+    /// <see cref="GetPeriodTotalsAsync"/>/<see cref="GetCategoryTotalsAsync"/>,
+    /// esta proyección no usa <c>Sum</c> en SQL, así que no necesita el
+    /// workaround de cast a <c>double</c>: alimenta a
+    /// <c>DetectAnomaliesUseCase</c>, que necesita el detalle por gasto para
+    /// construir el historial y los candidatos de <c>AnomalyDetector</c>.
+    /// </summary>
+    /// <param name="period">Rango de fechas, inclusivo en ambos extremos.</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    /// <returns>
+    /// Filas ordenadas por <c>Date</c> ascendente, con <c>ExpenseId</c>
+    /// ascendente como desempate.
+    /// </returns>
+    Task<IReadOnlyList<ExpenseAmountRow>> GetAmountRowsAsync(DateRange period, CancellationToken ct = default);
 }

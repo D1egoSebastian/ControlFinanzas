@@ -354,4 +354,30 @@ public sealed class ExpenseRepository : IExpenseRepository
 
         return totals.Select(t => t with { Amount = Math.Round(t.Amount, 4) }).ToList();
     }
+
+    /// <summary>
+    /// Obtiene una fila por cada <see cref="Expense"/> dentro de
+    /// <paramref name="period"/>, sin agregar (F-014, D-7).
+    /// </summary>
+    /// <remarks>
+    /// Proyección plana: no hay <c>Sum</c> en SQL, por lo que no necesita
+    /// el workaround de cast a <c>double</c> que documenta
+    /// <see cref="GetPeriodTotalsAsync"/>. Ordenada por <c>Date</c> luego
+    /// <c>Id</c> para dar un orden determinístico a
+    /// <c>DetectAnomaliesUseCase</c>.
+    /// </remarks>
+    /// <param name="period">Rango de fechas, inclusivo en ambos extremos.</param>
+    /// <param name="ct">Token de cancelación opcional.</param>
+    public async Task<IReadOnlyList<ExpenseAmountRow>> GetAmountRowsAsync(DateRange period, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(period);
+
+        return await _db.Expenses
+            .AsNoTracking()
+            .Where(e => e.Date >= period.Start && e.Date <= period.End)
+            .OrderBy(e => e.Date)
+            .ThenBy(e => e.Id)
+            .Select(e => new ExpenseAmountRow(e.Id, e.CategoryId, e.Date, e.Amount.Amount, e.Amount.Currency, e.Description))
+            .ToListAsync(ct);
+    }
 }
