@@ -541,6 +541,24 @@ Showing approximate conversions only.
   <data name="SettingsAiMaxTokensLabel" xml:space="preserve">
     <value>Max tokens per request</value>
   </data>
+  <data name="SettingsAiTestConnectionButton" xml:space="preserve">
+    <value>Test connection</value>
+  </data>
+  <data name="SettingsAiTestConnectionTesting" xml:space="preserve">
+    <value>Testing…</value>
+  </data>
+  <data name="SettingsAiTestConnectionOk" xml:space="preserve">
+    <value>Connection OK ({0}).</value>
+  </data>
+  <data name="SettingsAiTestConnectionNotConfigured" xml:space="preserve">
+    <value>Set a provider and an API key before testing.</value>
+  </data>
+  <data name="SettingsAiTestConnectionInvalidCredentials" xml:space="preserve">
+    <value>The provider rejected the API key.</value>
+  </data>
+  <data name="SettingsAiTestConnectionUnavailable" xml:space="preserve">
+    <value>The provider could not be reached. Check your connection.</value>
+  </data>
   <data name="SettingsAboutTitle" xml:space="preserve">
     <value>About</value>
   </data>

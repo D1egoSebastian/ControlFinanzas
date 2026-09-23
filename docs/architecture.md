@@ -368,7 +368,7 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 `ILLMClient` vive en `Application/Abstractions/`. Métodos:
 
 - `Task<LlmResponse> CompleteAsync(LlmRequest request, CancellationToken ct)`
-- `Task<bool> TestConnectionAsync(CancellationToken ct)` (smoke test, opcional pero útil en la UI de Settings)
+- `Task<LlmConnectionOutcome> TestConnectionAsync(CancellationToken ct)` — smoke test para el botón "Probar conexión" de Settings. **Actualizado en F-013, slice 7**: ya no es `Task<bool>` — devuelve un `LlmConnectionOutcome` de tres estados (`Ok` / `InvalidCredentials` / `Unavailable`), porque el criterio de completitud del roadmap (c) exige que el botón distinga "tu key es inválida" de "el proveedor no responde", algo que un `bool` no puede expresar. Nunca lanza; `AiNotConfigured` no es un miembro del enum porque esa decisión la toma la factory (`LlmConfigurationStatus`) antes de que exista un cliente con el cual hacer el round trip.
 - `string ProviderName { get; }` (para mostrar en la UI)
 
 `LlmRequest` lleva:

@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
              xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
+             xmlns:avaloniaConverters="using:Avalonia.Data.Converters"
              x:Class="ControlDeFinanzasIA.UI.Views.SettingsView"
              x:DataType="vm:SettingsViewModel"
              Background="{StaticResource InkBrush}">
@@ -112,6 +113,17 @@
                     <Button Content="{x:Static resources:Strings.SettingsSaveButton}"
                             Command="{Binding SaveAiCommand}"
                             Classes="ledger-btn-primary" />
+
+                    <!-- "Probar conexión" (F-013, slice 7, R-8) -->
+                    <Button Content="{x:Static resources:Strings.SettingsAiTestConnectionButton}"
+                            Command="{Binding TestConnectionCommand}"
+                            IsEnabled="{Binding CanTestConnection}"
+                            Classes="ledger-btn" />
+
+                    <TextBlock Text="{Binding AiTestConnectionMessage}"
+                               Foreground="{StaticResource SageBrush}"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding AiTestConnectionMessage, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
                 </StackPanel>
             </Border>
 

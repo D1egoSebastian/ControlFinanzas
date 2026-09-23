@@ -31,6 +31,22 @@ public sealed class FakeLlmClient : ILLMClient
     /// <summary>Number of times <see cref="CompleteAsync"/> was called. Zero means the use case never called the client.</summary>
     public int CompleteCallCount => CompleteRequests.Count;
 
+    /// <summary>
+    /// Number of times <see cref="TestConnectionAsync"/> was called (F-013,
+    /// slice 7). Zero means the use case never made a diagnostic round
+    /// trip — the assertion the "not configured" outcome relies on.
+    /// </summary>
+    public int TestConnectionCallCount { get; private set; }
+
+    /// <summary>
+    /// When set, <see cref="TestConnectionAsync"/> awaits this
+    /// <see cref="TaskCompletionSource{TResult}"/> before returning
+    /// <see cref="ConnectionOutcome"/> (F-013, slice 7). Lets a test hold
+    /// the round trip open to assert an in-flight busy state without a
+    /// real network call or a sleep.
+    /// </summary>
+    public TaskCompletionSource<bool>? TestConnectionGate { get; set; }
+
     /// <inheritdoc />
     public Task<LlmResponse> CompleteAsync(LlmRequest request, CancellationToken ct = default)
     {
@@ -47,6 +63,15 @@ public sealed class FakeLlmClient : ILLMClient
     }
 
     /// <inheritdoc />
-    public Task<LlmConnectionOutcome> TestConnectionAsync(CancellationToken ct = default)
-        => Task.FromResult(ConnectionOutcome);
+    public async Task<LlmConnectionOutcome> TestConnectionAsync(CancellationToken ct = default)
+    {
+        TestConnectionCallCount++;
+
+        if (TestConnectionGate is not null)
+        {
+            await TestConnectionGate.Task.ConfigureAwait(false);
+        }
+
+        return ConnectionOutcome;
+    }
 }

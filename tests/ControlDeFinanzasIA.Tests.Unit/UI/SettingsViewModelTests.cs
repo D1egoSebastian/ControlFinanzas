@@ -1,6 +1,7 @@
 using System.Reflection;
 using ControlDeFinanzasIA.Application.Settings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.GetAppSettings;
+using ControlDeFinanzasIA.Application.UseCases.Settings.TestAiConnection;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateAiSettings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateLocale;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateTheme;
@@ -289,12 +290,15 @@ public sealed class SettingsViewModelTests
         var updateLocaleUseCase = new UpdateLocaleUseCase(store, NullLogger<UpdateLocaleUseCase>.Instance);
         var updateAiSettingsUseCase = new UpdateAiSettingsUseCase(
             store, new UpdateAiSettingsValidator(), NullLogger<UpdateAiSettingsUseCase>.Instance);
+        var testAiConnectionUseCase = new TestAiConnectionUseCase(
+            store, new FakeLlmClientFactory(), NullLogger<TestAiConnectionUseCase>.Instance);
 
         return new SettingsViewModel(
             getAppSettingsQuery,
             updateThemeUseCase,
             updateLocaleUseCase,
             updateAiSettingsUseCase,
+            testAiConnectionUseCase,
             NullLogger<SettingsViewModel>.Instance);
     }
 }

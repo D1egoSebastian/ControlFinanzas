@@ -541,6 +541,24 @@ Mostrando conversiones aproximadas.
   <data name="SettingsAiMaxTokensLabel" xml:space="preserve">
     <value>Máximo de tokens por solicitud</value>
   </data>
+  <data name="SettingsAiTestConnectionButton" xml:space="preserve">
+    <value>Probar conexión</value>
+  </data>
+  <data name="SettingsAiTestConnectionTesting" xml:space="preserve">
+    <value>Probando…</value>
+  </data>
+  <data name="SettingsAiTestConnectionOk" xml:space="preserve">
+    <value>Conexión correcta ({0}).</value>
+  </data>
+  <data name="SettingsAiTestConnectionNotConfigured" xml:space="preserve">
+    <value>Configura un proveedor y una API key antes de probar.</value>
+  </data>
+  <data name="SettingsAiTestConnectionInvalidCredentials" xml:space="preserve">
+    <value>El proveedor rechazó la API key.</value>
+  </data>
+  <data name="SettingsAiTestConnectionUnavailable" xml:space="preserve">
+    <value>No se pudo contactar al proveedor. Verifica tu conexión.</value>
+  </data>
   <data name="SettingsAboutTitle" xml:space="preserve">
     <value>Acerca de</value>
   </data>

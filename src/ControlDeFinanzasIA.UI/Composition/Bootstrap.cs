@@ -40,6 +40,7 @@ using ControlDeFinanzasIA.Application.UseCases.SavedViews.DeleteSavedView;
 using ControlDeFinanzasIA.Application.UseCases.SavedViews.GetSavedViews;
 using ControlDeFinanzasIA.Application.UseCases.SavedViews.SaveCurrentFilter;
 using ControlDeFinanzasIA.Application.UseCases.Settings.GetAppSettings;
+using ControlDeFinanzasIA.Application.UseCases.Settings.TestAiConnection;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateAiSettings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateLocale;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateTheme;
@@ -203,6 +204,9 @@ public static class Bootstrap
         services.AddTransient<UpdateLocaleUseCase>();
         services.AddTransient<UpdateAiSettingsUseCase>();
         services.AddTransient<IValidator<UpdateAiSettingsCommand>, UpdateAiSettingsValidator>();
+
+        // Fase 13: "Probar conexión" en Settings (F-013, slice 7)
+        services.AddTransient<TestAiConnectionUseCase>();
 
         ServiceProvider tempProvider = services.BuildServiceProvider();
         try

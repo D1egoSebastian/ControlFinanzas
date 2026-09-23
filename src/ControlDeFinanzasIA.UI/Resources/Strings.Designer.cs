@@ -847,6 +847,36 @@ public class Strings
     public static string SettingsAiMaxTokensLabel => ResourceManager.GetString("SettingsAiMaxTokensLabel", Culture)!;
 
     /// <summary>
+    /// Gets the localized label of the Settings "Probar conexión" button (F-013, slice 7, R-8).
+    /// </summary>
+    public static string SettingsAiTestConnectionButton => ResourceManager.GetString("SettingsAiTestConnectionButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized busy-state label shown while the connection test is running (F-013, slice 7, R-8).
+    /// </summary>
+    public static string SettingsAiTestConnectionTesting => ResourceManager.GetString("SettingsAiTestConnectionTesting", Culture)!;
+
+    /// <summary>
+    /// Gets the localized success message, with a <c>{0}</c> placeholder for the provider name (F-013, slice 7, R-8).
+    /// </summary>
+    public static string SettingsAiTestConnectionOk => ResourceManager.GetString("SettingsAiTestConnectionOk", Culture)!;
+
+    /// <summary>
+    /// Gets the localized message shown when no provider/API key is configured yet (F-013, slice 7, R-8).
+    /// </summary>
+    public static string SettingsAiTestConnectionNotConfigured => ResourceManager.GetString("SettingsAiTestConnectionNotConfigured", Culture)!;
+
+    /// <summary>
+    /// Gets the localized message shown when the provider rejects the configured API key (F-013, slice 7, R-8).
+    /// </summary>
+    public static string SettingsAiTestConnectionInvalidCredentials => ResourceManager.GetString("SettingsAiTestConnectionInvalidCredentials", Culture)!;
+
+    /// <summary>
+    /// Gets the localized message shown when the provider could not be reached (F-013, slice 7, R-8).
+    /// </summary>
+    public static string SettingsAiTestConnectionUnavailable => ResourceManager.GetString("SettingsAiTestConnectionUnavailable", Culture)!;
+
+    /// <summary>
     /// Gets the localized title for the Acerca de (about) section of the settings screen.
     /// </summary>
     public static string SettingsAboutTitle => ResourceManager.GetString("SettingsAboutTitle", Culture)!;

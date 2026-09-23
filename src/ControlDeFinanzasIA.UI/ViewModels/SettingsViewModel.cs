@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Application.Settings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.GetAppSettings;
+using ControlDeFinanzasIA.Application.UseCases.Settings.TestAiConnection;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateAiSettings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateLocale;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateTheme;
@@ -33,6 +34,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
     private readonly UpdateThemeUseCase _updateThemeUseCase;
     private readonly UpdateLocaleUseCase _updateLocaleUseCase;
     private readonly UpdateAiSettingsUseCase _updateAiSettingsUseCase;
+    private readonly TestAiConnectionUseCase _testAiConnectionUseCase;
     private readonly ILogger<SettingsViewModel> _logger;
 
     /// <summary>
@@ -46,18 +48,21 @@ public sealed partial class SettingsViewModel : ViewModelBase
         UpdateThemeUseCase updateThemeUseCase,
         UpdateLocaleUseCase updateLocaleUseCase,
         UpdateAiSettingsUseCase updateAiSettingsUseCase,
+        TestAiConnectionUseCase testAiConnectionUseCase,
         ILogger<SettingsViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(getAppSettingsQuery);
         ArgumentNullException.ThrowIfNull(updateThemeUseCase);
         ArgumentNullException.ThrowIfNull(updateLocaleUseCase);
         ArgumentNullException.ThrowIfNull(updateAiSettingsUseCase);
+        ArgumentNullException.ThrowIfNull(testAiConnectionUseCase);
         ArgumentNullException.ThrowIfNull(logger);
 
         _getAppSettingsQuery = getAppSettingsQuery;
         _updateThemeUseCase = updateThemeUseCase;
         _updateLocaleUseCase = updateLocaleUseCase;
         _updateAiSettingsUseCase = updateAiSettingsUseCase;
+        _testAiConnectionUseCase = testAiConnectionUseCase;
         _logger = logger;
 
         Themes = Enum.GetValues<AppTheme>();
@@ -128,6 +133,22 @@ public sealed partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private int _aiMaxTokensPerRequest = AppSettings.DefaultAiMaxTokensPerRequest;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether "Probar conexión" is
+    /// currently in flight (F-013, slice 7, R-8). Drives
+    /// <see cref="CanTestConnection"/> and the button's busy label.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isTestingConnection;
+
+    /// <summary>
+    /// Gets or sets the localized result message of the last "Probar
+    /// conexión" run (F-013, slice 7, R-8). Empty before the button has
+    /// ever been clicked.
+    /// </summary>
+    [ObservableProperty]
+    private string _aiTestConnectionMessage = string.Empty;
+
     // --- Acerca de (no persistence) ---
 
     /// <summary>Gets the informational version of the application assembly.</summary>
@@ -167,6 +188,13 @@ public sealed partial class SettingsViewModel : ViewModelBase
     /// entered yet.
     /// </summary>
     public bool IsAiApiKeyWarningVisible => true;
+
+    /// <summary>
+    /// Gets a value indicating whether <see cref="TestConnectionCommand"/>
+    /// can execute: never while a previous run is still in flight (F-013,
+    /// slice 7, R-8).
+    /// </summary>
+    public bool CanTestConnection => !IsTestingConnection;
 
     /// <summary>
     /// Gets the localized (value, label) projection of <see cref="Themes"/>
@@ -259,6 +287,52 @@ public sealed partial class SettingsViewModel : ViewModelBase
 
         StatusMessage = Strings.SettingsSavedMessage;
     }
+
+    /// <summary>
+    /// Runs the "Probar conexión" diagnostic against the SAVED (persisted)
+    /// AI configuration via <see cref="TestAiConnectionUseCase"/> — never
+    /// against unsaved form field values (F-013, slice 7, R-8, D-11).
+    /// Never writes <see cref="FormError"/>: a connection-test result is
+    /// information, not a form error, and reusing <see cref="FormError"/>
+    /// would leave a red banner under an unrelated save button.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanTestConnection))]
+    private async Task TestConnectionAsync()
+    {
+        IsTestingConnection = true;
+        TestConnectionCommand.NotifyCanExecuteChanged();
+        AiTestConnectionMessage = Strings.SettingsAiTestConnectionTesting;
+
+        try
+        {
+            Result result = await _testAiConnectionUseCase.ExecuteAsync().ConfigureAwait(false);
+            AiTestConnectionMessage = result.IsSuccess
+                ? MessageForOutcome((TestAiConnectionDto)result.Value!)
+                : Strings.SettingsAiTestConnectionUnavailable;
+        }
+        catch (Exception ex)
+        {
+            // Defense in depth: TestAiConnectionUseCase.ExecuteAsync is
+            // documented to never throw (D-11), but no exception may ever
+            // reach the UI (roadmap criterion b's rule, applied here too).
+            _logger.LogWarning(ex, "AI connection test failed unexpectedly.");
+            AiTestConnectionMessage = Strings.SettingsAiTestConnectionUnavailable;
+        }
+        finally
+        {
+            IsTestingConnection = false;
+            TestConnectionCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    private static string MessageForOutcome(TestAiConnectionDto dto) => dto.Kind switch
+    {
+        AiConnectionResultKind.Ok => string.Format(CultureInfo.InvariantCulture, Strings.SettingsAiTestConnectionOk, dto.ProviderName),
+        AiConnectionResultKind.NotConfigured => Strings.SettingsAiTestConnectionNotConfigured,
+        AiConnectionResultKind.InvalidCredentials => Strings.SettingsAiTestConnectionInvalidCredentials,
+        AiConnectionResultKind.Unavailable => Strings.SettingsAiTestConnectionUnavailable,
+        _ => Strings.SettingsAiTestConnectionUnavailable,
+    };
 
     private async Task LoadAsync()
     {

@@ -26,6 +26,14 @@ public sealed class FakeLlmClientFactory : ILLMClientFactory
     /// <summary>Every <see cref="AppSettings"/> passed to <see cref="ResolveDiagnostic"/>, in call order.</summary>
     public List<AppSettings> ResolveDiagnosticCalls { get; } = [];
 
+    /// <summary>
+    /// When set, <see cref="ResolveDiagnostic"/> throws this exception
+    /// instead of returning <see cref="ResolveDiagnosticResult"/> (F-013,
+    /// slice 7). Drives the defensive catch-all path in
+    /// <c>TestAiConnectionUseCase</c> without a real transport failure.
+    /// </summary>
+    public Exception? ThrowOnResolveDiagnostic { get; set; }
+
     /// <inheritdoc />
     public LlmClientResolution Resolve(AppSettings settings)
     {
@@ -37,6 +45,12 @@ public sealed class FakeLlmClientFactory : ILLMClientFactory
     public LlmClientResolution ResolveDiagnostic(AppSettings settings)
     {
         ResolveDiagnosticCalls.Add(settings);
+
+        if (ThrowOnResolveDiagnostic is not null)
+        {
+            throw ThrowOnResolveDiagnostic;
+        }
+
         return ResolveDiagnosticResult;
     }
 }
