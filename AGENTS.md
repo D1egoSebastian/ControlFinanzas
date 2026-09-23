@@ -11,21 +11,21 @@ the project state changes, update this file.
   **Entity Framework Core** (Code First, versioned migrations),
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
-- **Status (today):** Phases 1, 2, 3, 4, and **5 fully archived**. Phase 6 is in progress:
-  F6-001/F6-002 are complete, while F6-003 persistence and the F6-004
-  Subscription create/update demo slice and initial Subscription UI are
-  implemented; generation and FixedExpense remain pending.
-  Phase 3 slice vertical of `Expense` complete and verified. Phase 4
-  UI capstone F-008 delivered via 4 chained PRs + 1 fix-PR with
-  BOLD "Libro Mayor" design pass (verdict PASS WITH WARNINGS, 5 minor
-  non-blocking warnings). Phase 5 complete — multi-moneda DOP/USD
-  with stub `IExchangeRateProvider` + `ICurrencyConverter` cache,
-  `PaymentMethodId` threaded end-to-end (entity → migration →
-  commands/validators → DTOs → repos with Include → filters →
-  query catalog → form picker → multi-select filter rail → second-line
-  conversion display). 559/559 tests verde. See
-  `spec/phases/phase-05/features.md` for the Phase 5 plan and
-  roadmap.
+- **Status (today):** Phases 0–13 fully archived. Phase 14 (AI insights, month-end
+  forecast, and anomaly detection) is in progress — spec and task breakdown
+  already drafted at `spec/features/phase-14/F-014-ai-insights-forecast-anomalies.{spec,tasks}.md`.
+  Phase 13 shipped the app's first outbound network dependency: `ILLMClient` +
+  `OpenAICompatibleClient`/`AnthropicClient` adapters + a
+  `Microsoft.Extensions.Http.Resilience`-backed pipeline (15s total timeout,
+  1 retry, circuit breaker), spent on automatic expense categorization — typing
+  a description suggests an existing category via a dismissable chip, with
+  accepting the chip as the only code path that ever writes the category from
+  AI output. Every failure mode (no key, no network, bad key, timeout,
+  unparseable response) leaves the form fully usable with an honest status
+  message, never an exception. 1184/1184 tests verde (936 unit + 248
+  integration). See `docs/AI_HANDOFF.md` and `spec/phases/phase-13/features.md`
+  for the full phase-13 detail and `spec/phases/phase-05/features.md` through
+  `spec/phases/phase-12/features.md` for earlier phases.
 - **Roadmap / architecture / vision:** `docs/roadmap.md`,
   `docs/architecture.md`, `docs/vision.md`.
 - **Mission / stack constitution:** `spec/constitution/mission.md`,

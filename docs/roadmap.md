@@ -844,7 +844,7 @@ no se le debería pedir otra al activar las features.
 
 ---
 
-### Fase 13 — Pipeline de IA + categorización automática
+### Fase 13 — Pipeline de IA + categorización automática ✅ COMPLETADA (2026-09-23)
 
 **Objetivo**
 Implementar `ILLMClient` con su primer adapter, el factory por
@@ -887,11 +887,61 @@ una feature grande. Lo que se valida aquí se reutiliza en las fases 14,
   debe ser consciente y debe poder probar la conexión antes de usarla.
 
 **Criterios de fase completada**
-- Con una API key válida configurada, escribir "pizza 25" en un gasto
-  sugiere automáticamente la categoría correcta.
-- Sin API key o sin red, la sugerencia falla silenciosamente y la app
-  sigue funcionando; la UI lo indica.
-- El botón "Probar conexión" en Settings valida proveedor + key.
+- ✅ Con una API key válida configurada, escribir "pizza 25" en un gasto
+  sugiere automáticamente la categoría correcta. **Verificado contra una
+  respuesta determinística de un `ILLMClient` fake ejercitado en las
+  pruebas de los slices 5b/6 — no contra un modelo real.** El test externo
+  opt-in contra OpenRouter (`CONTROL_FINANZAS_RUN_EXTERNAL_AI_TESTS=1`)
+  prueba que el wire format funciona de punta a punta, no la calidad de la
+  sugerencia de un modelo real; el tuning del prompt contra las respuestas
+  logueadas (`RawModelAnswer`) queda como follow-up, no como bloqueante de
+  esta fase.
+- ✅ Sin API key o sin red, la sugerencia falla silenciosamente y la app
+  sigue funcionando; la UI lo indica (`AiStatusMessage`: "IA no
+  configurada" / "IA no disponible").
+- ✅ El botón "Probar conexión" en Settings valida proveedor + key y
+  distingue cuatro resultados: no configurado, credenciales inválidas, no
+  disponible, y OK.
+
+**Estado actual (2026-09-23) — ✅ FASE COMPLETADA**
+- ✅ `Application/Abstractions/Llm/`: `ILLMClient`, `ILLMClientFactory`, `LlmRequest`/`LlmMessage`/
+  `LlmResponse`, `LlmException`/`LlmFailureKind` (7 miembros, incluyendo `CircuitOpen`),
+  `LlmConnectionOutcome`/`LlmConnectionStatus` (3 estados, desviación documentada de `Task<bool>`),
+  `LlmClientResolution`/`LlmConfigurationStatus`, `IPromptProvider` — cero referencias a
+  `System.Net.*`, verificado por `LlmContractPurityTests` (más estricto que NetArchTest) y por
+  NetArchTest R1/R2/R4 sin modificar.
+- ✅ `Infrastructure/Llm/`: `OpenAICompatibleClient` (OpenAI/OpenRouter/Custom, `Bearer` auth,
+  `response_format` solo para `OpenAI`) y `AnthropicClient` (`x-api-key` + `anthropic-version`,
+  `system` como campo top-level, no un mensaje `role:"system"`) — construidos por la factory, no por
+  DI directa. `LLMClientFactory`: resolutor síncrono y puro, `MissingApiKey` verificado antes que
+  `MissingBaseUrl` para cualquier proveedor. `LlmServiceCollectionExtensions.AddLlmClients`: 8
+  `HttpClient`s nombrados (uno principal + uno de diagnóstico por cada uno de los 4 `AiProvider`), con
+  los números de resiliencia exactos del diseño (15s timeout total, 6s por intento, 1 reintento
+  exponencial jitterizado, breaker ratio 0.5/throughput 4/sampling 30s/break 15s en el principal; solo
+  timeout en el de diagnóstico).
+- ✅ `Application/Llm/LlmCategoryAnswerParser` (pipeline tolerante de 4 pasos) +
+  `CategoryNameNormalizer` (dos niveles: exacto ordinal-insensible, luego diacríticos NFD-folded;
+  ambigüedad → sin match) + `CategorizeExpenseUseCase` (temperatura forzada 0.0, `MaxTokens=min(setting,128)`,
+  guard de 4/200 caracteres, correlation id, sin match es `Result.Success`).
+- ✅ `ExpensesViewModel`: parámetro 17° de constructor opcional (kill switch), chip de sugerencia con
+  token de generación + CTS por invocación para descartar respuestas supersedidas, `AcceptSuggestionCommand`
+  como único punto de escritura de `SelectedCategoryId` desde IA.
+- ✅ `TestAiConnectionUseCase` + botón "Probar conexión" en `SettingsView`, usando el pipeline de
+  diagnóstico (sin retry/breaker) para que una key recién corregida nunca choque con un breaker abierto.
+- ✅ Gates: build limpio, 1184/1184 tests verdes (936 unit + 248 integration, subiendo desde 1033/1033
+  al cierre de Fase 12), re-verificado 3 veces consecutivas sin flakiness, `dotnet format style` limpio,
+  NetArchTest 11/11.
+- ✅ Aplicado en 9 commits encadenados (`389382a` contratos, `54f8743` adapter OpenAI+prompts,
+  `d40b536` adapter Anthropic, `6e8fa63` factory+DI+resiliencia, `fedf209` parser tolerante, `fc6b5de`
+  caso de uso de categorización, `71c213a` chip de sugerencia UI, `3c044f8` Probar conexión, `aa340dd`
+  fix de un test de debounce flaky), con re-verificación independiente de los gates durante
+  `sdd-verify`.
+- ✅ SDD archivado: `spec/features/phase-13/F-013-ai-pipeline-categorization.done.md`.
+- ⚠️ Gap no bloqueante: el test `RapidKeystrokes_WithinDebounceWindow_ProduceExactlyOneCall` fue
+  genuinamente flaky con un debounce de 25ms y gaps de 20ms entre teclas simuladas — demasiado cerca de
+  la resolución del temporizador de Windows (~15.6ms). Arreglado en `aa340dd` ampliando la ventana a
+  400ms. **Patrón para futuros tests de timing en este repo**: dejar un margen de 10x+ sobre la
+  resolución del temporizador del SO, no acercarse a él.
 
 ---
 

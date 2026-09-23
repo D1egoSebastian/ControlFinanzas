@@ -363,6 +363,13 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 
 ## 11. Integración de IA — `ILLMClient`
 
+**Fase 13, implementado.** Lo que sigue documenta el contrato y los adapters realmente shippeados —
+`Application/Abstractions/Llm/`, `Infrastructure/Llm/OpenAICompatibleClient.cs`,
+`Infrastructure/Llm/AnthropicClient.cs`, `Infrastructure/Llm/LLMClientFactory.cs` — no un plan a
+futuro. El primer (y único, en v1) consumidor es `CategorizeExpenseUseCase` (sugerencia de categoría al
+tipear la descripción de un gasto); Fase 14 reutiliza el mismo `ILLMClient` para insights/forecast/
+anomalías narrativas.
+
 ### Contrato
 
 `ILLMClient` vive en `Application/Abstractions/`. Métodos:
@@ -402,9 +409,17 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 
 ### Resiliencia
 
-- **Polly** (o `Microsoft.Extensions.Http.Resilience`) para timeouts, reintentos con backoff y circuit breaker.
-- **Falla silenciosa**: si el cliente LLM lanza, el use case captura, loguea a nivel Warning con el correlation id, y devuelve un `Result.Failure` con código `LLMUnavailable`. La UI muestra "IA no disponible" sin romper la pantalla.
-- **Timeout duro**: 15 s por request por defecto, configurable.
+- **`Microsoft.Extensions.Http.Resilience`** (Polly por debajo) para timeouts, reintentos con backoff y
+  circuit breaker, registrado vía `AddLlmClients` (`Infrastructure/Llm/LlmServiceCollectionExtensions.cs`).
+  Cliente principal (`llm-{provider}`): timeout total 15 s, timeout por intento 6 s, 1 reintento (2
+  intentos totales) con backoff exponencial jitterizado a 1 s, breaker con ratio de fallo 0.5,
+  throughput mínimo 4, ventana de muestreo 30 s, duración de apertura 15 s. El predicado de retry por
+  defecto NO reintenta 400/401/403 — una key inválida falla en ~1 s, no agota el presupuesto de
+  reintentos. Cliente de diagnóstico (`llm-{provider}-diagnostic`, para "Probar conexión"): solo
+  timeout, sin retry ni breaker — nombrado aparte para que una key recién corregida nunca choque con un
+  breaker abierto por la anterior.
+- **Falla silenciosa**: si el cliente LLM lanza, el use case captura, loguea a nivel Warning con el correlation id, y devuelve un `Result.Failure` con código `LLMUnavailable` (o `AiNotConfigured` si no hay key configurada — cero llamadas HTTP en ese caso). La UI muestra "IA no disponible" sin romper la pantalla; el formulario sigue usable.
+- **Timeout duro**: 15 s por request, mas un timeout de 15 s con `CancellationTokenSource` enlazado en el propio use case como defensa en profundidad (se mantiene incluso si un futuro proveedor se registrara sin el handler de resiliencia).
 
 ### Por qué `ILLMClient` y no un SDK por proveedor
 
@@ -482,8 +497,11 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
   cifrado de disco (BitLocker, FileVault, LUKS)".
 - Cifrado en reposo por SO: **ADR pendiente** (DPAPI en Windows, Keychain en macOS, libsecret en Linux).
 - No hay `HttpClient`/`ILLMClient` en `UpdateAiSettingsUseCase` ni en `SettingsStore` — Fase 12 solo
-  persiste la configuración; el consumo real de IA es una fase futura, verificado con un assert por
-  reflexión en tests (ningún tipo `*LLMClient*` en la solución todavía).
+  persiste la configuración, verificado con un assert por reflexión en tests. El consumo real de la key
+  (Fase 13, `CategorizeExpenseUseCase`/`TestAiConnectionUseCase`) la lee de solo lectura vía
+  `ISettingsStore`; nunca la re-persiste, cifra ni transforma. La key nunca aparece en logs, mensajes de
+  estado ni el resultado de "Probar conexión" — asertado por `ApiKeyIsNeverLoggedTests` con una key
+  centinela.
 
 ---
 

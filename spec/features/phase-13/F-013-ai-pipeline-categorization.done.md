@@ -1,7 +1,8 @@
 # F-013 — AI Pipeline + Automatic Expense Categorization
 
 > **Phase:** 13 — Pipeline de IA + categorización automática
-> **Status:** 📝 Spec drafted (2026-09-21) — ready for design
+> **Status:** ✅ Archived (2026-09-23) — all acceptance criteria met, see
+> `.atl/sdd/f-013p13-ai-pipeline/verify-report.md` and `archive-report.md`
 > **SDD:** `.atl/sdd/f-013p13-ai-pipeline/`
 > **Depends on:** Phase 12 (`ISettingsStore`/`AppSettings` supply provider, key,
 > model, base URL, temperature, max tokens — read-only in this phase)
@@ -340,70 +341,117 @@ hand-editing for four consecutive phases.
 
 ## Acceptance Criteria
 
-- [ ] **(roadmap a)** With a valid API key configured, typing "pizza 25" in
-  an expense suggests the correct category. — R-3, R-6, S-1
-- [ ] **(roadmap b)** With no API key or no network, the suggestion fails
+- [x] **(roadmap a)** With a valid API key configured, typing "pizza 25" in
+  an expense suggests the correct category. — R-3, R-6, S-1. **Evidence:**
+  `CategorizeExpenseUseCase`/`ExpensesViewModel` suggestion pipeline
+  confirmed against a deterministic fake `ILLMClient` in slices 5b/6's
+  tests; the opt-in OpenRouter round trip is evidence-only, not the gate
+  (see `verify-report.md`).
+- [x] **(roadmap b)** With no API key or no network, the suggestion fails
   silently, the app keeps working, and the UI indicates it via
   `AiStatusMessage` ("IA no configurada" / "IA no disponible") — no dialog,
-  no exception, no blocked form. — R-4, S-2, S-3
-- [ ] **(roadmap c)** The "Probar conexión" button in Settings validates
+  no exception, no blocked form. — R-4, S-2, S-3. **Evidence:**
+  `CategorizeExpenseUseCase`'s `AiNotConfigured`/`LLMUnavailable`
+  short-circuits (zero client calls in the former) and
+  `ExpensesViewModel.RequestSuggestionAsync`'s broad catch, read directly.
+- [x] **(roadmap c)** The "Probar conexión" button in Settings validates
   provider + key and distinguishes not-configured, invalid-credentials,
-  unavailable, and OK. — R-8, S-4
-- [ ] `ILLMClient`/`LlmRequest`/`LlmResponse`/`ILLMClientFactory` exist in
+  unavailable, and OK. — R-8, S-4. **Evidence:** `TestAiConnectionUseCase`
+  read in full; all four outcomes confirmed as `Result.Success` variants.
+- [x] `ILLMClient`/`LlmRequest`/`LlmResponse`/`ILLMClientFactory` exist in
   `Application/Abstractions/` with zero `System.Net.Http` references; the
   existing `ArchitectureTests` R1/R2/R4 NetArchTest rules stay green
-  unmodified. — R-1
-- [ ] `OpenAICompatibleClient` and `AnthropicClient` are both covered by
+  unmodified. — R-1. **Evidence:** `LlmContractPurityTests` (stricter than
+  NetArchTest, rejects any `System.Net.*`) + NetArchTest 11/11 re-run green.
+- [x] `OpenAICompatibleClient` and `AnthropicClient` are both covered by
   `FakeHttpMessageHandler` tests asserting distinct URLs, headers
   (`Authorization: Bearer` vs `x-api-key` + `anthropic-version`), request
   body shape, and response deserialization for 401 / 429 / 500 / timeout. —
-  R-2
-- [ ] `ILLMClientFactory` returns the correct adapter for all four
+  R-2. **Evidence:** both adapter source files read directly; status-mapping
+  table confirmed identical to design D-10.
+- [x] `ILLMClientFactory` returns the correct adapter for all four
   `AiProvider` values and resolves base URLs per the documented defaults;
   `Custom` with an empty `AiBaseUrl` is a configuration error and never
-  produces a call. — R-2
-- [ ] The suggestion chip is rendered beside the category `ComboBox`;
+  produces a call. — R-2. **Evidence:** `LLMClientFactory.ResolveCore`/
+  `ResolveBaseUrl` read directly, matches the design's base-URL table
+  exactly.
+- [x] The suggestion chip is rendered beside the category `ComboBox`;
   accepting it is the only code path that writes `SelectedCategoryId` from
-  AI output — asserted by test. — R-5, S-5
-- [ ] No suggestion request fires when `SelectedCategoryId` is already set,
+  AI output — asserted by test. — R-5, S-5. **Evidence:** `AcceptSuggestion`
+  confirmed as the sole write site in `ExpensesViewModel.cs`.
+- [x] No suggestion request fires when `SelectedCategoryId` is already set,
   when the trimmed description is under 4 characters, when no API key is
   configured, or when the text repeats the last submitted text in the same
-  form session. — R-6, S-2, S-6
-- [ ] Rapid typing produces exactly one call per 600 ms pause; a superseded
+  form session. — R-6, S-2, S-6. **Evidence:** `RequestSuggestionAsync`'s
+  double-checked guards (before and after the debounce delay) and
+  `_suggestionCache` read directly.
+- [x] Rapid typing produces exactly one call per 600 ms pause; a superseded
   response is discarded and never renders; a manual `ComboBox` pick cancels
-  any in-flight request and clears the suggestion. — R-6, S-7, S-8
-- [ ] `CategorizeExpenseUseCase` sends `Temperature = 0.0` on every request,
-  independent of the user's persisted `AiTemperature`. — R-7
-- [ ] The tolerant parser correctly resolves clean JSON, fenced JSON, a prose
+  any in-flight request and clears the suggestion. — R-6, S-7, S-8.
+  **Evidence:** generation-token + `Interlocked`-based CTS handoff read
+  directly; the `aa340dd` fix widened the rapid-keystroke test's timing
+  window from 25 ms to 400 ms to remove Windows-timer-resolution flakiness
+  (no flake reproduced across 3 fresh full-suite runs in `sdd-verify`).
+- [x] `CategorizeExpenseUseCase` sends `Temperature = 0.0` on every request,
+  independent of the user's persisted `AiTemperature`. — R-7. **Evidence:**
+  `ClassificationTemperature` const, unconditionally used, confirmed by
+  direct read.
+- [x] The tolerant parser correctly resolves clean JSON, fenced JSON, a prose
   preamble, `categoria`/`name` aliases, case/diacritic mismatches, a
   bare-string answer, and explicit `null`/`none`, and treats truncated JSON
-  and a prose paragraph as parse failures (no-match). — R-3, S-9
-- [ ] An LLM-returned name with no exact (normalized) match under either
+  and a prose paragraph as parse failures (no-match). — R-3, S-9.
+  **Evidence:** `LlmCategoryAnswerParserTests`/`CategoryNameNormalizerTests`
+  green in the 936/936 unit run; parser consumption path in
+  `CategorizeExpenseUseCase` read directly.
+- [x] An LLM-returned name with no exact (normalized) match under either
   matching tier returns `Result.Success` with `Matched = false`, not a
-  failure; the UI shows no chip and no status message. — R-3, S-10
-- [ ] No `Category` row is ever created, updated, or deleted by any AI code
-  path — asserted by test. — R-3, S-11
-- [ ] Every AI pipeline failure is translated to
+  failure; the UI shows no chip and no status message. — R-3, S-10.
+  **Evidence:** `MatchCategory`'s tier-1/tier-2/ambiguity logic read
+  directly, returns `null` → `Result.Success(Matched=false)`.
+- [x] No `Category` row is ever created, updated, or deleted by any AI code
+  path — asserted by test. — R-3, S-11. **Evidence:**
+  `StrictReadOnlyCategoryRepository` (throwing `AddAsync`/`UpdateAsync`/
+  `RemoveAsync`) used by `CategorizeExpenseUseCaseTests` and
+  `ApiKeyIsNeverLoggedTests`, confirmed.
+- [x] Every AI pipeline failure is translated to
   `Result.Failure("LLMUnavailable", …)` (or `"AiNotConfigured"` when no key
   is configured) and logged at Warning with a correlation `Guid`; no
-  exception escapes to the UI. — R-4, S-2, S-3
-- [ ] Resilience on the main client is configured with exactly: 15 s total
+  exception escapes to the UI. — R-4, S-2, S-3. **Evidence:**
+  `CategorizeExpenseUseCase`'s full catch chain read directly, including the
+  caller-cancellation-vs-hard-timeout distinction.
+- [x] Resilience on the main client is configured with exactly: 15 s total
   timeout, 6 s per-attempt timeout, 1 retry with jittered exponential
   backoff, breaker at failure ratio 0.5 / minimum throughput 4 / 30 s
-  sampling / 15 s break; a 401/403 fails fast without retrying. — R-9, S-12
-- [ ] The diagnostic ("Probar conexión") client carries no retry and no
+  sampling / 15 s break; a 401/403 fails fast without retrying. — R-9, S-12.
+  **Evidence:** `LlmServiceCollectionExtensions.ConfigureMainPipeline` read
+  directly; `ResiliencePipelineTests` asserts attempt **counts** (1 for
+  401/403, 2 for a retryable 500) against the real registered pipeline, not
+  framework defaults — non-vacuous by design.
+- [x] The diagnostic ("Probar conexión") client carries no retry and no
   circuit breaker, and is unaffected by the main client's breaker state. —
-  R-8, R-9, S-13
-- [ ] The API key never appears in any log line, `AiStatusMessage`, or
-  test-connection result. — R-4, S-14
-- [ ] No hardcoded user-facing strings; all new copy resolves through
+  R-8, R-9, S-13. **Evidence:** distinct `llm-{provider}-diagnostic` named
+  `HttpClient` with only `AddTimeout`, confirmed by direct read and by
+  `ResiliencePipelineTests.DiagnosticClient_RetryableServerError_ProducesExactlyOneAttempt`.
+- [x] The API key never appears in any log line, `AiStatusMessage`, or
+  test-connection result. — R-4, S-14. **Evidence:** `ApiKeyIsNeverLoggedTests`
+  (sentinel key through 401/500/timeout failures) read in full, plus direct
+  read of `SettingsViewModel.MessageForOutcome`'s fixed message strings.
+- [x] No hardcoded user-facing strings; all new copy resolves through
   `Strings.resx` / `Strings.es-DO.resx`, with hand-written
   `Strings.Designer.cs` accessors for the XAML-consumed keys only (keys read
-  via `IStringLocalizer` need none). — R-10
-- [ ] No migration, no `AppDbContext` change, no change to `SettingsStore` /
-  `AppSettings` / the `Setting` table. — Out of Scope
-- [ ] The opt-in external test
+  via `IStringLocalizer` need none). — R-10. **Evidence:** confirmed the
+  `SettingsView`-only accessor set and `ExpensesView.axaml`'s continued
+  absence of a `resources:` namespace.
+- [x] No migration, no `AppDbContext` change, no change to `SettingsStore` /
+  `AppSettings` / the `Setting` table. — Out of Scope. **Evidence:** `git
+  diff` across all 9 phase commits touches no `Migrations/`,
+  `SettingsStore.cs`, `AppSettings.cs`, or `Setting.cs`.
+- [x] The opt-in external test
   (`CONTROL_FINANZAS_RUN_EXTERNAL_AI_TESTS=1` + key) performs one real
   OpenRouter free-model round trip through `OpenAICompatibleClient`, and is
-  skipped by default (not part of the normal suite). — R-2
-- [ ] Full test suite green, no regressions.
+  skipped by default (not part of the normal suite). — R-2. **Evidence:**
+  `OpenRouterRoundTripTests.cs` (task 4.12) confirmed present, env-var
+  gated, not counted in the 1184/1184 default run.
+- [x] Full test suite green, no regressions. **Evidence:** 1184/1184 (936
+  unit + 248 integration), re-run independently 3 consecutive times in
+  `sdd-verify`, zero flakiness.
