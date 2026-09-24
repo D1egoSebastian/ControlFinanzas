@@ -162,25 +162,25 @@ Application-side DI wiring resolves cleanly.
 Depends on 3. Goal: a reliable navigate-away signal for VMs that `GoBack` re-activates, plus a
 UI-layer clipboard port with no new Application/Infrastructure coupling.
 
-- [ ] 4.1 Write failing `tests/…Unit/UI/NavigationServiceTests.cs` additions: `OnNavigatedFrom` fires
+- [x] 4.1 Write failing `tests/…Unit/UI/NavigationServiceTests.cs` additions: `OnNavigatedFrom` fires
   on both `NavigateTo` and `GoBack`; `OnNavigatedTo` fires after the new VM becomes
   `CurrentViewModel`; a non-`INavigationAware` VM is unaffected — using a recording test VM. (D-7)
-- [ ] 4.2 Create `src/…UI/Navigation/INavigationAware.cs` (`OnNavigatedTo`/`OnNavigatedFrom`). Modify
+- [x] 4.2 Create `src/…UI/Navigation/INavigationAware.cs` (`OnNavigatedTo`/`OnNavigatedFrom`). Modify
   `src/…UI/Navigation/NavigationService.cs`: call `(CurrentViewModel as
   INavigationAware)?.OnNavigatedFrom()` before switching and `(newVm as
   INavigationAware)?.OnNavigatedTo()` after `OnCurrentChanged()`, in both `NavigateCore` and `GoBack`.
   Run 4.1 green. (D-7)
-- [ ] 4.3 Create `tests/…Unit/TestDoubles/FakeClipboardService.cs`: records the last `SetTextAsync`
+- [x] 4.3 Create `tests/…Unit/TestDoubles/FakeClipboardService.cs`: records the last `SetTextAsync`
   call. (D-8, D-13)
-- [ ] 4.4 Create `src/…UI/Services/IClipboardService.cs` (`Task SetTextAsync(string text)`) and
+- [x] 4.4 Create `src/…UI/Services/IClipboardService.cs` (`Task SetTextAsync(string text)`) and
   `src/…UI/Services/AvaloniaClipboardService.cs`: resolves `TopLevel.GetTopLevel(mainWindow)
   ?.Clipboard` via `IClassicDesktopStyleApplicationLifetime`; no-op with a Debug log when unavailable.
   (D-8, R-13)
-- [ ] 4.5 Modify `src/…UI/Composition/Bootstrap.cs`: `AddSingleton<IClipboardService,
+- [x] 4.5 Modify `src/…UI/Composition/Bootstrap.cs`: `AddSingleton<IClipboardService,
   AvaloniaClipboardService>()`. (D-8, D-12)
-- [ ] 4.6 Smoke-launch the app: confirm `IClipboardService` resolves from DI and existing navigation
+- [x] 4.6 Smoke-launch the app: confirm `IClipboardService` resolves from DI and existing navigation
   (sidebar routes, back) still works with no startup failure. Screenshot only, no simulated clicks.
-- [ ] 4.7 Run all four gates. All green before opening PR S4.
+- [x] 4.7 Run all four gates. All green before opening PR S4.
 
 ## 5. ViewModel + strings
 

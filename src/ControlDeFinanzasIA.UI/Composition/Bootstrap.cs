@@ -59,6 +59,7 @@ using ControlDeFinanzasIA.Infrastructure.Llm;
 using ControlDeFinanzasIA.Infrastructure.Persistence;
 using ControlDeFinanzasIA.UI.Formatting;
 using ControlDeFinanzasIA.UI.Navigation;
+using ControlDeFinanzasIA.UI.Services;
 using ControlDeFinanzasIA.UI.System;
 using ControlDeFinanzasIA.UI.ViewModels;
 using FluentValidation;
@@ -231,6 +232,9 @@ public static class Bootstrap
         // Fase 15: chat con IA sobre tus finanzas (F-015, slice S3).
         services.AddTransient<BuildChatContextQuery>();
         services.AddTransient<AskFinanceChatUseCase>();
+
+        // Fase 15: navegación + portapapeles (F-015, slice S4).
+        services.AddSingleton<IClipboardService, AvaloniaClipboardService>();
 
         ServiceProvider tempProvider = services.BuildServiceProvider();
         try

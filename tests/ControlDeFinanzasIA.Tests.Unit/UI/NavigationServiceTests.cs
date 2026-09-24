@@ -195,6 +195,135 @@ public sealed class NavigationServiceTests
         Assert.True(navigationService.CanGoBack);
     }
 
+    [Fact]
+    public void NavigateTo_TargetIsNavigationAware_CallsOnNavigatedToAfterActivation()
+    {
+        // Arrange
+        RecordingNavigationAwareViewModel aware = new();
+        const string awareRoute = "Aware";
+        FakeServiceProvider services = new(new Dictionary<Type, object>
+        {
+            { typeof(RecordingNavigationAwareViewModel), aware }
+        });
+        NavigationService navigationService = new(
+            services,
+            new Dictionary<string, Type>(StringComparer.Ordinal) { { awareRoute, typeof(RecordingNavigationAwareViewModel) } });
+
+        // Act
+        navigationService.NavigateTo(awareRoute);
+
+        // Assert
+        Assert.Equal(1, aware.OnNavigatedToCallCount);
+        Assert.Same(aware, navigationService.CurrentViewModel);
+    }
+
+    [Fact]
+    public void NavigateTo_PreviousViewModelIsNavigationAware_CallsOnNavigatedFromOnLeave()
+    {
+        // Arrange
+        RecordingNavigationAwareViewModel first = new();
+        DashboardViewModel second = CreateDashboardViewModel();
+        const string awareRoute = "Aware";
+        FakeServiceProvider services = new(new Dictionary<Type, object>
+        {
+            { typeof(RecordingNavigationAwareViewModel), first },
+            { typeof(DashboardViewModel), second }
+        });
+        NavigationService navigationService = new(
+            services,
+            new Dictionary<string, Type>(StringComparer.Ordinal)
+            {
+                { awareRoute, typeof(RecordingNavigationAwareViewModel) },
+                { RouteNames.Dashboard, typeof(DashboardViewModel) }
+            });
+        navigationService.NavigateTo(awareRoute);
+
+        // Act
+        navigationService.NavigateTo(RouteNames.Dashboard);
+
+        // Assert
+        Assert.Equal(1, first.OnNavigatedFromCallCount);
+    }
+
+    [Fact]
+    public void GoBack_PreviousViewModelIsNavigationAware_CallsOnNavigatedToAfterReactivation()
+    {
+        // Arrange
+        RecordingNavigationAwareViewModel first = new();
+        DashboardViewModel second = CreateDashboardViewModel();
+        const string awareRoute = "Aware";
+        FakeServiceProvider services = new(new Dictionary<Type, object>
+        {
+            { typeof(RecordingNavigationAwareViewModel), first },
+            { typeof(DashboardViewModel), second }
+        });
+        NavigationService navigationService = new(
+            services,
+            new Dictionary<string, Type>(StringComparer.Ordinal)
+            {
+                { awareRoute, typeof(RecordingNavigationAwareViewModel) },
+                { RouteNames.Dashboard, typeof(DashboardViewModel) }
+            });
+        navigationService.NavigateTo(awareRoute);
+        navigationService.NavigateTo(RouteNames.Dashboard);
+
+        // Act
+        navigationService.GoBack();
+
+        // Assert: once on the original NavigateTo, once more when GoBack reactivates it.
+        Assert.Equal(2, first.OnNavigatedToCallCount);
+        Assert.Same(first, navigationService.CurrentViewModel);
+    }
+
+    [Fact]
+    public void GoBack_CurrentViewModelIsNavigationAware_CallsOnNavigatedFromBeforeSwitching()
+    {
+        // Arrange
+        DashboardViewModel first = CreateDashboardViewModel();
+        RecordingNavigationAwareViewModel second = new();
+        const string awareRoute = "Aware";
+        FakeServiceProvider services = new(new Dictionary<Type, object>
+        {
+            { typeof(DashboardViewModel), first },
+            { typeof(RecordingNavigationAwareViewModel), second }
+        });
+        NavigationService navigationService = new(
+            services,
+            new Dictionary<string, Type>(StringComparer.Ordinal)
+            {
+                { RouteNames.Dashboard, typeof(DashboardViewModel) },
+                { awareRoute, typeof(RecordingNavigationAwareViewModel) }
+            });
+        navigationService.NavigateTo(RouteNames.Dashboard);
+        navigationService.NavigateTo(awareRoute);
+
+        // Act
+        navigationService.GoBack();
+
+        // Assert
+        Assert.Equal(1, second.OnNavigatedFromCallCount);
+        Assert.Same(first, navigationService.CurrentViewModel);
+    }
+
+    [Fact]
+    public void NavigateTo_NonNavigationAwareViewModel_NavigatesNormallyWithoutError()
+    {
+        // Arrange: DashboardViewModel does not implement INavigationAware; the hook must be a
+        // pure no-op for it.
+        DashboardViewModel dashboard = CreateDashboardViewModel();
+        FakeServiceProvider services = new(new Dictionary<Type, object>
+        {
+            { typeof(DashboardViewModel), dashboard }
+        });
+        NavigationService navigationService = new(services);
+
+        // Act
+        navigationService.NavigateTo(RouteNames.Dashboard);
+
+        // Assert
+        Assert.Same(dashboard, navigationService.CurrentViewModel);
+    }
+
     private static DashboardViewModel CreateDashboardViewModel()
     {
         FakeExpenseRepository expenseRepo = new();
@@ -237,5 +366,20 @@ public sealed class NavigationServiceTests
 
             return _factory?.Invoke(serviceType);
         }
+    }
+
+    /// <summary>
+    /// Recording <see cref="INavigationAware"/> test double (F-015, slice S4) used to assert
+    /// exactly when <see cref="NavigationService"/> invokes the navigate-away/navigate-to hooks.
+    /// </summary>
+    private sealed class RecordingNavigationAwareViewModel : ViewModelBase, INavigationAware
+    {
+        public int OnNavigatedToCallCount { get; private set; }
+
+        public int OnNavigatedFromCallCount { get; private set; }
+
+        public void OnNavigatedTo() => OnNavigatedToCallCount++;
+
+        public void OnNavigatedFrom() => OnNavigatedFromCallCount++;
     }
 }

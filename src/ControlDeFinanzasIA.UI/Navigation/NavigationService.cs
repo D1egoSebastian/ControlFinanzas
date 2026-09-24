@@ -21,23 +21,48 @@ public sealed class NavigationService : ObservableObject, INavigationService
     /// </summary>
     /// <param name="services">The service provider used to resolve view-models.</param>
     public NavigationService(IServiceProvider services)
+        : this(services, BuildDefaultRoutes())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NavigationService"/> class with an
+    /// explicit route map.
+    /// </summary>
+    /// <remarks>
+    /// Internal test-only seam: production code always goes through
+    /// <see cref="NavigationService(IServiceProvider)"/>, which resolves the fixed set of
+    /// application routes. This overload lets unit tests register additional route names
+    /// backed by recording test doubles (e.g. an <see cref="INavigationAware"/> spy) so the
+    /// real <see cref="NavigateCore"/>/<see cref="GoBack"/> code paths can be exercised
+    /// end-to-end without changing any production view-model's behavior.
+    /// </remarks>
+    /// <param name="services">The service provider used to resolve view-models.</param>
+    /// <param name="routes">The route name to view-model type map.</param>
+    internal NavigationService(IServiceProvider services, IReadOnlyDictionary<string, Type> routes)
     {
         ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(routes);
 
         _services = services;
-        _routes = new Dictionary<string, Type>(StringComparer.Ordinal)
-        {
-            { RouteNames.Dashboard, typeof(DashboardViewModel) },
-            { RouteNames.Expenses, typeof(ExpensesViewModel) },
-            { RouteNames.Incomes, typeof(IncomeViewModel) },
-            { RouteNames.Recurring, typeof(RecurringRulesViewModel) },
-            { RouteNames.Debts, typeof(DebtsViewModel) },
-            { RouteNames.Calendar, typeof(CalendarViewModel) },
-            { RouteNames.Budgets, typeof(BudgetsViewModel) },
-            { RouteNames.Goals, typeof(GoalsViewModel) },
-            { RouteNames.Settings, typeof(SettingsViewModel) }
-        };
+        _routes = new Dictionary<string, Type>(routes, StringComparer.Ordinal);
     }
+
+    /// <summary>
+    /// Builds the fixed route name to view-model type map used by production code.
+    /// </summary>
+    private static Dictionary<string, Type> BuildDefaultRoutes() => new(StringComparer.Ordinal)
+    {
+        { RouteNames.Dashboard, typeof(DashboardViewModel) },
+        { RouteNames.Expenses, typeof(ExpensesViewModel) },
+        { RouteNames.Incomes, typeof(IncomeViewModel) },
+        { RouteNames.Recurring, typeof(RecurringRulesViewModel) },
+        { RouteNames.Debts, typeof(DebtsViewModel) },
+        { RouteNames.Calendar, typeof(CalendarViewModel) },
+        { RouteNames.Budgets, typeof(BudgetsViewModel) },
+        { RouteNames.Goals, typeof(GoalsViewModel) },
+        { RouteNames.Settings, typeof(SettingsViewModel) }
+    };
 
     /// <inheritdoc />
     public ViewModelBase? CurrentViewModel
@@ -104,9 +129,14 @@ public sealed class NavigationService : ObservableObject, INavigationService
 
         configure?.Invoke(viewModel);
 
+        // F-015 D-7: signal the outgoing view-model before the switch, then let the
+        // incoming one know it is active only after CurrentChanged has already fired.
+        (CurrentViewModel as INavigationAware)?.OnNavigatedFrom();
+
         _history.Push(viewModel);
         CurrentViewModel = viewModel;
         OnCurrentChanged();
+        (viewModel as INavigationAware)?.OnNavigatedTo();
     }
 
     /// <inheritdoc />
@@ -117,9 +147,14 @@ public sealed class NavigationService : ObservableObject, INavigationService
             return;
         }
 
+        // F-015 D-7: GoBack reactivates the same instance already on the history stack, so
+        // this is the only way that view-model can learn it became active again.
+        (CurrentViewModel as INavigationAware)?.OnNavigatedFrom();
+
         _history.Pop();
         CurrentViewModel = _history.Peek();
         OnCurrentChanged();
+        (CurrentViewModel as INavigationAware)?.OnNavigatedTo();
     }
 
     private void OnCurrentChanged() => CurrentChanged?.Invoke(this, EventArgs.Empty);
