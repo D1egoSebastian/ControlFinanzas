@@ -187,7 +187,7 @@ UI-layer clipboard port with no new Application/Infrastructure coupling.
 Depends on 4. Goal: `ChatViewModel` drives the full send/stop/copy/reset flow against the real use
 case and ports, with generation-token guards matching the `ExpensesViewModel` precedent.
 
-- [ ] 5.1 Write failing `tests/…Unit/UI/ChatViewModelTests.cs`: `Send` appends a user bubble then an
+- [x] 5.1 Write failing `tests/…Unit/UI/ChatViewModelTests.cs`: `Send` appends a user bubble then an
   assistant bubble; `_answeredTurns` grows only on `Answered`; `SendCommand` is disabled while
   sending (a second `Execute` is a no-op); `Stop` produces a localized cancellation note (not an
   error) and the cancelled turn is excluded from the next request's replayed `LlmRequest` (S-6);
@@ -197,22 +197,33 @@ case and ports, with generation-token guards matching the `ExpensesViewModel` pr
   everything, and a late completion is dropped by the generation-token check (S-12); the figures panel
   values equal `ChatContextRenderer.FormatDop` of the snapshot's current-month totals. (R-9, R-10,
   R-11, R-12, R-13, D-9, S-2, S-6, S-9, S-11, S-12)
-- [ ] 5.2 Create `src/…UI/ViewModels/ChatMessageItem.cs`: `Role`, observable `Text`, observable
+- [x] 5.2 Create `src/…UI/ViewModels/ChatMessageItem.cs`: `Role`, observable `Text`, observable
   `State` (`Pending`/`Answered`/`Unavailable`/`Cancelled`/`Rejected`/`NotConfigured`),
   `IsNote` derived property. (D-9)
-- [ ] 5.3 Create `src/…UI/ViewModels/ChatViewModel.cs`: `sealed partial class : ViewModelBase,
+- [x] 5.3 Create `src/…UI/ViewModels/ChatViewModel.cs`: `sealed partial class : ViewModelBase,
   INavigationAware`; ctor `AskFinanceChatUseCase, IClipboardService, IStringLocalizer<Strings>,
   ILogger<ChatViewModel>`; `Messages`/`FigureLines` collections; `_answeredTurns` as the only replay
   source; generation-token `SendAsync`/`Stop`/`NewConversation`/`CopyAsync` commands;
   `ResetConversation()`; `OnNavigatedTo()` calling `GetAvailabilityAsync`; `ApplyFigures` using
   `ChatContextRenderer.FormatDop` with the reply's `Locale`. Run 5.1 green. (R-9, R-10, R-11, R-12,
   R-13, D-9)
-- [ ] 5.4 Add VM-facing keys to `Strings.resx`/`Strings.es-DO.resx` + hand-added
+
+  **Deviation:** `SendAsync` adds an explicit `if (IsSending) return;` guard at its top, in addition
+  to the `CanSend`-gated `[RelayCommand]`. `CommunityToolkit.Mvvm`'s generated `AsyncRelayCommand`
+  does not itself re-check `CanExecute` before running the delegate — `ExecuteAsync`/`Execute` called
+  directly (bypassing a bound button's own `CanExecute` check) runs unconditionally. Without the
+  explicit guard, a second concurrent invocation would await the same in-flight
+  `AskFinanceChatUseCase.ExecuteAsync` call path a second time instead of being a true no-op,
+  which is stricter than R-9 requires and was caught by a hang in
+  `ChatViewModelTests.SendCommand_SecondInvocationWhileSending_IsANoOp` during apply. The explicit
+  guard makes "at most one question in flight" an invariant of the view-model itself, not only of
+  the data-bound button's disabled state.
+- [x] 5.4 Add VM-facing keys to `Strings.resx`/`Strings.es-DO.resx` + hand-added
   `Strings.Designer.cs` accessors: `ChatThinking`, `ChatAiNotConfiguredBanner`, `ChatAiUnavailable`,
   `ChatCancelledNote`, `ChatQuestionRejected`, `ChatPrivacyDisclosureFormat`, `ChatYouLabel`,
   `ChatAssistantLabel`, `ChatFiguresTitle`, `ChatFiguresExpensesLabel`, `ChatFiguresIncomesLabel`,
   `ChatFiguresNetLabel`, `ChatFiguresMissingRates`, `ChatFiguresEmpty`. (R-15, D-11)
-- [ ] 5.5 Run all four gates. All green before opening PR S5.
+- [x] 5.5 Run all four gates. All green before opening PR S5.
 
 ## 6. View + routing + docs
 

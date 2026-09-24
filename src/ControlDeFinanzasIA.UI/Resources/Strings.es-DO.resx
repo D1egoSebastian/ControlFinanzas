@@ -628,4 +628,46 @@ Mostrando conversiones aproximadas.
   <data name="DashboardAnomalyMessageFormat" xml:space="preserve">
     <value>Gasto inusual en {0}: {1} (≈{2}x lo habitual de {3})</value>
   </data>
+  <data name="ChatThinking" xml:space="preserve">
+    <value>Pensando…</value>
+  </data>
+  <data name="ChatAiNotConfiguredBanner" xml:space="preserve">
+    <value>IA no configurada — configúrala en Configuración</value>
+  </data>
+  <data name="ChatAiUnavailable" xml:space="preserve">
+    <value>IA no disponible. Intenta de nuevo.</value>
+  </data>
+  <data name="ChatCancelledNote" xml:space="preserve">
+    <value>Pregunta detenida.</value>
+  </data>
+  <data name="ChatQuestionRejected" xml:space="preserve">
+    <value>La pregunta debe tener entre 1 y 500 caracteres.</value>
+  </data>
+  <data name="ChatPrivacyDisclosureFormat" xml:space="preserve">
+    <value>Tu pregunta y un resumen de tus finanzas —totales del mes, categorías, presupuestos, metas, deudas y pagos próximos— se envían a {0}. No se envían descripciones, notas ni transacciones individuales.</value>
+  </data>
+  <data name="ChatYouLabel" xml:space="preserve">
+    <value>Tú</value>
+  </data>
+  <data name="ChatAssistantLabel" xml:space="preserve">
+    <value>Asistente</value>
+  </data>
+  <data name="ChatFiguresTitle" xml:space="preserve">
+    <value>Cifras exactas</value>
+  </data>
+  <data name="ChatFiguresExpensesLabel" xml:space="preserve">
+    <value>Gastos</value>
+  </data>
+  <data name="ChatFiguresIncomesLabel" xml:space="preserve">
+    <value>Ingresos</value>
+  </data>
+  <data name="ChatFiguresNetLabel" xml:space="preserve">
+    <value>Balance neto</value>
+  </data>
+  <data name="ChatFiguresMissingRates" xml:space="preserve">
+    <value>Algunos montos no se pudieron convertir; las cifras pueden estar incompletas.</value>
+  </data>
+  <data name="ChatFiguresEmpty" xml:space="preserve">
+    <value>Sin datos disponibles todavía.</value>
+  </data>
 </root>

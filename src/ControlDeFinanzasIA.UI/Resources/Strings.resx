@@ -628,4 +628,46 @@ Showing approximate conversions only.
   <data name="DashboardAnomalyMessageFormat" xml:space="preserve">
     <value>Unusual expense in {0}: {1} (≈{2}x the usual {3})</value>
   </data>
+  <data name="ChatThinking" xml:space="preserve">
+    <value>Thinking…</value>
+  </data>
+  <data name="ChatAiNotConfiguredBanner" xml:space="preserve">
+    <value>AI not configured — set it up in Settings</value>
+  </data>
+  <data name="ChatAiUnavailable" xml:space="preserve">
+    <value>AI unavailable. Try again.</value>
+  </data>
+  <data name="ChatCancelledNote" xml:space="preserve">
+    <value>Question stopped.</value>
+  </data>
+  <data name="ChatQuestionRejected" xml:space="preserve">
+    <value>The question must be between 1 and 500 characters.</value>
+  </data>
+  <data name="ChatPrivacyDisclosureFormat" xml:space="preserve">
+    <value>Your question and a summary of your finances — monthly totals, categories, budgets, goals, debts, and upcoming payments — are sent to {0}. No descriptions, notes, or individual transactions are sent.</value>
+  </data>
+  <data name="ChatYouLabel" xml:space="preserve">
+    <value>You</value>
+  </data>
+  <data name="ChatAssistantLabel" xml:space="preserve">
+    <value>Assistant</value>
+  </data>
+  <data name="ChatFiguresTitle" xml:space="preserve">
+    <value>Exact figures</value>
+  </data>
+  <data name="ChatFiguresExpensesLabel" xml:space="preserve">
+    <value>Expenses</value>
+  </data>
+  <data name="ChatFiguresIncomesLabel" xml:space="preserve">
+    <value>Income</value>
+  </data>
+  <data name="ChatFiguresNetLabel" xml:space="preserve">
+    <value>Net balance</value>
+  </data>
+  <data name="ChatFiguresMissingRates" xml:space="preserve">
+    <value>Some amounts could not be converted; figures may be incomplete.</value>
+  </data>
+  <data name="ChatFiguresEmpty" xml:space="preserve">
+    <value>No data available yet.</value>
+  </data>
 </root>

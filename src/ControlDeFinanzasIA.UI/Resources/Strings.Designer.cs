@@ -992,4 +992,74 @@ public class Strings
     /// <c>{2}</c> ratio-to-median, <c>{3}</c> usual (median) amount.
     /// </summary>
     public static string DashboardAnomalyMessageFormat => ResourceManager.GetString("DashboardAnomalyMessageFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized placeholder shown on the pending assistant bubble while a question is in flight (F-015, D-9).
+    /// </summary>
+    public static string ChatThinking => ResourceManager.GetString("ChatThinking", Culture)!;
+
+    /// <summary>
+    /// Gets the localized, persistent banner shown when AI is not configured (F-015, D3, R-12).
+    /// </summary>
+    public static string ChatAiNotConfiguredBanner => ResourceManager.GetString("ChatAiNotConfiguredBanner", Culture)!;
+
+    /// <summary>
+    /// Gets the localized fallback note shown when the AI pipeline fails (F-015, R-6).
+    /// </summary>
+    public static string ChatAiUnavailable => ResourceManager.GetString("ChatAiUnavailable", Culture)!;
+
+    /// <summary>
+    /// Gets the localized note shown on a bubble whose question was cancelled via Stop (F-015, R-9, S-6).
+    /// </summary>
+    public static string ChatCancelledNote => ResourceManager.GetString("ChatCancelledNote", Culture)!;
+
+    /// <summary>
+    /// Gets the localized note shown when a question is outside the 1-500 char range (F-015, R-4).
+    /// </summary>
+    public static string ChatQuestionRejected => ResourceManager.GetString("ChatQuestionRejected", Culture)!;
+
+    /// <summary>
+    /// Gets the localized, always-visible privacy disclosure format string, with a <c>{0}</c> placeholder for the AI provider name (F-015, R-11, D-11).
+    /// </summary>
+    public static string ChatPrivacyDisclosureFormat => ResourceManager.GetString("ChatPrivacyDisclosureFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the user's own chat bubbles (F-015, D-11).
+    /// </summary>
+    public static string ChatYouLabel => ResourceManager.GetString("ChatYouLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the assistant's chat bubbles (F-015, D-11).
+    /// </summary>
+    public static string ChatAssistantLabel => ResourceManager.GetString("ChatAssistantLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title for the exact-figure backup panel (F-015, R-10, D-11).
+    /// </summary>
+    public static string ChatFiguresTitle => ResourceManager.GetString("ChatFiguresTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the figures panel's current-month expenses total (F-015, R-10).
+    /// </summary>
+    public static string ChatFiguresExpensesLabel => ResourceManager.GetString("ChatFiguresExpensesLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the figures panel's current-month income total (F-015, R-10).
+    /// </summary>
+    public static string ChatFiguresIncomesLabel => ResourceManager.GetString("ChatFiguresIncomesLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the figures panel's current-month net balance (F-015, R-10).
+    /// </summary>
+    public static string ChatFiguresNetLabel => ResourceManager.GetString("ChatFiguresNetLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized caption shown on the figures panel when the latest snapshot has a missing exchange rate (F-015, R-14).
+    /// </summary>
+    public static string ChatFiguresMissingRates => ResourceManager.GetString("ChatFiguresMissingRates", Culture)!;
+
+    /// <summary>
+    /// Gets the localized empty-state message for the figures panel before any question has been answered (F-015, R-10).
+    /// </summary>
+    public static string ChatFiguresEmpty => ResourceManager.GetString("ChatFiguresEmpty", Culture)!;
 }
