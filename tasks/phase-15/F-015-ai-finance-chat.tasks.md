@@ -86,7 +86,7 @@ item caps already applied.
 Depends on 1. Goal: a pure, culture-formatted renderer that stays ≤ 6,000 chars by construction, with
 a fixed, test-pinned section trim order.
 
-- [ ] 2.1 Write failing `tests/…Unit/UseCases/Chat/ChatContextRendererTests.cs`: the exact "Comida"
+- [x] 2.1 Write failing `tests/…Unit/UseCases/Chat/ChatContextRendererTests.cs`: the exact "Comida"
   line built independently for `CultureInfo("es-DO")` and `CultureInfo("en")` (never hand-typed
   separators); empty vs. unavailable vs. trimmed-omitted section text; fixed trim order (S-5) — each
   step drops exactly the next `TrimOrder` section (payments → debts → goals → budgets → prior-month
@@ -95,14 +95,27 @@ a fixed, test-pinned section trim order.
   the current-month summary and category list intact and all five trimmable sections omitted, in
   order; `SanitizeName` collapses control chars/newlines, strips a leading `#`/`!` run, caps at 80
   chars with `…`; the `!!` flag line appears if and only if `HasMissingRates`. (R-3, D-4, S-5)
-- [ ] 2.2 Create `src/…Application/UseCases/Chat/BuildChatContext/ChatContextLabels.cs`: a static
+
+  **Deviation:** with this renderer's actual per-line format overhead, the fully-capped worst-case
+  payload only needs the first FOUR `TrimOrder` sections dropped (payments, debts, goals, budgets) —
+  not all five — to fit under 6,000 chars. `PriorMonthCategories` is capped at 10 items and, even
+  fully maxed (80-char names), can never by itself push `baseline + PriorMonthCategories` back over
+  budget once the other four sections are gone. This is documented in the test
+  (`Render_WorstCaseSyntheticPayload_StaysUnderBudgetWithNeverTrimmedSectionsIntact` +
+  `Render_WorstCasePriorCategoriesAloneNeverNeedsTrimming`) and is a favorable deviation: less
+  information is discarded than design.md's illustrative estimate assumed, while the ≤6,000-char
+  ceiling and the fixed drop order still hold exactly. A separate test
+  (`Render_OverBudgetFromGoalsAndDebts_TrimsOnlyPaymentsDebtsGoalsInFixedOrder`) pins a genuine
+  partial-trim case (3 of 5 sections dropped, in order) to prove the loop stops as soon as the budget
+  is satisfied.
+- [x] 2.2 Create `src/…Application/UseCases/Chat/BuildChatContext/ChatContextLabels.cs`: a static
   two-locale (`es-DO`/`en`) section-label table — prompt data, not UI copy. (D-4)
-- [ ] 2.3 Create `src/…Application/UseCases/Chat/BuildChatContext/ChatContextRenderer.cs`: a pure
+- [x] 2.3 Create `src/…Application/UseCases/Chat/BuildChatContext/ChatContextRenderer.cs`: a pure
   static class (no DI registration), `TrimOrder` array, `Render`, `FormatDop`, `SanitizeName`;
   per-section caps enforced first, then the fixed drop-and-rejoin loop while
   `text.Length > MaxContextChars`; header/flag line/both summaries/current-month category list never
   touched. Run 2.1 green. (R-3, D-4)
-- [ ] 2.4 Run all four gates. All green before opening PR S2.
+- [x] 2.4 Run all four gates. All green before opening PR S2.
 
 ## 3. Use case + prompts + DI
 
