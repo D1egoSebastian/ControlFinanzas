@@ -24,4 +24,7 @@ public static class PromptNames
 
     /// <summary>Prompt de usuario para la narración por lotes de anomalías (F-014).</summary>
     public const string ExplainAnomaliesUser = "explain-anomalies.user";
+
+    /// <summary>Prompt de sistema para el chat financiero (F-015). No tiene contraparte "user": la pregunta se envía cruda como mensaje de usuario.</summary>
+    public const string ChatFinanceSystem = "chat-finance.system";
 }

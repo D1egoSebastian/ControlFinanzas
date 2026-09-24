@@ -123,7 +123,7 @@ Depends on 2. Goal: `AskFinanceChatUseCase` is success-shaped for every outcome 
 `Result.Failure`, never an uncaught exception), the grounding prompt exists in both locales, and the
 Application-side DI wiring resolves cleanly.
 
-- [ ] 3.1 Write failing `tests/…Unit/UseCases/Chat/AskFinanceChatUseCaseTests.cs`: 0-char and
+- [x] 3.1 Write failing `tests/…Unit/UseCases/Chat/AskFinanceChatUseCaseTests.cs`: 0-char and
   501-char trimmed questions → `Rejected`, zero `ILLMClient` calls, no settings read (S-3); not
   configured → `NotConfigured`, zero calls, no context build (S-2); the exact assembled `Messages`
   list (roles/order), with the D8 grounding sentence present verbatim in `Messages[0]` for both
@@ -136,26 +136,26 @@ Application-side DI wiring resolves cleanly.
   capped at 4,000 chars; a sentinel question string never appears in any log message/argument;
   `GetAvailabilityAsync` for configured and unconfigured settings. (R-4, R-5, R-6, R-7, R-8, D-5, S-2,
   S-3, S-4, S-7, S-8)
-- [ ] 3.2 Modify `tests/…Unit/TestDoubles/FakeLlmClient.cs`/`FakePromptProvider.cs` additively
+- [x] 3.2 Modify `tests/…Unit/TestDoubles/FakeLlmClient.cs`/`FakePromptProvider.cs` additively
   (`OnCompleteAsync`, `Templates`) only if the Phase 14 extensions are not already present in the
   tree — verify first; no existing test changes either way. (D-13 coexistence note)
-- [ ] 3.3 Create `src/…Application/UseCases/Chat/AskFinanceChat/{AskFinanceChatUseCase,
+- [x] 3.3 Create `src/…Application/UseCases/Chat/AskFinanceChat/{AskFinanceChatUseCase,
   AskFinanceChatCommand,ChatReply}.cs` (`ChatReply.cs` holds `ChatTurn`, `ChatReplyStatus`,
   `ChatAvailability`): the `CategorizeExpenseUseCase` guard skeleton (`ISettingsStore` →
   `ILLMClientFactory.Resolve`), the linked 15 s CTS, `Result.Success(ChatReply)` for every outcome.
   Run 3.1 green. (R-4, R-5, R-6, R-7, R-8, D-5)
-- [ ] 3.4 Modify `src/…Application/Llm/PromptNames.cs`: append `ChatFinanceSystem =
+- [x] 3.4 Modify `src/…Application/Llm/PromptNames.cs`: append `ChatFinanceSystem =
   "chat-finance.system"`. Create `src/…Infrastructure/Llm/Prompts/chat-finance.system.{es-DO,en}.txt`
   with the `{{context}}` placeholder and the D8 grounding sentence byte-identical in both locales
   (plus the es-DO Spanish fallback sentence). No `.csproj` change (already globbed). (R-8, D-6)
-- [ ] 3.5 Modify `tests/…Integration/Llm/EmbeddedPromptProviderTests.cs`: add
+- [x] 3.5 Modify `tests/…Integration/Llm/EmbeddedPromptProviderTests.cs`: add
   `ChatFinanceSystem` to `_allPromptNames`. Confirm green. (D-6)
-- [ ] 3.6 Modify `src/…UI/Composition/Bootstrap.cs`: add the Fase 15 block —
+- [x] 3.6 Modify `src/…UI/Composition/Bootstrap.cs`: add the Fase 15 block —
   `AddTransient<BuildChatContextQuery>()`, `AddTransient<AskFinanceChatUseCase>()`. (D-12)
-- [ ] 3.7 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) against an
+- [x] 3.7 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) against an
   existing dev DB: confirm `BuildChatContextQuery` and `AskFinanceChatUseCase` resolve from DI with no
   startup failure. Screenshot only, no simulated clicks.
-- [ ] 3.8 Run all four gates. All green before opening PR S3.
+- [x] 3.8 Run all four gates. All green before opening PR S3.
 
 ## 4. Navigation hook + clipboard port
 

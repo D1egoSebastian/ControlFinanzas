@@ -7,6 +7,8 @@ using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
 using ControlDeFinanzasIA.Application.UseCases.Calendar.GetCalendarMonth;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.CreateTag;
 using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
+using ControlDeFinanzasIA.Application.UseCases.Chat.AskFinanceChat;
+using ControlDeFinanzasIA.Application.UseCases.Chat.BuildChatContext;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.AcknowledgeAnomaly;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.Common;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.DetectAnomalies;
@@ -225,6 +227,10 @@ public static class Bootstrap
         services.AddTransient<GetDashboardInsightsQuery>();
         services.AddSingleton<DashboardNarrationCache>();
         services.AddSingleton<IAnomalyMessageFormatter, ResxAnomalyMessageFormatter>();
+
+        // Fase 15: chat con IA sobre tus finanzas (F-015, slice S3).
+        services.AddTransient<BuildChatContextQuery>();
+        services.AddTransient<AskFinanceChatUseCase>();
 
         ServiceProvider tempProvider = services.BuildServiceProvider();
         try
