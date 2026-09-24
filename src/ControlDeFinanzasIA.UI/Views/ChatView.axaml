@@ -1,0 +1,171 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+             xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
+             xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
+             xmlns:behaviors="using:ControlDeFinanzasIA.UI.Behaviors"
+             x:Class="ControlDeFinanzasIA.UI.Views.ChatView"
+             x:DataType="vm:ChatViewModel"
+             x:Name="Root"
+             Background="{StaticResource InkBrush}">
+    <Grid ColumnDefinitions="*,320" Margin="24">
+
+        <!-- Left column: conversation (F-015, R-1, R-9, D-10) -->
+        <Grid Grid.Column="0" RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="0,0,24,0">
+
+            <!-- Header: title + new conversation -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+                <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ChatTitle}" Classes="ledger-title" />
+                <Button Grid.Column="1"
+                        Content="{x:Static resources:Strings.ChatNewConversationButton}"
+                        Command="{Binding NewConversationCommand}"
+                        Classes="ledger-btn"
+                        VerticalAlignment="Center" />
+            </Grid>
+
+            <!-- "AI not configured" banner (D3, R-12) -->
+            <Border Grid.Row="1"
+                    IsVisible="{Binding ShowNotConfiguredBanner}"
+                    Background="#22E8A33D"
+                    BorderBrush="{StaticResource AmberBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource RadiusMedium}"
+                    Padding="12"
+                    Margin="0,0,0,12">
+                <TextBlock Text="{x:Static resources:Strings.ChatAiNotConfiguredBanner}"
+                           Foreground="{StaticResource AmberBrush}"
+                           TextWrapping="Wrap" />
+            </Border>
+
+            <!-- Transcript (D2, S-12): auto-scrolls to the newest message -->
+            <ScrollViewer Grid.Row="2" behaviors:ScrollToEndOnCollectionChanged.Observe="{Binding Messages}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Static resources:Strings.ChatEmptyState}"
+                               IsVisible="{Binding !Messages.Count}"
+                               Foreground="{StaticResource PaperDimBrush}" />
+
+                    <ItemsControl ItemsSource="{Binding Messages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ChatMessageItem">
+                                <!--
+                                    Role-aligned bubble (D-10): User bubbles align right, Assistant
+                                    replies/notes align left. IsNote drives muted styling (R-9, R-12);
+                                    State drives the Sage/Terracotta accent (R-6, S-6).
+                                -->
+                                <Border Background="{StaticResource SurfaceBrush}"
+                                        BorderThickness="0,0,0,2"
+                                        CornerRadius="{StaticResource RadiusMedium}"
+                                        Padding="12,8"
+                                        MaxWidth="480"
+                                        Opacity="{Binding IsNote, Converter={x:Static converters:BoolToOpacityConverter.Instance}}"
+                                        HorizontalAlignment="{Binding Role, Converter={x:Static converters:ChatMessageRoleAlignmentConverter.Instance}}">
+                                    <Border.BorderBrush>
+                                        <Binding Path="State" Converter="{x:Static converters:ChatMessageStateBrushConverter.Instance}" />
+                                    </Border.BorderBrush>
+                                    <StackPanel Spacing="4">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding Role, Converter={x:Static converters:ChatMessageRoleLabelConverter.Instance}}"
+                                                       Classes="ledger-section"
+                                                       Margin="0" />
+                                            <Button Grid.Column="1"
+                                                    Content="{x:Static resources:Strings.ChatCopyButton}"
+                                                    Command="{Binding #Root.((vm:ChatViewModel)DataContext).CopyCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    IsEnabled="{Binding State, Converter={x:Static converters:ChatMessageCopyableConverter.Instance}}"
+                                                    Classes="ledger-btn"
+                                                    Padding="6,2"
+                                                    FontSize="11" />
+                                        </Grid>
+                                        <TextBlock Text="{Binding Text}"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{StaticResource PaperBrush}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Input row: TextBox + Send/Stop (R-4, R-9, D-10) -->
+            <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" Margin="0,12,0,0">
+                <TextBox Grid.Column="0"
+                         Text="{Binding QuestionText}"
+                         Watermark="{x:Static resources:Strings.ChatInputPlaceholder}"
+                         IsEnabled="{Binding IsInputEnabled}"
+                         MaxLength="500"
+                         Classes="ledger-input">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding SendCommand}" />
+                    </TextBox.KeyBindings>
+                </TextBox>
+                <Button Grid.Column="1"
+                        Content="{x:Static resources:Strings.ChatSendButton}"
+                        Command="{Binding SendCommand}"
+                        Classes="ledger-btn-primary"
+                        Margin="8,0,0,0" />
+                <Button Grid.Column="2"
+                        Content="{x:Static resources:Strings.ChatStopButton}"
+                        Command="{Binding StopCommand}"
+                        IsVisible="{Binding IsSending}"
+                        Classes="ledger-btn-danger"
+                        Margin="8,0,0,0" />
+            </Grid>
+
+            <!-- Permanent privacy disclosure (R-11, D13) -->
+            <TextBlock Grid.Row="4"
+                       Text="{Binding PrivacyDisclosure}"
+                       Classes="ledger-status"
+                       Margin="0,8,0,0" />
+        </Grid>
+
+        <!-- Right column: exact-figure backup panel, from the DTO — never from LLM text (R-10, D12) -->
+        <ScrollViewer Grid.Column="1">
+            <Border Classes="ledger-row" Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Static resources:Strings.ChatFiguresTitle}" Classes="ledger-section" />
+                    <TextBlock Text="{Binding FiguresMonthLabel}" Foreground="{StaticResource PaperDimBrush}" />
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ChatFiguresExpensesLabel}" />
+                        <TextBlock Grid.Column="1" Text="{Binding FiguresExpenses}" Classes="ledger-amount expense" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ChatFiguresIncomesLabel}" />
+                        <TextBlock Grid.Column="1" Text="{Binding FiguresIncomes}" Classes="ledger-amount income" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ChatFiguresNetLabel}" />
+                        <TextBlock Grid.Column="1" Text="{Binding FiguresNet}" Classes="ledger-amount" />
+                    </Grid>
+
+                    <Border Classes="amber-rule" />
+
+                    <TextBlock Text="{x:Static resources:Strings.ChatFiguresEmpty}"
+                               IsVisible="{Binding !FigureLines.Count}"
+                               Foreground="{StaticResource PaperDimBrush}" />
+
+                    <ItemsControl ItemsSource="{Binding FigureLines}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ChatFigureLine">
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding Name}"
+                                               Foreground="{StaticResource PaperBrush}"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Grid.Column="1" Text="{Binding AmountDisplay}" Classes="ledger-amount" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Text="{x:Static resources:Strings.ChatFiguresMissingRates}"
+                               IsVisible="{Binding FiguresHaveMissingRates}"
+                               Foreground="{StaticResource TerracottaBrush}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

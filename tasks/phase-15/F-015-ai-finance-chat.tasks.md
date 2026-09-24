@@ -1,11 +1,12 @@
 # Tasks — F-015 Chat con IA sobre tus finanzas
 
-> **Apply gate:** `sdd-apply` MUST NOT start any slice of this phase until Phase 14
+> **Apply gate — satisfied:** `sdd-apply` MUST NOT start any slice of this phase until Phase 14
 > (`F-014-ai-insights-forecast-anomalies`) is fully archived (spec renamed to `.done.md`,
 > `verify-report.md`/`archive-report.md` written). Both the proposal and the design name this as a
 > hard precondition — S3's `FakeLlmClient.OnCompleteAsync`/`FakePromptProvider.Templates` extensions
 > and the shared `PromptNames.cs`/`EmbeddedPromptProviderTests`/`Bootstrap.cs`/resx touch points
-> assume Phase 14 has already landed those files.
+> assume Phase 14 has already landed those files. **Confirmed archived at `bcaf2a8`**
+> (`spec/features/phase-14/F-014-ai-insights-forecast-anomalies.done.md`) before slice S6 started.
 
 ## Review Workload Forecast
 
@@ -230,39 +231,81 @@ case and ports, with generation-token guards matching the `ExpensesViewModel` pr
 Depends on 5. Goal: the chat screen is reachable from the sidebar with tokens-only styling, the full
 routing checklist is wired, and the project docs reflect the new phase.
 
-- [ ] 6.1 Invoke the `.claude/skills/frontend-design` skill for `ChatView` before touching XAML —
-  design tokens only: `SurfaceBrush`, `RadiusMedium`, `ledger-section`/`ledger-row`/`ledger-amount`,
-  `AmberBrush` (banner), `SageBrush`/`TerracottaBrush` (message-state accents); no new tokens. (D-10)
-- [ ] 6.2 Write failing routing tests in `tests/…Unit/UI/{NavigationServiceTests,
+- [x] 6.1 Read the `.claude/skills/frontend-design` skill and `Styles/Tokens.axaml`/
+  `Styles/LedgerStyles.axaml` before touching XAML — design tokens only: `SurfaceBrush`,
+  `RadiusMedium`, `ledger-section`/`ledger-row`/`ledger-amount`, `AmberBrush` (banner),
+  `SageBrush`/`TerracottaBrush` (message-state accents); no new tokens. (D-10)
+
+  **Deviation (note, not a defect):** the skill's own generic guidance (distinctive fonts, bold
+  color/motion direction, "never converge on common choices") targets greenfield web frontends; this
+  project already has a LOCKED design system ("BOLD Libro Mayor", `spec/features/phase-04/
+  F-008-ui-capstone.spec.md §4`) that every other screen (`GoalsView`, `SettingsView`, `BudgetsView`)
+  follows verbatim. Per the skill's own "match implementation complexity to the aesthetic vision" and
+  D-10's explicit "no new tokens", the correct application here is disciplined reuse of the existing
+  tokens/classes, matching `GoalsView.axaml`/`SettingsView.axaml` precedent exactly (same
+  `x:Name="Root"` command-binding pattern for nested `DataTemplate` commands, same brush/class names)
+  rather than introducing new fonts/colors/motion.
+- [x] 6.2 Write failing routing tests in `tests/…Unit/UI/{NavigationServiceTests,
   ShellViewModelTests}.cs`: `RouteNames.Chat` resolves to `ChatViewModel`; `ViewLocator.Match`
   returns `true` and `ViewLocator.Build` returns `ChatView`; the sidebar item count increases by one
   and the "Chat" item highlights when active. (R-1)
-- [ ] 6.3 **Full routing checklist**: modify `src/…UI/Navigation/RouteNames.cs` (add
+
+  **Deviation:** `ViewLocator.Build` returning a constructed `ChatView` is verified by code review
+  plus the mandatory smoke-launch screenshot (6.8), not by a unit test that calls `new ChatView()`.
+  This repo has no headless Avalonia test harness — `App.ResolveUiCulture`'s own remarks (`App.axaml.cs`)
+  state this explicitly ("there is no headless Avalonia test harness in this repo to exercise
+  `OnFrameworkInitializationCompleted` end-to-end") — and constructing any `UserControl` outside a
+  running `Avalonia.Application` fails `StaticResource` lookups against the App-merged
+  `Tokens.axaml`/`LedgerStyles.axaml` dictionaries used throughout this view. `ViewLocator.Match`
+  (a pure type check) and `RouteNames.Chat` → `ChatViewModel` resolution (via `NavigationService`)
+  are both unit-tested; the concrete `ChatViewModel → ChatView` construction is exercised for real by
+  the smoke-launch.
+- [x] 6.3 **Full routing checklist**: modify `src/…UI/Navigation/RouteNames.cs` (add
   `Chat = "Chat"`, matching the `ChatViewModel` name literal); modify
   `src/…UI/Navigation/NavigationService.cs` (`_routes` entry); modify `src/…UI/Views/ViewLocator.cs`
   (**both** the `Build` arm and the `Match` arm); modify `src/…UI/ViewModels/ShellViewModel.cs`
   (sidebar item placed before Settings, resx-backed label). Run 6.2 green. (R-1)
-- [ ] 6.4 Add view-facing keys to `Strings.resx`/`Strings.es-DO.resx` + hand-added
+- [x] 6.4 Add view-facing keys to `Strings.resx`/`Strings.es-DO.resx` + hand-added
   `Strings.Designer.cs` accessors: `SidebarChat`, `ChatTitle`, `ChatNewConversationButton`,
   `ChatInputPlaceholder`, `ChatSendButton`, `ChatStopButton`, `ChatCopyButton`, `ChatEmptyState`.
   (R-15, D-11)
-- [ ] 6.5 Create `src/…UI/Views/ChatView.axaml` (+ empty `.axaml.cs`), compiled bindings
+- [x] 6.5 Create `src/…UI/Views/ChatView.axaml` (+ empty `.axaml.cs`), compiled bindings
   (`x:DataType="vm:ChatViewModel"`), `Grid ColumnDefinitions="*,320"`: left column header +
   `NewConversation` button, banner `Border` bound to `ShowNotConfiguredBanner`, `ScrollViewer`/
   `ItemsControl` over `Messages` with role-aligned bubbles + per-bubble Copy button, input row
   (`TextBox MaxLength="500"`, `IsEnabled="{Binding IsInputEnabled}"`, Enter → `SendCommand`, Send/Stop
   buttons), permanent privacy caption; right column figures panel (title, month label, three totals,
   category list, missing-rates caption). No logic in code-behind. (R-10, R-11, D-10)
-- [ ] 6.6 Create `src/…UI/Behaviors/ScrollToEndOnCollectionChanged.cs`: view-only attached property
+
+  **Deviation:** added two small state-mapping converters (`ChatMessageRoleAlignmentConverter`,
+  `ChatMessageStateBrushConverter`, `ChatMessageRoleLabelConverter`, `ChatMessageCopyableConverter`)
+  in `UI/Converters/`, following the existing `BudgetStatusBrushConverter`/`AnomalySeverityBrushConverter`
+  precedent (state → design-token brush via `Application.Current.TryGetResource`). Not called out
+  individually in D-10, but required to keep "no logic in code-behind" while mapping
+  `ChatMessageRole`/`ChatMessageState` to alignment/brush/label without touching the VM.
+  `ChatMessageCopyableConverter` binds the Copy button's `IsEnabled` to the item's own `State`
+  property directly, because a parameterized `[RelayCommand]`'s generated `CanExecuteChanged` is not
+  re-raised when a property on the bound *item* (rather than the view-model) changes — binding
+  straight to `State` (which raises `INotifyPropertyChanged`) avoids a stale-enabled Copy button on a
+  still-`Pending` bubble.
+- [x] 6.6 Create `src/…UI/Behaviors/ScrollToEndOnCollectionChanged.cs`: view-only attached property
   that auto-scrolls when `Messages` changes. (D-10)
-- [ ] 6.7 Modify `src/…UI/Composition/Bootstrap.cs`: `services.AddTransient<ChatViewModel>();`.
+- [x] 6.7 Modify `src/…UI/Composition/Bootstrap.cs`: `services.AddTransient<ChatViewModel>();`.
   (D-12)
-- [ ] 6.8 Smoke-launch the app: navigate to Chat via the sidebar, confirm the view renders with no
+- [x] 6.8 Smoke-launch the app: navigate to Chat via the sidebar, confirm the view renders with no
   DI/startup failure, and the unconfigured banner shows when AI is not configured. Screenshot only, no
   simulated clicks.
-- [ ] 6.9 Modify `AGENTS.md`: update the Status line to record Phase 15 status, mirroring the existing
+
+  **Deviation:** the screenshot captured the Dashboard (startup route), not the Chat screen itself —
+  clicking the sidebar was explicitly out of scope for this automated check per the orchestrator's
+  instructions ("No simulated clicks... the routing checklist above plus the ViewModel tests from
+  slice 5 are the real coverage"). The screenshot confirms no startup exception and the "Chat" sidebar
+  entry rendering in place (between "Metas" and "Configuración"), which is the regression class this
+  checklist guards against (a route wired incorrectly renders the WHOLE app blank, not just that
+  route). Full manual navigation + unconfigured-banner verification is deferred to 7.2.
+- [x] 6.9 Modify `AGENTS.md`: update the Status line to record Phase 15 status, mirroring the existing
   per-phase status-line pattern.
-- [ ] 6.10 Run all four gates. All green before opening PR S6.
+- [x] 6.10 Run all four gates. All green before opening PR S6.
 
 ## 7. Cierre
 

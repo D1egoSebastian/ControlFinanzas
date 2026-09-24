@@ -1,8 +1,14 @@
+using ControlDeFinanzasIA.Application.Settings;
 using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
+using ControlDeFinanzasIA.Application.UseCases.Chat.AskFinanceChat;
+using ControlDeFinanzasIA.Application.UseCases.Chat.BuildChatContext;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
+using ControlDeFinanzasIA.Application.UseCases.Debts.GetDebts;
+using ControlDeFinanzasIA.Application.UseCases.Debts.GetDebtSchedule;
+using ControlDeFinanzasIA.Application.UseCases.Goals.GetGoals;
 using ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.Resources;
@@ -67,12 +73,93 @@ public sealed class ShellViewModelTests
         Assert.Same(dashboard, shell.Current);
     }
 
+    // ------------------------------------------------------------------
+    // F-015 slice S6 (R-1): full routing checklist coverage.
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public void MenuItems_IncludesExactlyOneChatEntry()
+    {
+        // Arrange
+        FakeNavigationService fakeNav = new();
+
+        // Act
+        ShellViewModel shell = new(fakeNav, CreateLocalizer());
+
+        // Assert
+        Assert.Equal(10, shell.MenuItems.Count);
+        Assert.Single(shell.MenuItems, item => item.Route == RouteNames.Chat);
+    }
+
+    [Fact]
+    public void CurrentMenuItem_WhenChatIsActive_HighlightsChatEntry()
+    {
+        // Arrange
+        FakeNavigationService fakeNav = new();
+        ShellViewModel shell = new(fakeNav, CreateLocalizer());
+
+        // Act
+        fakeNav.CurrentViewModel = CreateChatViewModel();
+        fakeNav.RaiseCurrentChanged();
+
+        // Assert
+        Assert.NotNull(shell.SelectedMenuItem);
+        Assert.Equal(RouteNames.Chat, shell.SelectedMenuItem!.Route);
+        Assert.Equal(RouteNames.Chat, shell.CurrentMenuItem!.Route);
+    }
+
     private static IStringLocalizer<Strings> CreateLocalizer()
         => new FakeStringLocalizer<Strings>(new Dictionary<string, string>
         {
             { "SidebarDashboard", "Panel" },
-            { "SidebarExpenses", "Gastos" }
+            { "SidebarExpenses", "Gastos" },
+            { "SidebarChat", "Chat" }
         });
+
+    /// <summary>
+    /// Builds a minimally-wired <see cref="ChatViewModel"/> for routing tests: real dependency
+    /// types with default "not configured"/empty fakes, since this test only asserts sidebar
+    /// highlight wiring, never chat behavior (already covered by <c>ChatViewModelTests</c>, slice S5).
+    /// </summary>
+    private static ChatViewModel CreateChatViewModel()
+    {
+        FakeSettingsStore settingsStore = new() { AppSettings = AppSettings.Defaults };
+        FakeLlmClientFactory factory = new();
+        FakePromptProvider prompts = new();
+
+        FakeExpenseRepository expenseRepo = new();
+        FakeIncomeRepository incomeRepo = new();
+        FakeBudgetRepository budgetRepo = new();
+        FakeCategoryRepository categoryRepo = new();
+        FakeGoalRepository goalRepo = new();
+        FakeGoalContributionRepository goalContributionRepo = new();
+        FakeDebtRepository debtRepo = new();
+        FakeDebtPaymentRepository debtPaymentRepo = new();
+        FakeRecurringRuleRepository recurringRuleRepo = new();
+        FakeCurrencyConverter converter = new();
+        FakeClock clock = new() { Today = new DateOnly(2026, 9, 20) };
+
+        var buildContext = new BuildChatContextQuery(
+            new GetMonthSummaryQuery(expenseRepo, incomeRepo, converter),
+            new GetCategoryBreakdownQuery(expenseRepo, converter),
+            new GetBudgetVsActualQuery(budgetRepo, expenseRepo, categoryRepo, converter),
+            new GetGoalsQuery(goalRepo, goalContributionRepo, clock),
+            new GetDebtsQuery(debtRepo),
+            new GetDebtScheduleQuery(debtRepo, debtPaymentRepo),
+            new GetUpcomingPaymentsQuery(debtPaymentRepo, debtRepo, recurringRuleRepo, clock),
+            converter,
+            clock,
+            NullLogger<BuildChatContextQuery>.Instance);
+
+        var useCase = new AskFinanceChatUseCase(
+            settingsStore, factory, buildContext, prompts, NullLogger<AskFinanceChatUseCase>.Instance);
+
+        return new ChatViewModel(
+            useCase,
+            new FakeClipboardService(),
+            new FakeStringLocalizer<Strings>(),
+            NullLogger<ChatViewModel>.Instance);
+    }
 
     private static DashboardViewModel CreateDashboardViewModel()
     {

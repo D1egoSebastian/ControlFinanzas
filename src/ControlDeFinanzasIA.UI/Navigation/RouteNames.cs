@@ -59,4 +59,12 @@ public static class RouteNames
     /// current view-model's type name, so this must stay <c>"Settings"</c>.
     /// </summary>
     public const string Settings = "Settings";
+
+    /// <summary>
+    /// The finance chat route (consumed by F-015 of Phase 15, slice S6).
+    /// The literal value matters: <see cref="UI.ViewModels.ShellViewModel"/>
+    /// derives the sidebar highlight by stripping "ViewModel" from the
+    /// current view-model's type name, so this must stay <c>"Chat"</c>.
+    /// </summary>
+    public const string Chat = "Chat";
 }

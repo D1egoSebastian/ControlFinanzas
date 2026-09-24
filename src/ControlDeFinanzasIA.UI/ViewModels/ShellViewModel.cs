@@ -40,6 +40,7 @@ public sealed partial class ShellViewModel : ViewModelBase
             ,new RouteMenuItem(RouteNames.Calendar, "Calendario")
             ,new RouteMenuItem(RouteNames.Budgets, _localizer["SidebarBudgets"])
             ,new RouteMenuItem(RouteNames.Goals, _localizer["SidebarGoals"])
+            ,new RouteMenuItem(RouteNames.Chat, _localizer["SidebarChat"])
             ,new RouteMenuItem(RouteNames.Settings, _localizer["SidebarSettings"])
         ];
     }

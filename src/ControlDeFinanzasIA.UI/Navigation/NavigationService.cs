@@ -61,7 +61,8 @@ public sealed class NavigationService : ObservableObject, INavigationService
         { RouteNames.Calendar, typeof(CalendarViewModel) },
         { RouteNames.Budgets, typeof(BudgetsViewModel) },
         { RouteNames.Goals, typeof(GoalsViewModel) },
-        { RouteNames.Settings, typeof(SettingsViewModel) }
+        { RouteNames.Settings, typeof(SettingsViewModel) },
+        { RouteNames.Chat, typeof(ChatViewModel) }
     };
 
     /// <inheritdoc />

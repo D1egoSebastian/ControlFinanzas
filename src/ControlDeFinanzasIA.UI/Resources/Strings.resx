@@ -670,4 +670,28 @@ Showing approximate conversions only.
   <data name="ChatFiguresEmpty" xml:space="preserve">
     <value>No data available yet.</value>
   </data>
+  <data name="SidebarChat" xml:space="preserve">
+    <value>Chat</value>
+  </data>
+  <data name="ChatTitle" xml:space="preserve">
+    <value>Finance chat</value>
+  </data>
+  <data name="ChatNewConversationButton" xml:space="preserve">
+    <value>New conversation</value>
+  </data>
+  <data name="ChatInputPlaceholder" xml:space="preserve">
+    <value>Ask about your finances…</value>
+  </data>
+  <data name="ChatSendButton" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="ChatStopButton" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="ChatCopyButton" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="ChatEmptyState" xml:space="preserve">
+    <value>Ask a question about your finances to get started.</value>
+  </data>
 </root>

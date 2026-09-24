@@ -12,11 +12,20 @@ the project state changes, update this file.
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
 - **Status (today):** Phases 0–14 fully archived. Phase 15 (chat with AI about
-  your finances) is next, no spec/task breakdown drafted yet. Phase 14 (AI
-  insights, month-end forecast, and anomaly detection) shipped three AI-facing
-  dashboard sections — a month-end forecast card, a persisted anomaly-alerts
-  list with per-row dismiss, and an AI-written insights card — while keeping
-  every number deterministic: two pure Domain services (`AnomalyDetector`,
+  your finances) is feature-complete across all 6 slices (context builder,
+  renderer, use case + prompts + DI, navigation hook + clipboard port,
+  ViewModel, view + routing) and pending `sdd-verify`/`sdd-archive` — the
+  spec is still `F-015-ai-finance-chat.spec.md` (not yet renamed to
+  `.done.md`) and `spec/phases/phase-15/features.md` has not been written
+  yet. The chat screen is reachable from the sidebar (`RouteNames.Chat`),
+  answers grounded finance questions from a bounded, deterministic context
+  snapshot (never estimates), shows an exact-figure backup panel from the
+  DTO, and supports Stop/Copy/new-conversation with the conversation
+  cleared on navigate-away. Phase 14 (AI insights, month-end forecast, and
+  anomaly detection) shipped three AI-facing dashboard sections — a
+  month-end forecast card, a persisted anomaly-alerts list with per-row
+  dismiss, and an AI-written insights card — while keeping every number
+  deterministic: two pure Domain services (`AnomalyDetector`,
   `MonthEndForecaster`) compute all figures with zero `ILLMClient` dependency,
   and the LLM only narrates figures it is handed via two success-shaped use
   cases that never fail (not configured/offline/error all resolve to a
@@ -29,7 +38,7 @@ the project state changes, update this file.
   accepting the chip as the only code path that ever writes the category from
   AI output. Every failure mode (no key, no network, bad key, timeout,
   unparseable response) leaves the form fully usable with an honest status
-  message, never an exception. 1344/1344 tests verde (1079 unit + 265
+  message, never an exception. 1422/1422 tests verde (1154 unit + 268
   integration). See `docs/AI_HANDOFF.md`, `spec/phases/phase-14/features.md`,
   and `spec/phases/phase-13/features.md` for the full phase-13/14 detail and
   `spec/phases/phase-05/features.md` through `spec/phases/phase-12/features.md`

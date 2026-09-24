@@ -1,12 +1,20 @@
 using System.Threading;
+using ControlDeFinanzasIA.Application.Settings;
 using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
+using ControlDeFinanzasIA.Application.UseCases.Chat.AskFinanceChat;
+using ControlDeFinanzasIA.Application.UseCases.Chat.BuildChatContext;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
+using ControlDeFinanzasIA.Application.UseCases.Debts.GetDebts;
+using ControlDeFinanzasIA.Application.UseCases.Debts.GetDebtSchedule;
+using ControlDeFinanzasIA.Application.UseCases.Goals.GetGoals;
 using ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 using ControlDeFinanzasIA.UI.Navigation;
+using ControlDeFinanzasIA.UI.Resources;
 using ControlDeFinanzasIA.UI.ViewModels;
+using ControlDeFinanzasIA.UI.Views;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
@@ -322,6 +330,84 @@ public sealed class NavigationServiceTests
 
         // Assert
         Assert.Same(dashboard, navigationService.CurrentViewModel);
+    }
+
+    // ------------------------------------------------------------------
+    // F-015 slice S6 (R-1): full routing checklist coverage.
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public void NavigateTo_Chat_ResolvesChatViewModel()
+    {
+        // Arrange
+        ChatViewModel chat = CreateChatViewModel();
+        FakeServiceProvider services = new(new Dictionary<Type, object>
+        {
+            { typeof(ChatViewModel), chat }
+        });
+        NavigationService navigationService = new(services);
+
+        // Act
+        navigationService.NavigateTo(RouteNames.Chat);
+
+        // Assert
+        Assert.Same(chat, navigationService.CurrentViewModel);
+    }
+
+    [Fact]
+    public void ViewLocator_Match_ChatViewModel_ReturnsTrue()
+    {
+        // Arrange
+        ViewLocator viewLocator = new();
+        ChatViewModel chat = CreateChatViewModel();
+
+        // Act & Assert
+        Assert.True(viewLocator.Match(chat));
+    }
+
+    /// <summary>
+    /// Builds a minimally-wired <see cref="ChatViewModel"/> for routing tests: real dependency
+    /// types with default "not configured"/empty fakes, since these tests only assert routing
+    /// wiring, never chat behavior (already covered by <c>ChatViewModelTests</c>, slice S5).
+    /// </summary>
+    private static ChatViewModel CreateChatViewModel()
+    {
+        FakeSettingsStore settingsStore = new() { AppSettings = AppSettings.Defaults };
+        FakeLlmClientFactory factory = new();
+        FakePromptProvider prompts = new();
+
+        FakeExpenseRepository expenseRepo = new();
+        FakeIncomeRepository incomeRepo = new();
+        FakeBudgetRepository budgetRepo = new();
+        FakeCategoryRepository categoryRepo = new();
+        FakeGoalRepository goalRepo = new();
+        FakeGoalContributionRepository goalContributionRepo = new();
+        FakeDebtRepository debtRepo = new();
+        FakeDebtPaymentRepository debtPaymentRepo = new();
+        FakeRecurringRuleRepository recurringRuleRepo = new();
+        FakeCurrencyConverter converter = new();
+        FakeClock clock = new() { Today = new DateOnly(2026, 9, 20) };
+
+        var buildContext = new BuildChatContextQuery(
+            new GetMonthSummaryQuery(expenseRepo, incomeRepo, converter),
+            new GetCategoryBreakdownQuery(expenseRepo, converter),
+            new GetBudgetVsActualQuery(budgetRepo, expenseRepo, categoryRepo, converter),
+            new GetGoalsQuery(goalRepo, goalContributionRepo, clock),
+            new GetDebtsQuery(debtRepo),
+            new GetDebtScheduleQuery(debtRepo, debtPaymentRepo),
+            new GetUpcomingPaymentsQuery(debtPaymentRepo, debtRepo, recurringRuleRepo, clock),
+            converter,
+            clock,
+            NullLogger<BuildChatContextQuery>.Instance);
+
+        var useCase = new AskFinanceChatUseCase(
+            settingsStore, factory, buildContext, prompts, NullLogger<AskFinanceChatUseCase>.Instance);
+
+        return new ChatViewModel(
+            useCase,
+            new FakeClipboardService(),
+            new FakeStringLocalizer<Strings>(),
+            NullLogger<ChatViewModel>.Instance);
     }
 
     private static DashboardViewModel CreateDashboardViewModel()

@@ -1062,4 +1062,44 @@ public class Strings
     /// Gets the localized empty-state message for the figures panel before any question has been answered (F-015, R-10).
     /// </summary>
     public static string ChatFiguresEmpty => ResourceManager.GetString("ChatFiguresEmpty", Culture)!;
+
+    /// <summary>
+    /// Gets the localized sidebar label for the finance chat route (F-015, R-1, R-15).
+    /// </summary>
+    public static string SidebarChat => ResourceManager.GetString("SidebarChat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title shown at the top of the chat screen (F-015, D-10).
+    /// </summary>
+    public static string ChatTitle => ResourceManager.GetString("ChatTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the button that starts a fresh conversation (F-015, D-10).
+    /// </summary>
+    public static string ChatNewConversationButton => ResourceManager.GetString("ChatNewConversationButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized watermark shown on the empty question input (F-015, D-10).
+    /// </summary>
+    public static string ChatInputPlaceholder => ResourceManager.GetString("ChatInputPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the Send button (F-015, D-10).
+    /// </summary>
+    public static string ChatSendButton => ResourceManager.GetString("ChatSendButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the Stop button, visible only while a question is in flight (F-015, R-9, D-10).
+    /// </summary>
+    public static string ChatStopButton => ResourceManager.GetString("ChatStopButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label/tooltip for a bubble's Copy button (F-015, R-13, D-10).
+    /// </summary>
+    public static string ChatCopyButton => ResourceManager.GetString("ChatCopyButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized empty-state message shown before any question has been sent (F-015, D-10).
+    /// </summary>
+    public static string ChatEmptyState => ResourceManager.GetString("ChatEmptyState", Culture)!;
 }
