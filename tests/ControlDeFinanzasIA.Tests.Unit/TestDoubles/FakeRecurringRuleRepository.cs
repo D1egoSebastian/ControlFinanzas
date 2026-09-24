@@ -13,6 +13,7 @@ namespace ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 public sealed class FakeRecurringRuleRepository : IRecurringRuleRepository
 {
     private readonly List<RecurringRule> _rules = new();
+    private Exception? _getAllException;
 
     /// <summary>Gets the rules passed to <see cref="AddAsync"/>.</summary>
     public IReadOnlyList<RecurringRule> Added => _rules;
@@ -24,6 +25,14 @@ public sealed class FakeRecurringRuleRepository : IRecurringRuleRepository
     public Result AddResult { get; set; } = Result.Success(null!);
 
     public void Seed(RecurringRule rule) => _rules.Add(rule);
+
+    /// <summary>
+    /// Configures <see cref="GetAllAsync"/> to throw the given exception
+    /// (F-015, Slice S1 — isolates <c>BuildChatContextQuery</c>'s
+    /// upcoming-payments section).
+    /// </summary>
+    /// <param name="exception">The exception to throw.</param>
+    public void SetThrowOnGetAll(Exception exception) => _getAllException = exception;
 
     /// <inheritdoc />
     public Task<Result> AddAsync(RecurringRule rule, CancellationToken ct = default)
@@ -49,5 +58,7 @@ public sealed class FakeRecurringRuleRepository : IRecurringRuleRepository
 
     /// <inheritdoc />
     public Task<IReadOnlyList<RecurringRule>> GetAllAsync(CancellationToken ct = default)
-        => Task.FromResult<IReadOnlyList<RecurringRule>>(new ReadOnlyCollection<RecurringRule>(_rules.ToList()));
+        => _getAllException is not null
+            ? Task.FromException<IReadOnlyList<RecurringRule>>(_getAllException)
+            : Task.FromResult<IReadOnlyList<RecurringRule>>(new ReadOnlyCollection<RecurringRule>(_rules.ToList()));
 }

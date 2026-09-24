@@ -53,7 +53,7 @@ Depends on nothing (Phase 14 archived — see gate note above). Goal: `ChatConte
 fully populated by a composite over the existing Phase 8–12 queries, with per-section degradation and
 item caps already applied.
 
-- [ ] 1.1 Write failing `tests/…Unit/UseCases/Chat/BuildChatContextQueryTests.cs`: S-1 ("Comida"
+- [x] 1.1 Write failing `tests/…Unit/UseCases/Chat/BuildChatContextQueryTests.cs`: S-1 ("Comida"
   ranked 6th and again at rank 30 keeps its exact DOP figure); 31 categories → 30 named lines +
   `Otras categorías (1)` with the exact overflow amount; prior-month categories capped at 10; budgets
   capped at 15 in query order; goals `Status == Active` only, ≤ 10; debts `Active` only, ≤ 10, pending
@@ -63,22 +63,22 @@ item caps already applied.
   `HasMissingRates = true` and that item's `AmountDop == null` without poisoning any sum (S-9); the
   privacy reflection test asserting no snapshot record exposes a `Note`/`Tags`/`PaymentMethod*`/
   `Counterparty*` property (S-10). (R-2, D-1, D-2, D-3, S-1, S-9, S-10)
-- [ ] 1.2 Create `src/…Application/UseCases/Chat/ChatContextLimits.cs` (`CurrentMonthCategories = 30`,
+- [x] 1.2 Create `src/…Application/UseCases/Chat/ChatContextLimits.cs` (`CurrentMonthCategories = 30`,
   `PriorMonthCategories = 10`, `Budgets = 15`, `Goals = 10`, `Debts = 10`, `UpcomingPayments = 10`,
   `UpcomingHorizonDays = 30`, `MaxContextChars = 6_000`, `MaxNameChars = 80`,
   `UnfoldedTopCount = int.MaxValue`). (D-1)
-- [ ] 1.3 Create `src/…Application/UseCases/Chat/BuildChatContext/ChatContextSnapshot.cs`
+- [x] 1.3 Create `src/…Application/UseCases/Chat/BuildChatContext/ChatContextSnapshot.cs`
   (`ChatAmount`, `ChatMonthTotals`, `ChatCategoryLine`, `ChatCategoryList`, `ChatBudgetLine`,
   `ChatGoalLine`, `ChatDebtLine`, `ChatPaymentLine`, `ChatContextSnapshot`, `ChatContextSection`) —
   `null` means unavailable, empty list means "none". (R-2, D-2)
-- [ ] 1.4 Create `src/…Application/UseCases/Chat/BuildChatContext/BuildChatContextQuery.cs`: 7
+- [x] 1.4 Create `src/…Application/UseCases/Chat/BuildChatContext/BuildChatContextQuery.cs`: 7
   sequential sections (never `WhenAll`), each with its own try/catch degrading to `null`; category
   breakdown called with `topCount = UnfoldedTopCount` and folded to 30 named lines +
   `OverflowCount`/`OverflowAmountDop` by the builder itself; goal/debt lists capped **before**
   per-debt `GetDebtScheduleQuery` reads; per-item `ICurrencyConverter.ConvertAsync` for goals, debts,
   payments with `AmountDop = null` on failure; "este mes" resolved from `IClock.Today`, never a
   dashboard month. Run 1.1 green. (R-2, D-1, D-2, D-3)
-- [ ] 1.5 Run all four gates: `dotnet build -c Release`, `dotnet test -c Release --no-build`,
+- [x] 1.5 Run all four gates: `dotnet build -c Release`, `dotnet test -c Release --no-build`,
   `dotnet format style --verify-no-changes`, NetArchTest filter. All green before opening PR S1.
 
 ## 2. Renderer

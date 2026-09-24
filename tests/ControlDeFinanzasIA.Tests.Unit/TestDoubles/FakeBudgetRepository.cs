@@ -13,6 +13,7 @@ namespace ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 public sealed class FakeBudgetRepository : IBudgetRepository
 {
     private readonly List<Budget> _budgets = new();
+    private Exception? _getByMonthException;
 
     /// <summary>Gets the budgets currently stored.</summary>
     public IReadOnlyList<Budget> Budgets => _budgets;
@@ -36,6 +37,14 @@ public sealed class FakeBudgetRepository : IBudgetRepository
     public int GetByMonthCallCount { get; private set; }
 
     public void Seed(Budget budget) => _budgets.Add(budget);
+
+    /// <summary>
+    /// Configures <see cref="GetByMonthAsync"/> to throw the given
+    /// exception (F-015, Slice S1 — isolates
+    /// <c>BuildChatContextQuery</c>'s budgets section).
+    /// </summary>
+    /// <param name="exception">The exception to throw.</param>
+    public void SetThrowOnGetByMonth(Exception exception) => _getByMonthException = exception;
 
     /// <inheritdoc />
     public Task<Result> AddAsync(Budget budget, CancellationToken ct = default)
@@ -88,6 +97,12 @@ public sealed class FakeBudgetRepository : IBudgetRepository
     public Task<IReadOnlyList<Budget>> GetByMonthAsync(int year, int month, CancellationToken ct = default)
     {
         GetByMonthCallCount++;
+
+        if (_getByMonthException is not null)
+        {
+            return Task.FromException<IReadOnlyList<Budget>>(_getByMonthException);
+        }
+
         IReadOnlyList<Budget> matches = _budgets
             .Where(b => b.Year == year && b.Month == month)
             .OrderBy(b => b.CategoryId)

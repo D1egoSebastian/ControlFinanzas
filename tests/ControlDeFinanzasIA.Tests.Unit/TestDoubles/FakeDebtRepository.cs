@@ -13,6 +13,7 @@ namespace ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 public sealed class FakeDebtRepository : IDebtRepository
 {
     private readonly List<Debt> _debts = new();
+    private Exception? _getAllException;
 
     /// <summary>Gets the debts currently stored.</summary>
     public IReadOnlyList<Debt> Debts => _debts;
@@ -27,6 +28,14 @@ public sealed class FakeDebtRepository : IDebtRepository
     public bool AddWithScheduleCalled { get; private set; }
 
     public void Seed(Debt debt) => _debts.Add(debt);
+
+    /// <summary>
+    /// Configures <see cref="GetAllAsync"/> to throw the given exception
+    /// (F-015, Slice S1 — isolates <c>BuildChatContextQuery</c>'s debts
+    /// section).
+    /// </summary>
+    /// <param name="exception">The exception to throw.</param>
+    public void SetThrowOnGetAll(Exception exception) => _getAllException = exception;
 
     /// <inheritdoc />
     public Task<Result> AddAsync(Debt debt, CancellationToken ct = default)
@@ -73,5 +82,7 @@ public sealed class FakeDebtRepository : IDebtRepository
 
     /// <inheritdoc />
     public Task<IReadOnlyList<Debt>> GetAllAsync(CancellationToken ct = default)
-        => Task.FromResult<IReadOnlyList<Debt>>(new ReadOnlyCollection<Debt>(_debts.ToList()));
+        => _getAllException is not null
+            ? Task.FromException<IReadOnlyList<Debt>>(_getAllException)
+            : Task.FromResult<IReadOnlyList<Debt>>(new ReadOnlyCollection<Debt>(_debts.ToList()));
 }

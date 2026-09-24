@@ -17,6 +17,8 @@ public sealed class FakeExpenseRepository : IExpenseRepository
     private Result _addResult = Result.Success(null!);
     private Exception? _getByFilterException;
     private Exception? _getAmountRowsException;
+    private Exception? _getPeriodTotalsException;
+    private Exception? _getCategoryTotalsException;
 
     /// <summary>
     /// Gets or sets the result returned by <see cref="UpdateAsync"/>.
@@ -96,6 +98,25 @@ public sealed class FakeExpenseRepository : IExpenseRepository
     /// </summary>
     /// <param name="exception">The exception to throw.</param>
     public void SetThrowOnGetAmountRows(Exception exception) => _getAmountRowsException = exception;
+
+    /// <summary>
+    /// Configures <see cref="GetPeriodTotalsAsync"/> to throw the given
+    /// exception (F-015, Slice S1 — isolates
+    /// <c>BuildChatContextQuery</c>'s current/prior month summary section
+    /// from the other sections without affecting
+    /// <see cref="GetCategoryTotalsAsync"/>, which the category-breakdown
+    /// section uses instead).
+    /// </summary>
+    /// <param name="exception">The exception to throw.</param>
+    public void SetThrowOnGetPeriodTotals(Exception exception) => _getPeriodTotalsException = exception;
+
+    /// <summary>
+    /// Configures <see cref="GetCategoryTotalsAsync"/> to throw the given
+    /// exception (F-015, Slice S1 — isolates
+    /// <c>BuildChatContextQuery</c>'s category-breakdown section).
+    /// </summary>
+    /// <param name="exception">The exception to throw.</param>
+    public void SetThrowOnGetCategoryTotals(Exception exception) => _getCategoryTotalsException = exception;
 
     /// <inheritdoc />
     public Task<Result> AddAsync(Expense expense, CancellationToken ct = default)
@@ -180,6 +201,11 @@ public sealed class FakeExpenseRepository : IExpenseRepository
     {
         ArgumentNullException.ThrowIfNull(period);
 
+        if (_getPeriodTotalsException is not null)
+        {
+            return Task.FromException<IReadOnlyList<CurrencyTotal>>(_getPeriodTotalsException);
+        }
+
         IReadOnlyList<CurrencyTotal> totals = _addedExpenses
             .Where(e => e.Date >= period.Start && e.Date <= period.End)
             .GroupBy(e => e.Amount.Currency)
@@ -194,6 +220,11 @@ public sealed class FakeExpenseRepository : IExpenseRepository
     {
         ArgumentNullException.ThrowIfNull(period);
         GetCategoryTotalsCallCount++;
+
+        if (_getCategoryTotalsException is not null)
+        {
+            return Task.FromException<IReadOnlyList<CategoryCurrencyTotal>>(_getCategoryTotalsException);
+        }
 
         IReadOnlyList<CategoryCurrencyTotal> totals = _addedExpenses
             .Where(e => e.Date >= period.Start && e.Date <= period.End)

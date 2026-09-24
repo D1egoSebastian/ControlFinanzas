@@ -13,6 +13,7 @@ namespace ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 public sealed class FakeGoalRepository : IGoalRepository
 {
     private readonly List<Goal> _goals = new();
+    private Exception? _getAllException;
 
     /// <summary>Gets the goals currently stored.</summary>
     public IReadOnlyList<Goal> Goals => _goals;
@@ -47,6 +48,14 @@ public sealed class FakeGoalRepository : IGoalRepository
     public Goal? GetByIdOverride { get; set; }
 
     public void Seed(Goal goal) => _goals.Add(goal);
+
+    /// <summary>
+    /// Configures <see cref="GetAllAsync"/> to throw the given exception
+    /// (F-015, Slice S1 — isolates <c>BuildChatContextQuery</c>'s goals
+    /// section).
+    /// </summary>
+    /// <param name="exception">The exception to throw.</param>
+    public void SetThrowOnGetAll(Exception exception) => _getAllException = exception;
 
     /// <inheritdoc />
     public Task<Result> AddAsync(Goal goal, CancellationToken ct = default)
@@ -94,5 +103,7 @@ public sealed class FakeGoalRepository : IGoalRepository
 
     /// <inheritdoc />
     public Task<IReadOnlyList<Goal>> GetAllAsync(CancellationToken ct = default)
-        => Task.FromResult<IReadOnlyList<Goal>>(_goals.ToList());
+        => _getAllException is not null
+            ? Task.FromException<IReadOnlyList<Goal>>(_getAllException)
+            : Task.FromResult<IReadOnlyList<Goal>>(_goals.ToList());
 }
