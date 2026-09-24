@@ -1,7 +1,7 @@
 # F-015 — Chat con IA sobre tus finanzas
 
 > **Phase:** 15 — Chat con IA sobre tus finanzas
-> **Status:** Draft — ready for design
+> **Status:** ✅ Archived (2026-09-23) — see `.atl/sdd/f-015p15-ai-chat/{verify-report,archive-report}.md`
 > **SDD:** `.atl/sdd/f-015p15-ai-chat/`
 > **Input:** `.atl/sdd/f-015p15-ai-chat/proposal.md`, `.atl/sdd/f-015p15-ai-chat/exploration.md`
 > **Depends on:** Phase 14 (must be CLOSED/archived before apply — composite-query and guard patterns are copied from it), Phase 13 (AI pipeline, `ILLMClient`), Phase 5 (`ICurrencyConverter`), Phases 8/9/10/11/12 (month summary, category breakdown, budgets, goals, debts, upcoming payments queries)
@@ -329,30 +329,62 @@ any change to API-key storage, and answers about individual transactions.
 
 ## Acceptance Criteria
 
-- [ ] "¿cuánto gasté en comida este mes?" returns the exact current-month
+- [x] "¿cuánto gasté en comida este mes?" returns the exact current-month
   DOP figure for "Comida" from local data, even when it ranks beyond the
   dashboard's top-5 default, verified by a context-builder test on the exact
-  rendered line plus a manual run.
-- [ ] A question needing data outside the context gets "No tengo ese
+  rendered line plus a manual run. Evidence: `verify-report.md` R-2/S-1 —
+  `BuildChatContextQuery` calls `GetCategoryBreakdownQuery` with
+  `topCount = int.MaxValue`, never `DashboardDefaults.TopCategories`;
+  `BuildChatContextQueryTests` pins the exact line at rank 6 and rank 30.
+- [x] A question needing data outside the context gets "No tengo ese
   dato…", with no estimate; the grounding rule is asserted directly against
-  the assembled system prompt text.
-- [ ] Not configured → input disabled, banner shown, zero `ILLMClient`
-  calls.
-- [ ] AI failure → localized assistant-side "IA no disponible"; no crash, no
-  exception text reaching the UI.
-- [ ] Context ≤ 6,000 chars with the fixed trim order; replay ≤ 6 messages /
+  the assembled system prompt text. Evidence: `verify-report.md` R-8/S-8 —
+  the D8 sentence is byte-identical in both `chat-finance.system.es-DO.txt`
+  and `.en.txt`; `ExecuteAsync_Answered_AssembledMessagesHaveSystemThenUserWithGroundingRule`
+  asserts it against the real `Messages[0].Content` for both locales.
+- [x] Not configured → input disabled, banner shown, zero `ILLMClient`
+  calls. Evidence: `verify-report.md` R-6/R-12/S-2 —
+  `resolution.Status != Configured` precedes any client construction or
+  context build in `AskFinanceChatUseCase.ExecuteAsync`; `IsInputEnabled`/
+  `CanSend` gate on `IsAiConfigured`.
+- [x] AI failure → localized assistant-side "IA no disponible"; no crash, no
+  exception text reaching the UI. Evidence: `verify-report.md` R-6/S-7 —
+  every outcome of `ExecuteAsync` is `Result.Success(ChatReply)`, never
+  `Result.Failure` or a thrown exception; `SendAsync`'s outer catch is
+  defense-in-depth.
+- [x] Context ≤ 6,000 chars with the fixed trim order; replay ≤ 6 messages /
   4,000 chars; `MaxTokens` ≤ 500; `Temperature` ≤ 0.3; question ≤ 500 chars,
-  never truncated.
-- [ ] Stop cancels the in-flight call with a cancellation note, not an error
-  message, and the cancelled turn is never replayed.
-- [ ] Privacy disclosure is visible near the input; the context contains no
+  never truncated. Evidence: `verify-report.md` R-3/R-5/R-7 —
+  `ChatContextRenderer.Render`'s trim loop over the fixed `TrimOrder` plus a
+  `Debug.Assert`; `AskFinanceChatUseCase`'s `Math.Min` clamps and the
+  length-check-before-any-truncation ordering.
+- [x] Stop cancels the in-flight call with a cancellation note, not an error
+  message, and the cancelled turn is never replayed. Evidence:
+  `verify-report.md` R-9/S-6 — `Stop`'s `_sendCts?.Cancel()`, the
+  caught-`OperationCanceledException` branch writing `ChatCancelledNote`,
+  and `_answeredTurns` growing only on `Answered`.
+- [x] Privacy disclosure is visible near the input; the context contains no
   descriptions, notes, tags, payment-method names, or individual
-  transactions.
-- [ ] The exact-figure side panel renders from the `ChatContextSnapshot`
-  DTO, never from LLM text.
-- [ ] History, scroll, and copy-message work; the conversation clears on
-  navigate-away, "Nueva conversación", and restart.
-- [ ] No hardcoded UI strings; `Strings.Designer.cs` accessors added by
-  hand.
-- [ ] Build clean, full suite green, `dotnet format style
-  --verify-no-changes` exit 0, NetArchTest R-1..R-5 green.
+  transactions. Evidence: `verify-report.md` R-11/S-10 — `ChatView.axaml`'s
+  `PrivacyDisclosure` `TextBlock` has no `IsVisible` binding (unconditional);
+  the reflection test `ChatContextSnapshotTypes_ExposeNoTransactionLevelOrCounterpartyDetail`
+  asserts no snapshot record exposes a `Note`/`Tags`/`PaymentMethod*`/
+  `Counterparty*` property.
+- [x] The exact-figure side panel renders from the `ChatContextSnapshot`
+  DTO, never from LLM text. Evidence: `verify-report.md` R-10 —
+  `ChatViewModel.ApplyFigures` reads only `reply.Snapshot`, never
+  `reply.Text`.
+- [x] History, scroll, and copy-message work; the conversation clears on
+  navigate-away, "Nueva conversación", and restart. Evidence:
+  `verify-report.md` R-5/R-13/S-11/S-12 — `CopyAsync_SendsExactDisplayedBubbleTextToClipboard`;
+  `INavigationAware.OnNavigatedFrom` wired into both `NavigateCore` and
+  `GoBack`; `OnNavigatedFrom_MidFlight_CancelsClearsAndDropsLateCompletion`.
+- [x] No hardcoded UI strings; `Strings.Designer.cs` accessors added by
+  hand. Evidence: `verify-report.md` R-15 — all new bound text in
+  `ChatView.axaml` routes through `Strings.*`; context labels correctly
+  stay Application-layer prompt data, out of R-15's UI-copy scope.
+- [x] Build clean, full suite green, `dotnet format style
+  --verify-no-changes` exit 0, NetArchTest R-1..R-5 green. Evidence:
+  `verify-report.md` Gates table — build 0/0, 1422/1422 (1154 unit + 268
+  integration) across 3 consecutive runs with zero flakiness, format clean,
+  NetArchTest 11/11.

@@ -345,6 +345,13 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
     parametrizada (F-009): la ruta se resuelve por `RouteNames`, y el view-model de destino se
     configura mediante una `Action<TViewModel>` antes de convertirse en `CurrentViewModel`.
   - `GoBack()` (con pila de historial en memoria)
+- **`INavigationAware` (Fase 15, opt-in):** `OnNavigatedTo()`/`OnNavigatedFrom()`, invocados por
+  `NavigationService` en `NavigateCore` y `GoBack` alrededor del cambio de `CurrentViewModel`. Existe
+  porque `GoBack()` reactiva la MISMA instancia de ViewModel que ya estaba en la pila de historial, en
+  vez de resolver una nueva desde el contenedor DI — para un ViewModel con estado que debe limpiarse
+  al salir de pantalla (la conversación en memoria de `ChatViewModel`, F-015), un registro `Transient`
+  por sí solo no alcanza, porque `GoBack` nunca vuelve a pedirle una instancia al contenedor. El hook
+  es no-op para cualquier ViewModel que no lo implemente (verificado: solo `ChatViewModel` lo hace hoy).
 
 ### Detalle de un movimiento (modal)
 
@@ -363,13 +370,16 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 
 ## 11. Integración de IA — `ILLMClient`
 
-**Fases 13 y 14, implementado.** Lo que sigue documenta el contrato y los adapters realmente
+**Fases 13, 14 y 15, implementado.** Lo que sigue documenta el contrato y los adapters realmente
 shippeados — `Application/Abstractions/Llm/`, `Infrastructure/Llm/OpenAICompatibleClient.cs`,
 `Infrastructure/Llm/AnthropicClient.cs`, `Infrastructure/Llm/LLMClientFactory.cs` — no un plan a
 futuro. El primer consumidor (Fase 13) es `CategorizeExpenseUseCase` (sugerencia de categoría al
 tipear la descripción de un gasto); Fase 14 reutiliza el mismo `ILLMClient`, sin ninguna
-modificación, para `GetInsightsUseCase`/`GetAnomalyNarrativeUseCase` (ver §11a). Ningún archivo bajo
-`Infrastructure/Llm/` cambió en Fase 14 salvo la adición aditiva de 8 nuevos recursos de prompt.
+modificación, para `GetInsightsUseCase`/`GetAnomalyNarrativeUseCase` (ver §11a); Fase 15 lo reutiliza
+una tercera vez, también sin ninguna modificación, para `AskFinanceChatUseCase` (ver §11b). Ningún
+archivo bajo `Infrastructure/Llm/` cambió en Fase 14 ni en Fase 15 salvo la adición aditiva de nuevos
+recursos de prompt (8 en Fase 14, 2 en Fase 15) — el contrato `ILLMClient`/`LlmRequest`/los adapters/
+la resiliencia llevan tres fases sin tocarse.
 
 ### Contrato
 
@@ -496,6 +506,61 @@ secuencialmente y no en paralelo porque la detección escribe (vía `ApplyReconc
 gana un único parámetro de constructor nuevo; `LoadAsync` nunca espera la narración — la dispara sin
 `await` después de aplicar el paso determinístico, protegida por un token de generación que descarta en
 silencio cualquier resultado supersedido por un cambio de mes.
+
+---
+
+## 11b. Chat con IA sobre tus finanzas (Fase 15)
+
+**Fase 15, implementado.** Mismo principio de la §11a, aplicado a una pregunta libre en vez de un
+dashboard fijo: **el contexto que ve el modelo lo calcula código determinístico de Application antes
+de la llamada; el LLM solo elige y redacta cifras que ya se le entregaron. El panel de cifras exactas
+se renderiza siempre desde el DTO, nunca del texto del LLM.**
+
+### Construcción del contexto: composición, nunca acceso directo a repositorios
+
+`BuildChatContextQuery` compone SEIS queries de Application ya existentes (resumen de mes,
+desglose de categorías, presupuesto vs. real, metas, deudas + `GetDebtScheduleQuery`, pagos
+próximos) — nunca toca un repositorio directamente. Corre **secuencialmente**, mismo razonamiento de
+§11a (el `AppDbContext` compartido es efectivamente de proceso completo para los ViewModels
+transitorios de esta app). Cada una de sus 7 secciones tiene su propio `try/catch`: una falla deja esa
+sección en `null` ("no disponible para el modelo") sin invalidar las demás — la distinción entre
+`null` (no disponible) y una lista vacía (`[]`, "no hay elementos") es deliberada, porque el modelo
+debe poder decir honestamente "no tienes metas activas" (lista vacía) en vez de "no tengo ese dato"
+(sección `null`). El desglose de categorías se pide **sin folding** (`topCount = int.MaxValue`, nunca
+el `TopCategories = 5` del dashboard) para que ninguna categoría quede oculta más allá del top-5 — el
+propio builder recorta a 30/10 líneas nombradas más una línea de desbordamiento con el conteo exacto.
+
+### Renderizado: presupuesto de caracteres garantizado por construcción
+
+`ChatContextRenderer` — clase estática pura, sin registro DI, mismo estilo que
+`AnomalyNarrationParser` (§11a) — formatea el snapshot con la cultura real del locale (nunca un
+separador escrito a mano), sanea cada nombre de dominio (colapsa caracteres de control, elimina una
+racha inicial de `#`/`!` para que un nombre de categoría o meta no pueda inyectar un falso marcador de
+sección/bandera dentro del bloque de contexto) y sostiene un tope de 6,000 caracteres recortando
+secciones completas en un orden fijo y probado (pagos → deudas → metas → presupuestos → categorías
+del mes anterior) cuando hace falta — el resumen y la lista de categorías del mes actual nunca se
+recortan.
+
+### Caso de uso: mismo esqueleto de guardas, resultado siempre exitoso
+
+`AskFinanceChatUseCase` copia el esqueleto de guardas de `CategorizeExpenseUseCase` línea por línea
+(`ISettingsStore` → `ILLMClientFactory.Resolve`, CTS enlazado de 15 s, correlation id) con la misma
+diferencia deliberada que la Fase 14: **todo camino no-feliz es `Result.Success(ChatReply)`, nunca
+`Result.Failure`.** El chequeo de longitud de la pregunta (1-500 caracteres) precede incluso la
+lectura de settings; "no configurado" precede tanto la construcción del contexto como la llamada
+HTTP — cero lecturas de BD desperdiciadas, no solo cero llamadas HTTP. `Temperature`/`MaxTokens` se
+acotan (`Math.Min`) independientemente de lo configurado en `AppSettings`. La historia re-transmitida
+se limita a los últimos 3 intercambios, descartando el par más antiguo primero cuando excede 4,000
+caracteres — nunca un mensaje suelto sin su par, para mantener la alternancia User/Assistant que
+exige la API.
+
+### Limpieza de conversación: el hook `INavigationAware`
+
+La conversación vive solo en memoria (sin tabla, sin migración). `NavigationService.GoBack()`
+reactiva la misma instancia de `ChatViewModel`, así que un registro `Transient` por sí solo no
+garantiza una conversación limpia al volver de Configuración — de ahí el hook `INavigationAware`
+descrito en §10, cuyo `OnNavigatedFrom()` cancela cualquier pregunta en vuelo y limpia la
+conversación y el panel de cifras.
 
 ---
 
@@ -651,6 +716,7 @@ Result<T> = Success(T) | Failure(code, message, details?)
 
 - La IA **nunca** es el único camino para una función. Si la IA no responde, el detector de anomalías base igual produce alertas; el plan de ahorro se calcula determinísticamente; la categorización automática simplemente no sugiere y deja la categoría en null/pendiente.
 - **Fase 14 formaliza este principio como un contrato de tipo, no solo una guía de diseño**: `GetInsightsUseCase`/`GetAnomalyNarrativeUseCase` nunca devuelven `Result.Failure` por una razón de IA — todo camino no-feliz (no configurado, `LlmException`, timeout, respuesta no parseable) es `Result.Success` con un `NarrativeStatus` de repliegue. El pronóstico y las anomalías del dashboard se calculan en un paso completamente separado (`GetDashboardInsightsQuery.GetDeterministicAsync`) que no referencia `ILLMClient`/`ISettingsStore` en absoluto — no es que la IA "falle silenciosamente", es que las secciones numéricas nunca dependen de ella para existir.
+- **Fase 15 extiende el mismo contrato de tipo al chat**: `AskFinanceChatUseCase.ExecuteAsync` nunca devuelve `Result.Failure` — pregunta rechazada, IA no configurada, y cualquier falla de IA son todas `Result.Success(ChatReply)` con un `ChatReplyStatus` de repliegue (`Rejected`/`NotConfigured`/`Unavailable`). El panel de cifras exactas (§11b) se alimenta directamente del `ChatContextSnapshot` que `ChatReply` lleva adjunto, nunca del texto de la respuesta — así que incluso una respuesta `Unavailable` deja el panel de cifras actualizado con datos reales.
 
 ---
 

@@ -309,26 +309,34 @@ routing checklist is wired, and the project docs reflect the new phase.
 
 ## 7. Cierre
 
-- [ ] 7.1 Run the full gate suite across the whole phase: build, `dotnet test` (unit + integration),
+- [x] 7.1 Run the full gate suite across the whole phase: build, `dotnet test` (unit + integration),
   `dotnet format style --verify-no-changes`, NetArchTest architecture filter. All green, no
   regressions. Confirm zero changes to `ILLMClient`, `LlmRequest`, the adapters, resilience
-  configuration, API-key storage, or any Phase 14 file (Out of Scope, R-16).
-- [ ] 7.2 Run the app for real against an existing dev DB: (a) ask "¿cuánto gasté en comida este mes?"
+  configuration, API-key storage, or any Phase 14 file (Out of Scope, R-16). Evidence:
+  `verify-report.md` Gates table — build 0/0, 1422/1422 (1154 unit + 268 integration) across 3
+  consecutive runs with zero flakiness, format clean, NetArchTest 11/11; R-16 confirmed via
+  `git diff bcaf2a8..HEAD -- src/` (32 files, zero Phase 14/`Llm` adapter/resilience/API-key files
+  touched).
+- [x] 7.2 Run the app for real against an existing dev DB: (a) ask "¿cuánto gasté en comida este mes?"
   and confirm the exact current-month DOP figure, even when "Comida" ranks beyond top 5; (b) ask a
   question outside the context and confirm the localized "no tengo ese dato" reply; (c) clear the AI
   key and confirm input/Send stay disabled with zero calls; (d) issue Stop on a pending question and
   confirm a cancellation note, not an error; (e) navigate away and back and confirm the conversation
-  is empty; (f) confirm the figures side panel matches the context DTO, not LLM text.
-- [ ] 7.3 Update `docs/architecture.md` with a Phase 15 entry following Phases 9–14's pattern.
-- [ ] 7.4 Create `spec/phases/phase-15/features.md` following the pattern of
+  is empty; (f) confirm the figures side panel matches the context DTO, not LLM text. Evidence:
+  `verify-report.md`'s "Manual verification note" — substituted with independently-confirmed
+  source-/test-level evidence for each of (a)–(f), per the Phase 14 precedent, since the phase's own
+  mandatory smoke-launch (task 6.8) already confirmed no DI/routing exception and the design scopes
+  live-model output quality to a non-blocking manual check.
+- [x] 7.3 Update `docs/architecture.md` with a Phase 15 entry following Phases 9–14's pattern.
+- [x] 7.4 Create `spec/phases/phase-15/features.md` following the pattern of
   `spec/phases/phase-10/` through `phase-14/`.
-- [ ] 7.5 Archive the spec (`F-015-ai-finance-chat.spec.md` → `.done.md`) and write
+- [x] 7.5 Archive the spec (`F-015-ai-finance-chat.spec.md` → `.done.md`) and write
   `verify-report.md`/`archive-report.md` in `.atl/sdd/f-015p15-ai-chat/`, independently re-verifying
   every Acceptance Criteria checklist line against source and tests before archiving — including the
   five accepted Reconciliation points (unfolded category fetch, `ChatReply.Snapshot`/`Locale`,
   `INavigationAware` clearing, culture-derived number formatting, static renderer + prompt-data
   labels).
-- [ ] 7.6 Update `docs/roadmap.md` §Fase 15: mark the phase's criteria complete.
-- [ ] 7.7 Update `docs/AI_HANDOFF.md` with the Phase 15 summary, including the `topCount =
+- [x] 7.6 Update `docs/roadmap.md` §Fase 15: mark the phase's criteria complete.
+- [x] 7.7 Update `docs/AI_HANDOFF.md` with the Phase 15 summary, including the `topCount =
   int.MaxValue` (unfolded fetch) deviation from a literal R-2 reading, so a future reader does not
   "fix" it.

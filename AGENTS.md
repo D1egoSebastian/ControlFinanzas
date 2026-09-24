@@ -11,26 +11,36 @@ the project state changes, update this file.
   **Entity Framework Core** (Code First, versioned migrations),
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
-- **Status (today):** Phases 0–14 fully archived. Phase 15 (chat with AI about
-  your finances) is feature-complete across all 6 slices (context builder,
-  renderer, use case + prompts + DI, navigation hook + clipboard port,
-  ViewModel, view + routing) and pending `sdd-verify`/`sdd-archive` — the
-  spec is still `F-015-ai-finance-chat.spec.md` (not yet renamed to
-  `.done.md`) and `spec/phases/phase-15/features.md` has not been written
-  yet. The chat screen is reachable from the sidebar (`RouteNames.Chat`),
-  answers grounded finance questions from a bounded, deterministic context
-  snapshot (never estimates), shows an exact-figure backup panel from the
-  DTO, and supports Stop/Copy/new-conversation with the conversation
-  cleared on navigate-away. Phase 14 (AI insights, month-end forecast, and
-  anomaly detection) shipped three AI-facing dashboard sections — a
-  month-end forecast card, a persisted anomaly-alerts list with per-row
-  dismiss, and an AI-written insights card — while keeping every number
-  deterministic: two pure Domain services (`AnomalyDetector`,
-  `MonthEndForecaster`) compute all figures with zero `ILLMClient` dependency,
-  and the LLM only narrates figures it is handed via two success-shaped use
-  cases that never fail (not configured/offline/error all resolve to a
-  fallback payload, never an exception or `Result.Failure`). Phase 13 shipped
-  the app's first outbound network dependency: `ILLMClient` +
+- **Status (today):** Phases 0–15 fully archived. Phase 16 (AI savings plan
+  for goals) is next — already spec'd, designed, and task-broken-down at
+  `spec/features/phase-16/`, `tasks/phase-16/`, and
+  `.atl/sdd/f-016p16-ai-savings-plan/`; start directly with `sdd-apply`.
+  Phase 15 (chat with AI about your finances) shipped a chat screen that
+  answers plain-language finance questions grounded in local data — every
+  figure the model can quote is computed and formatted by deterministic
+  Application code (`BuildChatContextQuery`, composing 6 already-existing
+  queries, category breakdown fetched UNFOLDED so no category is ever
+  hidden beyond the dashboard's top-5 default) before the call; the LLM
+  only selects and phrases figures it was given. `ChatContextRenderer`
+  keeps the rendered context ≤ 6,000 chars by construction, dropping whole
+  sections in a fixed order when needed. `AskFinanceChatUseCase` copies
+  `CategorizeExpenseUseCase`'s guard skeleton and is success-shaped for
+  every outcome (rejected/not-configured/any AI failure — never
+  `Result.Failure` or an uncaught exception). The conversation lives in
+  memory only, cleared via a new opt-in `INavigationAware` hook because
+  `NavigationService.GoBack` reactivates the same `ChatViewModel` instance
+  instead of resolving a new one. The exact-figure side panel always
+  renders from the DTO, never from LLM text. Phase 14 (AI insights,
+  month-end forecast, and anomaly detection) shipped three AI-facing
+  dashboard sections — a month-end forecast card, a persisted
+  anomaly-alerts list with per-row dismiss, and an AI-written insights
+  card — while keeping every number deterministic: two pure Domain
+  services (`AnomalyDetector`, `MonthEndForecaster`) compute all figures
+  with zero `ILLMClient` dependency, and the LLM only narrates figures it
+  is handed via two success-shaped use cases that never fail (not
+  configured/offline/error all resolve to a fallback payload, never an
+  exception or `Result.Failure`). Phase 13 shipped the app's first
+  outbound network dependency: `ILLMClient` +
   `OpenAICompatibleClient`/`AnthropicClient` adapters + a
   `Microsoft.Extensions.Http.Resilience`-backed pipeline (15s total timeout,
   1 retry, circuit breaker), spent on automatic expense categorization — typing
@@ -39,10 +49,10 @@ the project state changes, update this file.
   AI output. Every failure mode (no key, no network, bad key, timeout,
   unparseable response) leaves the form fully usable with an honest status
   message, never an exception. 1422/1422 tests verde (1154 unit + 268
-  integration). See `docs/AI_HANDOFF.md`, `spec/phases/phase-14/features.md`,
-  and `spec/phases/phase-13/features.md` for the full phase-13/14 detail and
-  `spec/phases/phase-05/features.md` through `spec/phases/phase-12/features.md`
-  for earlier phases.
+  integration). See `docs/AI_HANDOFF.md`, `spec/phases/phase-15/features.md`,
+  `spec/phases/phase-14/features.md`, and `spec/phases/phase-13/features.md`
+  for the full phase-13/14/15 detail and `spec/phases/phase-05/features.md`
+  through `spec/phases/phase-12/features.md` for earlier phases.
 - **Roadmap / architecture / vision:** `docs/roadmap.md`,
   `docs/architecture.md`, `docs/vision.md`.
 - **Mission / stack constitution:** `spec/constitution/mission.md`,

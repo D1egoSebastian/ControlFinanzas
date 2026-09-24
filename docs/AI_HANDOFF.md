@@ -9,8 +9,9 @@
 ## 1. TL;DR
 
 - **What it is:** `ControlDeFinanzasIA` — a cross-platform (.NET 8 + Avalonia MVVM) desktop app for personal-finance control with AI assist. 100% local data. DOP + USD.
-- **Current phase:** **Phase 14 archived** (AI insights, month-end forecast, and anomaly detection on the dashboard). Phases 0–14 fully archived. **Phase 15 (chat with AI about your finances) next.**
-- **Test count:** 1344/1344 passing (1079 unit + 265 integration) as of 2026-09-23, Phase 14 close (up from 1184 at Phase 13 close). Re-run 3 consecutive times independently during `sdd-verify` with zero flakiness. Release unit-test host runs cleanly end to end, no Debug fallback needed.
+- **Current phase:** **Phase 15 archived** (chat with AI about your finances). Phases 0–15 fully archived. **Phase 16 (AI savings plan for goals) next — already spec'd/designed/tasked.**
+- **Test count:** 1422/1422 passing (1154 unit + 268 integration) as of 2026-09-23, Phase 15 close (up from 1344 at Phase 14 close). Re-run 3 consecutive times independently during `sdd-verify` with zero flakiness. Release unit-test host runs cleanly end to end, no Debug fallback needed.
+- **Phase 15 shipped a chat screen that answers plain-language finance questions grounded in local data, with every figure computed deterministically before the model ever sees it.** `BuildChatContextQuery` composes 6 already-existing queries (month summary, category breakdown — fetched UNFOLDED so no category is ever hidden past the dashboard's top-5 default —, budget vs. actual, goals, debts + schedule, upcoming payments), each section degrading independently on failure. `ChatContextRenderer`, a pure static class, formats that snapshot into a culture-correct, name-sanitized prompt block capped at 6,000 characters by construction, dropping whole sections in a fixed order when needed. `AskFinanceChatUseCase` copies `CategorizeExpenseUseCase`'s guard skeleton and is success-shaped for every outcome (rejected, not configured, any AI failure — never `Result.Failure` or an uncaught exception). The conversation lives in memory only, cleared via a brand-new opt-in `INavigationAware` hook because `NavigationService.GoBack` reactivates the same `ChatViewModel` instance instead of resolving a new one. See gotcha #24 below for the `AsyncRelayCommand` CanExecute-not-self-checked footgun found in slice 5 and gotcha #25 for the `InternalsVisibleTo` test-only seam introduced in slice 4.
 - **Phase 14 shipped three AI-facing dashboard sections while keeping every number deterministic**: a month-end forecast, persisted anomaly alerts, and an AI-written insight summary. Two new pure Domain services — `AnomalyDetector` (robust median/MAD z-score, `MAD=0` ratio fallback, never divides by zero) and `MonthEndForecaster` (run-rate/history blend with explicit `InsufficientData`/`ClosedMonth`/`FutureMonth` states) — compute every figure with **zero** `ILLMClient` dependency. The LLM only narrates figures it is handed, via two success-shaped use cases (`GetInsightsUseCase`, `GetAnomalyNarrativeUseCase`) that copy Phase 13's guard skeleton but never fail — not-configured, offline, and every AI error all resolve to a fallback payload plus a correlation-id Warning log, never an exception or `Result.Failure`. One new composite query (`GetDashboardInsightsQuery`) splits a deterministic step (forecast + reconciled anomalies, sequential, zero LLM) from a non-blocking narration step (insights + one batched anomaly-narration call, `WhenAll`, at most 2 concurrent calls) — the dashboard's numeric sections render immediately regardless of AI state. See gotcha #23 below for the `AnomalySeverity`-as-string persistence deviation and gotcha #22 for Phase 13's flaky-test lesson this phase's own timing-sensitive tests followed.
 - **Phase 13 shipped a real AI feature end to end**: typing an expense description (4+ chars, 600ms debounce) suggests an existing category via a dismissable chip; accepting the chip is the *only* code path in the entire feature that writes `SelectedCategoryId` from AI output. Every failure mode (no key, no network, bad key, timeout, unparseable response, no matching category) leaves the form fully usable with an honest `AiStatusMessage`, never an exception or a dialog. `ILLMClient` + two provider adapters (`OpenAICompatibleClient` for OpenAI/OpenRouter/Custom, `AnthropicClient`) + `Microsoft.Extensions.Http.Resilience`-backed pipeline (15s total timeout, 1 retry, circuit breaker) ship in `Application`/`Infrastructure`, with zero `System.Net.*` leak into `Application`/`UI` enforced by a reflection test stricter than the existing NetArchTest rules. See gotcha #22 below for a real flaky-test root cause found and fixed during this phase.
 - **The app was actually launched and screenshotted for the first time this project** at Phase 9 close — confirmed real rendering (LiveCharts2, all 6 sidebar routes) and caught two real runtime-only bugs no test suite could catch: `ViewLocator` missing the `DebtsViewModel` case (Debts route rendered blank since Phase 7) and the entire "Libro Mayor" stylesheet never merged into `App.axaml` (every `ledger-*` class had been inert since Phase 4). Both fixed — see gotchas below. Phase 10 continued the same discipline: `dotnet run` mid-slice-4 confirmed the new Dashboard "Progreso de presupuestos" card renders correctly, including its empty-state message. Phase 11 confirmed the same mid-slice-3: the Dashboard renders with the new "Metas" sidebar entry, no startup crash. Phase 13's slices 6 and 7 both smoke-launched the app with no DI startup failure — the first phase to register `AddHttpClient` calls anywhere in the solution.
@@ -31,7 +32,7 @@
 | Type | Cross-platform desktop (Windows, macOS, Linux), single-user, local data only |
 | UI pattern | MVVM strict with **CommunityToolkit.Mvvm** (`[ObservableProperty]`, `[RelayCommand]`) |
 | Localization | `es-DO` default + `en` via `IStringLocalizer` / resx |
-| Status | Phases 0–14 ✅ archived; Phase 15 (chat with AI about your finances) next |
+| Status | Phases 0–15 ✅ archived; Phase 16 (AI savings plan for goals) next |
 
 ---
 
@@ -105,9 +106,18 @@ only) — see the TL;DR above.
   `GetDashboardInsightsQuery` composite, non-blocking `DashboardViewModel` narration pass, three
   new `DashboardView.axaml` sections.
 
+**Phase 15** — `spec/features/phase-15/` (1 done, archived 2026-09-23)
+- `F-015-ai-finance-chat.done.md` (umbrella). All 6 strictly-chained slices complete:
+  `BuildChatContextQuery` composite over 6 existing queries (unfolded category fetch, per-section
+  degrade), pure static `ChatContextRenderer` (culture-correct, ≤6,000 chars by construction, fixed
+  section-trim order), `AskFinanceChatUseCase` (success-shaped for every outcome, zero HTTP when not
+  configured), grounding-rule prompt pair, new `INavigationAware` hook + `IClipboardService` port,
+  `ChatViewModel`/`ChatView` with a full routing checklist (sidebar, `RouteNames`, both `ViewLocator`
+  arms).
+
 ---
 
-## 4. Phase 6, 7, 8, 9, 10, 11, 12, 13 & 14 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20, 2026-09-20, 2026-09-21, 2026-09-23, 2026-09-23)
+## 4. Phase 6, 7, 8, 9, 10, 11, 12, 13, 14 & 15 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20, 2026-09-20, 2026-09-21, 2026-09-23, 2026-09-23, 2026-09-23)
 
 ### What's done (backend)
 
@@ -431,15 +441,67 @@ The full task breakdown is at `tasks/phase-13/F-013-ai-pipeline-categorization.t
 
 The full task breakdown is at `tasks/phase-14/F-014-ai-insights-forecast-anomalies.tasks.md`.
 
+### Phase 15 — what's done
+
+- Application: `Application/UseCases/Chat/ChatContextLimits.cs` (30/10/15/10/10/10 item caps,
+  `MaxContextChars = 6_000`); `Application/UseCases/Chat/BuildChatContext/{ChatContextSnapshot,
+  BuildChatContextQuery,ChatContextRenderer,ChatContextLabels}.cs` — `BuildChatContextQuery` composes
+  6 already-existing queries + `GetDebtScheduleQuery` SEQUENTIALLY (never `WhenAll`, same D-10
+  reasoning as Phase 14's `GetDashboardInsightsQuery`), each of its 7 sections has its own try/catch
+  degrading to `null` without aborting the others; the category breakdown is fetched with
+  `topCount = int.MaxValue` (never `DashboardDefaults.TopCategories`) and folded to 30/10 named lines
+  + a counted overflow line by the builder itself, so no category is ever silently hidden.
+  `ChatContextRenderer` is a pure static class (`AnomalyNarrationParser` precedent, no DI
+  registration), culture-formats every figure (never a hand-typed separator), sanitizes names to
+  close a prompt-injection vector (`#`/`!` section/flag markers), and stays ≤6,000 chars by
+  construction via a fixed section-drop loop.
+- Application: `Application/UseCases/Chat/AskFinanceChat/{AskFinanceChatUseCase,
+  AskFinanceChatCommand,ChatReply}.cs` — copies `CategorizeExpenseUseCase`'s guard skeleton
+  (`ISettingsStore` → `ILLMClientFactory.Resolve`) line for line; the question-length check (1-500)
+  precedes even the settings read, and "not configured" precedes both the context build and the HTTP
+  call (zero wasted DB reads). 15s linked CTS identical to Phases 13/14, same Stop-vs-timeout
+  distinction. `Temperature`/`MaxTokens` clamped independent of `AppSettings`. Every outcome is
+  `Result.Success(ChatReply)`, never `Result.Failure`. `Application/Llm/PromptNames.cs` +1
+  (`ChatFinanceSystem`).
+- Infrastructure: `Infrastructure/Llm/Prompts/chat-finance.system.{es-DO,en}.txt` — the D8 grounding
+  sentence is byte-identical in both locale files (no `.csproj` change needed, already globbed).
+- UI: `UI/Navigation/INavigationAware.cs` (new opt-in hook) wired into both `NavigationService
+  .NavigateCore` and `GoBack` — required because `GoBack` reactivates the same VM instance rather than
+  resolving a new one; no-op for every pre-existing route. `UI/Services/{IClipboardService,
+  AvaloniaClipboardService}.cs` — resolves `TopLevel.Clipboard` via the classic desktop lifetime,
+  no-ops with a Debug log when unavailable. `UI/ViewModels/{ChatMessageItem,ChatViewModel}.cs` —
+  generation-token `SendAsync`/`Stop`/`NewConversation`/`CopyAsync` commands (the `ExpensesViewModel`
+  precedent, no debounce); `_answeredTurns` grows only on `Answered`, so failed/cancelled/rejected/
+  banner turns can never be replayed by construction. `UI/Views/ChatView.axaml` — full routing
+  checklist (`RouteNames.Chat`, `NavigationService._routes`, both `ViewLocator` arms, `ShellViewModel`
+  sidebar item), a permanent (unconditional) privacy disclosure, and an exact-figure panel sourced
+  only from the DTO.
+- Applied in 6 strictly-chained commits (`e400643` context builder, `9cd88da` renderer, `ae16098` use
+  case + prompts, `59b15b9` navigation hook + clipboard port, `a05db68` view model, `574bd1a` view +
+  routing). S3, S4, and S6 each carried a mandatory app smoke-launch before their gate-run closed
+  (DI-wiring risk for S3, `NavigationService` core-path risk for S4, full routing-surface risk for
+  S6). Each slice was independently re-verified by the orchestrator after landing.
+- **No fix commit required** — the `sdd-verify` adversarial reliability+risk review pass over the
+  full phase diff found no confirmed defects: no exception escapes to the UI, cancellation is honored
+  and correctly distinguished from the 15s hard timeout, the `INavigationAware` hook is safely no-op
+  for every pre-existing route, `SanitizeName` closes the section/flag-marker prompt-injection vector,
+  and no secret, question, or reply text reaches the logs.
+- Gates: build clean, 1422/1422 tests (1154 unit + 268 integration, up from 1344 at Phase 14 close),
+  re-verified independently 3 consecutive times with zero flakiness, `dotnet format style` clean,
+  NetArchTest 11/11 — see `.atl/sdd/f-015p15-ai-chat/verify-report.md` and `archive-report.md`.
+- Spec archived to `spec/features/phase-15/F-015-ai-finance-chat.done.md`.
+
+The full task breakdown is at `tasks/phase-15/F-015-ai-finance-chat.tasks.md`.
+
 ---
 
 ## 5. What's pending (next up)
 
 Ordered by priority. Each item references its source-of-truth spec/plan.
 
-1. **Phase 15 — Chat with AI about your finances** — `docs/roadmap.md` §Fase 15. Reuses
-   `ILLMClient`/`ILLMClientFactory` from Phase 13 and the dashboard queries Phase 14 built; no spec/task
-   breakdown drafted yet — start with `sdd-propose`.
+1. **Phase 16 — AI savings plan for goals** — `docs/roadmap.md` §Fase 16. Already fully planned: spec
+   at `spec/features/phase-16/`, tasks at `tasks/phase-16/`, exploration/proposal/design under
+   `.atl/sdd/f-016p16-ai-savings-plan/` — start directly with `sdd-apply` slice 1.
 2. **Follow-up, not phase-blocking**: fix `Motion.axaml`'s `RenderTransform` animation bug (see
    Phase 9 notes above) so the row-reveal animations can be merged into `App.axaml` alongside
    `LedgerStyles.axaml`.
@@ -475,16 +537,31 @@ Ordered by priority. Each item references its source-of-truth spec/plan.
    a screenshot during Phase 14's own smoke-launch checks. Not reproduced deliberately — may simply be
    mouse hover state captured mid-screenshot rather than a real navigation-highlight bug. Worth a clean
    re-check (mouse away from the sidebar) before treating it as a defect.
-10. **Phase 16 — IA savings-plan explanation** — `docs/roadmap.md` §Fase 16
-11. **Phase 17 — Notifications** — `docs/roadmap.md` §Fase 17 (consumes the `AnomalyAlert` rows Phase
+10. **Follow-up, not phase-blocking**: `ChatViewModel.SendAsync` needs an explicit `if (IsSending)
+    return;` guard in ADDITION to the `[RelayCommand(CanExecute = ...)]` predicate, because
+    `CommunityToolkit.Mvvm`'s generated `AsyncRelayCommand` does not itself re-check `CanExecute`
+    before running the delegate when invoked directly (only a bound button's own click path is
+    protected). Any future `[RelayCommand]` async method that must guarantee "at most one in flight"
+    needs the same explicit guard — the `CanExecute` predicate alone is not sufficient.
+11. **Follow-up, not phase-blocking**: Phase 15 introduced this codebase's first
+    `[assembly: InternalsVisibleTo("ControlDeFinanzasIA.Tests.Unit")]`
+    (`src/ControlDeFinanzasIA.UI/AssemblyInfo.cs`), exposing `NavigationService`'s internal test-only
+    constructor overload so `NavigationServiceTests` can exercise the real `NavigateCore`/`GoBack`
+    code paths with a recording `INavigationAware` spy. A reusable seam for any future test that needs
+    to exercise `NavigationService` end to end without a headless Avalonia harness.
+12. **Follow-up, not phase-blocking**: Phase 15's `chat-finance.system.*` prompts inherit the exact
+    same live-model prompt-tuning caveat as Phase 13's categorization prompt and Phase 14's
+    insights/anomaly-narration prompts — all tests use a deterministic fake `ILLMClient`; real-model
+    response quality was not re-verified interactively as part of this phase's SDD close.
+13. **Phase 17 — Notifications** — `docs/roadmap.md` §Fase 17 (consumes the `AnomalyAlert` rows Phase
     14 persists)
-12. **Phase 18 — PDF/Excel export** — `docs/roadmap.md` §Fase 18
-13. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19
-14. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20
-15. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
+14. **Phase 18 — PDF/Excel export** — `docs/roadmap.md` §Fase 18
+15. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19
+16. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20
+17. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
 
-**MVP (no IA) = phases 0–12, fully complete. Phases 13–14 = first two shipped AI features.** Phase 15+
-continues the AI pipeline and polish.
+**MVP (no IA) = phases 0–12, fully complete. Phases 13–15 = first three shipped AI features.** Phase
+16+ continues the AI pipeline and polish.
 
 ---
 
@@ -758,8 +835,8 @@ dotnet ef migrations add <Name> `
 
 ### Where to start
 
-1. **Read `spec/` first.** Phase 14 (AI insights, month-end forecast, anomaly detection) is archived at `spec/features/phase-14/F-014-ai-insights-forecast-anomalies.done.md`. Phase 15 (chat with AI about your finances) is already fully planned — spec at `spec/features/phase-15/F-015-ai-finance-chat.spec.md`, tasks at `tasks/phase-15/F-015-ai-finance-chat.tasks.md`, exploration/proposal/design under `.atl/sdd/f-015p15-ai-chat/` — start directly with `sdd-apply` slice 1. Phase 16 is planned the same way (`spec/features/phase-16/`, `tasks/phase-16/`).
-2. **Check tasks:** `tasks/phase-14/F-014-ai-insights-forecast-anomalies.tasks.md` is the closed checklist for the last fully completed phase — use it as the pattern reference for a 10-work-unit chained-PR breakdown (the largest yet in this project).
+1. **Read `spec/` first.** Phase 15 (chat with AI about your finances) is archived at `spec/features/phase-15/F-015-ai-finance-chat.done.md`. Phase 16 (AI savings plan for goals) is already fully planned — spec at `spec/features/phase-16/`, tasks at `tasks/phase-16/`, exploration/proposal/design under `.atl/sdd/f-016p16-ai-savings-plan/` — start directly with `sdd-apply` slice 1.
+2. **Check tasks:** `tasks/phase-15/F-015-ai-finance-chat.tasks.md` is the closed checklist for the last fully completed phase — use it as the pattern reference for a 6-work-unit strictly-chained-PR breakdown.
 3. **Read constitution** if touching architecture or stack: `spec/constitution/mission.md`, `spec/constitution/tech-stack.md`.
 4. **Check the SDD working dir** for any in-flight change: `.atl/sdd/<change-id>/`.
 
@@ -908,6 +985,24 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
     silently poison every other tracked entity on the same shared context. **Any future use case that
     writes on a read-heavy path via the same shared `AppDbContext` should follow this detach-only
     pattern, not `ChangeTracker.Clear()`.**
+24. **`CommunityToolkit.Mvvm`'s `[RelayCommand]`-generated `AsyncRelayCommand` does NOT re-check its
+    own `CanExecute` before running the delegate when invoked directly** (`Command.Execute(parameter)`
+    bypasses the `CanExecute` guard a bound button relies on — only the data-bound-button path is
+    protected). Phase 15's `ChatViewModel.SendAsync` needed an explicit `if (IsSending) return;` guard
+    at the top of the method, IN ADDITION to `[RelayCommand(CanExecute = nameof(CanSend))]`, to make
+    "at most one question in flight" (R-9) a true invariant of the view-model rather than only of the
+    bound button's disabled state — caught by a hang in
+    `ChatViewModelTests.SendCommand_SecondInvocationWhileSending_IsANoOp` during apply. **Any future
+    `[RelayCommand]` async method that must guarantee "at most one execution in flight" needs the same
+    explicit top-of-method guard** — the `CanExecute` predicate alone is not sufficient.
+25. **This codebase's first `[assembly: InternalsVisibleTo(...)]`** landed in Phase 15
+    (`src/ControlDeFinanzasIA.UI/AssemblyInfo.cs`, granting `ControlDeFinanzasIA.Tests.Unit`), to
+    expose `NavigationService`'s `internal` test-only constructor overload (an explicit route map) so
+    `NavigationServiceTests` can drive the real `NavigateCore`/`GoBack` code paths with a recording
+    `INavigationAware` test double, without changing any production view-model's behavior and without
+    a headless Avalonia harness. **A reusable seam for any future test that needs to exercise
+    `NavigationService` end to end** — prefer this pattern over adding new public surface area just for
+    testability.
 
 ---
 
@@ -919,7 +1014,7 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 # 1. Confirm the build is clean before you do anything
 dotnet build -c Release
 
-# 2. Confirm the existing 1344 tests still pass
+# 2. Confirm the existing 1422 tests still pass
 dotnet test -c Release --no-build
 
 # 3. Confirm CI's format gate is green
@@ -928,8 +1023,8 @@ dotnet format style --verify-no-changes
 # 4. Confirm the architecture rules still hold
 dotnet test --no-build -c Release --filter "FullyQualifiedName~Architecture"
 
-# 5. Phase 14 is archived; there is no in-progress task list. Read the roadmap for what's next.
-Get-Content -Raw .\docs\roadmap.md | Select-String -Pattern "Fase 15" -Context 0,40
+# 5. Phase 15 is archived; there is no in-progress task list. Read the roadmap for what's next.
+Get-Content -Raw .\docs\roadmap.md | Select-String -Pattern "Fase 16" -Context 0,40
 ```
 
 If all five succeed, the working tree is healthy. If any fail, **stop and fix before reading further code** — fixing a broken build first will save you time.

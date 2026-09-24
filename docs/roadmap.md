@@ -1034,7 +1034,7 @@ agrupan aquí porque se muestran juntas en el dashboard.
 
 ---
 
-### Fase 15 — Chat con IA sobre tus finanzas
+### Fase 15 — Chat con IA sobre tus finanzas ✅ COMPLETADA (2026-09-23)
 
 **Objetivo**
 Vista de chat donde el usuario pregunta cosas como "¿cuánto gasté en
@@ -1070,7 +1070,59 @@ implementadas y los datos sean ricos.
 
 **Criterios de fase completada**
 - Preguntar "¿cuánto gasté en comida este mes?" devuelve una respuesta
-  con la cifra correcta basada en los datos locales.
+  con la cifra correcta basada en los datos locales. ✅
+- Si la IA no responde, el chat lo comunica de forma honesta sin
+  inventar cifras. ✅
+
+**Estado actual (2026-09-23) — ✅ FASE COMPLETADA**
+- ✅ `BuildChatContextQuery`: query compuesta sobre 6 queries ya existentes (resumen de mes,
+  desglose de categorías, presupuesto vs. real, metas, deudas + calendario, pagos próximos),
+  SECUENCIAL (nunca `WhenAll`, mismo razonamiento D-10 de la Fase 14), cada una de sus 7 secciones
+  se degrada de forma independiente (`try/catch` propio) sin invalidar las demás. El desglose de
+  categorías se pide **sin folding** (`topCount = int.MaxValue`, nunca `DashboardDefaults
+  .TopCategories`) y el propio builder recorta a 30/10 líneas nombradas más una línea de
+  desbordamiento con el conteo exacto — así "Comida" nunca queda oculta más allá del top-5 del
+  dashboard. Montos por ítem (metas, deudas, pagos) se normalizan a DOP uno por uno; una conversión
+  fallida deja ese monto en `null` sin envenenar ninguna suma.
+- ✅ `ChatContextRenderer`: clase estática pura (sin registro DI, mismo estilo que
+  `AnomalyNarrationParser` de la Fase 14), formatea con la cultura real del locale (nunca
+  separadores escritos a mano), sanea nombres (colapsa caracteres de control, elimina una racha
+  inicial de `#`/`!` — cierra un vector de inyección de prompt vía nombres de usuario), y sostiene
+  el presupuesto de 6,000 caracteres recortando secciones completas en un orden fijo y probado
+  (pagos → deudas → metas → presupuestos → categorías del mes anterior) sin tocar nunca el resumen
+  ni la lista de categorías del mes actual.
+- ✅ `AskFinanceChatUseCase`: copia el esqueleto de guardas de `CategorizeExpenseUseCase`
+  (`ISettingsStore` → `ILLMClientFactory.Resolve`) línea por línea; el chequeo de longitud de
+  pregunta (1-500) precede incluso la lectura de settings, y "no configurado" precede tanto la
+  construcción del contexto como la llamada HTTP (cero lecturas de BD desperdiciadas). CTS enlazado
+  de 15s idéntico a las Fases 13/14, con la misma distinción Stop-vs-timeout. `Temperature`/
+  `MaxTokens` acotados independientemente de `AppSettings`. Todo desenlace es
+  `Result.Success(ChatReply)`, nunca `Result.Failure` ni una excepción sin capturar. La regla de
+  fundamentación (D8) aparece byte-idéntica en ambos prompts de locale.
+- ✅ `INavigationAware`: hook opt-in nuevo (`OnNavigatedTo`/`OnNavigatedFrom`), necesario porque
+  `NavigationService.GoBack` reactiva la MISMA instancia de `ChatViewModel` en vez de resolver una
+  nueva — sin este hook, un Chat → Configuración → Atrás no habría limpiado la conversación. Cableado
+  en ambos `NavigateCore` y `GoBack`; no-op para toda ruta preexistente.
+  `ChatViewModel.SendAsync` añade una guardia explícita `if (IsSending) return;` ADEMÁS del
+  `CanExecute` del comando — un `AsyncRelayCommand` invocado programáticamente no re-chequea
+  `CanExecute` por sí solo, así que sin la guardia explícita "una pregunta a la vez" no sería un
+  invariante real de la ViewModel.
+- ✅ Gates: build limpio, 1422/1422 tests verdes (1154 unit + 268 integration, subiendo desde
+  1344/1344 al cierre de Fase 14), re-verificado 3 veces consecutivas sin flakiness, `dotnet format
+  style` limpio, NetArchTest 11/11.
+- ✅ Aplicado en 6 commits estrictamente encadenados (`e400643` context builder, `9cd88da` renderer,
+  `ae16098` caso de uso + prompts, `59b15b9` hook de navegación + puerto de portapapeles, `a05db68`
+  view model, `574bd1a` vista + ruteo), cada uno re-verificado de forma independiente por el
+  orquestador antes de encadenar el siguiente. Sin commit de fix — el pase adversarial de
+  `sdd-verify` (lente confiabilidad+riesgo) sobre el diff completo de la fase no encontró defectos
+  confirmados.
+- ✅ SDD archivado: `spec/features/phase-15/F-015-ai-finance-chat.done.md`.
+- ⚠️ Hallazgos no bloqueantes trasladados como follow-up (ver `spec/phases/phase-15/features.md` §5
+  y `docs/AI_HANDOFF.md`): la guardia explícita de `IsSending` en `SendAsync` (footgun de
+  `AsyncRelayCommand` para cualquier futuro comando que deba garantizar "a lo sumo uno en vuelo");
+  primer uso de `InternalsVisibleTo` en el proyecto (seam de prueba de `NavigationService`); prompt
+  tuning contra respuestas de un modelo real pendiente (mismo patrón que las Fases 13/14); no existe
+  aún un harness de pruebas Avalonia headless (gap preexistente, no introducido por esta fase).
 
 ---
 
