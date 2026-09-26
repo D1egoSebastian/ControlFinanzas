@@ -21,6 +21,8 @@ public class EmbeddedPromptProviderTests
         PromptNames.ExplainAnomaliesSystem,
         PromptNames.ExplainAnomaliesUser,
         PromptNames.ChatFinanceSystem,
+        PromptNames.GenerateSavingsPlanSystem,
+        PromptNames.GenerateSavingsPlanUser,
     ];
 
     [Theory]

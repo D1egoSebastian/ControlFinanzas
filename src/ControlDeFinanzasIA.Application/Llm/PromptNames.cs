@@ -27,4 +27,10 @@ public static class PromptNames
 
     /// <summary>Prompt de sistema para el chat financiero (F-015). No tiene contraparte "user": la pregunta se envía cruda como mensaje de usuario.</summary>
     public const string ChatFinanceSystem = "chat-finance.system";
+
+    /// <summary>Prompt de sistema para la narración del plan de ahorro de una meta (F-016).</summary>
+    public const string GenerateSavingsPlanSystem = "generate-savings-plan.system";
+
+    /// <summary>Prompt de usuario para la narración del plan de ahorro de una meta (F-016).</summary>
+    public const string GenerateSavingsPlanUser = "generate-savings-plan.user";
 }
