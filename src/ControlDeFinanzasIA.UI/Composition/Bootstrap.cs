@@ -32,6 +32,7 @@ using ControlDeFinanzasIA.Application.UseCases.Expenses.UpdateExpense;
 using ControlDeFinanzasIA.Application.UseCases.Goals.ContributeToGoal;
 using ControlDeFinanzasIA.Application.UseCases.Goals.CreateGoal;
 using ControlDeFinanzasIA.Application.UseCases.Goals.DeleteGoal;
+using ControlDeFinanzasIA.Application.UseCases.Goals.GenerateSavingsPlan;
 using ControlDeFinanzasIA.Application.UseCases.Goals.GetGoals;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.GetIncomes;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.RegisterIncome;
@@ -236,6 +237,9 @@ public static class Bootstrap
 
         // Fase 15: navegación + portapapeles (F-015, slice S4).
         services.AddSingleton<IClipboardService, AvaloniaClipboardService>();
+
+        // Fase 16: plan de ahorro con IA para metas (F-016, slice S2).
+        services.AddTransient<GenerateSavingsPlanUseCase>();
 
         ServiceProvider tempProvider = services.BuildServiceProvider();
         try

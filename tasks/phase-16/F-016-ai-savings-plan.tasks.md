@@ -94,7 +94,7 @@ Depends on 1. Goal: `GenerateSavingsPlanUseCase` is success-shaped for every AI 
 `GoalNotFound` fails), never trusts the ViewModel, and the Application-side DI wiring resolves
 cleanly.
 
-- [ ] 2.1 Write failing
+- [x] 2.1 Write failing
   `tests/…Unit/Application/Goals/GenerateSavingsPlanUseCaseTests.cs`: `GoalNotFound` returned even
   when AI is not configured (R-2); not configured → `Success(NotConfigured)`, zero `ILLMClient`
   calls, no contribution read (S-2); Live, AlreadyMet, and TargetDateInPast each assert the exact
@@ -111,10 +111,10 @@ cleanly.
   Unavailable; a caller-initiated cancellation rethrows `OperationCanceledException` unchanged;
   the constructor takes no `ICurrencyConverter` (reflection check, F-011 R-4 precedent). (R-2..
   R-12, D-1..D-4)
-- [ ] 2.2 Create `tests/…Unit/TestDoubles/DictionaryPromptProvider.cs`: a `(name) → template` map
+- [x] 2.2 Create `tests/…Unit/TestDoubles/DictionaryPromptProvider.cs`: a `(name) → template` map
   that records every `GetTemplate` call — a Phase-16-owned double, never extends the shared
   `FakePromptProvider` (D-12). (D-12)
-- [ ] 2.3 Create
+- [x] 2.3 Create
   `src/…Application/UseCases/Goals/GenerateSavingsPlan/GenerateSavingsPlanUseCase.cs`: sealed
   class, `MaxTokensCeiling`/`TemperatureCeiling`/`MaxGoalNameChars`/`HardTimeout` constants,
   ctor `(IGoalRepository, IGoalContributionRepository, ISettingsStore, ILLMClientFactory,
@@ -128,13 +128,13 @@ cleanly.
   with the goal name replaced last, linked 15 s CTS around `CompleteAsync`, `Guard.Clean` +
   `Guard.IsGrounded` on the response, Debug/Warning logging per R-12. Run 2.1 green. (R-2..R-12,
   D-1..D-4)
-- [ ] 2.4 Modify `src/…UI/Composition/Bootstrap.cs`: append the Fase 16 block after the Phase
+- [x] 2.4 Modify `src/…UI/Composition/Bootstrap.cs`: append the Fase 16 block after the Phase
   13 "Probar conexión" block (and after Phase 14/15 blocks if already landed):
   `services.AddTransient<GenerateSavingsPlanUseCase>();`. (R-1, D-10)
-- [ ] 2.5 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) against an
+- [x] 2.5 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) against an
   existing dev DB: confirm `GenerateSavingsPlanUseCase` resolves from DI with no startup failure.
   Screenshot only, no simulated clicks.
-- [ ] 2.6 Run all four gates. All green before opening PR S2.
+- [x] 2.6 Run all four gates. All green before opening PR S2.
 
 ## 3. Row + ViewModel
 
