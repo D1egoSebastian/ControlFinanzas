@@ -11,13 +11,34 @@ the project state changes, update this file.
   **Entity Framework Core** (Code First, versioned migrations),
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
-- **Status (today):** Phases 0–15 fully archived. Phase 16 (AI savings plan
-  for goals) is feature-complete (slices S1-S4 applied — guard/DTO/prompts,
-  use case + DI, observable `GoalRow` + `GoalsViewModel.RequestPlanCommand`,
-  and the inline "Pedir plan con IA" button + narration/fallback caption in
-  `GoalsView.axaml`), pending `sdd-verify`/`sdd-archive`. 1510/1510 tests
-  green (1236 unit + 274 integration). See
-  `spec/features/phase-16/F-016-ai-savings-plan.spec.md`, `tasks/phase-16/`,
+- **Status (today):** Phases 0–16 fully archived. Phase 17 (in-app
+  notifications) is next and already mid-apply, concurrently with Phase
+  16's own verify/archive close — check `tasks/phase-17/*.tasks.md`'s
+  checkbox state and `git log --oneline` for its real progress before
+  continuing it; do not assume it is done. Phase 16 (AI savings plan for
+  goals) shipped a "Pedir plan con IA" button on every goal row that asks
+  the LLM for a short, motivational explanation of the exact deterministic
+  figure `SavingsPlanCalculator` (Phase 11, unmodified) already computes.
+  `GenerateSavingsPlanUseCase` takes only `GoalId`, reloads the goal and its
+  contributions server-side, recomputes via `Goal.CalculateProgress` +
+  `SavingsPlanCalculator.Calculate`, and classifies the plan into exactly
+  one state (`Live`/`AlreadyMet`/`TargetDateInPast`, `AlreadyMet` wins when
+  both apply) so the prompt only ever receives that state's figures. A pure
+  `SavingsPlanNarrationGuard` extracts every digit run from the model's
+  cleaned output and drops the narration to `Unavailable` if any run isn't
+  among the figures — plus the sanitized goal name — actually sent, closing
+  the loop against invented numbers (a membership check, not positional, a
+  documented and accepted design limitation). `GoalRow` converted from an
+  immutable record to an `ObservableObject` (keeping its exact 13-parameter
+  PascalCase constructor via a scoped `IDE1006` suppression) so a per-row
+  `IsGeneratingPlan` flag plus `[RelayCommand(AllowConcurrentExecutions =
+  true)]` let one row's request run without disabling any other row's
+  button. Not configured, a provider failure, or a guard rejection all
+  leave the card's number untouched, showing only a localized fallback
+  caption. 1522/1522 tests green (1236 unit + 286 integration — the
+  integration count also includes Phase 17's concurrently-landed
+  `Notification` persistence tests). See
+  `spec/features/phase-16/F-016-ai-savings-plan.done.md`, `tasks/phase-16/`,
   and `.atl/sdd/f-016p16-ai-savings-plan/`.
   Phase 15 (chat with AI about your finances) shipped a chat screen that
   answers plain-language finance questions grounded in local data — every

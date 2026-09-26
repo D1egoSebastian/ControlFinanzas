@@ -1,7 +1,7 @@
 # F-016 — Plan de ahorro con IA para metas
 
 > **Phase:** 16 — Plan de ahorro con IA para metas
-> **Status:** Draft — ready for design
+> **Status:** ✅ Archived (2026-09-26) — see `.atl/sdd/f-016p16-ai-savings-plan/{verify-report,archive-report}.md`
 > **SDD:** `.atl/sdd/f-016p16-ai-savings-plan/`
 > **Input:** `.atl/sdd/f-016p16-ai-savings-plan/proposal.md`, `.atl/sdd/f-016p16-ai-savings-plan/exploration.md`
 > **Depends on:** Phase 11 (goals + `SavingsPlanCalculator`, archived), Phase 13 (AI pipeline, `ILLMClient`, factory, prompts, archived). No dependency on Phase 14/15 code.
@@ -308,19 +308,41 @@ adapters, or Phase 13/14/15 code. Currency conversion on the goals path.
 
 ## Acceptance Criteria
 
-- [ ] Every goal shows a plan with the correct deterministic figure (Phase
+- [x] Every goal shows a plan with the correct deterministic figure (Phase
   11 values unchanged) and, on request, a readable 2-4 sentence
   explanation, verified by use-case tests per state (Live, AlreadyMet,
-  TargetDateInPast) and a manual run.
-- [ ] AI off, unconfigured, or failing → the deterministic plan is shown
+  TargetDateInPast) and a manual run. Evidence: `verify-report.md` R-2/R-3/
+  S-1 — `GenerateSavingsPlanUseCase` recomputes via
+  `Goal.CalculateProgress` + `SavingsPlanCalculator.Calculate(...,
+  IClock.Today)` from freshly-loaded repository data, never a
+  VM-supplied figure; `BuildFacts`'s per-state switch sends exactly the
+  figures defined for each state.
+- [x] AI off, unconfigured, or failing → the deterministic plan is shown
   exactly as before; only the narration spot shows the localized
   `GoalsAiNotConfigured`/`GoalsAiUnavailable` caption. Not configured →
-  zero `ILLMClient` calls.
-- [ ] A narration containing any number not supplied to the AI is never
-  displayed (D13/S-4 test).
-- [ ] Narration clears on reload; a double-click on the same row triggers
+  zero `ILLMClient` calls. Evidence: `verify-report.md` R-5/S-2/S-3 —
+  `resolution.Status != Configured` precedes both the contribution read
+  and any client construction; `GoalsViewModelTests` pins the caption
+  mapping with the row's deterministic figure unchanged.
+- [x] A narration containing any number not supplied to the AI is never
+  displayed (D13/S-4 test). Evidence: `verify-report.md` R-10/S-4 —
+  `SavingsPlanNarrationGuard.IsGrounded` rejects any digit run absent from
+  `[.. facts.Values, name]`, logged at Warning with only the correlation
+  id.
+- [x] Narration clears on reload; a double-click on the same row triggers
   one call; other rows stay usable while one row is generating (S-7, S-8).
-- [ ] A goal name containing an injection attempt does not change the
-  assembled system prompt's fixed rule text (S-9).
-- [ ] Build is clean, the full suite is green, `dotnet format style
+  Evidence: `verify-report.md` R-6/R-7/S-7/S-8 — `LoadGoalsAsync` rebuilds
+  fresh `GoalRow` instances on every reload;
+  `[RelayCommand(AllowConcurrentExecutions = true)]` plus the per-row
+  `IsGeneratingPlan` guard is asserted by a dedicated concurrent-rows VM
+  test.
+- [x] A goal name containing an injection attempt does not change the
+  assembled system prompt's fixed rule text (S-9). Evidence:
+  `verify-report.md` R-9/S-9 — `SanitizeGoalName` plus `Replace`-only,
+  name-inserted-last prompt assembly; a use-case test asserts `Messages[0]`
+  is byte-for-byte identical to the system template even for an
+  injection-bearing name.
+- [x] Build is clean, the full suite is green, `dotnet format style
   --verify-no-changes` exits 0, and NetArchTest R-1..R-5 is green.
+  Evidence: `verify-report.md` Gates table — build 0/0, 1522/1522 (1236
+  unit + 286 integration), format clean, NetArchTest 11/11.

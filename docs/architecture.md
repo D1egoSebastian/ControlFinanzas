@@ -370,16 +370,17 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 
 ## 11. Integración de IA — `ILLMClient`
 
-**Fases 13, 14 y 15, implementado.** Lo que sigue documenta el contrato y los adapters realmente
+**Fases 13, 14, 15 y 16, implementado.** Lo que sigue documenta el contrato y los adapters realmente
 shippeados — `Application/Abstractions/Llm/`, `Infrastructure/Llm/OpenAICompatibleClient.cs`,
 `Infrastructure/Llm/AnthropicClient.cs`, `Infrastructure/Llm/LLMClientFactory.cs` — no un plan a
 futuro. El primer consumidor (Fase 13) es `CategorizeExpenseUseCase` (sugerencia de categoría al
 tipear la descripción de un gasto); Fase 14 reutiliza el mismo `ILLMClient`, sin ninguna
 modificación, para `GetInsightsUseCase`/`GetAnomalyNarrativeUseCase` (ver §11a); Fase 15 lo reutiliza
-una tercera vez, también sin ninguna modificación, para `AskFinanceChatUseCase` (ver §11b). Ningún
-archivo bajo `Infrastructure/Llm/` cambió en Fase 14 ni en Fase 15 salvo la adición aditiva de nuevos
-recursos de prompt (8 en Fase 14, 2 en Fase 15) — el contrato `ILLMClient`/`LlmRequest`/los adapters/
-la resiliencia llevan tres fases sin tocarse.
+una tercera vez, también sin ninguna modificación, para `AskFinanceChatUseCase` (ver §11b); Fase 16 lo
+reutiliza una cuarta vez, otra vez sin ninguna modificación, para `GenerateSavingsPlanUseCase` (ver
+§11c). Ningún archivo bajo `Infrastructure/Llm/` cambió en Fase 14, Fase 15 ni Fase 16 salvo la
+adición aditiva de nuevos recursos de prompt (8 en Fase 14, 2 en Fase 15, 4 en Fase 16) — el contrato
+`ILLMClient`/`LlmRequest`/los adapters/la resiliencia llevan cuatro fases sin tocarse.
 
 ### Contrato
 
@@ -564,6 +565,56 @@ conversación y el panel de cifras.
 
 ---
 
+## 11c. Plan de ahorro con IA para metas (Fase 16)
+
+**Fase 16, implementado.** Mismo principio de §11a/§11b, aplicado a una única cifra por meta en vez
+de un dashboard o una conversación libre: **`SavingsPlanCalculator` (Fase 11, sin modificar) calcula
+la cifra determinista; el LLM solo explica la cifra que ya se le entregó. La tarjeta de la meta
+nunca depende de la IA — solo la narración puede faltar.**
+
+### Recalculo server-side, nunca confía en la ViewModel
+
+`GenerateSavingsPlanUseCase` toma únicamente el `GoalId` de la meta — nunca una cifra calculada por
+la ViewModel — y recarga la meta y sus contribuciones desde los repositorios en cada clic. Recalcula
+exactamente como `GetGoalsQuery`: `Goal.CalculateProgress(contributions)` seguido de
+`SavingsPlanCalculator.Calculate(..., IClock.Today)`. El chequeo de "meta no encontrada" precede la
+lectura de `AppSettings`, así que se reporta incluso con la IA apagada — el único desenlace que
+produce `Result.Failure` en todo el caso de uso.
+
+### Estado explícito: solo las cifras del estado seleccionado viajan al modelo
+
+El plan recalculado se clasifica en exactamente un estado — `Live`, `AlreadyMet`, o
+`TargetDateInPast` (`AlreadyMet` gana cuando ambos aplican, igual que `GoalRow.ShowAlreadyMetMessage`
+en Fase 11) — y solo las cifras definidas para ese estado se insertan en el prompt: `Live` recibe
+aporte mensual/meses restantes/monto restante/monto objetivo; `AlreadyMet` recibe solo monto
+objetivo/monto aportado; `TargetDateInPast` recibe solo monto restante/fecha objetivo. Ningún estado
+puede filtrar la cifra de otro porque el bloque de texto se construye con un `switch` por estado, no
+con un objeto compartido con campos opcionales.
+
+### Guard numérico determinista: el LLM nunca inventa una cifra sin ser detectado
+
+`SavingsPlanNarrationGuard` (clase estática pura, mismo estilo que `AnomalyNarrationParser`/
+`ChatContextRenderer`) extrae cada racha de dígitos ASCII de la narración final y la rechaza —
+cayendo a `Unavailable` — si alguna racha no aparece entre las rachas de las cifras realmente
+enviadas MÁS el nombre saneado de la meta (sin esto último, una meta llamada "Carro 2027" rechazaría
+toda narración que la mencione). Ceros a la izquierda se normalizan (`05` ≡ `5`); cualquier dígito
+no-ASCII (ancho completo, superíndices, fracciones) rechaza de inmediato. Es una verificación de
+pertenencia, no de posición — una limitación documentada y aceptada en el diseño, no un defecto.
+
+### `GoalRow`: de record inmutable a estado observable por fila
+
+`GoalRow` pasó de `record` a `ObservableObject` para poder actualizar `PlanNarration`/
+`PlanNarrationStatusText`/`IsGeneratingPlan` en el lugar, sin reconstruir la fila en cada tecla de
+una solicitud en vuelo. El constructor de 13 parámetros mantiene sus nombres PascalCase exactos
+(supresión `IDE1006` acotada) para que las pruebas existentes con argumentos nombrados sigan
+compilando. `GoalsViewModel.RequestPlanCommand` usa
+`[RelayCommand(AllowConcurrentExecutions = true)]` — el valor por defecto (`false`) comparte un único
+`IsRunning` entre todas las invocaciones, lo que deshabilitaría el botón de TODAS las filas mientras
+una sola está generando; la guarda real "a lo sumo una solicitud por fila" vive en el propio
+`GoalRow.IsGeneratingPlan`, no en el comando.
+
+---
+
 ## 12. Persistencia — detalles adicionales
 
 ### Ruta del archivo
@@ -717,6 +768,7 @@ Result<T> = Success(T) | Failure(code, message, details?)
 - La IA **nunca** es el único camino para una función. Si la IA no responde, el detector de anomalías base igual produce alertas; el plan de ahorro se calcula determinísticamente; la categorización automática simplemente no sugiere y deja la categoría en null/pendiente.
 - **Fase 14 formaliza este principio como un contrato de tipo, no solo una guía de diseño**: `GetInsightsUseCase`/`GetAnomalyNarrativeUseCase` nunca devuelven `Result.Failure` por una razón de IA — todo camino no-feliz (no configurado, `LlmException`, timeout, respuesta no parseable) es `Result.Success` con un `NarrativeStatus` de repliegue. El pronóstico y las anomalías del dashboard se calculan en un paso completamente separado (`GetDashboardInsightsQuery.GetDeterministicAsync`) que no referencia `ILLMClient`/`ISettingsStore` en absoluto — no es que la IA "falle silenciosamente", es que las secciones numéricas nunca dependen de ella para existir.
 - **Fase 15 extiende el mismo contrato de tipo al chat**: `AskFinanceChatUseCase.ExecuteAsync` nunca devuelve `Result.Failure` — pregunta rechazada, IA no configurada, y cualquier falla de IA son todas `Result.Success(ChatReply)` con un `ChatReplyStatus` de repliegue (`Rejected`/`NotConfigured`/`Unavailable`). El panel de cifras exactas (§11b) se alimenta directamente del `ChatContextSnapshot` que `ChatReply` lleva adjunto, nunca del texto de la respuesta — así que incluso una respuesta `Unavailable` deja el panel de cifras actualizado con datos reales.
+- **Fase 16 aplica el mismo contrato a la narración del plan de ahorro, con una garantía adicional propia**: `GenerateSavingsPlanUseCase.ExecuteAsync` solo devuelve `Result.Failure` para `GoalNotFound` — no configurada, cualquier falla de IA, y una narración rechazada por el guard numérico son todas `Result.Success(SavingsPlanNarrationDto)` con un `SavingsPlanNarrationStatus` de repliegue (`NotConfigured`/`Unavailable`). A diferencia de §11a/§11b, aquí la cifra determinista (`GoalRow`'s bound properties) ni siquiera es un DTO adjunto a la respuesta — el caso de uso no tiene ninguna vía de escritura hacia `GoalRow` en absoluto, así que un repliegue a `Unavailable` deja la tarjeta exactamente como estaba antes del clic, sin ningún paso adicional de "restaurar" el estado previo.
 
 ---
 

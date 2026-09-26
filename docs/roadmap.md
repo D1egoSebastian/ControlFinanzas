@@ -1126,7 +1126,7 @@ implementadas y los datos sean ricos.
 
 ---
 
-### Fase 16 — Plan de ahorro con IA para metas
+### Fase 16 — Plan de ahorro con IA para metas ✅ COMPLETADA (2026-09-26)
 
 **Objetivo**
 Que cada meta pueda pedir un plan de ahorro **explicado** por la IA,
@@ -1156,7 +1156,49 @@ depender de la IA.
 
 **Criterios de fase completada**
 - Cada meta muestra un plan con cifra correcta y una explicación
-  legible.
+  legible. ✅
+
+**Estado actual (2026-09-26) — ✅ FASE COMPLETADA**
+- ✅ `GenerateSavingsPlanUseCase`: toma únicamente `GoalId`, recarga la meta y sus contribuciones
+  desde los repositorios y recalcula `Goal.CalculateProgress` + `SavingsPlanCalculator.Calculate(...,
+  IClock.Today)` — nunca confía en una cifra provista por la ViewModel. `GetByIdAsync` se comprueba
+  ANTES de leer la configuración de IA, así que "meta no encontrada" se reporta incluso con la IA
+  apagada. Clasifica el plan en exactamente un estado (`Live`/`AlreadyMet`/`TargetDateInPast`,
+  `AlreadyMet` gana cuando ambos aplican) y solo envía al prompt las cifras de ese estado. Es
+  success-shaped para toda causa relacionada con IA (`Result.Failure` solo para `GoalNotFound`); CTS
+  enlazado de 15s idéntico a las Fases 13/14/15, con la misma distinción Stop-vs-timeout.
+- ✅ `SavingsPlanNarrationGuard`: clase estática pura que extrae cada racha de dígitos ASCII de la
+  narración limpiada y rechaza (cae a `Unavailable`, con Warning que solo registra el correlation id)
+  cualquier racha que no aparezca entre las cifras realmente enviadas MÁS el nombre saneado de la
+  meta (así "Carro 2027" no rechaza toda narración que lo mencione). Ceros a la izquierda se
+  normalizan (`05` ≡ `5`); cualquier dígito no-ASCII (ancho completo, superíndices, fracciones)
+  rechaza de inmediato. `Clean` despoja bloques de código, colapsa 3+ saltos de línea, y recorta a
+  600 caracteres cortando en el último espacio para nunca partir una cifra.
+- ✅ `GoalRow`: convertido de `record` a `ObservableObject` manteniendo el constructor de 13
+  parámetros con nombres PascalCase idénticos (supresión `IDE1006` acotada) para que las pruebas
+  existentes con argumentos nombrados sigan compilando sin cambios. Gana estado observable
+  (`PlanNarration`, `PlanNarrationStatusText`, `IsGeneratingPlan`) sin perder ninguna propiedad
+  existente.
+- ✅ `GoalsViewModel.RequestPlanCommand`: `[RelayCommand(AllowConcurrentExecutions = true)]` con
+  guarda por fila (`row.IsGeneratingPlan`) — una solicitud en vuelo en una fila nunca deshabilita el
+  botón de otra. `LoadGoalsAsync` reconstruye filas frescas en cada recarga, así que la narración
+  nunca sobrevive a un create/contribute/delete. Botón "Pedir plan con IA" en `GoalsView.axaml`,
+  dentro de la tarjeta existente, sin ruta nueva.
+- ✅ Gates: build limpio, 1522/1522 tests verdes (1236 unit + 286 integration, subiendo desde
+  1422/1422 al cierre de Fase 15 — el conteo de integración también incluye las pruebas de
+  persistencia de `Notification` de la Fase 17, que avanzó en paralelo en este mismo árbol), `dotnet
+  format style` limpio, NetArchTest 11/11.
+- ✅ Aplicado en 4 slices estrictamente encadenados (`536528c` guard + DTO + prompts, `1963842` caso
+  de uso, `887b28d` fila + ViewModel, `e9caef2` vista + docs), cada uno re-verificado de forma
+  independiente por el orquestador antes de encadenar el siguiente. Sin commit de fix — el pase
+  adversarial de `sdd-verify` (lente confiabilidad+riesgo) sobre el diff propio de la fase no
+  encontró defectos confirmados.
+- ✅ SDD archivado: `spec/features/phase-16/F-016-ai-savings-plan.done.md`.
+- ⚠️ Hallazgos no bloqueantes trasladados como follow-up (ver `spec/phases/phase-16/features.md` §5
+  y `docs/AI_HANDOFF.md`): el guard es una verificación de pertenencia, no de posición (limitación
+  documentada y aceptada); una corrida transitoria de `DashboardViewModelTests` (12 fallos en un solo
+  run de 5, no reproducible en runs aislados posteriores) no se vincula a ningún archivo de esta
+  fase — merece investigación dedicada si recurre.
 
 ---
 
