@@ -703,4 +703,7 @@ Mostrando conversiones aproximadas.
   <data name="GoalsAiUnavailable" xml:space="preserve">
     <value>La explicación con IA no está disponible ahora. Tu plan sigue siendo correcto.</value>
   </data>
+  <data name="GoalsRequestPlanButton" xml:space="preserve">
+    <value>Pedir plan con IA</value>
+  </data>
 </root>

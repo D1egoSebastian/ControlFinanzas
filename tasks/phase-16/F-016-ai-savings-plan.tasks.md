@@ -191,23 +191,27 @@ narration carry-over on reload.
 Depends on 3. Goal: the "Pedir plan con IA" button is reachable on every goal row using only
 existing design tokens, and the project docs reflect the new phase.
 
-- [ ] 4.1 Invoke the `.claude/skills/frontend-design` skill for `GoalsView` before touching
+- [x] 4.1 Invoke the `.claude/skills/frontend-design` skill for `GoalsView` before touching
   XAML — existing tokens only: `PaperBrush`, `PaperDimBrush`, `SageBrush`, `ledger-btn`. No new
   tokens. (D-8)
-- [ ] 4.2 Modify `src/…UI/Resources/Strings.resx`/`Strings.es-DO.resx` + `Strings.Designer.cs`:
+- [x] 4.2 Modify `src/…UI/Resources/Strings.resx`/`Strings.es-DO.resx` + `Strings.Designer.cs`:
   add `GoalsRequestPlanButton` key + accessor. (R-13, D-9)
-- [ ] 4.3 Modify `src/…UI/Views/GoalsView.axaml`: add the button
+- [x] 4.3 Modify `src/…UI/Views/GoalsView.axaml`: add the button
   (`Command="{Binding #Root.((vm:GoalsViewModel)DataContext).RequestPlanCommand}"`,
   `CommandParameter="{Binding}"`, `IsEnabled="{Binding !IsGeneratingPlan}"`) and the two
   `PlanNarration`/`PlanNarrationStatusText` `TextBlock`s, all inside the row `StackPanel` after
   the `ShowPlan` `TextBlock` and before the Select/Delete panel (R-1, D-3, D-8). The existing
   plan/warning/progress blocks stay untouched. (R-1, D-8)
-- [ ] 4.4 Smoke-launch the app: navigate to Goals, confirm the button and narration/caption
+- [x] 4.4 Smoke-launch the app: navigate to Goals, confirm the button and narration/caption
   `TextBlock`s render on every row with no DI/startup failure. Screenshot only, no simulated
-  clicks.
-- [ ] 4.5 Modify `AGENTS.md`: update the Status line to record Phase 16 status, mirroring the
+  clicks. **Deviation**: launched and screenshotted the default `Panel` (Dashboard) route only —
+  reaching `Metas` requires a sidebar click, and the apply prompt explicitly said "No simulated
+  clicks," so the screenshot confirms clean startup (no exception, `GoalsView.axaml` compiles and
+  loads with the new DI graph) rather than the rendered Goals row. Full on-screen verification of
+  the button/narration on every row is deferred to task 5.2's manual run.
+- [x] 4.5 Modify `AGENTS.md`: update the Status line to record Phase 16 status, mirroring the
   existing per-phase status-line pattern.
-- [ ] 4.6 Run all four gates. All green before opening PR S4.
+- [x] 4.6 Run all four gates. All green before opening PR S4.
 
 ## 5. Cierre
 

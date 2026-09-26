@@ -12,9 +12,13 @@ the project state changes, update this file.
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
 - **Status (today):** Phases 0–15 fully archived. Phase 16 (AI savings plan
-  for goals) is next — already spec'd, designed, and task-broken-down at
-  `spec/features/phase-16/`, `tasks/phase-16/`, and
-  `.atl/sdd/f-016p16-ai-savings-plan/`; start directly with `sdd-apply`.
+  for goals) is feature-complete (slices S1-S4 applied — guard/DTO/prompts,
+  use case + DI, observable `GoalRow` + `GoalsViewModel.RequestPlanCommand`,
+  and the inline "Pedir plan con IA" button + narration/fallback caption in
+  `GoalsView.axaml`), pending `sdd-verify`/`sdd-archive`. 1510/1510 tests
+  green (1236 unit + 274 integration). See
+  `spec/features/phase-16/F-016-ai-savings-plan.spec.md`, `tasks/phase-16/`,
+  and `.atl/sdd/f-016p16-ai-savings-plan/`.
   Phase 15 (chat with AI about your finances) shipped a chat screen that
   answers plain-language finance questions grounded in local data — every
   figure the model can quote is computed and formatted by deterministic

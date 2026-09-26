@@ -1117,4 +1117,9 @@ public class Strings
     /// Gets the localized fallback caption shown when the AI plan narration is unavailable (F-016, R-13, D-9).
     /// </summary>
     public static string GoalsAiUnavailable => ResourceManager.GetString("GoalsAiUnavailable", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label for the button that requests an AI savings-plan narration (F-016, R-13, D-9).
+    /// </summary>
+    public static string GoalsRequestPlanButton => ResourceManager.GetString("GoalsRequestPlanButton", Culture)!;
 }

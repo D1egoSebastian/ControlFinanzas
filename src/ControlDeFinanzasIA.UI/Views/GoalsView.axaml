@@ -106,6 +106,23 @@
                                         </TextBlock.Text>
                                     </TextBlock>
 
+                                    <!-- AI savings-plan narration (F-016, R-1, D-8): inline button + narration/fallback caption, no new route. -->
+                                    <Button Content="{x:Static resources:Strings.GoalsRequestPlanButton}"
+                                            Command="{Binding #Root.((vm:GoalsViewModel)DataContext).RequestPlanCommand}"
+                                            CommandParameter="{Binding}"
+                                            IsEnabled="{Binding !IsGeneratingPlan}"
+                                            Classes="ledger-btn"
+                                            HorizontalAlignment="Left" />
+                                    <TextBlock Text="{Binding PlanNarration}"
+                                               TextWrapping="Wrap"
+                                               Foreground="{StaticResource PaperBrush}"
+                                               IsVisible="{Binding PlanNarration, Converter={x:Static avaloniaConverters:StringConverters.IsNotNullOrEmpty}}" />
+                                    <TextBlock Text="{Binding PlanNarrationStatusText}"
+                                               TextWrapping="Wrap"
+                                               FontStyle="Italic"
+                                               Foreground="{StaticResource PaperDimBrush}"
+                                               IsVisible="{Binding PlanNarrationStatusText, Converter={x:Static avaloniaConverters:StringConverters.IsNotNullOrEmpty}}" />
+
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <Button Content="{x:Static resources:Strings.GoalsSelectButton}"
                                                 Command="{Binding #Root.((vm:GoalsViewModel)DataContext).SelectCommand}"
