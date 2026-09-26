@@ -426,6 +426,85 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence.Migrations
                     b.ToTable("GoalContributions", (string)null);
                 });
 
+            modelBuilder.Entity("ControlDeFinanzasIA.Domain.Notifications.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Amount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Currency")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DedupKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DigestAnomalyCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DigestBudgetCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DigestFrequency")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DigestPaymentCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DigestTotals")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DismissedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Percent")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("ReferenceDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SourceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SubjectLabel")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Tier")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DedupKey")
+                        .IsUnique();
+
+                    b.HasIndex("DismissedAt");
+
+                    b.HasIndex("ReferenceDate");
+
+                    b.ToTable("Notifications", (string)null);
+                });
+
             modelBuilder.Entity("ControlDeFinanzasIA.Domain.Recurring.RecurringRule", b =>
                 {
                     b.Property<Guid>("Id")

@@ -78,40 +78,40 @@ Depends on 1. Goal: `Notification` rows persist through a reconcile-shaped repos
 `AddNotifications` migration, mirroring the `AnomalyAlert` detach-not-clear rule, with zero diff to
 any other table.
 
-- [ ] 2.1 Write failing `tests/…Integration/Persistence/NotificationRepositoryTests.cs`: a
+- [x] 2.1 Write failing `tests/…Integration/Persistence/NotificationRepositoryTests.cs`: a
   `DedupKey` unique-index violation is caught and the shared `AppDbContext` stays usable for a
   later save (only the call's own attached entries are detached, no `ChangeTracker.Clear()`);
   `ApplyReconciliationAsync` performs exactly one `SaveChangesAsync`; `DigestTotals` round-trips
   through JSON; `Kind`/`Tier`/`DigestFrequency` round-trip as strings; `Currency` round-trips as
   int. (R-1, D-8)
-- [ ] 2.2 Create `src/…Application/Abstractions/INotificationRepository.cs`: `GetAllAsync`,
+- [x] 2.2 Create `src/…Application/Abstractions/INotificationRepository.cs`: `GetAllAsync`,
   `GetUndismissedAsync`, `GetByIdAsync`, `GetByIdsAsync`, `UpdateRangeAsync`,
   `ApplyReconciliationAsync(plan)`, plus the `NotificationReconciliationPlan` record (`ToAdd`,
   `ToUpdate`, `ToRemove`, `IsEmpty`) living next to it. (D-4, D-8)
-- [ ] 2.3 Create `src/…Infrastructure/Persistence/Configurations/NotificationConfiguration.cs`:
+- [x] 2.3 Create `src/…Infrastructure/Persistence/Configurations/NotificationConfiguration.cs`:
   table `Notifications`, `HasConversion<string>()` on `Kind`/`Tier`/`DigestFrequency`,
   `HasConversion<int>()` on `Currency`, `HasPrecision(18,4)` on `Amount`/`Percent`, a JSON converter
   + `ValueComparer` on `DigestTotals`, `Ignore(IsRead, IsDismissed)`, unique index on `DedupKey`,
   plus indexes on `ReferenceDate` and `DismissedAt`, no FK to any source table. (D-8)
-- [ ] 2.4 Create `src/…Infrastructure/Persistence/Repositories/NotificationRepository.cs`: copies
+- [x] 2.4 Create `src/…Infrastructure/Persistence/Repositories/NotificationRepository.cs`: copies
   `AnomalyAlertRepository.ApplyReconciliationAsync` line for line — one `SaveChangesAsync`, and on
   `DbUpdateException` detach only this call's newly-tracked entries, never
   `ChangeTracker.Clear()`. `UpdateRangeAsync` applies the same detach-on-failure rule. Reads use
   `AsNoTracking`. Run 2.1 green. (R-1, D-8)
-- [ ] 2.5 Modify `src/…Infrastructure/Persistence/AppDbContext.cs`: append
+- [x] 2.5 Modify `src/…Infrastructure/Persistence/AppDbContext.cs`: append
   `public DbSet<Notification> Notifications { get; set; }`. (D-8)
-- [ ] 2.6 Modify `src/…Infrastructure/ServiceCollectionExtensions.cs` (`AddPersistence`): append
+- [x] 2.6 Modify `src/…Infrastructure/ServiceCollectionExtensions.cs` (`AddPersistence`): append
   `services.AddScoped<INotificationRepository, NotificationRepository>();` after
   `IAnomalyAlertRepository`. (D-8)
-- [ ] 2.7 Generate the migration with `dotnet ef migrations add AddNotifications --project
+- [x] 2.7 Generate the migration with `dotnet ef migrations add AddNotifications --project
   src/ControlDeFinanzasIA.Infrastructure --startup-project src/ControlDeFinanzasIA.UI`; regenerate
   `AppDbContextModelSnapshot.cs`. `Down()` drops the table. (D-8)
-- [ ] 2.8 Modify `tests/…Integration/.../ModelSnapshotConsistencyTests.cs`: add one round-trip
+- [x] 2.8 Modify `tests/…Integration/.../ModelSnapshotConsistencyTests.cs`: add one round-trip
   fact covering the new table. (D-8)
-- [ ] 2.9 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) against an
+- [x] 2.9 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) against an
   existing dev DB: confirm the `AddNotifications` migration applies with no startup failure.
   Screenshot only, no simulated clicks.
-- [ ] 2.10 Run all four gates. All green before opening PR S1b.
+- [x] 2.10 Run all four gates. All green before opening PR S1b.
 
 ## 3. Settings + reconciler (S2)
 

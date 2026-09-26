@@ -3,6 +3,7 @@ using ControlDeFinanzasIA.Domain.Budgets;
 using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Debts;
 using ControlDeFinanzasIA.Domain.Goals;
+using ControlDeFinanzasIA.Domain.Notifications;
 using ControlDeFinanzasIA.Domain.Recurring;
 using ControlDeFinanzasIA.Domain.Settings;
 using ControlDeFinanzasIA.Domain.Transactions;
@@ -104,6 +105,9 @@ public class AppDbContext : DbContext
 
     /// <summary>Conjunto de alertas de anomalías detectadas (F-014).</summary>
     public DbSet<AnomalyAlert> AnomalyAlerts => Set<AnomalyAlert>();
+
+    /// <summary>Conjunto de avisos persistidos y reconciliados (F-017).</summary>
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     /// <summary>
     /// Configura el modelo de EF Core aplicando las configuraciones de

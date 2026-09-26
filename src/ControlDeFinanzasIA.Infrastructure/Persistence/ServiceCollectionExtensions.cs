@@ -87,6 +87,7 @@ namespace ControlDeFinanzasIA.Infrastructure.Persistence;
         services.AddScoped<ISettingRepository, SettingRepository>();
         services.AddScoped<ISettingsStore, SettingsStore>();
         services.AddScoped<IAnomalyAlertRepository, AnomalyAlertRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
 
         return services;
     }

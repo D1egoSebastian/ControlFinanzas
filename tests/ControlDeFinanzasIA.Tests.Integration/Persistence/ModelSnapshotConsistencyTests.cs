@@ -74,4 +74,29 @@ public sealed class ModelSnapshotConsistencyTests
         Assert.NotNull(reloaded);
         Assert.Equal(Domain.Alerts.AnomalySeverity.Warning, reloaded!.Severity);
     }
+
+    [Fact]
+    public async Task MigrateAsync_CleanDatabase_CreatesNotificationsTableAndRoundTrips()
+    {
+        using var factory = new TestAppDbContextFactory();
+        await using AppDbContext context = factory.CreateContext();
+
+        await context.Database.MigrateAsync();
+
+        var notification = Domain.Notifications.Notification.ForDebtInstallment(
+            Guid.NewGuid(),
+            new DateOnly(2026, 9, 29),
+            "Round-trip guard",
+            Domain.ValueObjects.Money.Create(1500m, Domain.Enums.Currency.DOP),
+            new DateTime(2026, 9, 26, 10, 0, 0, DateTimeKind.Utc));
+
+        context.Notifications.Add(notification);
+        await context.SaveChangesAsync();
+
+        await using AppDbContext freshContext = factory.CreateContext();
+        Domain.Notifications.Notification? reloaded = await freshContext.Notifications.FindAsync(notification.Id);
+
+        Assert.NotNull(reloaded);
+        Assert.Equal(Domain.Notifications.NotificationKind.DebtInstallmentDue, reloaded!.Kind);
+    }
 }
