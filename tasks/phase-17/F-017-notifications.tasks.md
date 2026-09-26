@@ -49,27 +49,27 @@ case.
 Depends on nothing (Phase 7/10/14 dependencies already archived). Goal: the `Notification`
 aggregate and its enums exist as pure, EF-free building blocks with per-kind fact validation.
 
-- [ ] 1.1 Write failing `tests/…Unit/Domain/Notifications/NotificationTests.cs`: each
+- [x] 1.1 Write failing `tests/…Unit/Domain/Notifications/NotificationTests.cs`: each
   `For*` factory rejects a fact belonging to another kind and rejects a missing required fact;
   `SanitizeLabel` strips control chars, collapses whitespace, and cuts at 120 chars; `MarkRead`/
   `Dismiss` are idempotent (first timestamp wins); `RefreshFacts` throws
   `InvalidOperationException` when `IsDismissed`; `HasSameFacts` compares only fact columns, not
   `Id`/`CreatedAt`/`ReadAt`/`DismissedAt`. (R-1, R-11, D-1)
-- [ ] 1.2 Write failing `tests/…Unit/Domain/Notifications/NotificationKeysTests.cs`: exact
+- [x] 1.2 Write failing `tests/…Unit/Domain/Notifications/NotificationKeysTests.cs`: exact
   `DedupKey` shape per kind (`debt:{id:N}`, `recurring:{id:N}:{yyyy-MM-dd}`,
   `budget:{id:N}:{yyyy-MM}:{Near|Exceeded}`, `anomaly:{id:N}`, `digest:{Daily|Weekly}:{yyyy-MM-dd}`),
   all dates formatted with `CultureInfo.InvariantCulture`. (R-1, D-2)
-- [ ] 1.3 Create `src/…Domain/Notifications/{NotificationKind,NotificationTier,DigestFrequency}.cs`
+- [x] 1.3 Create `src/…Domain/Notifications/{NotificationKind,NotificationTier,DigestFrequency}.cs`
   and `NotificationCurrencyTotal.cs` (`record NotificationCurrencyTotal(Currency Currency, decimal
   Amount)`). (R-2, D-1)
-- [ ] 1.4 Create `src/…Domain/Notifications/Notification.cs`: sealed class, private setters,
+- [x] 1.4 Create `src/…Domain/Notifications/Notification.cs`: sealed class, private setters,
   private parameterless ctor, the fact columns from D-1's table, `SanitizeLabel`, per-kind static
   factories (`ForDebtInstallment`, `ForRecurringCharge`, `ForBudget`, `ForAnomaly`, `ForDigest`),
   `MarkRead`, `Dismiss`, `HasSameFacts`, `RefreshFacts`, `IsRead`, `IsDismissed`. Run 1.1 green.
   (R-1, R-11, D-1)
-- [ ] 1.5 Create `src/…Domain/Notifications/NotificationKeys.cs`: pure static class building the
+- [x] 1.5 Create `src/…Domain/Notifications/NotificationKeys.cs`: pure static class building the
   `DedupKey` string per kind. Run 1.2 green. (R-1, D-2)
-- [ ] 1.6 Run all four gates: `dotnet build -c Release`, `dotnet test -c Release --no-build`,
+- [x] 1.6 Run all four gates: `dotnet build -c Release`, `dotnet test -c Release --no-build`,
   `dotnet format style --verify-no-changes`, NetArchTest filter. All green before opening PR S1a.
 
 ## 2. Persistence (S1b)
