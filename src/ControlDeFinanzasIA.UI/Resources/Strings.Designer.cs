@@ -1102,4 +1102,19 @@ public class Strings
     /// Gets the localized empty-state message shown before any question has been sent (F-015, D-10).
     /// </summary>
     public static string ChatEmptyState => ResourceManager.GetString("ChatEmptyState", Culture)!;
+
+    /// <summary>
+    /// Gets the localized caption shown on a goal row while its AI plan narration is in flight (F-016, R-13, D-9).
+    /// </summary>
+    public static string GoalsPlanGenerating => ResourceManager.GetString("GoalsPlanGenerating", Culture)!;
+
+    /// <summary>
+    /// Gets the localized fallback caption shown when the AI is not configured (F-016, R-13, D-9).
+    /// </summary>
+    public static string GoalsAiNotConfigured => ResourceManager.GetString("GoalsAiNotConfigured", Culture)!;
+
+    /// <summary>
+    /// Gets the localized fallback caption shown when the AI plan narration is unavailable (F-016, R-13, D-9).
+    /// </summary>
+    public static string GoalsAiUnavailable => ResourceManager.GetString("GoalsAiUnavailable", Culture)!;
 }

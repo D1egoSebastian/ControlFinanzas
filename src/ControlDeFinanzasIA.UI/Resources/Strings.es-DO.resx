@@ -694,4 +694,13 @@ Mostrando conversiones aproximadas.
   <data name="ChatEmptyState" xml:space="preserve">
     <value>Haz una pregunta sobre tus finanzas para empezar.</value>
   </data>
+  <data name="GoalsPlanGenerating" xml:space="preserve">
+    <value>Generando plan…</value>
+  </data>
+  <data name="GoalsAiNotConfigured" xml:space="preserve">
+    <value>La IA no está configurada. Configúrala en Configuración para ver una explicación.</value>
+  </data>
+  <data name="GoalsAiUnavailable" xml:space="preserve">
+    <value>La explicación con IA no está disponible ahora. Tu plan sigue siendo correcto.</value>
+  </data>
 </root>

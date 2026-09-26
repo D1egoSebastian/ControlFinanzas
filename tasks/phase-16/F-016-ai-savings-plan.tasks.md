@@ -142,7 +142,7 @@ Depends on 2. Goal: `GoalRow` becomes observable without breaking its existing c
 contract, and `GoalsViewModel` drives the per-row request with a correct in-flight guard and no
 narration carry-over on reload.
 
-- [ ] 3.1 Write failing test additions in `tests/…Unit/UI/GoalsViewModelTests.cs`: extend
+- [x] 3.1 Write failing test additions in `tests/…Unit/UI/GoalsViewModelTests.cs`: extend
   `CreateViewModel` with a trailing optional `GenerateSavingsPlanUseCase? savingsPlanUseCase =
   null` defaulted over `FakeLlmClientFactory`'s "not configured" resolution so existing tests keep
   making zero LLM calls; Generated → `PlanNarration` set and status text empty; NotConfigured/
@@ -154,10 +154,12 @@ narration carry-over on reload.
   completion arriving after reload leaves the new row instance untouched (D9 stale-result check);
   the existing `GoalRow` constructor tests using named PascalCase arguments still compile
   unchanged. (R-6, R-7, R-11, D-6, D-7, D-11, S-7, S-8)
-- [ ] 3.2 Create `tests/…Unit/TestDoubles/GatedLlmClient.cs`: each `CompleteAsync` call returns a
-  per-call `TaskCompletionSource` the test completes explicitly, and records every request — a
-  Phase-16-owned double, never extends the shared `FakeLlmClient` (D-12). (D-12)
-- [ ] 3.3 Modify `src/…UI/ViewModels/GoalRow.cs`: convert from a record to
+- [x] 3.2 ~~Create `tests/…Unit/TestDoubles/GatedLlmClient.cs`~~ — **deviation**: `FakeLlmClient`
+  already carries `OnCompleteAsync` (Phase 14 D-13, landed in the tree by apply time), so per
+  design D-12's explicit fallback ("apply MAY use them instead and skip the new files"), the S-8
+  and D-9 tests gate via `FakeLlmClient.OnCompleteAsync` + `TaskCompletionSource` directly instead
+  of a new file. No shared fake was edited. (D-12)
+- [x] 3.3 Modify `src/…UI/ViewModels/GoalRow.cs`: convert from a record to
   `public sealed partial class GoalRow : ObservableObject`; keep the 13-parameter constructor's
   exact order, types, and PascalCase names inside a scoped
   `#pragma warning disable IDE1006` / `restore` (comment citing this decision, so
@@ -166,7 +168,7 @@ narration carry-over on reload.
   `ShowPlan`) in the constructor unchanged; add `[ObservableProperty] string _planNarration = ""`,
   `[ObservableProperty] string _planNarrationStatusText = ""`, and
   `[ObservableProperty] bool _isGeneratingPlan`. (D-6)
-- [ ] 3.4 Modify `src/…UI/ViewModels/GoalsViewModel.cs`: add `GenerateSavingsPlanUseCase
+- [x] 3.4 Modify `src/…UI/ViewModels/GoalsViewModel.cs`: add `GenerateSavingsPlanUseCase
   generateSavingsPlanUseCase` to the constructor after `deleteUseCase`, with a null guard; add
   `[RelayCommand(AllowConcurrentExecutions = true)] RequestPlanAsync(GoalRow? row)` — early return
   when `row is null || row.IsGeneratingPlan` (D8), set `IsGeneratingPlan = true` +
@@ -178,11 +180,11 @@ narration carry-over on reload.
   reset `IsGeneratingPlan = false` in `finally`. `LoadGoalsAsync` stays unchanged (already rebuilds
   fresh `GoalRow` instances on every reload, satisfying R-6). Run 3.1 green. (R-2, R-4, R-5, R-6,
   R-7, R-11, D-7)
-- [ ] 3.5 Modify `src/…UI/Resources/Strings.resx`, `Strings.es-DO.resx`, and
+- [x] 3.5 Modify `src/…UI/Resources/Strings.resx`, `Strings.es-DO.resx`, and
   `Strings.Designer.cs`: add `GoalsPlanGenerating`, `GoalsAiNotConfigured`, and
   `GoalsAiUnavailable` keys with hand-added accessors in the existing
   `public static string X => ResourceManager.GetString("X", Culture)!;` shape. (R-13, D-9)
-- [ ] 3.6 Run all four gates. All green before opening PR S3.
+- [x] 3.6 Run all four gates. All green before opening PR S3.
 
 ## 4. View + docs
 

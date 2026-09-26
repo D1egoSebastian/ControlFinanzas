@@ -1,6 +1,8 @@
+using ControlDeFinanzasIA.Application.Abstractions.Llm;
 using ControlDeFinanzasIA.Application.UseCases.Goals.ContributeToGoal;
 using ControlDeFinanzasIA.Application.UseCases.Goals.CreateGoal;
 using ControlDeFinanzasIA.Application.UseCases.Goals.DeleteGoal;
+using ControlDeFinanzasIA.Application.UseCases.Goals.GenerateSavingsPlan;
 using ControlDeFinanzasIA.Application.UseCases.Goals.GetGoals;
 using ControlDeFinanzasIA.Domain.Enums;
 using ControlDeFinanzasIA.Domain.Goals;
@@ -203,6 +205,199 @@ public sealed class GoalsViewModelTests
     }
 
     [Fact]
+    public async Task RequestPlanCommand_Generated_SetsNarrationAndClearsStatusText()
+    {
+        var goals = new FakeGoalRepository();
+        var goal = Goal.Create("Fondo", Money.Create(100000m, Currency.DOP), new DateOnly(2027, 1, 1));
+        goals.Seed(goal);
+        var llmClient = new FakeLlmClient
+        {
+            ResponseToReturn = new LlmResponse("Vas por buen camino, sigue asi.", 10, 5),
+        };
+        GenerateSavingsPlanUseCase savingsPlanUseCase = CreateSavingsPlanUseCase(goals, llmClient: llmClient, configured: true);
+        GoalsViewModel viewModel = CreateViewModel(goals: goals, savingsPlanUseCase: savingsPlanUseCase);
+        await Task.Delay(1);
+        GoalRow row = viewModel.Goals[0];
+        decimal figureBefore = row.RemainingAmount;
+
+        await viewModel.RequestPlanCommand.ExecuteAsync(row);
+
+        Assert.Equal("Vas por buen camino, sigue asi.", row.PlanNarration);
+        Assert.Equal(string.Empty, row.PlanNarrationStatusText);
+        Assert.False(row.IsGeneratingPlan);
+        Assert.Equal(figureBefore, row.RemainingAmount);
+    }
+
+    [Fact]
+    public async Task RequestPlanCommand_NotConfigured_ShowsLocalizedCaptionAndKeepsFigureUnchanged()
+    {
+        // Default CreateViewModel wires a savings-plan use case over FakeLlmClientFactory's
+        // default "not configured" resolution, so no override is needed here.
+        var goals = new FakeGoalRepository();
+        var goal = Goal.Create("Fondo", Money.Create(100000m, Currency.DOP), new DateOnly(2027, 1, 1));
+        goals.Seed(goal);
+        GoalsViewModel viewModel = CreateViewModel(goals: goals);
+        await Task.Delay(1);
+        GoalRow row = viewModel.Goals[0];
+        decimal figureBefore = row.RemainingAmount;
+
+        await viewModel.RequestPlanCommand.ExecuteAsync(row);
+
+        Assert.Equal(Strings.GoalsAiNotConfigured, row.PlanNarrationStatusText);
+        Assert.Equal(string.Empty, row.PlanNarration);
+        Assert.False(row.IsGeneratingPlan);
+        Assert.Equal(figureBefore, row.RemainingAmount);
+    }
+
+    [Fact]
+    public async Task RequestPlanCommand_LlmFailure_ShowsLocalizedCaptionAndKeepsFigureUnchanged()
+    {
+        var goals = new FakeGoalRepository();
+        var goal = Goal.Create("Fondo", Money.Create(100000m, Currency.DOP), new DateOnly(2027, 1, 1));
+        goals.Seed(goal);
+        var llmClient = new FakeLlmClient
+        {
+            ExceptionToThrow = new LlmException(LlmFailureKind.Transport, "boom"),
+        };
+        GenerateSavingsPlanUseCase savingsPlanUseCase = CreateSavingsPlanUseCase(goals, llmClient: llmClient, configured: true);
+        GoalsViewModel viewModel = CreateViewModel(goals: goals, savingsPlanUseCase: savingsPlanUseCase);
+        await Task.Delay(1);
+        GoalRow row = viewModel.Goals[0];
+        decimal figureBefore = row.RemainingAmount;
+
+        await viewModel.RequestPlanCommand.ExecuteAsync(row);
+
+        Assert.Equal(Strings.GoalsAiUnavailable, row.PlanNarrationStatusText);
+        Assert.Equal(string.Empty, row.PlanNarration);
+        Assert.False(row.IsGeneratingPlan);
+        Assert.Equal(figureBefore, row.RemainingAmount);
+    }
+
+    [Fact]
+    public async Task RequestPlanCommand_ConcurrentRows_RowBPendingNeverBlocksRowA_AndDoubleClickOnRowBIsNoOp()
+    {
+        // S-8: row A and row B both idle. Row B's request starts first and is held open by the
+        // gate below; row A must complete normally while row B is still pending, and a second
+        // click on row B while it is pending must not invoke the client again.
+        var goals = new FakeGoalRepository();
+        var goalA = Goal.Create("Meta A", Money.Create(100000m, Currency.DOP), new DateOnly(2027, 1, 1));
+        var goalB = Goal.Create("Meta B", Money.Create(200000m, Currency.DOP), new DateOnly(2027, 1, 1));
+        goals.Seed(goalA);
+        goals.Seed(goalB);
+
+        var gate = new TaskCompletionSource<bool>();
+        var firstCallStarted = new TaskCompletionSource<bool>();
+        int callOrder = 0;
+        var llmClient = new FakeLlmClient
+        {
+            OnCompleteAsync = async (_, _) =>
+            {
+                if (Interlocked.Increment(ref callOrder) == 1)
+                {
+                    firstCallStarted.TrySetResult(true);
+                    await gate.Task;
+                }
+
+                return new LlmResponse("Vas bien, continua asi.", 10, 5);
+            },
+        };
+        GenerateSavingsPlanUseCase savingsPlanUseCase = CreateSavingsPlanUseCase(goals, llmClient: llmClient, configured: true);
+        GoalsViewModel viewModel = CreateViewModel(goals: goals, savingsPlanUseCase: savingsPlanUseCase);
+        await Task.Delay(1);
+        GoalRow rowA = viewModel.Goals.Single(g => g.Name == "Meta A");
+        GoalRow rowB = viewModel.Goals.Single(g => g.Name == "Meta B");
+
+        Task rowBTask = viewModel.RequestPlanCommand.ExecuteAsync(rowB);
+        await firstCallStarted.Task;
+        Assert.True(rowB.IsGeneratingPlan);
+
+        Assert.True(viewModel.RequestPlanCommand.CanExecute(rowA));
+        await viewModel.RequestPlanCommand.ExecuteAsync(rowA);
+
+        Assert.False(rowA.IsGeneratingPlan);
+        Assert.Equal("Vas bien, continua asi.", rowA.PlanNarration);
+        Assert.True(rowB.IsGeneratingPlan);
+
+        int callCountBeforeSecondClick = llmClient.CompleteCallCount;
+        await viewModel.RequestPlanCommand.ExecuteAsync(rowB);
+        Assert.Equal(callCountBeforeSecondClick, llmClient.CompleteCallCount);
+
+        gate.SetResult(true);
+        await rowBTask;
+        Assert.False(rowB.IsGeneratingPlan);
+        Assert.Equal("Vas bien, continua asi.", rowB.PlanNarration);
+    }
+
+    [Fact]
+    public async Task LoadGoalsAsync_AfterContribute_ClearsNarrationAndIsGeneratingPlan_NoCarryOverByGoalId()
+    {
+        var goals = new FakeGoalRepository();
+        var contributions = new FakeGoalContributionRepository();
+        var goal = Goal.Create("Fondo", Money.Create(100000m, Currency.DOP), new DateOnly(2027, 1, 1));
+        goals.Seed(goal);
+        var llmClient = new FakeLlmClient
+        {
+            ResponseToReturn = new LlmResponse("Vas por buen camino, sigue asi.", 10, 5),
+        };
+        GenerateSavingsPlanUseCase savingsPlanUseCase = CreateSavingsPlanUseCase(goals, contributions, llmClient: llmClient, configured: true);
+        GoalsViewModel viewModel = CreateViewModel(goals: goals, contributions: contributions, savingsPlanUseCase: savingsPlanUseCase);
+        await Task.Delay(1);
+        GoalRow row = viewModel.Goals[0];
+        await viewModel.RequestPlanCommand.ExecuteAsync(row);
+        Assert.NotEqual(string.Empty, row.PlanNarration);
+
+        viewModel.SelectCommand.Execute(row);
+        viewModel.ContributionAmount = 1000m;
+        await viewModel.ContributeCommand.ExecuteAsync(null);
+
+        GoalRow reloadedRow = Assert.Single(viewModel.Goals);
+        Assert.Equal(goal.Id, reloadedRow.Id);
+        Assert.NotSame(row, reloadedRow);
+        Assert.Equal(string.Empty, reloadedRow.PlanNarration);
+        Assert.Equal(string.Empty, reloadedRow.PlanNarrationStatusText);
+        Assert.False(reloadedRow.IsGeneratingPlan);
+    }
+
+    [Fact]
+    public async Task RequestPlanCommand_LateCompletionAfterReload_LeavesNewRowInstanceUntouched()
+    {
+        // D-9: a result arriving after a reload writes to the detached old row instance and is
+        // effectively discarded — the rebuilt row instance is never touched by the stale write.
+        var goals = new FakeGoalRepository();
+        var contributions = new FakeGoalContributionRepository();
+        var goal = Goal.Create("Fondo", Money.Create(100000m, Currency.DOP), new DateOnly(2027, 1, 1));
+        goals.Seed(goal);
+        var gate = new TaskCompletionSource<bool>();
+        var llmClient = new FakeLlmClient
+        {
+            OnCompleteAsync = async (_, _) =>
+            {
+                await gate.Task;
+                return new LlmResponse("Narracion tardia sin numeros.", 10, 5);
+            },
+        };
+        GenerateSavingsPlanUseCase savingsPlanUseCase = CreateSavingsPlanUseCase(goals, contributions, llmClient: llmClient, configured: true);
+        GoalsViewModel viewModel = CreateViewModel(goals: goals, contributions: contributions, savingsPlanUseCase: savingsPlanUseCase);
+        await Task.Delay(1);
+        GoalRow staleRow = viewModel.Goals[0];
+
+        Task staleRequestTask = viewModel.RequestPlanCommand.ExecuteAsync(staleRow);
+
+        viewModel.SelectCommand.Execute(staleRow);
+        viewModel.ContributionAmount = 1000m;
+        await viewModel.ContributeCommand.ExecuteAsync(null);
+        GoalRow freshRow = viewModel.Goals[0];
+        Assert.NotSame(staleRow, freshRow);
+
+        gate.SetResult(true);
+        await staleRequestTask;
+
+        Assert.Equal("Narracion tardia sin numeros.", staleRow.PlanNarration);
+        Assert.Equal(string.Empty, freshRow.PlanNarration);
+        Assert.False(freshRow.IsGeneratingPlan);
+    }
+
+    [Fact]
     public void GoalRow_ProgressValue_ClampsAt100_WhilePercentCompleteStaysAboveIt()
     {
         var row = new GoalRow(
@@ -251,7 +446,8 @@ public sealed class GoalsViewModelTests
         FakeGoalRepository? goals = null,
         FakeGoalContributionRepository? contributions = null,
         ContributeToGoalUseCase? contributeUseCase = null,
-        FakeClock? clock = null)
+        FakeClock? clock = null,
+        GenerateSavingsPlanUseCase? savingsPlanUseCase = null)
     {
         goals ??= new FakeGoalRepository();
         contributions ??= new FakeGoalContributionRepository();
@@ -263,12 +459,40 @@ public sealed class GoalsViewModelTests
             goals, contributions, new ContributeToGoalValidator(), NullLogger<ContributeToGoalUseCase>.Instance);
         var deleteUseCase = new DeleteGoalUseCase(goals);
 
+        // Defaults to FakeLlmClientFactory's "not configured" resolution, so existing tests that
+        // do not pass savingsPlanUseCase keep making zero LLM calls.
+        savingsPlanUseCase ??= CreateSavingsPlanUseCase(goals, contributions, configured: false);
+
         return new GoalsViewModel(
             getGoalsQuery,
             createUseCase,
             contributeUseCase,
             deleteUseCase,
+            savingsPlanUseCase,
             clock,
             NullLogger<GoalsViewModel>.Instance);
+    }
+
+    private static GenerateSavingsPlanUseCase CreateSavingsPlanUseCase(
+        FakeGoalRepository goals,
+        FakeGoalContributionRepository? contributions = null,
+        FakeLlmClient? llmClient = null,
+        bool configured = false)
+    {
+        contributions ??= new FakeGoalContributionRepository();
+        var factory = new FakeLlmClientFactory();
+        if (configured)
+        {
+            factory.ResolveResult = LlmClientResolution.Configured(llmClient ?? new FakeLlmClient());
+        }
+
+        return new GenerateSavingsPlanUseCase(
+            goals,
+            contributions,
+            new FakeSettingsStore(),
+            factory,
+            new DictionaryPromptProvider(),
+            new FakeClock { Today = _today },
+            NullLogger<GenerateSavingsPlanUseCase>.Instance);
     }
 }

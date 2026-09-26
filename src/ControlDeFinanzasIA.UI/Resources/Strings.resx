@@ -694,4 +694,13 @@ Showing approximate conversions only.
   <data name="ChatEmptyState" xml:space="preserve">
     <value>Ask a question about your finances to get started.</value>
   </data>
+  <data name="GoalsPlanGenerating" xml:space="preserve">
+    <value>Generating plan…</value>
+  </data>
+  <data name="GoalsAiNotConfigured" xml:space="preserve">
+    <value>AI is not configured. Set it up in Settings to see an explanation.</value>
+  </data>
+  <data name="GoalsAiUnavailable" xml:space="preserve">
+    <value>The AI explanation is unavailable right now. Your plan is still correct.</value>
+  </data>
 </root>

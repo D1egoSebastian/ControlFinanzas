@@ -6,6 +6,7 @@ using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Application.UseCases.Goals.ContributeToGoal;
 using ControlDeFinanzasIA.Application.UseCases.Goals.CreateGoal;
 using ControlDeFinanzasIA.Application.UseCases.Goals.DeleteGoal;
+using ControlDeFinanzasIA.Application.UseCases.Goals.GenerateSavingsPlan;
 using ControlDeFinanzasIA.Application.UseCases.Goals.GetGoals;
 using ControlDeFinanzasIA.Domain.Enums;
 using ControlDeFinanzasIA.UI.Resources;
@@ -27,6 +28,7 @@ public sealed partial class GoalsViewModel : ViewModelBase
     private readonly CreateGoalUseCase _createUseCase;
     private readonly ContributeToGoalUseCase _contributeUseCase;
     private readonly DeleteGoalUseCase _deleteUseCase;
+    private readonly GenerateSavingsPlanUseCase _generateSavingsPlanUseCase;
     private readonly IClock _clock;
     private readonly ILogger<GoalsViewModel> _logger;
 
@@ -42,6 +44,7 @@ public sealed partial class GoalsViewModel : ViewModelBase
         CreateGoalUseCase createUseCase,
         ContributeToGoalUseCase contributeUseCase,
         DeleteGoalUseCase deleteUseCase,
+        GenerateSavingsPlanUseCase generateSavingsPlanUseCase,
         IClock clock,
         ILogger<GoalsViewModel> logger)
     {
@@ -49,6 +52,7 @@ public sealed partial class GoalsViewModel : ViewModelBase
         ArgumentNullException.ThrowIfNull(createUseCase);
         ArgumentNullException.ThrowIfNull(contributeUseCase);
         ArgumentNullException.ThrowIfNull(deleteUseCase);
+        ArgumentNullException.ThrowIfNull(generateSavingsPlanUseCase);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(logger);
 
@@ -56,6 +60,7 @@ public sealed partial class GoalsViewModel : ViewModelBase
         _createUseCase = createUseCase;
         _contributeUseCase = contributeUseCase;
         _deleteUseCase = deleteUseCase;
+        _generateSavingsPlanUseCase = generateSavingsPlanUseCase;
         _clock = clock;
         _logger = logger;
 
@@ -237,6 +242,60 @@ public sealed partial class GoalsViewModel : ViewModelBase
         }
 
         await LoadGoalsAsync().ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Requests an AI narration for <paramref name="row"/>'s savings plan
+    /// (F-016, R-1, R-2..R-7). Declared with
+    /// <see cref="RelayCommandAttribute.AllowConcurrentExecutions"/> set so
+    /// a request in flight on one row never disables another row's button
+    /// — the per-row <see cref="GoalRow.IsGeneratingPlan"/> flag is the
+    /// only in-flight guard (D-8). The use case is success-shaped for
+    /// every AI outcome; only an unexpected exception (or a stale
+    /// <c>GoalNotFound</c> for a row that no longer exists) falls back to
+    /// the <see cref="Strings.GoalsAiUnavailable"/> caption.
+    /// </summary>
+    /// <param name="row">The row to request a plan narration for. Null is treated as no-op.</param>
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task RequestPlanAsync(GoalRow? row)
+    {
+        if (row is null || row.IsGeneratingPlan)
+        {
+            return;
+        }
+
+        row.IsGeneratingPlan = true;
+        row.PlanNarration = string.Empty;
+        row.PlanNarrationStatusText = Strings.GoalsPlanGenerating;
+
+        try
+        {
+            // No ConfigureAwait(false): the HTTP call completes on a pool thread, and this
+            // row's properties are UI-bound (ExpensesViewModel suggestion-await precedent).
+            Result result = await _generateSavingsPlanUseCase.ExecuteAsync(row.Id);
+
+            SavingsPlanNarrationDto dto = result.IsSuccess && result.Value is SavingsPlanNarrationDto value
+                ? value
+                : new SavingsPlanNarrationDto(SavingsPlanNarrationStatus.Unavailable, null); // stale row: GoalNotFound
+
+            row.PlanNarration = dto.Status == SavingsPlanNarrationStatus.Generated ? dto.Text! : string.Empty;
+            row.PlanNarrationStatusText = dto.Status switch
+            {
+                SavingsPlanNarrationStatus.Generated => string.Empty,
+                SavingsPlanNarrationStatus.NotConfigured => Strings.GoalsAiNotConfigured,
+                _ => Strings.GoalsAiUnavailable,
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Savings plan narration failed unexpectedly. GoalId={GoalId}", row.Id);
+            row.PlanNarration = string.Empty;
+            row.PlanNarrationStatusText = Strings.GoalsAiUnavailable;
+        }
+        finally
+        {
+            row.IsGeneratingPlan = false;
+        }
     }
 
     private async Task LoadAsync()
