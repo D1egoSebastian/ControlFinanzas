@@ -119,7 +119,7 @@ Depends on 2. Goal: per-kind toggles and digest frequency read through `SettingK
 `ISettingsStore` only (never `AppSettings`), and the pure reconciler produces add/update/remove
 plans for the four detectable kinds (digest branch deferred to S7).
 
-- [ ] 3.1 Write failing `tests/…Unit/Application/Notifications/NotificationReconcilerTests.cs`:
+- [x] 3.1 Write failing `tests/…Unit/Application/Notifications/NotificationReconcilerTests.cs`:
   two passes over the same candidate → one row with `CreatedAt` unchanged (S-4); a dismissed key is
   never recreated (S-5); a dismissed Near plus a later Exceeded candidate → Exceeded added,
   unaffected by the dismissal (S-6); an Exceeded candidate removes an undismissed Near for the same
@@ -129,32 +129,32 @@ plans for the four detectable kinds (digest branch deferred to S7).
   today − 60` including dismissed ones, and keeps a row at exactly 60 days (S-10); an undismissed
   row with changed facts goes to `ToUpdate` with `Id`/`CreatedAt`/`ReadAt` preserved. (R-5, R-7, R-9,
   D-4)
-- [ ] 3.2 Write failing `tests/…Unit/Application/Notifications/NotificationSettingsTests.cs`:
+- [x] 3.2 Write failing `tests/…Unit/Application/Notifications/NotificationSettingsTests.cs`:
   `Defaults` is all-true toggles + `Weekly`; a missing or invalid stored toggle value reads as
   `true`; a missing or invalid frequency reads as `Weekly`; an invalid cursor string reads as
   `null`. (D-7)
-- [ ] 3.3 Create `tests/…Unit/TestDoubles/InMemorySettingsStore.cs`: a real key→value map
+- [x] 3.3 Create `tests/…Unit/TestDoubles/InMemorySettingsStore.cs`: a real key→value map
   implementing `ISettingsStore`, distinct from the shared `FakeSettingsStore` (D-15). (D-7)
-- [ ] 3.4 Modify `src/…Application/Settings/SettingKeys.cs`: append the 6 constants
+- [x] 3.4 Modify `src/…Application/Settings/SettingKeys.cs`: append the 6 constants
   (`NotificationsDebtDueEnabled`, `NotificationsRecurringDueEnabled`, `NotificationsBudgetEnabled`,
   `NotificationsAnomalyEnabled`, `NotificationsDigestFrequency`,
   `NotificationsDigestLastPeriodStart`). (R-12, R-13, D-7)
-- [ ] 3.5 Create `src/…Application/Notifications/NotificationSettings.cs`: record
+- [x] 3.5 Create `src/…Application/Notifications/NotificationSettings.cs`: record
   `(bool DebtDue, bool RecurringDue, bool Budget, bool Anomaly, DigestFrequency Digest)` with a
   static `Defaults`. (R-12, R-13, D-7)
-- [ ] 3.6 Create `src/…Application/Notifications/NotificationSettingsReader.cs`:
+- [x] 3.6 Create `src/…Application/Notifications/NotificationSettingsReader.cs`:
   `ReadAsync(ISettingsStore, ct)` per D-7's parse rules. Run 3.2 green. (R-12, R-13, D-7)
-- [ ] 3.7 Create `src/…Application/Notifications/NotificationReconciler.cs`: `Plan(existing,
+- [x] 3.7 Create `src/…Application/Notifications/NotificationReconciler.cs`: `Plan(existing,
   candidates, evaluatedKinds, protectedKeys, today, digestDue)` implementing purge → candidates
   (skip dismissed, refresh-or-noop, add) → removals (evaluated kind, not candidate, not
   protected) per D-4, with the digest branch left as a no-op stub for S7. Run 3.1 green. (R-1, R-5,
   R-7, R-9, D-4)
-- [ ] 3.8 Create `src/…Application/UseCases/Notifications/GetNotificationSettings/
+- [x] 3.8 Create `src/…Application/UseCases/Notifications/GetNotificationSettings/
   GetNotificationSettingsQuery.cs`: `Success(NotificationSettings)`. (R-12, R-13)
-- [ ] 3.9 Create `src/…Application/UseCases/Notifications/UpdateNotificationSettings/
+- [x] 3.9 Create `src/…Application/UseCases/Notifications/UpdateNotificationSettings/
   UpdateNotificationSettingsUseCase.cs`: 5 sequential `SetAsync` calls, returns the first failure
   (the `UpdateAiSettings` precedent). (R-12, R-13)
-- [ ] 3.10 Run all four gates. All green before opening PR S2.
+- [x] 3.10 Run all four gates. All green before opening PR S2.
 
 ## 4. Detection: due items (S3)
 

@@ -31,4 +31,24 @@ public static class SettingKeys
 
     /// <summary>Clave del maximo de tokens por request configurado para IA.</summary>
     public const string AiMaxTokensPerRequest = "ai.maxTokensPerRequest";
+
+    // Fase 17: notificaciones (F-017, R-12, R-13). Bloque agregado — no reordenar lo anterior.
+
+    /// <summary>Clave del toggle de avisos de cuotas de deuda próximas a vencer.</summary>
+    public const string NotificationsDebtDueEnabled = "notifications.debtDue.enabled";
+
+    /// <summary>Clave del toggle de avisos de cargos recurrentes próximos a generarse.</summary>
+    public const string NotificationsRecurringDueEnabled = "notifications.recurringDue.enabled";
+
+    /// <summary>Clave del toggle de avisos de umbral de presupuesto.</summary>
+    public const string NotificationsBudgetEnabled = "notifications.budget.enabled";
+
+    /// <summary>Clave del toggle de avisos de anomalías sin reconocer.</summary>
+    public const string NotificationsAnomalyEnabled = "notifications.anomaly.enabled";
+
+    /// <summary>Clave de la frecuencia configurada del resumen periódico.</summary>
+    public const string NotificationsDigestFrequency = "notifications.digest.frequency";
+
+    /// <summary>Clave del cursor (inicio del último período generado) del resumen periódico.</summary>
+    public const string NotificationsDigestLastPeriodStart = "notifications.digest.lastPeriodStart";
 }
