@@ -20,6 +20,18 @@ public sealed record BackupOptions(string AppVersion)
         TimeSpan.FromMilliseconds(2000),
     ];
 
+    /// <summary>
+    /// Waits between attempts to swap the live database in (200 ms, 600 ms, 1.8 s by default). The number of
+    /// entries is the number of retries after the first attempt, so the default makes at most four attempts.
+    /// The same schedule paces the rollback attempts after a failed verification.
+    /// </summary>
+    public IReadOnlyList<TimeSpan> SwapRetryDelays { get; init; } =
+    [
+        TimeSpan.FromMilliseconds(200),
+        TimeSpan.FromMilliseconds(600),
+        TimeSpan.FromMilliseconds(1800),
+    ];
+
     /// <summary>Largest database, in bytes, that a backup may declare or actually inflate to (1 GiB).</summary>
     public long MaxDatabaseBytes { get; init; } = 1L << 30;
 

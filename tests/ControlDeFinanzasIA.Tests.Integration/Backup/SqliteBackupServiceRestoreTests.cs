@@ -436,7 +436,7 @@ public sealed class SqliteBackupServiceRestoreTests : IDisposable
         Result result = await NewService(fs).RestoreAsync(_ => Task.FromResult<Stream>(new MemoryStream(zip)));
 
         AssertRejected(result, BackupErrorCodes.IoError, before, expectSafetyZip: true);
-        Assert.Equal(1, fs.CountCalls("Replace"));
+        Assert.Equal(1 + new BackupOptions("x").SwapRetryDelays.Count, fs.CountCalls("Replace"));
         Assert.False(File.Exists(BakPath));
     }
 

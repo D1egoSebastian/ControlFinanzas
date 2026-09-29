@@ -103,13 +103,28 @@ public sealed class SqliteBehaviorAssumptionsTests : IDisposable
 
         string path = Path.Combine(_dir, "pooled.db");
         var builder = new SqliteConnectionStringBuilder { DataSource = path, Mode = SqliteOpenMode.ReadWriteCreate, Pooling = true };
-        using (var c = new SqliteConnection(builder.ConnectionString))
+        // ClearAllPools is process-wide and other fixtures call it while running in parallel; if one clears
+        // the pool between the close and the delete, the file is deletable for the wrong reason. Arm again.
+        bool held = false;
+        for (int attempt = 0; attempt < 50 && !held; attempt++)
         {
-            c.Open();
-            Exec(c, "CREATE TABLE T (Id INTEGER);");
+            using (var c = new SqliteConnection(builder.ConnectionString))
+            {
+                c.Open();
+                Exec(c, "CREATE TABLE IF NOT EXISTS T (Id INTEGER);");
+            }
+
+            try
+            {
+                File.Delete(path);
+            }
+            catch (IOException)
+            {
+                held = true;
+            }
         }
 
-        Assert.ThrowsAny<IOException>(() => File.Delete(path));
+        Assert.True(held, "A pooled connection must keep the OS handle open after it was closed.");
 
         SqliteConnection.ClearAllPools();
         File.Delete(path);

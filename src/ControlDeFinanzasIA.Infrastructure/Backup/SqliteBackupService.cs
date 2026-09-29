@@ -9,16 +9,15 @@ using Microsoft.Extensions.Logging;
 namespace ControlDeFinanzasIA.Infrastructure.Backup;
 
 /// <summary>
-/// SQLite backup engine (F-019). Create, inspect and restore live in this partial class. It will declare
-/// <see cref="IBackupService"/> once <c>CompletePendingRestore</c> exists (no half-implemented interface,
-/// no placeholder members).
+/// SQLite backup engine (F-019). Create, inspect, restore and the startup clean-up live in this partial
+/// class. It must be registered as a single instance: the gate that serializes every operation is inside it.
 /// </summary>
 /// <remarks>
 /// Every connection is non-pooled and independent of <c>AppDbContext</c>, so disposing it really
 /// releases the OS file handle. Scratch files live in <c>&lt;DataDir&gt;\backups\.work\&lt;guid&gt;\</c>,
 /// on the same volume as the live database, and are removed in every outcome.
 /// </remarks>
-public sealed partial class SqliteBackupService
+public sealed partial class SqliteBackupService : IBackupService
 {
     private const int _sqliteBusy = 5;
     private const int _sqliteLocked = 6;

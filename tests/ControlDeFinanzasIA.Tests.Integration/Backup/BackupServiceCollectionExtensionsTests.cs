@@ -21,6 +21,19 @@ public sealed class BackupServiceCollectionExtensionsTests
     }
 
     [Fact]
+    public void AddBackup_RegistersTheServiceContractAsTheSameSingleInstance()
+    {
+        using ServiceProvider provider = Build(services => services.AddBackup("3.2.1-test"));
+
+        IBackupService contract = provider.GetRequiredService<IBackupService>();
+
+        // One instance: the single-flight gate that serializes create/inspect/restore lives inside it.
+        Assert.IsType<SqliteBackupService>(contract);
+        Assert.Same(contract, provider.GetRequiredService<IBackupService>());
+        Assert.Same(contract, provider.GetRequiredService<SqliteBackupService>());
+    }
+
+    [Fact]
     public void AddBackup_CalledTwice_IsIdempotent()
     {
         var services = new ServiceCollection();

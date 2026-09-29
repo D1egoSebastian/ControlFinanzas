@@ -74,6 +74,114 @@ public sealed partial class SqliteBackupService
         }
     }
 
+    /// <summary>
+    /// Startup hook, called only after the migrations of the (possibly restored) database succeeded. Removes the
+    /// original that the last restore retained at <c>data.db.pre-restore.bak</c> and sweeps the scratch
+    /// directory. The <c>.bak</c> is deleted only when the live database opens, passes a quick check and carries
+    /// every migration of this build; otherwise it is kept. Safety backups and every other file are never
+    /// touched. It does nothing while another backup operation runs, is idempotent, and never throws.
+    /// </summary>
+    public void CompletePendingRestore()
+    {
+        bool entered = false;
+        try
+        {
+            entered = _gate.Wait(0);
+            if (!entered)
+            {
+                _logger.LogInformation("A backup operation is running; the restore clean-up was skipped");
+                return;
+            }
+
+            RemoveRetainedOriginal();
+            SweepWorkDirectory();
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            _logger.LogWarning(ex, "Completing the pending restore failed; nothing was deleted beyond what was already logged");
+        }
+        finally
+        {
+            if (entered)
+            {
+                _gate.Release();
+            }
+        }
+    }
+
+    private void RemoveRetainedOriginal()
+    {
+        try
+        {
+            string live = _paths.DatabaseFilePath;
+            string bak = live + ".pre-restore.bak";
+            if (!_fs.FileExists(bak))
+            {
+                return;
+            }
+
+            if (!LiveIsProvenMigrated(live))
+            {
+                _logger.LogWarning("The database was not proven to be open and migrated, so the retained original {Bak} was kept", bak);
+                return;
+            }
+
+            _fs.Delete(bak);
+            _logger.LogInformation("The restore is complete; the retained original {Bak} was removed", bak);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            _logger.LogWarning(ex, "The retained original could not be removed and was kept");
+        }
+    }
+
+    private void SweepWorkDirectory()
+    {
+        try
+        {
+            _fs.DeleteDirectory(Path.Combine(BackupsDirectory, ".work"));
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            _logger.LogWarning(ex, "The backup scratch directory could not be swept");
+        }
+    }
+
+    /// <summary>The live file opens, is healthy and lists every migration this build knows.</summary>
+    private bool LiveIsProvenMigrated(string live)
+    {
+        if (!_fs.FileExists(live))
+        {
+            return false;
+        }
+
+        try
+        {
+            using SqliteConnection connection = OpenConnection(live, SqliteOpenMode.ReadOnly);
+            if (!QuickCheckIsOk(connection)
+                || Scalar(connection, "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = '__EFMigrationsHistory';") == "0")
+            {
+                return false;
+            }
+
+            var applied = new HashSet<string>(ReadAppliedMigrations(connection), StringComparer.Ordinal);
+            return _catalog.KnownMigrationIds.All(applied.Contains);
+        }
+        catch (SqliteException ex)
+        {
+            _logger.LogWarning(ex, "The live database could not be checked after the restore");
+            return false;
+        }
+    }
+
+    private static bool QuickCheckIsOk(SqliteConnection connection)
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "PRAGMA quick_check;";
+        using SqliteDataReader reader = command.ExecuteReader();
+        return reader.Read() && string.Equals(reader.GetString(0), "ok", StringComparison.Ordinal) && !reader.Read();
+    }
+
     [GeneratedRegex(@"^pre-restore-(?<stamp>\d{8}-\d{6})(?:-(?<n>\d+))?\.zip$", RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture)]
     private static partial Regex SafetyZipNamePattern();
 
@@ -111,7 +219,7 @@ public sealed partial class SqliteBackupService
 
         // Point of no return for cancellation: a half-finished swap is worse than a slow one.
         string safetyPath = Path.Combine(BackupsDirectory, safetyName);
-        Result? failure = await Task.Run(() => Swap(validated.DatabasePath, normalized.Sha256, safetyPath), CancellationToken.None).ConfigureAwait(false);
+        Result? failure = await SwapAsync(validated.DatabasePath, normalized.Sha256, safetyPath).ConfigureAwait(false);
         if (failure is not null)
         {
             return failure;
@@ -270,38 +378,87 @@ public sealed partial class SqliteBackupService
     }
 
     /// <summary>
-    /// R3 to R7 without retries: releases every handle, makes sure no sidecar of the old database remains,
-    /// performs the single <c>Replace</c> of the live path, verifies the installed file and rolls back on doubt.
-    /// Returns a failure, or <see langword="null"/> on success.
+    /// R3 to R7: releases every handle, gates on sidecars, performs the single <c>Replace</c> of the live path,
+    /// verifies the installed file and rolls back on doubt. A failed attempt is repaired (the name invariant:
+    /// the original is back at the live path) and repeated on <see cref="BackupOptions.SwapRetryDelays"/>.
+    /// Cancellation is deliberately not accepted here. Returns a failure, or <see langword="null"/> on success.
     /// </summary>
-    private Result? Swap(string restoredPath, string expectedHash, string safetyBackupPath)
+    private async Task<Result?> SwapAsync(string restoredPath, string expectedHash, string safetyBackupPath)
     {
         string live = _paths.DatabaseFilePath;
         string bak = live + ".pre-restore.bak";
+        IReadOnlyList<TimeSpan> delays = _options.SwapRetryDelays;
 
-        SqliteConnection.ClearAllPools();
-        ReleaseLiveSidecars(live);
-        string originalHash = Sha256Hex(live);
-
-        if (_fs.FileExists(bak))
+        for (int attempt = 0; ; attempt++)
         {
-            _fs.Move(bak, UniquePath(live + ".pre-restore-" + SwapStamp(), ".bak"));
-        }
+            SwapAttempt outcome = await Task.Run(() => AttemptSwap(restoredPath, live, bak, safetyBackupPath), CancellationToken.None).ConfigureAwait(false);
+            if (outcome.Failure is null)
+            {
+                string? problem = await Task.Run(() => VerifyInstalled(live, expectedHash), CancellationToken.None).ConfigureAwait(false);
+                return problem is null
+                    ? null
+                    : await RollBackAsync(live, bak, outcome.OriginalHash, safetyBackupPath, problem).ConfigureAwait(false);
+            }
 
+            if (attempt >= delays.Count)
+            {
+                return outcome.Failure;
+            }
+
+            await _options.Delay(delays[attempt], CancellationToken.None).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// One pass of R3 to R5. Any I/O or SQLite failure becomes a failed attempt after the name invariant was
+    /// repaired; nothing here throws for a problem that a later attempt could clear.
+    /// </summary>
+    private SwapAttempt AttemptSwap(string restoredPath, string live, string bak, string safetyBackupPath)
+    {
+        string originalHash = string.Empty;
+        bool replaceStarted = false;
         try
         {
+            SqliteConnection.ClearAllPools();
+
+            // A previous attempt may have left the original under the .bak name (Win32 1177 style).
+            RepairNameInvariant(live, bak, safetyBackupPath);
+            if (!_fs.FileExists(live))
+            {
+                return SwapAttempt.Failed(_swapNotDone);
+            }
+
+            ReleaseLiveSidecars(live);
+            originalHash = Sha256Hex(live);
+
+            if (_fs.FileExists(bak))
+            {
+                _fs.Move(bak, UniquePath(live + ".pre-restore-" + SwapStamp(), ".bak"));
+            }
+
+            replaceStarted = true;
             _fs.Replace(restoredPath, live, bak);
+            return new SwapAttempt(originalHash, null);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SqliteException or BackupRejectedException)
         {
             _logger.LogWarning(ex, "The database file could not be replaced; the original is kept");
             RepairNameInvariant(live, bak, safetyBackupPath);
-            return Result.Failure(BackupErrorCodes.IoError, "The current data could not be replaced (a file may be in use). Nothing was changed.");
-        }
 
-        string? problem = VerifyInstalled(live, expectedHash);
-        return problem is null ? null : RollBack(live, bak, originalHash, safetyBackupPath, problem);
+            // Replace can report a failure after it already did its job: the staged file is gone and the
+            // original sits under the .bak name. Verification decides; a second Replace would find nothing.
+            if (replaceStarted && !_fs.FileExists(restoredPath) && _fs.FileExists(live) && _fs.FileExists(bak))
+            {
+                return new SwapAttempt(originalHash, null);
+            }
+
+            return SwapAttempt.Failed(ex is BackupRejectedException rejected ? rejected.Failure : _swapNotDone);
+        }
     }
+
+    private static readonly Result _swapNotDone = Result.Failure(
+        BackupErrorCodes.IoError,
+        "The current data could not be replaced (a file may be in use). Nothing was changed.");
 
     /// <summary>
     /// Makes the live path free of any state that belongs to a different database file: resolves a hot
@@ -408,11 +565,7 @@ public sealed partial class SqliteBackupService
             }
 
             using SqliteConnection connection = OpenConnection(live, SqliteOpenMode.ReadOnly);
-            using SqliteCommand command = connection.CreateCommand();
-            command.CommandText = "PRAGMA quick_check;";
-            using SqliteDataReader reader = command.ExecuteReader();
-            bool ok = reader.Read() && string.Equals(reader.GetString(0), "ok", StringComparison.Ordinal) && !reader.Read();
-            return ok ? null : "The installed database failed its quick check.";
+            return QuickCheckIsOk(connection) ? null : "The installed database failed its quick check.";
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SqliteException)
         {
@@ -421,27 +574,79 @@ public sealed partial class SqliteBackupService
         }
     }
 
-    /// <summary>Puts the original (kept at <paramref name="bak"/>) back and proves it is byte-identical.</summary>
-    private Result RollBack(string live, string bak, string originalHash, string safetyBackupPath, string reason)
+    /// <summary>
+    /// Puts the original (kept at <paramref name="bak"/>) back and proves it is byte-identical, repeating on
+    /// the swap schedule. A failure here is the worst case of the pipeline: it is logged as Critical with the
+    /// paths the user needs for a manual recovery.
+    /// </summary>
+    private async Task<Result> RollBackAsync(string live, string bak, string originalHash, string safetyBackupPath, string reason)
     {
         _logger.LogError("Restore verification failed ({Reason}); rolling back to the original database", reason);
         string rejected = UniquePath(live + ".rollback-" + SwapStamp(), string.Empty);
-        try
+        IReadOnlyList<TimeSpan> delays = _options.SwapRetryDelays;
+
+        for (int attempt = 0; ; attempt++)
         {
-            _fs.Replace(bak, live, rejected);
-            if (!string.Equals(Sha256Hex(live), originalHash, StringComparison.OrdinalIgnoreCase))
+            bool restored = await Task.Run(() => TryRollBack(live, bak, rejected, originalHash, safetyBackupPath), CancellationToken.None).ConfigureAwait(false);
+            if (restored)
             {
-                _logger.LogCritical("After the rollback {Live} differs from the original. The rejected file is {Rejected}; a full copy is in {Safety}", live, rejected, safetyBackupPath);
-                return Result.Failure(BackupErrorCodes.IoError, "The restore failed and the previous data could not be confirmed. Contact support with the safety backup in the backups folder.");
+                DeleteQuietly(rejected);
+                return Result.Failure(BackupErrorCodes.IoError, "The restored data failed verification, so your previous data was put back unchanged.");
             }
 
-            DeleteQuietly(rejected);
-            return Result.Failure(BackupErrorCodes.IoError, "The restored data failed verification, so your previous data was put back unchanged.");
+            if (attempt >= delays.Count)
+            {
+                break;
+            }
+
+            await _options.Delay(delays[attempt], CancellationToken.None).ConfigureAwait(false);
+        }
+
+        _logger.LogCritical(
+            "The rollback failed. The original database is kept at {Bak}; the rejected file is at {Rejected}; a full copy is in {Safety}",
+            bak,
+            rejected,
+            safetyBackupPath);
+        return Result.Failure(BackupErrorCodes.IoError, "The restore failed and the previous data could not be put back automatically. The safety backup in the backups folder holds a full copy.");
+    }
+
+    /// <summary>One rollback attempt; true only when the live path holds bytes identical to the original.</summary>
+    private bool TryRollBack(string live, string bak, string rejected, string originalHash, string safetyBackupPath)
+    {
+        try
+        {
+            SqliteConnection.ClearAllPools();
+            if (_fs.FileExists(bak))
+            {
+                _fs.Replace(bak, live, rejected);
+            }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _logger.LogCritical(ex, "The rollback failed. The original database is kept at {Bak}; a full copy is in {Safety}", bak, safetyBackupPath);
-            return Result.Failure(BackupErrorCodes.IoError, "The restore failed and the previous data could not be put back automatically. The safety backup in the backups folder holds a full copy.");
+            _logger.LogWarning(ex, "A rollback attempt failed");
+            RepairNameInvariant(live, bak, safetyBackupPath);
+        }
+
+        try
+        {
+            // Whatever sits next to the live path now belongs to the rejected file, not to the original.
+            RemoveSidecar(live + _sidecarWal);
+            RemoveSidecar(live + _sidecarShm);
+            RemoveSidecar(live + _sidecarJournal);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogWarning(ex, "Sidecar files of the rejected database could not be removed after the rollback");
+        }
+
+        try
+        {
+            return _fs.FileExists(live) && string.Equals(Sha256Hex(live), originalHash, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogWarning(ex, "The database file could not be compared with the original after a rollback attempt");
+            return false;
         }
     }
 
@@ -545,4 +750,9 @@ public sealed partial class SqliteBackupService
     }
 
     private readonly record struct Normalized(bool KeyCarriedOver, string Sha256);
+
+    private readonly record struct SwapAttempt(string OriginalHash, Result? Failure)
+    {
+        public static SwapAttempt Failed(Result failure) => new(string.Empty, failure);
+    }
 }

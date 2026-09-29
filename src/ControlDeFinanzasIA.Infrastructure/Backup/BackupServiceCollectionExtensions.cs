@@ -8,9 +8,8 @@ namespace ControlDeFinanzasIA.Infrastructure.Backup;
 public static class BackupServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers the backup file system, options and <see cref="SqliteBackupService"/> as singletons.
-    /// Safe to call more than once. <see cref="Application.Abstractions.IBackupService"/> is registered
-    /// by the slice that completes the service.
+    /// Registers the backup file system, options, migration catalog and <see cref="SqliteBackupService"/> as
+    /// singletons, and <see cref="IBackupService"/> as the same instance. Safe to call more than once.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="appVersion">Application version recorded in every manifest.</param>
@@ -25,6 +24,9 @@ public static class BackupServiceCollectionExtensions
         services.TryAddSingleton(new BackupOptions(appVersion));
         services.TryAddSingleton<IMigrationCatalog, EfMigrationCatalog>();
         services.TryAddSingleton<SqliteBackupService>();
+
+        // The contract resolves to the very same instance: its single-flight gate must be shared.
+        services.TryAddSingleton<IBackupService>(sp => sp.GetRequiredService<SqliteBackupService>());
 
         return services;
     }

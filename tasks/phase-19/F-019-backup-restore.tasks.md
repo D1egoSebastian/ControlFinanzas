@@ -336,7 +336,7 @@ invariant after a partial Win32 failure, verifies the result and rolls back to b
 post-swap problem; `CompletePendingRestore` implements the `.bak` lifecycle. This slice carries the data-loss
 failure-injection suite and one REAL file-lock test.
 
-- [ ] 4b.1 Write failing `tests/…Integration/Backup/SqliteBackupServiceSwapFailureTests.cs` against the REAL service
+- [x] 4b.1 Write failing `tests/…Integration/Backup/SqliteBackupServiceSwapFailureTests.cs` against the REAL service
   with `FaultyBackupFileSystem` and a recording `Delay` (every test asserts live SHA-256 equals the original after
   failure and `backups\.work\` empty):
   (a) **retry with backoff**: `Replace` throws `IOException` twice then succeeds: exactly 3 attempts, delays 200 ms
@@ -359,34 +359,56 @@ failure-injection suite and one REAL file-lock test.
   failure injection at each stage (validation, free space, safety backup, extraction, swap, post-verify) never
   changes the live SHA-256 for any non-success outcome (S-33, R-10); (j) retention still runs after an R7 rollback
   when R2 produced a ZIP (DD-6 R8). (R-10, R-13, S-20..S-22, S-33)
-- [ ] 4b.2 Write failing **real file-lock test** in `tests/…Integration/Backup/SqliteBackupServiceRealLockTests.cs`
+- [x] 4b.2 Write failing **real file-lock test** in `tests/…Integration/Backup/SqliteBackupServiceRealLockTests.cs`
   (guard with `[SkippableFact]`/`Skip.IfNot(OperatingSystem.IsWindows())`, and it MUST run and pass on the Windows
   dev machine, the skip is only for other OSes): hold `data.db` open with `new FileStream(path, FileMode.Open,
   FileAccess.Read, FileShare.ReadWrite)` (no `FileShare.Delete`) while `RestoreAsync` runs with the real
   `PhysicalBackupFileSystem` and a no-op `Delay`: result `IoError` after 3 real attempts, live SHA-256 identical,
   no temp left, safety ZIP kept; after releasing the lock the same restore succeeds. No fake file system is used in
   this test. (R-13, S-21, T8)
-- [ ] 4b.3 Write failing `tests/…Integration/Backup/CompletePendingRestoreTests.cs`: after a successful restore
+- [x] 4b.3 Write failing `tests/…Integration/Backup/CompletePendingRestoreTests.cs`: after a successful restore
   `CompletePendingRestore()` deletes `data.db.pre-restore.bak` and sweeps `backups\.work\` (S-1, S-25, R-14); it is
   a no-op when nothing exists; it does NOT throw when the `.bak` is locked (real `FileStream` lock, assert no
   exception and the file remains) or missing (R-14); the safety ZIP and other `backups\` files are never deleted by
   it (R-12, R-14). (R-14, S-25)
-- [ ] 4b.4 Write failing older-schema test: restore a backup whose history is a proper subset, then run
+- [x] 4b.4 Write failing older-schema test: restore a backup whose history is a proper subset, then run
   `AppDbContext.Database.Migrate()` on the swapped file: succeeds and all data is kept (S-15, D-14). (R-9, S-15)
-- [ ] 4b.5 Implement in `SqliteBackupService.cs` (partial): R4 hot-journal gate (open `ReadWrite`, `Pooling=False`,
+- [x] 4b.5 Implement in `SqliteBackupService.cs` (partial): R4 hot-journal gate (open `ReadWrite`, `Pooling=False`,
   `SELECT count(*) FROM sqlite_master`, re-check within the retry schedule), R6 retry loop over
   `BackupOptions.SwapRetryDelays` with `ClearAllPools()` and `Delay` before each repeat and the invariant repair,
   R7 post-swap verification (SHA-256 of `data.db` equals `expectedHash`, read-only `quick_check` ok) with rollback
   and Critical log, cancellation ignored from R4 onward, and `CompletePendingRestore()` (never throws, logs).
   Replace the single-attempt swap of 4a.3 rather than adding a second code path. Run 4b.1 through 4b.4 green.
   (R-10, R-13, R-14, DD-6, Reconciliation #7, #10)
-- [ ] 4b.6 Update `IBackupService` registration: `AddBackup` now registers `IBackupService` →
+- [x] 4b.6 Update `IBackupService` registration: `AddBackup` now registers `IBackupService` →
   `SqliteBackupService` (all four interface members exist and are fully implemented), extending
   `BackupServiceCollectionExtensionsTests` to resolve `IBackupService` and assert the concrete type. (R-24)
-- [ ] 4b.7 Run all four gates plus the no-stubs grep over the slice's files. Run the failure-injection and real-lock
+- [x] 4b.7 Run all four gates plus the no-stubs grep over the slice's files. Run the failure-injection and real-lock
   tests explicitly by name and record N > 0 executed (not skipped) on Windows:
   `dotnet test -c Release --no-build --filter "FullyQualifiedName~SwapFailure|FullyQualifiedName~RealLock"`.
   All green before opening PR S4b. (R-10, R-13, R-14)
+
+**S4b apply notes:**
+- Retry schedule semantics: `BackupOptions.SwapRetryDelays` (200/600/1800 ms) is the number of RETRIES, like
+  `SnapshotRetryDelays`, so a permanent failure makes 4 attempts (the task text said "3 attempts" but also asks for
+  all three delays to be requested; the delays win). The same schedule paces the rollback attempts.
+- Each attempt: `ClearAllPools`, repair the name invariant (live missing and `.bak` present -> move back), R4 sidecar
+  gate (hot journal, WAL checkpoint, `-wal`/`-shm` removal), hash of the original, move-aside of an anomalous `.bak`,
+  the single `Replace`. Any `IOException`/`UnauthorizedAccessException`/`SqliteException`/gate rejection is a failed
+  attempt, followed by the repair. If `Replace` throws after it already installed the file (staged file gone, live
+  and `.bak` present) the attempt is treated as installed and goes to verification instead of retrying.
+- A `-journal` next to a WAL-mode live database is never resolved by SQLite (WAL ignores it), so the restore fails
+  closed with the journal untouched; a real hot journal is exercised in journal mode DELETE.
+- Rollback is retried on the schedule, repairs its own partial failure, removes stale sidecars of the rejected file
+  and only reports success when the live bytes equal the original hash; otherwise it logs Critical with the `.bak`,
+  the rejected file and the safety ZIP paths.
+- `CompletePendingRestore` skips when the service gate is held (an operation, e.g. a restore, is running), deletes
+  the `.bak` only when the live DB opens, passes `quick_check` and lists every known migration id, then sweeps
+  `backups\.work`. Other files (safety ZIPs, `data.db.pre-restore-<utc>.bak`, `data.db.rollback-*`) are never touched.
+- `AddBackup` registers `IBackupService` as a factory over the `SqliteBackupService` singleton so both share the gate.
+- `[SkippableFact]` is not available (no new package allowed): `WindowsOnlyFactAttribute` sets `Skip` on non-Windows.
+- The pre-existing `PoolingOn_KeepsTheHandleUntilClearAllPools_OnWindows` test raced with other fixtures'
+  process-wide `ClearAllPools` (seen once in four full runs) and now re-arms the pool until it holds.
 
 ## 5. Ports wiring, DI and startup hook (S5)
 
