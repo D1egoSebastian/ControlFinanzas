@@ -210,6 +210,8 @@ public sealed class ShellViewModelTests
             new GetBudgetVsActualQuery(budgetRepo, expenseRepo, categoryRepo, converter),
             DashboardInsightsQueryBuilder.Build(expenseRepo, incomeRepo, converter, clock, budgetRepo, categoryRepo),
             clock,
-            NullLogger<DashboardViewModel>.Instance);
+            NullLogger<DashboardViewModel>.Instance,
+            ExportFixtures.Create(expenseRepo, incomeRepo, converter).UseCase,
+            new FakeFileSaveDialog());
     }
 }

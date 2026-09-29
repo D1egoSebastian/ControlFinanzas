@@ -199,7 +199,7 @@ Depends on 4. Goal: the Dashboard shows "Exportar PDF"/"Exportar Excel" for the 
 real Avalonia save dialog, with labels built by the ViewModel and no double execution. Invoke the
 `.claude/skills/frontend-design` skill for the buttons and status text.
 
-- [ ] 5.1 Resx first (S-15, R-13): append to `src/…UI/Resources/Strings.resx` (en) and `Strings.es-DO.resx` the
+- [x] 5.1 Resx first (S-15, R-13): append to `src/…UI/Resources/Strings.resx` (en) and `Strings.es-DO.resx` the
   same key set: all report labels from D-7 (`ReportMonthSummaryTitle`, `ReportExpenseListTitle`,
   `ReportSummarySection`, `ReportExpensesLabel`, `ReportIncomesLabel`, `ReportNetBalanceLabel`,
   `ReportDeltaLabel`, `ReportCategoriesSection`, `ReportBudgetsSection`, `ReportCategoryColumn`,
@@ -212,18 +212,18 @@ real Avalonia save dialog, with labels built by the ViewModel and no double exec
   (`ExportPdfButton`, `ExportExcelButton`, `ExportDialogTitle`, `ExportPdfFileTypeName`,
   `ExportExcelFileTypeName`, `ExportSucceededMessage`, `ExportFailedMessage`, `ExportMonthSummaryFileName`,
   `ExportExpenseListFileName`). Neutral, professional Spanish for es-DO. (R-13)
-- [ ] 5.2 Append MANUAL accessors for every new key to `src/…UI/Resources/Strings.Designer.cs` (the Designer is
+- [x] 5.2 Append MANUAL accessors for every new key to `src/…UI/Resources/Strings.Designer.cs` (the Designer is
   hand-maintained; do not regenerate). (R-13)
-- [ ] 5.3 Write failing resx-completeness test (`tests/…Unit/UI/ExportResourcesTests.cs`): every new key exists
+- [x] 5.3 Write failing resx-completeness test (`tests/…Unit/UI/ExportResourcesTests.cs`): every new key exists
   in `Strings.resx`, `Strings.es-DO.resx` and `Strings.Designer.cs`, both resx files define the same key set,
   and no value is empty. (R-13, S-15)
-- [ ] 5.4 Write failing `tests/…Unit/UI/ReportLabelsFactoryTests.cs`: en vs es-DO titles differ; `Culture`
+- [x] 5.4 Write failing `tests/…Unit/UI/ReportLabelsFactoryTests.cs`: en vs es-DO titles differ; `Culture`
   equals the current culture; every `ReportLabels` string is non-empty in both locales. Test under both UI
   cultures, restoring the culture afterwards. (R-10, S-13)
-- [ ] 5.5 Test doubles: `tests/…Unit/TestDoubles/FakeFileSaveDialog.cs` (returns null or a target; counts
+- [x] 5.5 Test doubles: `tests/…Unit/TestDoubles/FakeFileSaveDialog.cs` (returns null or a target; counts
   calls; can block on a `TaskCompletionSource`) and `ExportFixtures` builder producing the two new Dashboard
   constructor arguments. (R-15)
-- [ ] 5.6 Write failing Dashboard tests in `tests/…Unit/UI/DashboardViewModelTests.cs`: cancel (dialog returns
+- [x] 5.6 Write failing Dashboard tests in `tests/…Unit/UI/DashboardViewModelTests.cs`: cancel (dialog returns
   null) means the writer is never called, no stream opened, empty `ExportStatusMessage`, `IsExporting`
   cleared (R-8, S-10); PDF/XLSX success reaches the writer with the matching `Format` and the captured
   `SelectedMonth` and sets the success message with the file name (R-15, S-1, S-2); use case failure sets
@@ -233,37 +233,37 @@ real Avalonia save dialog, with labels built by the ViewModel and no double exec
   `CancellationToken` cancellation shows no failure message (R-14); suggested file name has kind + `yyyy-MM`
   and the right extension (R-8); captured `ReportLabels` equal the es-DO resx strings and es-DO culture under
   es-DO and the English strings under en (R-10, S-13).
-- [ ] 5.7 Create `src/…UI/Formatting/ReportLabelsFactory.cs` (internal static `Create()` from the static
+- [x] 5.7 Create `src/…UI/Formatting/ReportLabelsFactory.cs` (internal static `Create()` from the static
   `Strings` class plus `CultureInfo.CurrentCulture`). Run 5.4 green. (R-10, D-7)
-- [ ] 5.8 Create `src/…UI/Services/AvaloniaFileSaveDialog.cs` copying the `AvaloniaClipboardService` pattern:
+- [x] 5.8 Create `src/…UI/Services/AvaloniaFileSaveDialog.cs` copying the `AvaloniaClipboardService` pattern:
   resolve `IClassicDesktopStyleApplicationLifetime.MainWindow` → `TopLevel.GetTopLevel` on every call, log a
   Warning and return `null` when there is no `TopLevel`, `SaveFilePickerAsync` with title, suggested name,
   default extension, `ShowOverwritePrompt = true` and one `FilePickerFileType` (`*.pdf`/`application/pdf` or
   `*.xlsx`/`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`), return
   `new SaveTarget(file.Name, _ => file.OpenWriteAsync(), owner: file)`. Only UI references Avalonia. No
   automated test (no `TopLevel` in tests); covered by manual check in section 8. (R-1, R-8, R-12, D-8)
-- [ ] 5.9 Modify `src/…UI/ViewModels/DashboardViewModel.cs`: append exactly two constructor parameters after
+- [x] 5.9 Modify `src/…UI/ViewModels/DashboardViewModel.cs`: append exactly two constructor parameters after
   `logger` (`ExportMonthSummaryReportUseCase`, `IFileSaveDialog`), null-checked; add `IsExporting`,
   `ExportStatusMessage`, `IsExportError`, `ExportPdfCommand`/`ExportExcelCommand`
   (`AllowConcurrentExecutions = true`, `CanExecute = !IsExporting`) with the body guard over `IsExporting`, the
   month captured before the dialog, cancel returning with no message, and `finally` clearing the flag. Run 5.6
   green. (R-8, R-14, R-15, D-11)
-- [ ] 5.10 Update the three existing fixtures to pass the two new arguments through `ExportFixtures`:
+- [x] 5.10 Update the three existing fixtures to pass the two new arguments through `ExportFixtures`:
   `DashboardViewModelTests.CreateViewModel`, `NavigationServiceTests.CreateDashboardViewModel`,
   `ShellViewModelTests.CreateDashboardViewModel`. Existing assertions unchanged. (R-15, Reconciliation #11)
-- [ ] 5.11 Modify `src/…UI/Views/DashboardView.axaml`: two `ledger-btn` buttons in the period-navigation grid
+- [x] 5.11 Modify `src/…UI/Views/DashboardView.axaml`: two `ledger-btn` buttons in the period-navigation grid
   (`ColumnDefinitions` grows by two) bound to the commands, plus a status `TextBlock` under `LoadError` bound
   to `ExportStatusMessage` with the Terracotta error style when `IsExportError`; all text via resx bindings,
   no code-behind logic; follow existing design tokens and the `frontend-design` skill. (R-13, R-15)
-- [ ] 5.12 Append the Fase 18 block to `src/…UI/Composition/Bootstrap.cs` after the Phase 17 block:
+- [x] 5.12 Append the Fase 18 block to `src/…UI/Composition/Bootstrap.cs` after the Phase 17 block:
   `services.AddReportExporters();`, `AddTransient<ExportMonthSummaryReportUseCase>()`,
   `AddSingleton<IFileSaveDialog, AvaloniaFileSaveDialog>()`. Write and pass `ExportCompositionTests` (real
   `Bootstrap`): both writers resolve as `IEnumerable<IReportWriter>`, the use case resolves, the dialog is
   `AvaloniaFileSaveDialog`, the Dashboard VM resolves. (R-1, R-11, R-15, D-10)
-- [ ] 5.13 Smoke-launch (`dotnet run --project src/ControlDeFinanzasIA.UI`): confirm startup without DI
+- [x] 5.13 (launch-only: started ~18 s, no unhandled exception, migrations + dashboard queries ran; screenshot and locale visual check not performed) Smoke-launch (`dotnet run --project src/ControlDeFinanzasIA.UI`): confirm startup without DI
   failure, the Dashboard shows both buttons and the status area in es-DO and en. Screenshot only, no simulated
   clicks. (R-15)
-- [ ] 5.14 Run all four gates. All green before opening PR S4. (R-12)
+- [x] 5.14 Run all four gates. All green before opening PR S4. (R-12)
 
 ## 6. Expenses list export (S5)
 

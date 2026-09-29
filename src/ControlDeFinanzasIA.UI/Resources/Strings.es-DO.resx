@@ -802,4 +802,148 @@ Mostrando conversiones aproximadas.
   <data name="SettingsNotificationsDigestWeekly" xml:space="preserve">
     <value>Semanal</value>
   </data>
+  <data name="ReportMonthSummaryTitle" xml:space="preserve">
+    <value>Resumen mensual</value>
+  </data>
+  <data name="ReportExpenseListTitle" xml:space="preserve">
+    <value>Lista de gastos</value>
+  </data>
+  <data name="ReportSummarySection" xml:space="preserve">
+    <value>Resumen</value>
+  </data>
+  <data name="ReportExpensesLabel" xml:space="preserve">
+    <value>Gastos</value>
+  </data>
+  <data name="ReportIncomesLabel" xml:space="preserve">
+    <value>Ingresos</value>
+  </data>
+  <data name="ReportNetBalanceLabel" xml:space="preserve">
+    <value>Balance neto</value>
+  </data>
+  <data name="ReportDeltaLabel" xml:space="preserve">
+    <value>Variación vs. mes anterior</value>
+  </data>
+  <data name="ReportCategoriesSection" xml:space="preserve">
+    <value>Gastos por categoría</value>
+  </data>
+  <data name="ReportBudgetsSection" xml:space="preserve">
+    <value>Presupuestos</value>
+  </data>
+  <data name="ReportCategoryColumn" xml:space="preserve">
+    <value>Categoría</value>
+  </data>
+  <data name="ReportAmountDopColumn" xml:space="preserve">
+    <value>Monto (DOP)</value>
+  </data>
+  <data name="ReportShareColumn" xml:space="preserve">
+    <value>Participación</value>
+  </data>
+  <data name="ReportBudgetColumn" xml:space="preserve">
+    <value>Presupuesto</value>
+  </data>
+  <data name="ReportActualColumn" xml:space="preserve">
+    <value>Real</value>
+  </data>
+  <data name="ReportPercentColumn" xml:space="preserve">
+    <value>% usado</value>
+  </data>
+  <data name="ReportStatusColumn" xml:space="preserve">
+    <value>Estado</value>
+  </data>
+  <data name="ReportDateColumn" xml:space="preserve">
+    <value>Fecha</value>
+  </data>
+  <data name="ReportDescriptionColumn" xml:space="preserve">
+    <value>Descripción</value>
+  </data>
+  <data name="ReportAmountColumn" xml:space="preserve">
+    <value>Monto</value>
+  </data>
+  <data name="ReportCurrencyColumn" xml:space="preserve">
+    <value>Moneda</value>
+  </data>
+  <data name="ReportTotalLabel" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="ReportStatusOk" xml:space="preserve">
+    <value>En orden</value>
+  </data>
+  <data name="ReportStatusNear" xml:space="preserve">
+    <value>Cerca del límite</value>
+  </data>
+  <data name="ReportStatusExceeded" xml:space="preserve">
+    <value>Excedido</value>
+  </data>
+  <data name="ReportStatusIndeterminate" xml:space="preserve">
+    <value>No disponible</value>
+  </data>
+  <data name="ReportNoData" xml:space="preserve">
+    <value>Sin datos para este período.</value>
+  </data>
+  <data name="ReportFiltersLabel" xml:space="preserve">
+    <value>Filtros</value>
+  </data>
+  <data name="ReportFilterAll" xml:space="preserve">
+    <value>Todos los registros</value>
+  </data>
+  <data name="ReportFilterPeriodFormat" xml:space="preserve">
+    <value>Período: {0} a {1}</value>
+  </data>
+  <data name="ReportFilterCategoryLabel" xml:space="preserve">
+    <value>Categoría</value>
+  </data>
+  <data name="ReportFilterTagsFormat" xml:space="preserve">
+    <value>Etiquetas: {0}</value>
+  </data>
+  <data name="ReportCountLabel" xml:space="preserve">
+    <value>Registros</value>
+  </data>
+  <data name="ReportGeneratedOnFormat" xml:space="preserve">
+    <value>Generado el {0}</value>
+  </data>
+  <data name="ReportMissingRatesNote" xml:space="preserve">
+    <value>Algunos montos no se pudieron convertir a DOP porque no había tasa de cambio disponible.</value>
+  </data>
+  <data name="ReportPageLabel" xml:space="preserve">
+    <value>Página</value>
+  </data>
+  <data name="ExportPdfButton" xml:space="preserve">
+    <value>Exportar PDF</value>
+  </data>
+  <data name="ExportExcelButton" xml:space="preserve">
+    <value>Exportar Excel</value>
+  </data>
+  <data name="ExportDialogTitle" xml:space="preserve">
+    <value>Guardar informe</value>
+  </data>
+  <data name="ExportPdfFileTypeName" xml:space="preserve">
+    <value>Documento PDF</value>
+  </data>
+  <data name="ExportExcelFileTypeName" xml:space="preserve">
+    <value>Libro de Excel</value>
+  </data>
+  <data name="ExportSucceededMessage" xml:space="preserve">
+    <value>Informe guardado: {0}</value>
+  </data>
+  <data name="ExportFailedMessage" xml:space="preserve">
+    <value>No se pudo exportar el informe.</value>
+  </data>
+  <data name="ExportDataFailedMessage" xml:space="preserve">
+    <value>No se pudieron leer los datos del informe.</value>
+  </data>
+  <data name="ExportRenderFailedMessage" xml:space="preserve">
+    <value>No se pudo generar el informe.</value>
+  </data>
+  <data name="ExportSaveFailedMessage" xml:space="preserve">
+    <value>No se pudo guardar el archivo. Verifique que no esté abierto en otro programa.</value>
+  </data>
+  <data name="ExportWriterUnavailableMessage" xml:space="preserve">
+    <value>Este formato de exportación no está disponible.</value>
+  </data>
+  <data name="ExportMonthSummaryFileName" xml:space="preserve">
+    <value>resumen-mensual-{0}</value>
+  </data>
+  <data name="ExportExpenseListFileName" xml:space="preserve">
+    <value>gastos-{0}</value>
+  </data>
 </root>

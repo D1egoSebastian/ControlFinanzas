@@ -486,7 +486,8 @@ public sealed class DashboardViewModelTests
 
         DashboardViewModel viewModel = new(
             summaryQuery, breakdownQuery, evolutionQuery, upcomingPaymentsQuery, budgetVsActualQuery,
-            insightsQuery, clock, NullLogger<DashboardViewModel>.Instance);
+            insightsQuery, clock, NullLogger<DashboardViewModel>.Instance,
+            ExportFixtures.Create().UseCase, new FakeFileSaveDialog());
 
         // Act: a stale (March) reload starts first but is controlled to finish LAST.
         TaskCompletionSource<IReadOnlyList<ExpenseAmountRow>> staleTcs = expenseRepo.EnqueueControlledCall();
@@ -767,7 +768,7 @@ public sealed class DashboardViewModelTests
         }
     }
 
-    private static DashboardViewModel CreateViewModel(
+    internal static DashboardViewModel CreateViewModel(
         FakeExpenseRepository expenseRepo,
         FakeIncomeRepository incomeRepo,
         DateOnly today,
@@ -778,9 +779,11 @@ public sealed class DashboardViewModelTests
         FakeBudgetRepository? budgetRepo = null,
         FakeCategoryRepository? categoryRepo = null,
         FakeAnomalyAlertRepository? alertRepo = null,
-        FakeLlmClientFactory? llmFactory = null)
+        FakeLlmClientFactory? llmFactory = null,
+        ExportFixtures? export = null)
     {
         converter ??= new FakeCurrencyConverter();
+        export ??= ExportFixtures.Create(expenseRepo, incomeRepo, converter);
         FakeClock clock = new()
         {
             Today = today,
@@ -813,7 +816,9 @@ public sealed class DashboardViewModelTests
             budgetVsActualQuery,
             insightsQuery,
             clock,
-            NullLogger<DashboardViewModel>.Instance);
+            NullLogger<DashboardViewModel>.Instance,
+            export.UseCase,
+            export.Dialog);
     }
 
     private static Expense CreateExpense(DateOnly date, decimal amount, Currency currency = Currency.DOP)

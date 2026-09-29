@@ -1281,4 +1281,244 @@ public class Strings
     /// Gets the localized label of the periodic summary Weekly option in Settings (F-017, R-17, D-13).
     /// </summary>
     public static string SettingsNotificationsDigestWeekly => ResourceManager.GetString("SettingsNotificationsDigestWeekly", Culture)!;
+
+    /// <summary>
+    /// Gets the localized report title of the month summary (F-018).
+    /// </summary>
+    public static string ReportMonthSummaryTitle => ResourceManager.GetString("ReportMonthSummaryTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized report title of the expense list (F-018).
+    /// </summary>
+    public static string ReportExpenseListTitle => ResourceManager.GetString("ReportExpenseListTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized summary section heading (F-018).
+    /// </summary>
+    public static string ReportSummarySection => ResourceManager.GetString("ReportSummarySection", Culture)!;
+
+    /// <summary>
+    /// Gets the localized expenses row label (F-018).
+    /// </summary>
+    public static string ReportExpensesLabel => ResourceManager.GetString("ReportExpensesLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized incomes row label (F-018).
+    /// </summary>
+    public static string ReportIncomesLabel => ResourceManager.GetString("ReportIncomesLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized net balance row label (F-018).
+    /// </summary>
+    public static string ReportNetBalanceLabel => ResourceManager.GetString("ReportNetBalanceLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized month-over-month delta label (F-018).
+    /// </summary>
+    public static string ReportDeltaLabel => ResourceManager.GetString("ReportDeltaLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized categories section heading (F-018).
+    /// </summary>
+    public static string ReportCategoriesSection => ResourceManager.GetString("ReportCategoriesSection", Culture)!;
+
+    /// <summary>
+    /// Gets the localized budgets section heading (F-018).
+    /// </summary>
+    public static string ReportBudgetsSection => ResourceManager.GetString("ReportBudgetsSection", Culture)!;
+
+    /// <summary>
+    /// Gets the localized category column header (F-018).
+    /// </summary>
+    public static string ReportCategoryColumn => ResourceManager.GetString("ReportCategoryColumn", Culture)!;
+
+    /// <summary>
+    /// Gets the localized DOP amount column header (F-018).
+    /// </summary>
+    public static string ReportAmountDopColumn => ResourceManager.GetString("ReportAmountDopColumn", Culture)!;
+
+    /// <summary>
+    /// Gets the localized share column header (F-018).
+    /// </summary>
+    public static string ReportShareColumn => ResourceManager.GetString("ReportShareColumn", Culture)!;
+
+    /// <summary>
+    /// Gets the localized budget column header (F-018).
+    /// </summary>
+    public static string ReportBudgetColumn => ResourceManager.GetString("ReportBudgetColumn", Culture)!;
+
+    /// <summary>
+    /// Gets the localized actual column header (F-018).
+    /// </summary>
+    public static string ReportActualColumn => ResourceManager.GetString("ReportActualColumn", Culture)!;
+
+    /// <summary>
+    /// Gets the localized percent used column header (F-018).
+    /// </summary>
+    public static string ReportPercentColumn => ResourceManager.GetString("ReportPercentColumn", Culture)!;
+
+    /// <summary>
+    /// Gets the localized status column header (F-018).
+    /// </summary>
+    public static string ReportStatusColumn => ResourceManager.GetString("ReportStatusColumn", Culture)!;
+
+    /// <summary>
+    /// Gets the localized date column header (F-018).
+    /// </summary>
+    public static string ReportDateColumn => ResourceManager.GetString("ReportDateColumn", Culture)!;
+
+    /// <summary>
+    /// Gets the localized description column header (F-018).
+    /// </summary>
+    public static string ReportDescriptionColumn => ResourceManager.GetString("ReportDescriptionColumn", Culture)!;
+
+    /// <summary>
+    /// Gets the localized amount column header (F-018).
+    /// </summary>
+    public static string ReportAmountColumn => ResourceManager.GetString("ReportAmountColumn", Culture)!;
+
+    /// <summary>
+    /// Gets the localized currency column header (F-018).
+    /// </summary>
+    public static string ReportCurrencyColumn => ResourceManager.GetString("ReportCurrencyColumn", Culture)!;
+
+    /// <summary>
+    /// Gets the localized total row label (F-018).
+    /// </summary>
+    public static string ReportTotalLabel => ResourceManager.GetString("ReportTotalLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized budget status OK label (F-018).
+    /// </summary>
+    public static string ReportStatusOk => ResourceManager.GetString("ReportStatusOk", Culture)!;
+
+    /// <summary>
+    /// Gets the localized budget status near-limit label (F-018).
+    /// </summary>
+    public static string ReportStatusNear => ResourceManager.GetString("ReportStatusNear", Culture)!;
+
+    /// <summary>
+    /// Gets the localized budget status exceeded label (F-018).
+    /// </summary>
+    public static string ReportStatusExceeded => ResourceManager.GetString("ReportStatusExceeded", Culture)!;
+
+    /// <summary>
+    /// Gets the localized budget status indeterminate label (F-018).
+    /// </summary>
+    public static string ReportStatusIndeterminate => ResourceManager.GetString("ReportStatusIndeterminate", Culture)!;
+
+    /// <summary>
+    /// Gets the localized empty section text (F-018).
+    /// </summary>
+    public static string ReportNoData => ResourceManager.GetString("ReportNoData", Culture)!;
+
+    /// <summary>
+    /// Gets the localized filters section heading (F-018).
+    /// </summary>
+    public static string ReportFiltersLabel => ResourceManager.GetString("ReportFiltersLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized no-filter text (F-018).
+    /// </summary>
+    public static string ReportFilterAll => ResourceManager.GetString("ReportFilterAll", Culture)!;
+
+    /// <summary>
+    /// Gets the localized filter period format (F-018).
+    /// </summary>
+    public static string ReportFilterPeriodFormat => ResourceManager.GetString("ReportFilterPeriodFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized filter category label (F-018).
+    /// </summary>
+    public static string ReportFilterCategoryLabel => ResourceManager.GetString("ReportFilterCategoryLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized filter tags format (F-018).
+    /// </summary>
+    public static string ReportFilterTagsFormat => ResourceManager.GetString("ReportFilterTagsFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized record count label (F-018).
+    /// </summary>
+    public static string ReportCountLabel => ResourceManager.GetString("ReportCountLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized generated-on footer format (F-018).
+    /// </summary>
+    public static string ReportGeneratedOnFormat => ResourceManager.GetString("ReportGeneratedOnFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized missing rates note (F-018).
+    /// </summary>
+    public static string ReportMissingRatesNote => ResourceManager.GetString("ReportMissingRatesNote", Culture)!;
+
+    /// <summary>
+    /// Gets the localized page footer prefix (F-018).
+    /// </summary>
+    public static string ReportPageLabel => ResourceManager.GetString("ReportPageLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized Dashboard export PDF button (F-018).
+    /// </summary>
+    public static string ExportPdfButton => ResourceManager.GetString("ExportPdfButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized Dashboard export Excel button (F-018).
+    /// </summary>
+    public static string ExportExcelButton => ResourceManager.GetString("ExportExcelButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized save dialog title (F-018).
+    /// </summary>
+    public static string ExportDialogTitle => ResourceManager.GetString("ExportDialogTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized save dialog PDF file type name (F-018).
+    /// </summary>
+    public static string ExportPdfFileTypeName => ResourceManager.GetString("ExportPdfFileTypeName", Culture)!;
+
+    /// <summary>
+    /// Gets the localized save dialog Excel file type name (F-018).
+    /// </summary>
+    public static string ExportExcelFileTypeName => ResourceManager.GetString("ExportExcelFileTypeName", Culture)!;
+
+    /// <summary>
+    /// Gets the localized success status message ({0} = file name) (F-018).
+    /// </summary>
+    public static string ExportSucceededMessage => ResourceManager.GetString("ExportSucceededMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized generic export failure message (F-018).
+    /// </summary>
+    public static string ExportFailedMessage => ResourceManager.GetString("ExportFailedMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized data failure message (F-018).
+    /// </summary>
+    public static string ExportDataFailedMessage => ResourceManager.GetString("ExportDataFailedMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized render failure message (F-018).
+    /// </summary>
+    public static string ExportRenderFailedMessage => ResourceManager.GetString("ExportRenderFailedMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized save failure message (F-018).
+    /// </summary>
+    public static string ExportSaveFailedMessage => ResourceManager.GetString("ExportSaveFailedMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized writer unavailable message (F-018).
+    /// </summary>
+    public static string ExportWriterUnavailableMessage => ResourceManager.GetString("ExportWriterUnavailableMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized suggested file name ({0} = yyyy-MM) (F-018).
+    /// </summary>
+    public static string ExportMonthSummaryFileName => ResourceManager.GetString("ExportMonthSummaryFileName", Culture)!;
+
+    /// <summary>
+    /// Gets the localized suggested expense-list file name ({0} = yyyy-MM-dd) (F-018).
+    /// </summary>
+    public static string ExportExpenseListFileName => ResourceManager.GetString("ExportExpenseListFileName", Culture)!;
 }

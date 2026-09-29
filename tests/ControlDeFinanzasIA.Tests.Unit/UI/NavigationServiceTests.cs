@@ -429,7 +429,9 @@ public sealed class NavigationServiceTests
             new GetBudgetVsActualQuery(budgetRepo, expenseRepo, categoryRepo, converter),
             DashboardInsightsQueryBuilder.Build(expenseRepo, incomeRepo, converter, clock, budgetRepo, categoryRepo),
             clock,
-            NullLogger<DashboardViewModel>.Instance);
+            NullLogger<DashboardViewModel>.Instance,
+            ExportFixtures.Create(expenseRepo, incomeRepo, converter).UseCase,
+            new FakeFileSaveDialog());
     }
 
     private sealed class FakeServiceProvider : IServiceProvider

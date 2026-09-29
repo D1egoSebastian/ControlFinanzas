@@ -14,6 +14,8 @@ using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthEndForecast;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
+using ControlDeFinanzasIA.Application.UseCases.Exports.Common;
+using ControlDeFinanzasIA.Application.UseCases.Exports.ExportMonthSummaryReport;
 using ControlDeFinanzasIA.Domain.Alerts;
 using ControlDeFinanzasIA.Domain.Budgets;
 using ControlDeFinanzasIA.Domain.Forecasting;
@@ -41,6 +43,8 @@ public sealed partial class DashboardViewModel : ViewModelBase
     private readonly GetDashboardInsightsQuery _getDashboardInsightsQuery;
     private readonly IClock _clock;
     private readonly ILogger<DashboardViewModel> _logger;
+    private readonly ExportMonthSummaryReportUseCase _exportMonthSummary;
+    private readonly IFileSaveDialog _fileSaveDialog;
 
     private int _loadGeneration;
     private CancellationTokenSource? _narrationCts;
@@ -62,7 +66,9 @@ public sealed partial class DashboardViewModel : ViewModelBase
         GetBudgetVsActualQuery getBudgetVsActualQuery,
         GetDashboardInsightsQuery getDashboardInsightsQuery,
         IClock clock,
-        ILogger<DashboardViewModel> logger)
+        ILogger<DashboardViewModel> logger,
+        ExportMonthSummaryReportUseCase exportMonthSummary,
+        IFileSaveDialog fileSaveDialog)
     {
         ArgumentNullException.ThrowIfNull(getMonthSummaryQuery);
         ArgumentNullException.ThrowIfNull(getCategoryBreakdownQuery);
@@ -72,7 +78,11 @@ public sealed partial class DashboardViewModel : ViewModelBase
         ArgumentNullException.ThrowIfNull(getDashboardInsightsQuery);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(exportMonthSummary);
+        ArgumentNullException.ThrowIfNull(fileSaveDialog);
 
+        _exportMonthSummary = exportMonthSummary;
+        _fileSaveDialog = fileSaveDialog;
         _getMonthSummaryQuery = getMonthSummaryQuery;
         _getCategoryBreakdownQuery = getCategoryBreakdownQuery;
         _getMonthlyEvolutionQuery = getMonthlyEvolutionQuery;
@@ -231,6 +241,112 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// <summary>Gets or sets the narrative-only fallback caption shown under the anomalies list when batch narration did not run/succeed and the list is non-empty (R-6).</summary>
     [ObservableProperty]
     private string _anomalyNarrationStatusText = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether a report export is in flight. Shared by both export
+    /// commands: it is the single source of truth for the double-invocation guard (F-018, D-11).
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExportPdfCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ExportExcelCommand))]
+    private bool _isExporting;
+
+    /// <summary>Gets or sets the outcome text of the last export (file name on success, error text on failure); empty after a cancel.</summary>
+    [ObservableProperty]
+    private string _exportStatusMessage = string.Empty;
+
+    /// <summary>Gets or sets a value indicating whether <see cref="ExportStatusMessage"/> describes a failure.</summary>
+    [ObservableProperty]
+    private bool _isExportError;
+
+    /// <summary>Exports the displayed month as a PDF report.</summary>
+    [RelayCommand(CanExecute = nameof(CanExport), AllowConcurrentExecutions = true)]
+    private Task ExportPdfAsync() => ExportAsync(ReportFormat.Pdf);
+
+    /// <summary>Exports the displayed month as an Excel workbook.</summary>
+    [RelayCommand(CanExecute = nameof(CanExport), AllowConcurrentExecutions = true)]
+    private Task ExportExcelAsync() => ExportAsync(ReportFormat.Xlsx);
+
+    private bool CanExport() => !IsExporting;
+
+    /// <summary>
+    /// Maps a use-case failure code to its localized message; unknown or missing codes fall back to
+    /// the generic export failure text.
+    /// </summary>
+    internal static string ExportErrorMessage(string? code) => code switch
+    {
+        ReportErrorCodes.RenderFailed => Strings.ExportRenderFailedMessage,
+        ReportErrorCodes.SaveFailed => Strings.ExportSaveFailedMessage,
+        ReportErrorCodes.DataFailed => Strings.ExportDataFailedMessage,
+        ReportErrorCodes.WriterUnavailable => Strings.ExportWriterUnavailableMessage,
+        _ => Strings.ExportFailedMessage,
+    };
+
+    private async Task ExportAsync(ReportFormat format)
+    {
+        // The real guard: ExecuteAsync does not consult CanExecute, and the two commands have
+        // independent single-flight state, so the shared flag is checked before the first await.
+        if (IsExporting)
+        {
+            return;
+        }
+
+        IsExporting = true;
+        ExportStatusMessage = string.Empty;
+        IsExportError = false;
+
+        try
+        {
+            // Captured up front: navigating months while the dialog is open must not retarget the export.
+            DateOnly month = SelectedMonth;
+
+            using SaveTarget? target = await _fileSaveDialog.PickAsync(SuggestedFileName(month, format), format);
+            if (target is null)
+            {
+                // Cancelled: nothing is written and no message is shown.
+                return;
+            }
+
+            Result result = await _exportMonthSummary.ExecuteAsync(
+                new ExportMonthSummaryReportCommand(month, format, ReportLabelsFactory.Create()),
+                target);
+
+            if (result.IsSuccess)
+            {
+                ExportStatusMessage = string.Format(CultureInfo.CurrentCulture, Strings.ExportSucceededMessage, target.DisplayName);
+            }
+            else
+            {
+                IsExportError = true;
+                ExportStatusMessage = ExportErrorMessage(result.Error?.Code);
+                _logger.LogWarning(
+                    "Month-summary export failed for {Month}: {ErrorCode} {ErrorMessage}",
+                    month,
+                    result.Error?.Code,
+                    result.Error?.Message);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Not a failure: no message.
+        }
+        catch (Exception ex)
+        {
+            IsExportError = true;
+            ExportStatusMessage = Strings.ExportFailedMessage;
+            _logger.LogError(ex, "Unable to export the month summary for {Month}.", SelectedMonth);
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
+    private static string SuggestedFileName(DateOnly month, ReportFormat format)
+    {
+        string extension = format == ReportFormat.Pdf ? ".pdf" : ".xlsx";
+        return string.Format(CultureInfo.CurrentCulture, Strings.ExportMonthSummaryFileName, month.ToString("yyyy-MM", CultureInfo.InvariantCulture)) + extension;
+    }
 
     /// <summary>Navigates to the month immediately before <see cref="SelectedMonth"/> and reloads.</summary>
     [RelayCommand]
