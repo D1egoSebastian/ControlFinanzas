@@ -65,8 +65,10 @@ public sealed partial class SqliteBackupService
     /// Shared validation core. Stages the archive and extracts <c>data.db</c> to <c>restore.db</c> inside
     /// <paramref name="workDirectory"/> (fixed names, never entry names), then verifies everything.
     /// Throws <see cref="BackupRejectedException"/> for any rejection; the caller owns the work directory.
+    /// <paramref name="beforeExtract"/> receives the declared database size once the manifest is accepted and
+    /// before anything is extracted (restore uses it for the free-space check).
     /// </summary>
-    private async Task<Validated> ValidateAsync(string workDirectory, Func<CancellationToken, Task<Stream>> openRead, CancellationToken ct)
+    private async Task<Validated> ValidateAsync(string workDirectory, Func<CancellationToken, Task<Stream>> openRead, CancellationToken ct, Action<long>? beforeExtract = null)
     {
         ct.ThrowIfCancellationRequested();
         _fs.CreateDirectory(workDirectory);
@@ -81,10 +83,10 @@ public sealed partial class SqliteBackupService
             await BackupZip.CopyCappedAsync(source, staged, stagingCap, ct).ConfigureAwait(false);
         }
 
-        return await Task.Run(() => ValidateStaged(incoming, extracted, ct), ct).ConfigureAwait(false);
+        return await Task.Run(() => ValidateStaged(incoming, extracted, beforeExtract, ct), ct).ConfigureAwait(false);
     }
 
-    private Validated ValidateStaged(string incoming, string extracted, CancellationToken ct)
+    private Validated ValidateStaged(string incoming, string extracted, Action<long>? beforeExtract, CancellationToken ct)
     {
         string appVersion = _options.AppVersion;
         string appSchema = _catalog.KnownMigrationIds.Count > 0 ? _catalog.KnownMigrationIds[^1] : "unknown";
@@ -112,6 +114,7 @@ public sealed partial class SqliteBackupService
                 }
 
                 manifest = BackupZip.ParseManifest(ReadManifest(manifestEntry, ct), appSchema, appVersion);
+                beforeExtract?.Invoke(databaseEntry.Length);
                 actualHash = ExtractDatabase(databaseEntry, extracted, ct);
             }
         }

@@ -9,9 +9,9 @@ using Microsoft.Extensions.Logging;
 namespace ControlDeFinanzasIA.Infrastructure.Backup;
 
 /// <summary>
-/// SQLite backup engine (F-019). Create and inspect live in this partial class; restore is
-/// added by a later slice, which is also when it starts implementing
-/// <see cref="IBackupService"/> (no half-implemented interface, no placeholder members).
+/// SQLite backup engine (F-019). Create, inspect and restore live in this partial class. It will declare
+/// <see cref="IBackupService"/> once <c>CompletePendingRestore</c> exists (no half-implemented interface,
+/// no placeholder members).
 /// </summary>
 /// <remarks>
 /// Every connection is non-pooled and independent of <c>AppDbContext</c>, so disposing it really
@@ -71,7 +71,7 @@ public sealed partial class SqliteBackupService
         string workDirectory = Path.Combine(_paths.DataDirectory, "backups", ".work", Guid.NewGuid().ToString("N"));
         try
         {
-            return await CreateCoreAsync(workDirectory, openDestination, ct).ConfigureAwait(false);
+            return await CreateCoreAsync(workDirectory, redactApiKey: true, openDestination, ct).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -154,7 +154,7 @@ public sealed partial class SqliteBackupService
             && !reader.Read();
     }
 
-    private async Task<Result> CreateCoreAsync(string workDirectory, Func<CancellationToken, Task<Stream>> openDestination, CancellationToken ct)
+    private async Task<Result> CreateCoreAsync(string workDirectory, bool redactApiKey, Func<CancellationToken, Task<Stream>> openDestination, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         string livePath = _paths.DatabaseFilePath;
@@ -170,7 +170,7 @@ public sealed partial class SqliteBackupService
         await SnapshotAsync(livePath, exportDatabase, ct).ConfigureAwait(false);
         ct.ThrowIfCancellationRequested();
 
-        Prepared prepared = await Task.Run(() => PrepareExport(exportDatabase), ct).ConfigureAwait(false);
+        Prepared prepared = await Task.Run(() => PrepareExport(exportDatabase, redactApiKey), ct).ConfigureAwait(false);
         if (prepared.Failure is not null)
         {
             return prepared.Failure;
@@ -183,7 +183,7 @@ public sealed partial class SqliteBackupService
             exportedAt,
             _options.AppVersion,
             prepared.Sha256!,
-            ApiKeyIncluded: false);
+            ApiKeyIncluded: !redactApiKey);
 
         await Task.Run(
             () =>
@@ -249,7 +249,7 @@ public sealed partial class SqliteBackupService
     /// deleted cell, <c>VACUUM</c> rebuilds the file so no free page keeps old bytes), normalizes the
     /// journal mode, verifies integrity before and after, and hashes the result.
     /// </summary>
-    private Prepared PrepareExport(string exportDatabase)
+    private Prepared PrepareExport(string exportDatabase, bool redactApiKey)
     {
         string? schemaVersion;
         using (SqliteConnection connection = OpenConnection(exportDatabase, SqliteOpenMode.ReadWrite))
@@ -261,7 +261,7 @@ public sealed partial class SqliteBackupService
             }
 
             Execute(connection, "PRAGMA journal_mode = DELETE;");
-            if (Scalar(connection, "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'Settings';") != "0")
+            if (redactApiKey && Scalar(connection, "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'Settings';") != "0")
             {
                 Execute(connection, "PRAGMA secure_delete = ON;");
                 Execute(connection, "DELETE FROM Settings WHERE Key = $key;", ("$key", SettingKeys.AiApiKey));

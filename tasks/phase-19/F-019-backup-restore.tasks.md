@@ -262,11 +262,11 @@ roundtrip already works end to end. Hardening of the swap (journal, retry, repai
 then a swap failure returns `IoError` with the live file untouched. Seam: safety backup + validation reuse vs swap +
 rollback.
 
-- [ ] 4a.1 Create `tests/…Integration/Backup/FaultyBackupFileSystem.cs`: a decorator over `PhysicalBackupFileSystem`
+- [x] 4a.1 Create `tests/…Integration/Backup/FaultyBackupFileSystem.cs`: a decorator over `PhysicalBackupFileSystem`
   that throws a configured exception on the n-th call of a named operation (`Create`, `Replace`, `Move`, `Delete`,
   `GetAvailableFreeSpace` override to a value), records the ordered call log, and optionally runs a side effect
   before throwing (used in S4b). (R-11, R-13)
-- [ ] 4a.2 Write failing `tests/…Integration/Backup/SqliteBackupServiceRestoreTests.cs` against the REAL service
+- [x] 4a.2 Write failing `tests/…Integration/Backup/SqliteBackupServiceRestoreTests.cs` against the REAL service
   (all assert live SHA-256 identity on failure paths, and `backups\.work\` empty):
   (a) **roundtrip**: export A, mutate the live DB, restore A: every table equals A, `Settings` equals A plus the
   local `ai.apiKey` (S-1, R-16, Reconciliation #12); (b) restore re-runs full validation and does not trust a prior
@@ -291,7 +291,7 @@ rollback.
   a single `Replace` fault (always) gives `IoError`, live identical, temp deleted, safety ZIP kept (R-13 baseline,
   extended in S4b); (l) after a successful swap `data.db.pre-restore.bak` exists and equals the original bytes
   (R-14). (R-8, R-10..R-12, R-15, R-16, S-1, S-17..S-19, S-23, S-24, S-33)
-- [ ] 4a.3 Implement in `src/…Infrastructure/Backup/SqliteBackupService.cs` (partial): `RestoreAsync` runs the
+- [x] 4a.3 Implement in `src/…Infrastructure/Backup/SqliteBackupService.cs` (partial): `RestoreAsync` runs the
   shared validation core (S3, fresh work dir), then the free-space check before extraction (`IoError` +
   `ReasonInsufficientSpace`), then R1 (key carry-over into `restore.db` via `INSERT ... ON CONFLICT(Key) DO
   UPDATE`, `PRAGMA journal_mode=DELETE`, assert no `-journal/-wal/-shm`, hash to `expectedHash`), then R2
@@ -302,13 +302,32 @@ rollback.
   `finally`. Returns `RestoreOutcome`. Cancellation honored until R2 finishes. Run 4a.2 green. Every branch listed
   above maps to a test name in 4a.2; no branch may be left without one. (R-8, R-10..R-12, R-14..R-16, DD-6,
   Reconciliation #4, #7, #9, #11)
-- [ ] 4a.4 Refactor the DD-4 create pipeline into a private method taking `redactApiKey` so user export (S2 tests
+- [x] 4a.4 Refactor the DD-4 create pipeline into a private method taking `redactApiKey` so user export (S2 tests
   2.3 unchanged and still green) and safety backup share one implementation (R-12: "same creation pipeline").
   Re-run 2.3 and 4a.2. (R-12, DD-6)
-- [ ] 4a.5 Run all four gates plus the no-stubs grep over the slice's files. Additionally grep that the live path is
+- [x] 4a.5 Run all four gates plus the no-stubs grep over the slice's files. Additionally grep that the live path is
   written by exactly one statement: `rg -n "Replace\(" src/ControlDeFinanzasIA.Infrastructure/Backup` shows the
   swap call in `SqliteBackupService` (and the `PhysicalBackupFileSystem` wrapper) only. All green before opening
   PR S4a. (R-10, R-13)
+
+**S4a apply notes (findings that bind S4b):**
+- WAL handling (the live DB is in WAL mode): `Swap` calls `SqliteConnection.ClearAllPools()`, resolves any hot
+  `-journal`, and if `-wal`/`-shm` exist runs `PRAGMA wal_checkpoint(TRUNCATE)` on a non-pooled writer connection
+  (busy result aborts), then refuses the swap if a non-empty `-wal` remains and requires the sidecars to be deletable.
+  After the swap `VerifyInstalled` deletes any `-wal`/`-shm`/`-journal` BEFORE opening the new file; a sidecar that
+  cannot be deleted triggers the rollback. The checkpoint changes live bytes (never its rows) only when pending
+  frames exist; the original is then retained in `data.db.pre-restore.bak` with those frames folded in.
+- The hot-journal gate had to move BEFORE the safety backup (a read-only snapshot cannot recover a hot journal), and
+  runs again inside the swap preparation. It is a single attempt; S4b adds the retry schedule around it.
+- The minimal post-swap verification (hash + `quick_check`) and a single-attempt rollback via
+  `Replace(.bak, data.db, data.db.rollback-<utc>)` were built in S4a (not left as a hole). S4b still owns the retry
+  loop, the fault-injection suite for them, the Critical-log assertion and `CompletePendingRestore`. The
+  invariant repair (`data.db` missing and `.bak` present -> move back) is already in the single-attempt path.
+- `SqliteConnection.ClearAllPools()` is process-wide: tests that arm a pooled connection must tolerate a foreign
+  fixture clearing it (see the retry in the pooled-WAL test).
+- The class does not yet declare `: IBackupService` (`CompletePendingRestore` is S4b); `AddBackup` is unchanged.
+- Retention names use an explicit pattern (`pre-restore-yyyyMMdd-HHmmss[-N].zip`) and a (timestamp, N) order so a
+  collision suffix sorts as newer; the next suffix is max+1, never a number freed by retention.
 
 ## 4b. Restore: hardened swap, rollback and `.bak` lifecycle (S4b)
 

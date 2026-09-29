@@ -28,4 +28,7 @@ public sealed record BackupOptions(string AppVersion)
 
     /// <summary>Asynchronous wait used between retries; tests substitute a no-op.</summary>
     public Func<TimeSpan, CancellationToken, Task> Delay { get; init; } = Task.Delay;
+
+    /// <summary>How many <c>pre-restore-*.zip</c> safety backups are kept after a restore (the newest ones).</summary>
+    public int SafetyBackupsToKeep { get; init; } = 3;
 }
