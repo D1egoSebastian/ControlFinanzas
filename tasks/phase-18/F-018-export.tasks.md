@@ -49,26 +49,26 @@ documented follow-up, not an acceptance criterion; Reconciliation #12, R-16).
 Depends on nothing (Phases 4, 5, 8, 10, 17 archived). Goal: library-free ports and value types live in
 Application, with the paging helper and test doubles ready for the use case in S1b.
 
-- [ ] 1.1 Write failing `tests/…Unit/Application/Exports/ReportPagingTests.cs`: page 1 fixes the expected
+- [x] 1.1 Write failing `tests/…Unit/Application/Exports/ReportPagingTests.cs`: page 1 fixes the expected
   total; the loop continues while collected < total; 450 rows read as 200/200/50; an empty page breaks the loop
   (rows deleted mid-export); a hard cap of `ceil(total/200)` pages; zero rows yields an empty list. (R-7, S-9,
   D-5)
-- [ ] 1.2 Write failing `tests/…Unit/Application/Exports/SaveTargetTests.cs`: `OpenWriteAsync` delegates to the
+- [x] 1.2 Write failing `tests/…Unit/Application/Exports/SaveTargetTests.cs`: `OpenWriteAsync` delegates to the
   supplied function; `Dispose` disposes the owner exactly once; `OpenWriteAsync` after `Dispose` throws
   `ObjectDisposedException`. (R-1, R-8, D-1)
-- [ ] 1.3 Create `src/…Application/Abstractions/{ReportFormat,IReportWriter,IFileSaveDialog,SaveTarget,
+- [x] 1.3 Create `src/…Application/Abstractions/{ReportFormat,IReportWriter,IFileSaveDialog,SaveTarget,
   ReportLabels}.cs` exactly as in D-1: `ReportLabels` is a `sealed record` of `required init` strings plus a
   `CultureInfo Culture` (all keys from D-7); no QuestPDF, ClosedXML or Avalonia type. Run 1.2 green.
   (R-1, R-10, R-12)
-- [ ] 1.4 Create `src/…Application/DTOs/Reports/{ReportTransactionKind,ReportTransactionLine,MonthSummaryReport,
+- [x] 1.4 Create `src/…Application/DTOs/Reports/{ReportTransactionKind,ReportTransactionLine,MonthSummaryReport,
   ExportReportResult}.cs` per D-2, reusing `MonthSummaryResult`, `CategorySlice` and `BudgetVsActualResult`
   as-is. (R-2, R-3, R-4, Reconciliation #1)
-- [ ] 1.5 Create `src/…Application/UseCases/Exports/Common/ReportPaging.cs` (internal static `ReadAllAsync`,
+- [x] 1.5 Create `src/…Application/UseCases/Exports/Common/ReportPaging.cs` (internal static `ReadAllAsync`,
   page size 200). Run 1.1 green. (R-7, D-5)
-- [ ] 1.6 Create test doubles `tests/…Unit/TestDoubles/{FakeReportWriter,SaveTargets}.cs`:
+- [x] 1.6 Create test doubles `tests/…Unit/TestDoubles/{FakeReportWriter,SaveTargets}.cs`:
   `FakeReportWriter` captures DTO, labels and bytes and supports `FailWith`/`ThrowWith`;
   `SaveTargets.Recording()` counts opens and keeps written bytes. (R-9, R-10)
-- [ ] 1.7 Run all four gates: `dotnet build -c Release`, `dotnet test -c Release --no-build`,
+- [x] 1.7 Run all four gates: `dotnet build -c Release`, `dotnet test -c Release --no-build`,
   `dotnet format style --verify-no-changes`, NetArchTest filter (R-1..R-5; confirm Application has no
   QuestPDF/ClosedXML/Avalonia reference). All green before opening PR S1a. (R-12)
 

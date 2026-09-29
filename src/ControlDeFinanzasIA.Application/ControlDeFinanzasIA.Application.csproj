@@ -8,4 +8,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="ControlDeFinanzasIA.Tests.Unit" />
+  </ItemGroup>
+
 </Project>
