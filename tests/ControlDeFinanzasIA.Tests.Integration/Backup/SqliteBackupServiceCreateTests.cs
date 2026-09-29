@@ -416,6 +416,7 @@ public sealed class SqliteBackupServiceCreateTests : IDisposable
     private SqliteBackupService NewService(BackupOptions? options = null) => new(
         _db.Paths,
         new TestClock(_now),
+        new EfMigrationCatalog(),
         new PhysicalBackupFileSystem(),
         options ?? new BackupOptions("9.9.9-test") { Delay = (_, _) => Task.CompletedTask },
         NullLogger<SqliteBackupService>.Instance);

@@ -1,3 +1,4 @@
+using ControlDeFinanzasIA.Application.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -22,6 +23,7 @@ public static class BackupServiceCollectionExtensions
 
         services.TryAddSingleton<IBackupFileSystem, PhysicalBackupFileSystem>();
         services.TryAddSingleton(new BackupOptions(appVersion));
+        services.TryAddSingleton<IMigrationCatalog, EfMigrationCatalog>();
         services.TryAddSingleton<SqliteBackupService>();
 
         return services;

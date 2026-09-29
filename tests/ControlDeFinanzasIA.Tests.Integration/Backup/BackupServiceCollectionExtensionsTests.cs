@@ -13,6 +13,8 @@ public sealed class BackupServiceCollectionExtensionsTests
 
         Assert.IsType<PhysicalBackupFileSystem>(provider.GetRequiredService<IBackupFileSystem>());
         Assert.Equal("3.2.1-test", provider.GetRequiredService<BackupOptions>().AppVersion);
+        Assert.IsType<EfMigrationCatalog>(provider.GetRequiredService<IMigrationCatalog>());
+        Assert.Same(provider.GetRequiredService<IMigrationCatalog>(), provider.GetRequiredService<IMigrationCatalog>());
         SqliteBackupService service = provider.GetRequiredService<SqliteBackupService>();
         Assert.Same(service, provider.GetRequiredService<SqliteBackupService>());
         Assert.Same(provider.GetRequiredService<IBackupFileSystem>(), provider.GetRequiredService<IBackupFileSystem>());

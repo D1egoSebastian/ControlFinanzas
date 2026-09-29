@@ -9,7 +9,7 @@ namespace ControlDeFinanzasIA.Infrastructure.Backup;
 /// Reads and writes the backup ZIP layout (F-019, R-2): exactly two entries, <c>manifest.json</c> and
 /// <c>data.db</c>, with deterministic compression. Exercised through <see cref="SqliteBackupService"/>.
 /// </summary>
-internal static class BackupZip
+internal static partial class BackupZip
 {
     /// <summary>Name of the manifest entry.</summary>
     internal const string ManifestEntryName = "manifest.json";

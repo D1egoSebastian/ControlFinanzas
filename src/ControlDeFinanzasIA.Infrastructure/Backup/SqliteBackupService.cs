@@ -9,8 +9,8 @@ using Microsoft.Extensions.Logging;
 namespace ControlDeFinanzasIA.Infrastructure.Backup;
 
 /// <summary>
-/// SQLite backup engine (F-019). This slice provides the create pipeline; inspect and restore are
-/// added to this partial class by later slices, which is also when it starts implementing
+/// SQLite backup engine (F-019). Create and inspect live in this partial class; restore is
+/// added by a later slice, which is also when it starts implementing
 /// <see cref="IBackupService"/> (no half-implemented interface, no placeholder members).
 /// </summary>
 /// <remarks>
@@ -27,6 +27,7 @@ public sealed partial class SqliteBackupService
 
     private readonly IPathResolver _paths;
     private readonly IClock _clock;
+    private readonly IMigrationCatalog _catalog;
     private readonly IBackupFileSystem _fs;
     private readonly BackupOptions _options;
     private readonly ILogger<SqliteBackupService> _logger;
@@ -36,17 +37,20 @@ public sealed partial class SqliteBackupService
     public SqliteBackupService(
         IPathResolver paths,
         IClock clock,
+        IMigrationCatalog catalog,
         IBackupFileSystem fs,
         BackupOptions options,
         ILogger<SqliteBackupService> logger)
     {
         ArgumentNullException.ThrowIfNull(paths);
         ArgumentNullException.ThrowIfNull(clock);
+        ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(fs);
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(logger);
         _paths = paths;
         _clock = clock;
+        _catalog = catalog;
         _fs = fs;
         _options = options;
         _logger = logger;

@@ -203,16 +203,16 @@ future-schema backup without any write outside its own work directory, and the l
 every rejection. Size note: this is the largest slice; if it exceeds ~450 lines split at the seam "structure +
 manifest + caps (steps 1-3)" vs "extract + hash + integrity + schema compare (steps 5-8)".
 
-- [ ] 3.1 Write failing `tests/…Integration/Backup/EfMigrationCatalogTests.cs`: `KnownMigrationIds` equals the set
+- [x] 3.1 Write failing `tests/…Integration/Backup/EfMigrationCatalogTests.cs`: `KnownMigrationIds` equals the set
   of ids of the files in `src/…Infrastructure/Persistence/Migrations/` (discovered by reflection over
   `Migration` types with `MigrationAttribute`), is ordinal-sorted, contains `…_AddNotifications` and
   `…_AddSettings`; constructing the catalog opens no connection (no file created for `Data Source=:memory:`).
   (R-9, D-15, DD-3)
-- [ ] 3.2 Create `src/…Infrastructure/Backup/EfMigrationCatalog.cs` (Singleton; builds once from
+- [x] 3.2 Create `src/…Infrastructure/Backup/EfMigrationCatalog.cs` (Singleton; builds once from
   `new AppDbContext(options).Database.GetMigrations()`, disposes the context, caches). Run 3.1 green. (R-9, R-24)
-- [ ] 3.3 Add a `BackupZipBuilder` test helper in `tests/…Integration/Backup/` that produces crafted ZIPs from
+- [x] 3.3 Add a `BackupZipBuilder` test helper in `tests/…Integration/Backup/` that produces crafted ZIPs from
   arbitrary entry names, bytes and manifests (used for every malformed case below). (R-8)
-- [ ] 3.4 Write failing `tests/…Integration/Backup/SqliteBackupServiceInspectTests.cs` against the REAL service.
+- [x] 3.4 Write failing `tests/…Integration/Backup/SqliteBackupServiceInspectTests.cs` against the REAL service.
   Each case asserts the expected code AND `fixture.LiveSha256()` equal before/after AND no `data.db-journal` AND
   `backups\.work\` empty (R-10, S-33):
   (a) valid backup returns `BackupInfo` with `ExportedAtUtc`, `AppVersion`, `SchemaVersion`, `DatabaseSizeBytes`,
@@ -234,7 +234,7 @@ manifest + caps (steps 1-3)" vs "extract + hash + integrity + schema compare (st
   without `AddSettings`, no table) sets `LocalApiKeyWillBeLost true` when the live DB has a key, and `false` when
   it has none (S-24, R-15); (r) a picker stream that is non-seekable is accepted (staged to disk first). (R-8,
   R-9, R-10, R-18, S-2, S-8..S-16, S-24)
-- [ ] 3.5 Create the inspect pipeline in `src/…Infrastructure/Backup/SqliteBackupService.cs` (partial) and
+- [x] 3.5 Create the inspect pipeline in `src/…Infrastructure/Backup/SqliteBackupService.cs` (partial) and
   `BackupZip.cs`: `InspectAsync` per DD-5 steps 1-3 and 5-8: stage to `work\incoming.zip` through a counting stream;
   structure check with ordinal name equality; capped manifest read; extraction of `data.db` to `work\restore.db`
   through a capped hashing stream using a FIXED destination name (never the entry name); hash compare
@@ -242,11 +242,17 @@ manifest + caps (steps 1-3)" vs "extract + hash + integrity + schema compare (st
   `IMigrationCatalog` with set membership; `LocalApiKeyWillBeLost` from a `ReadOnly` live read. The shared
   validation core is a private method returning the extracted temp path plus facts so `RestoreAsync` (S4a) reuses it
   without duplication. Run 3.4 green. (R-8, R-9, R-10, R-18, DD-5)
-- [ ] 3.6 Extend `BackupServiceCollectionExtensions.AddBackup` with `TryAddSingleton<IMigrationCatalog,
+- [x] 3.6 Extend `BackupServiceCollectionExtensions.AddBackup` with `TryAddSingleton<IMigrationCatalog,
   EfMigrationCatalog>()` and extend its test. (R-24)
-- [ ] 3.7 Run all four gates plus the no-stubs grep over the slice's files (`Infrastructure/Backup`,
+- [x] 3.7 Run all four gates plus the no-stubs grep over the slice's files (`Infrastructure/Backup`,
   `Tests.Integration/Backup`). Confirm `git diff --name-only` shows no `.csproj`/`Directory.Packages.props`
   change. All green before opening PR S3. (R-24)
+
+**S3 apply notes:** a "lying header" (declared length smaller than the real inflated size) yields `Corrupt`, not
+`NotABackup`: the BCL bounds inflation at the declared size, so the truncated payload fails the SHA-256 check; the
+service-side capped copy remains as a second line of defence. `SqliteBackupService` now takes `IMigrationCatalog`
+(constructor order per DD-3) and inspect lives in `SqliteBackupService.Inspect.cs`; the shared core is
+`ValidateAsync` returning the private `Validated` record (extracted path, manifest, info, `BackupHasSettings`).
 
 ## 4a. Restore: safety backup, key carry-over, first swap (S4a)
 

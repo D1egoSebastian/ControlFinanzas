@@ -20,6 +20,12 @@ public sealed record BackupOptions(string AppVersion)
         TimeSpan.FromMilliseconds(2000),
     ];
 
+    /// <summary>Largest database, in bytes, that a backup may declare or actually inflate to (1 GiB).</summary>
+    public long MaxDatabaseBytes { get; init; } = 1L << 30;
+
+    /// <summary>Largest manifest, in bytes, that a backup may declare or actually inflate to (64 KiB).</summary>
+    public long MaxManifestBytes { get; init; } = 64 * 1024;
+
     /// <summary>Asynchronous wait used between retries; tests substitute a no-op.</summary>
     public Func<TimeSpan, CancellationToken, Task> Delay { get; init; } = Task.Delay;
 }
