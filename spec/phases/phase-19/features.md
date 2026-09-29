@@ -1,7 +1,7 @@
 # Phase 19 — Backup and Restore
 
 > **Phase:** 19 — Backup and restore
-> **Status:** In progress (spec written 2026-09-29)
+> **Status:** Implemented, pending archive (slices S1-S7 applied 2026-09-29; verify and manual checks outstanding)
 > **Spec ID:** F-019 — `spec/features/phase-19/F-019-backup-restore.spec.md`
 > **Dependencies:** Phases 0-18 archived (Settings, migrations, `IFileSaveDialog` precedent).
 > **Blocks:** Phase 20 (CSV import reuses `IFileOpenDialog`). Distinct from Phase 18 (report export).
@@ -16,17 +16,20 @@ Structure: ports and three use cases in `Application`; `SqliteBackupService`, `E
 
 ## 2. Slice plan
 
-Chained slices, each about 400-450 changed lines at most.
+Nine chained slices, applied in order (the design's S4 became S4a/S4b, S6 became S6a/S6b, and a data-directory override was added as S5.1).
 
-| ID | Slice | Est. lines | Status |
-| --- | --- | --- | --- |
-| S1 | Contracts (`IBackupService`, `IFileOpenDialog`, `IMigrationCatalog`, `FileTypeFilter`, `OpenTarget`, records, `BackupErrorCodes`), `IFileSaveDialog` generic overload, `CreateBackupUseCase`, fakes and unit tests | ~350 | Pending |
-| S2 | `SqliteBackupService.CreateAsync` (BackupDatabase, redaction, integrity check, manifest, SHA-256, ZIP), `AddBackup()`, real temp-dir SQLite tests incl. concurrent writer and key-byte scan | ~400 | Pending |
-| S3 | Inspect pipeline, `EfMigrationCatalog`, newer-schema reject, zip-slip and size caps, hash/corruption tests | ~400 | Pending |
-| S4 | Restore: free-space check, safety backup + retention, key carry-over, release/swap/retry, rollback, `.bak` hook, roundtrip and failure-injection tests (live bytes identical) | ~450 | Pending |
-| S5 | `InspectBackupUseCase`, `RestoreBackupUseCase`, `AvaloniaFileOpenDialog`, `Bootstrap` DI, `App` startup hook, arch guard for `Microsoft.Data.Sqlite` | ~300 | Pending |
-| S6 | `BackupSettingsViewModel`, confirm panel, `IAppRestartService`, Settings view block, resx es-DO + en + Designer, VM tests, fixture updates, smoke launch | ~450 | Pending |
-| S7 | Docs reconciliation, end-to-end roundtrip test, verify, archive | ~200 | Pending |
+| ID | Slice | Status |
+| --- | --- | --- |
+| S1 | Contracts (`IBackupService`, `IFileOpenDialog`, `IMigrationCatalog`, `FileTypeFilter`, `OpenTarget`, records, `BackupErrorCodes`, `BackupFileName`), `IFileSaveDialog` generic overload, `CreateBackupUseCase`, fakes and unit tests | Done |
+| S2 | `SqliteBackupService.CreateAsync` (BackupDatabase, key redaction, integrity check, manifest, SHA-256, ZIP), `AddBackup()`, real temp-dir SQLite tests incl. concurrent writer and key-byte scan | Done |
+| S3 | Inspect pipeline, `EfMigrationCatalog`, newer-schema rejection, zip-slip and size caps, hash/corruption tests | Done |
+| S4a | Restore up to and including a real single-attempt swap: validation reuse, free-space check, safety backup + retention, key carry-over | Done |
+| S4b | Hardened swap: hot journal, retry/backoff/repair, post-swap verify + rollback, `CompletePendingRestore`, failure-injection and real file-lock tests | Done |
+| S5 | `InspectBackupUseCase`, `RestoreBackupUseCase`, `AvaloniaFileOpenDialog`, `Bootstrap` DI, `App` startup hook, arch guard for `Microsoft.Data.Sqlite` | Done |
+| S5.1 | `CONTROLDEFINANZASIA_DATA_DIR` override in `SystemPathResolver` so smoke launches never touch the real data directory | Done |
+| S6a | Strings (es-DO + en), `INotificationCenter.SuspendAsync`, `IAppRestartService`/`AppRestartService` | Done |
+| S6b | `BackupSettingsViewModel`, Backup block in Settings (before "Acerca de"), `SettingsViewModel` optional parameter | Done |
+| S7 | `BackupRestoreEndToEndTests` (real use cases + service, roundtrip, future schema, corrupt file, older schema + `Migrate()`, `.bak` cleanup, VM flow) and docs reconciliation | Done |
 
 ## 3. Phase completion criteria
 
@@ -57,5 +60,7 @@ Chained slices, each about 400-450 changed lines at most.
 
 ## 6. Follow-ups (not in this phase)
 
+- Shell-wide "restart required" banner (T14): after a restore, other screens can still write to the restored file until the user restarts.
+- Manual checks with the real native dialogs and the real relaunch, in both locales (not automatable): recorded in the Cierre step, not run by hand in S7.
 - Automatic revert after a failed post-restore migration and a migration-failure startup dialog.
 - Auto/scheduled backup, encryption, cloud sync (out of scope per ADR-009).

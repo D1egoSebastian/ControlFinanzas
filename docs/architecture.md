@@ -198,7 +198,7 @@ La solución `ControlDeFinanzasIA.sln` contiene **seis proyectos** C#:
 - **`IClock`** — `DateTime UtcNow`, `DateOnly Today`. Para testear fechas.
 - **`IPathResolver`** — devuelve la ruta del directorio de datos según el SO.
 - **`ISettingsStore`** — lectura/escritura tipada de settings (envuelve `ISettingRepository` con helpers).
-- **`IBackupService`** — export/import del archivo completo.
+- **`IBackupService`** — respaldo y restauración de la base completa (Fase 19): `CreateAsync`, `InspectAsync`, `RestoreAsync` y `CompletePendingRestore()`. Recibe delegados que abren el stream (`Func<CancellationToken, Task<Stream>>`), nunca rutas ni tipos de SQLite/ZIP. Lo acompañan **`IMigrationCatalog`** (ids de migración conocidos por este build), **`IFileOpenDialog`** (selector de archivo que devuelve un `OpenTarget?`) y las clases `OpenTarget`/`FileTypeFilter`. `IAppRestartService` vive en UI (`UI/Services`), no en Application.
 - **`ICsvImporter`** — importación con perfil configurable.
 
 ### Use cases (uno por intención de usuario)
@@ -242,8 +242,7 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 
 **Imports / Exports**
 - `ImportCsvUseCase` (con perfil de columnas reutilizable)
-- `ExportDataUseCase` (respaldo completo)
-- `ImportBackupUseCase` (restauración desde archivo de backup)
+- `CreateBackupUseCase`, `InspectBackupUseCase`, `RestoreBackupUseCase` (`Application/UseCases/Backup/`, Fase 19; respaldo completo y restauración; no son exportación de reportes, ver §11e)
 
 **Settings**
 - `GetSettingsQuery`, `UpdateSettingsUseCase` (tema, locale, configuración de IA)
@@ -293,7 +292,7 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 ### Filesystem
 
 - **`PathResolver`** (implementa `IPathResolver`) devuelve el directorio de datos según el SO, definido en `tech-stack.md`.
-- **`BackupService`** exporta el archivo SQLite a un `.zip` que contiene el `.db` y un `manifest.json` con la versión del schema. El import valida el manifest antes de reemplazar.
+- **`SqliteBackupService`** (`Infrastructure/Backup/`, implementa `IBackupService`; Fase 19, implementado) exporta la base a un `.zip` con `manifest.json` + `data.db`. La restauración valida todo el archivo antes de tocar la base viva. Detalle en §11f y §12 «Backup».
 - **`CsvImporter`** lee un CSV, aplica un `CsvImportProfile` (mapeo de columnas + formato de fecha + separador decimal), devuelve las entidades detectadas, las pasa por validación y las inserta en una transacción. Perfil guardable.
 - **Reportes PDF / XLSX (Fase 18, implementado):** `QuestPdfReportWriter` y `ClosedXmlReportWriter` en `Infrastructure/Reports/` implementan `IReportWriter`; ver §11e. No existe `CsvExporter`: la Fase 18 no produce CSV (el backup completo es la Fase 19, distinto de un reporte).
 
@@ -717,6 +716,81 @@ Exportación de Deudas (~250 líneas estimadas) y salida CSV: no implementadas.
 
 ---
 
+## 11f. Backup y restauración (Fase 19)
+
+**Fase 19, implementada; pendiente de archivo.** Como las Fases 17 y 18, no usa `ILLMClient`, no añade migración, paquete
+ni clave de configuración. El respaldo es **distinto** de los reportes de la Fase 18: copia toda la base para poder
+recuperarla, no proyecta datos para leerlos.
+
+### Puertos y casos de uso
+
+- Application: `IBackupService`, `IMigrationCatalog`, `IFileOpenDialog` (con `OpenTarget`, `FileTypeFilter`), la
+  sobrecarga genérica de `IFileSaveDialog.PickAsync(nombre, FileTypeFilter, título)`, y los registros `BackupManifest`,
+  `BackupInfo`, `BackupCreated`, `RestoreOutcome`. Códigos de error estables en `BackupErrorCodes`: `NotABackup`,
+  `Corrupt`, `NewerSchema`, `IoError` (la falta de espacio es `IoError` con `Details["reason"] = "insufficientSpace"`).
+- `CreateBackupUseCase`, `InspectBackupUseCase` y `RestoreBackupUseCase` (`Application/UseCases/Backup/`) delegan en
+  `IBackupService`, convierten cualquier excepción inesperada en `Result.Failure(IoError)` con log, y solo propagan la
+  cancelación.
+- UI: `IAppRestartService`/`AppRestartService` (relanza el ejecutable y cierra el actual; si no puede, la UI muestra
+  el texto manual), `AvaloniaFileOpenDialog` y `BackupSettingsViewModel` (singleton, máquina de estados
+  `Idle → Exporting | Inspecting → ConfirmPending → Restoring → RestartRequired`, este último terminal en la sesión).
+
+### `SqliteBackupService` (Infrastructure/Backup)
+
+Infrastructure es la única capa que usa `Microsoft.Data.Sqlite` directamente (una regla NetArchTest lo exige para
+Application y UI). Se registra con `AddBackup(appVersion)` como singleton y `IBackupService` resuelve a la misma instancia: su compuerta de
+un solo vuelo serializa create/inspect/restore. Colaboradores: `IBackupFileSystem`/`PhysicalBackupFileSystem` (permite
+inyectar fallos en tests), `EfMigrationCatalog`, `BackupOptions` (topes de tamaño, esperas de reintento, 3 copias de
+seguridad).
+
+- **Crear:** instantánea con la API `BackupDatabase` (consistente aunque la app escriba en modo WAL), en un directorio
+  de trabajo `<DataDir>\backups\.work\<guid>\`. Sobre la copia se comprueba la integridad, se quita la API key
+  (`secure_delete` + `VACUUM`, de modo que ningún byte de la clave queda en el archivo), se normaliza el modo de
+  journal y se calcula el SHA-256. El destino del usuario se abre **al final**, de modo que un fallo nunca lo crea ni
+  lo trunca.
+- **Inspeccionar:** valida forma del ZIP (exactamente `manifest.json` y `data.db`, sin rutas que escapen), topes de
+  tamaño, manifiesto, SHA-256, `integrity_check`/`foreign_key_check` y la comparación del historial de migraciones.
+  Trabaja siempre sobre copias; la base viva queda byte a byte igual tras cada rechazo.
+- **Restaurar (orden del pipeline):** (1) revalida el archivo completo; (2) resuelve un journal caliente de la base viva;
+  (3) normaliza la copia entrante (modo de journal sin WAL, arrastra la API key local si el backup no trae una);
+  (4) escribe y **relee** una copia de seguridad `backups\pre-restore-yyyyMMdd-HHmmss.zip` (conserva la API key y nunca sale
+  del directorio de datos; se conservan las 3 más recientes); (5) libera conexiones, pliega el WAL y exige que no queden
+  `-wal`/`-shm`/`-journal`; (6) un único `File.Replace` con reintentos y espera creciente, reparando el invariante de
+  nombres si Win32 falla a medias; (7) verifica por hash el archivo instalado y, si hay duda, revierte desde
+  `data.db.pre-restore.bak`. La cancelación se respeta hasta publicar la copia de seguridad y se ignora después.
+- **Ciclo de vida del `.bak`:** tras un restore correcto se conserva `data.db.pre-restore.bak`. En el siguiente arranque,
+  `Bootstrap.ApplyMigrationsAndCompletePendingRestore` ejecuta `ApplyMigrations` y, solo si terminó, llama a
+  `IBackupService.CompletePendingRestore()`, que borra el `.bak` (únicamente si la base viva abre, pasa `quick_check` y
+  trae todas las migraciones de este build) y limpia `backups\.work`. Nunca borra las copias `pre-restore-*.zip` ni
+  ningún otro archivo, es idempotente y no lanza excepciones (un fallo se registra y el arranque continúa).
+- **Restore de un esquema más antiguo:** se acepta; el restore no migra. El siguiente arranque migra el archivo y solo
+  entonces se libera el `.bak`.
+
+### Suspensión de notificaciones
+
+`INotificationCenter.SuspendAsync()` (implementado por `ScopedNotificationCenter`) espera a la ejecución en curso y
+convierte en no-op todo miembro que toque la base mientras exista una suspensión. `BackupSettingsViewModel` la adquiere
+antes de restaurar; se libera si el restore falla y se mantiene hasta que el proceso termina si tiene éxito.
+
+### Directorio de datos alternativo para pruebas
+
+`SystemPathResolver` respeta la variable de entorno `CONTROLDEFINANZASIA_DATA_DIR` cuando contiene una ruta absoluta
+completa; en otro caso usa la ruta del SO de §12. Permite lanzar la app de pruebas (`dotnet run`) sin tocar los datos
+reales del usuario.
+
+### Pruebas y seguimientos
+
+`BackupRestoreEndToEndTests` (Integration) prueba con los casos de uso y el servicio reales y bases SQLite temporales: el
+roundtrip de la hoja de ruta (export desde A, instalación limpia, restore, todas las filas iguales salvo `ai.apiKey`),
+el arrastre de la clave local, el rechazo de esquema futuro, el archivo corrupto, el esquema antiguo más `Migrate()`, la
+liberación del `.bak` y el flujo vía `BackupSettingsViewModel`.
+
+Fuera de esta fase: un aviso global «reinicio necesario» en el shell (otras pantallas pueden seguir escribiendo en el
+archivo restaurado hasta reiniciar), la reversión automática ante una migración fallida tras un restore, el diálogo de
+error de migración al arrancar, y las comprobaciones manuales con los diálogos nativos y el relanzamiento real.
+
+---
+
 ## 12. Persistencia — detalles adicionales
 
 ### Ruta del archivo
@@ -734,10 +808,20 @@ Exportación de Deudas (~250 líneas estimadas) y salida CSV: no implementadas.
 
 ### Backup
 
-- Manual, mediante `ExportDataUseCase` que produce un `.zip`:
-  - `data.db`
-  - `manifest.json` con `{ "schemaVersion": N, "exportedAt": ISO8601, "appVersion": "x.y.z" }`
-- El import valida `schemaVersion` y rechaza si es de una versión más nueva (no downgrades).
+Implementado en la Fase 19 (ver §11f). Es un respaldo completo de la base, **no** una exportación de reportes (Fase 18).
+
+- Manual, mediante `CreateBackupUseCase`, que produce un `.zip` con exactamente dos entradas:
+  - `data.db` (instantánea consistente por la API de backup de SQLite; sin la API key de IA)
+  - `manifest.json` con `formatVersion`, `schemaVersion` (último `MigrationId`), `exportedAt` (ISO 8601 UTC), `appVersion`, `dbSha256` y `apiKeyIncluded`.
+- `InspectBackupUseCase` / `RestoreBackupUseCase` comparan el historial de migraciones del backup con `IMigrationCatalog`: un `MigrationId` desconocido (o `formatVersion` > 1) se rechaza como `NewerSchema` mostrando ambas versiones (no downgrades); un subconjunto propio de migraciones se acepta y se migra en el siguiente arranque.
+
+#### Recuperación manual
+
+Si una restauración falla de forma irrecuperable o la migración posterior a un restore falla al arrancar (la app no arranca, no hay reversión automática):
+
+1. Cierre la aplicación.
+2. En el directorio de datos, copie `data.db.pre-restore.bak` sobre `data.db` (es la base original exacta, byte a byte), **o** descomprima `data.db` de `backups\pre-restore-*.zip` (copia de seguridad previa al restore, la más reciente ordena al final) y sustitúyalo.
+3. Borre los archivos `data.db-wal` y `data.db-shm` si existen, y arranque de nuevo.
 
 ### Import CSV
 
@@ -830,7 +914,7 @@ Exportación de Deudas (~250 líneas estimadas) y salida CSV: no implementadas.
 
 - **EF Core**: repos contra un archivo SQLite temporal (no en memoria, para acercarse al comportamiento real). Patrón `IDbContextFactory` para paralelizar.
 - **CsvImporter**: roundtrip con archivos sintéticos.
-- **BackupService**: roundtrip export → import, con verificación de integridad.
+- **Backup (Fase 19)**: `SqliteBackupService` real sobre bases SQLite temporales creadas con las migraciones reales (creación, inspección, restauración, inyección de fallos con `FaultyBackupFileSystem`, bloqueo real de archivo solo en Windows) y `BackupRestoreEndToEndTests`, que recorre `CreateBackupUseCase` → `InspectBackupUseCase` → `RestoreBackupUseCase` por DI real (`AddPersistence` + `AddBackup`) y compara todas las tablas.
 - **Llm clients (marcados "external")**: solo se ejecutan si `CONTROL_FINANZAS_RUN_EXTERNAL_AI_TESTS=1` y hay API key. Hacen requests reales a OpenRouter con un modelo gratuito.
 
 ### Architecture tests
@@ -911,7 +995,7 @@ Plantilla: **Contexto · Decisión · Consecuencias**. Lista viva. Se actualiza 
 | ADR-006 | **`Result<T>` para errores esperados, excepciones solo para inesperados** | Aceptada |
 | ADR-007 | **`IClock` y `IPathResolver` inyectados en todo lo dependiente de tiempo/ruta** | Aceptada |
 | ADR-008 | **API key de IA en claro en v1, cifrado por SO diferido a v2** | Aceptada (temporal) |
-| ADR-009 | **Backup como ZIP con SQLite + manifest, sin auto-backup** | Aceptada |
+| ADR-009 | **Backup como ZIP con SQLite + manifest, sin auto-backup** (la única copia automática es la de seguridad previa a un restore, `backups\pre-restore-*.zip`; Fase 19, §11f) | Aceptada |
 | ADR-010 | **Tests con NetArchTest validando el grafo de dependencias** | Aceptada |
 | ADR-011 | **Cifrado en reposo de la API key** (DPAPI/Keychain/libsecret) | Pendiente v2 |
 | ADR-012 | **Auto-update de la app** | Pendiente v2 |

@@ -1327,7 +1327,20 @@ una feature "de producto" en el mismo sentido.
 
 ---
 
-### Fase 19 — Backup y restauración
+### Fase 19 — Backup y restauración ✅ IMPLEMENTADA (pendiente de archivo)
+
+**Estado (2026-09-29):** slices S1–S7 implementadas; falta el cierre (verify, comprobaciones manuales con los diálogos
+nativos y archivo). Casos de uso reales: `CreateBackupUseCase`, `InspectBackupUseCase`, `RestoreBackupUseCase` sobre
+`SqliteBackupService`; ver `docs/architecture.md` §11f.
+
+- Criterio «export, instalación limpia, import, datos idénticos»: cumplido. Evidencia:
+  `tests/ControlDeFinanzasIA.Tests.Integration/Backup/BackupRestoreEndToEndTests.cs`
+  (`Roundtrip_ExportFromA_RestoreIntoAFreshInstall_ReproducesEveryTableExceptTheApiKey` y
+  `Roundtrip_WhenTheFreshInstallHasItsOwnApiKey_TheLocalKeyIsCarriedOver`).
+- Criterio «backup de versión futura rechazado con mensaje claro»: cumplido. Evidencia:
+  `FutureSchemaBackup_IsRejectedAsNewerSchemaWithBothVersions_AndTheLiveDatabaseIsByteIdentical` (mismo archivo).
+- Seguimientos (fuera de la fase): aviso global «reinicio necesario» en el shell (T14), reversión automática tras una
+  migración fallida posterior a un restore, diálogo de error de migración al arrancar.
 
 **Objetivo**
 Botón "Exportar todo a un archivo" y "Restaurar desde archivo" en

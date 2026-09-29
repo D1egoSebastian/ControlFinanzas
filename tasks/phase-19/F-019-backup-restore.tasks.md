@@ -646,7 +646,7 @@ skill for the visual pass before ticking the view task.
 
 Depends on 6b. Goal: the roadmap completion criterion is proven through real DI, and docs match the shipped names.
 
-- [ ] 7.1 Write failing then green `tests/…Integration/Backup/BackupRestoreEndToEndTests.cs` using real DI
+- [x] 7.1 Write failing then green `tests/…Integration/Backup/BackupRestoreEndToEndTests.cs` using real DI
   (`AddPersistence` + `AddBackup`, real `EfMigrationCatalog`, `PhysicalBackupFileSystem`): seed database A in every
   table incl. `Settings` with `ai.apiKey` → `CreateBackupUseCase` to a real file → create a FRESH data directory
   with a migrated empty DB → `RestoreBackupUseCase` → `AppDbContext.Database.Migrate()` (the `ApplyMigrations`
@@ -654,27 +654,29 @@ Depends on 6b. Goal: the roadmap completion criterion is proven through real DI,
   over so the key row is absent), `CompletePendingRestore()` deletes the `.bak`. Additional case: a fresh directory
   whose live DB HAS a key retains that local key after the restore (S-23). Row comparison is by table via
   `sqlite_master` enumeration so a table added later is covered automatically. (R-16, S-1, S-23, S-25)
-- [ ] 7.2 Write failing then green end-to-end negative cases in the same file, through the use cases: a future-schema
+- [x] 7.2 Write failing then green end-to-end negative cases in the same file, through the use cases: a future-schema
   backup gives `NewerSchema` with both versions and the live SHA-256 unchanged (S-2); a backup with one flipped byte
   gives `Corrupt` with the live SHA-256 unchanged (S-12). (R-10, S-2, S-12)
-- [ ] 7.3 Update `docs/architecture.md` §Backup: replace `ExportDataUseCase` / `ImportBackupUseCase` /
+- [x] 7.3 Update `docs/architecture.md` §Backup: replace `ExportDataUseCase` / `ImportBackupUseCase` /
   `BackupService` with the shipped `CreateBackupUseCase`, `InspectBackupUseCase`, `RestoreBackupUseCase`,
   `SqliteBackupService` and mention `IBackupService`, `IMigrationCatalog`, `IFileOpenDialog`, `IAppRestartService`
   and `INotificationCenter.SuspendAsync`; state explicitly that backup is not report export (Phase 18); document the
   restore pipeline order, `.bak` lifecycle and the MANUAL RECOVERY steps (close the app; copy
   `data.db.pre-restore.bak` over `data.db`, or unzip `data.db` from `backups\pre-restore-*.zip`; what to do after a
   failed post-restore migration). (R-14, R-25, D-21)
-- [ ] 7.4 Update `docs/roadmap.md` §Fase 19: mark completion criteria (roundtrip, future-version rejection) complete
+- [x] 7.4 Update `docs/roadmap.md` §Fase 19: mark completion criteria (roundtrip, future-version rejection) complete
   with evidence pointers, and list follow-ups: shell-wide "restart required" banner (T14), automatic revert after a
   failed post-restore migration, migration-failure startup dialog. (R-25, R-26)
-- [ ] 7.5 Create/update `spec/phases/phase-19/features.md` (the untracked folder already exists; read it first) to
+- [x] 7.5 Create/update `spec/phases/phase-19/features.md` (the untracked folder already exists; read it first) to
   reflect the final state, following the pattern of `spec/phases/phase-10/` through `phase-18/`. (R-25)
-- [ ] 7.6 Confirm no new package, migration, setting or schema change: `git diff --name-only <phase base>^ HEAD`
+- [x] 7.6 Confirm no new package, migration, setting or schema change: `git diff --name-only <phase base>^ HEAD`
   filtered by `Directory.Packages.props`, `.csproj`, `Migrations/`, `SettingKeys`, `AppSettings` is empty; Phase 18
   export behavior unchanged apart from the additive `IFileSaveDialog` overload. (R-24, R-26)
-- [ ] 7.7 Run all four gates plus the no-stubs grep across the ENTIRE phase diff:
+- [x] 7.7 Run all four gates plus the no-stubs grep across the ENTIRE phase diff:
   `rg -n "NotImplementedException|TODO|FIXME|HACK" -g "*.cs" -g "*.axaml"` limited to the files changed in phase 19
   returns nothing. All green before opening PR S7. (R-24)
+
+**S7 apply notes:** the end-to-end file is `BackupRestoreEndToEndTests.cs` (7 tests: roundtrip without and with a local key on the fresh install, no key bytes in the ZIP, future schema via Inspect and Restore, flipped-byte archive, older schema + `Migrate()` + `.bak` cleanup, and the full `BackupSettingsViewModel` flow with the real use cases and local fake dialogs/restart/notification center). It has no unit-project fakes (Integration cannot see them), so the doubles are private nested classes. The rendered docs sections are `architecture.md` §11f and §12 Backup. Gates: build 0/0, 1725 unit + 550 integration green x3, format exit 0. Manual checks remain NOT RUN BY HAND (task 8.2).
 
 ## 8. Cierre
 
