@@ -24,6 +24,15 @@ public sealed class FakeNotificationRepository : INotificationRepository
     /// <summary>Number of times <see cref="ApplyReconciliationAsync"/> was invoked.</summary>
     public int ApplyReconciliationCallCount { get; private set; }
 
+    /// <summary>Gets or sets the result returned by <see cref="UpdateRangeAsync"/>.</summary>
+    public Result UpdateRangeResult { get; set; } = Result.Success(null!);
+
+    /// <summary>Number of times <see cref="UpdateRangeAsync"/> was invoked.</summary>
+    public int UpdateRangeCallCount { get; private set; }
+
+    /// <summary>Number of times <see cref="GetByIdsAsync"/> was invoked.</summary>
+    public int GetByIdsCallCount { get; private set; }
+
     /// <summary>The last plan passed to <see cref="ApplyReconciliationAsync"/>, or <see langword="null"/>.</summary>
     public NotificationReconciliationPlan? LastAppliedPlan { get; private set; }
 
@@ -52,6 +61,7 @@ public sealed class FakeNotificationRepository : INotificationRepository
         IReadOnlyCollection<Guid> ids, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(ids);
+        GetByIdsCallCount++;
         return Task.FromResult<IReadOnlyList<Notification>>(
             _notifications.Where(n => ids.Contains(n.Id)).ToList());
     }
@@ -60,6 +70,7 @@ public sealed class FakeNotificationRepository : INotificationRepository
     public Task<Result> UpdateRangeAsync(IReadOnlyList<Notification> notifications, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(notifications);
+        UpdateRangeCallCount++;
 
         foreach (Notification notification in notifications)
         {
@@ -70,7 +81,7 @@ public sealed class FakeNotificationRepository : INotificationRepository
             }
         }
 
-        return Task.FromResult(Result.Success(null!));
+        return Task.FromResult(UpdateRangeResult);
     }
 
     /// <inheritdoc />

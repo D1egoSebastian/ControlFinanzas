@@ -1,11 +1,17 @@
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
+using ControlDeFinanzasIA.Application.Services;
 using ControlDeFinanzasIA.Application.Settings;
+using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
 using ControlDeFinanzasIA.Application.UseCases.Notifications.DetectNotifications;
+using ControlDeFinanzasIA.Domain.Alerts;
+using ControlDeFinanzasIA.Domain.Budgets;
+using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Debts;
 using ControlDeFinanzasIA.Domain.Enums;
 using ControlDeFinanzasIA.Domain.Notifications;
 using ControlDeFinanzasIA.Domain.Recurring;
+using ControlDeFinanzasIA.Domain.Transactions;
 using ControlDeFinanzasIA.Domain.ValueObjects;
 using ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 using Xunit;
@@ -204,21 +210,267 @@ public sealed class DetectNotificationsUseCaseTests
         Assert.Equal(0, notifications.ApplyReconciliationCallCount);
     }
 
+    // --- S4: budget + anomaly ---
+
+    [Fact]
+    public async Task ExecuteAsync_AllFourKindsQualify_AddsOneCandidatePerKind()
+    {
+        // S-1: installment due in 2 days, subscription in 1 day, budget at Exceeded, unacknowledged anomaly.
+        var debts = new FakeDebtRepository();
+        var debtPayments = new FakeDebtPaymentRepository();
+        var rules = new FakeRecurringRuleRepository();
+        var budgets = new FakeBudgetRepository();
+        var expenses = new FakeExpenseRepository();
+        var categories = new FakeCategoryRepository();
+        var alerts = new FakeAnomalyAlertRepository();
+        var notifications = new FakeNotificationRepository();
+
+        Debt debt = CreateDebt("Préstamo carro", _today.AddDays(2));
+        debts.Seed(debt);
+        debtPayments.Seed(new DebtScheduleGenerator().Generate(debt)[0]);
+        rules.Seed(CreateRule("Netflix", _today.AddDays(1)));
+
+        var categoryId = Guid.NewGuid();
+        categories.SetCategories([new Category { Id = categoryId, Name = "Comida" }]);
+        budgets.Seed(Budget.Create(_today.Year, _today.Month, categoryId, Money.Create(1000m, Currency.DOP)));
+        expenses.CategoryNames[categoryId] = "Comida";
+        await expenses.AddAsync(CreateExpense(categoryId, 1200m));
+
+        var alert = AnomalyAlert.Create(
+            Guid.NewGuid(), categoryId, _today.AddDays(-1), AnomalySeverity.Warning, "Gasto inusual", _fixedCreatedAt);
+        alerts.Seed(alert);
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications,
+            debtPaymentRepository: debtPayments,
+            debtRepository: debts,
+            recurringRuleRepository: rules,
+            budgetRepository: budgets,
+            expenseRepository: expenses,
+            categoryRepository: categories,
+            anomalyAlertRepository: alerts);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        DetectNotificationsSummary summary = Assert.IsType<DetectNotificationsSummary>(result.Value);
+        Assert.Equal(4, summary.Added);
+        Assert.Equal(
+            new[]
+            {
+                NotificationKind.DebtInstallmentDue,
+                NotificationKind.RecurringChargeDue,
+                NotificationKind.BudgetThreshold,
+                NotificationKind.Anomaly,
+            }.OrderBy(k => k),
+            notifications.Notifications.Select(n => n.Kind).OrderBy(k => k));
+
+        Notification budgetRow = notifications.Notifications.Single(n => n.Kind == NotificationKind.BudgetThreshold);
+        Assert.Equal(NotificationTier.Exceeded, budgetRow.Tier);
+        Assert.Equal("Comida", budgetRow.SubjectLabel);
+        Assert.Equal(new DateOnly(_today.Year, _today.Month, 1), budgetRow.ReferenceDate);
+
+        Notification anomalyRow = notifications.Notifications.Single(n => n.Kind == NotificationKind.Anomaly);
+        Assert.Equal(alert.Id, anomalyRow.SourceId);
+        Assert.Equal("Comida", anomalyRow.SubjectLabel);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BudgetTogglesOff_DoesNotReadBudgetsAndRemovesExistingBudgetRows()
+    {
+        var settingsStore = new InMemorySettingsStore();
+        settingsStore.Seed(SettingKeys.NotificationsBudgetEnabled, "false");
+
+        var budgets = new FakeBudgetRepository();
+        var notifications = new FakeNotificationRepository();
+        var existing = Notification.ForBudget(
+            Guid.NewGuid(), new DateOnly(_today.Year, _today.Month, 1), "Comida", 85m, NotificationTier.Near, _fixedCreatedAt);
+        notifications.Seed(existing);
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications, settingsStore: settingsStore, budgetRepository: budgets);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(0, budgets.GetByMonthCallCount);
+        Assert.DoesNotContain(notifications.Notifications, n => n.Id == existing.Id);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AnomalyToggleOff_DoesNotReadAlertsAndRemovesExistingAnomalyRows()
+    {
+        var settingsStore = new InMemorySettingsStore();
+        settingsStore.Seed(SettingKeys.NotificationsAnomalyEnabled, "false");
+
+        var alerts = new TrackingAnomalyAlertRepository(new FakeAnomalyAlertRepository(), new ConcurrencyGuard());
+        var notifications = new FakeNotificationRepository();
+        var existing = Notification.ForAnomaly(Guid.NewGuid(), _today, "Comida", _fixedCreatedAt);
+        notifications.Seed(existing);
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications, settingsStore: settingsStore, anomalyAlertRepository: alerts);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(0, alerts.GetAllCallCount);
+        Assert.DoesNotContain(notifications.Notifications, n => n.Id == existing.Id);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AlertAcknowledgedElsewhere_RemovesItsUndismissedNotification()
+    {
+        var alerts = new FakeAnomalyAlertRepository();
+        var notifications = new FakeNotificationRepository();
+
+        var alert = AnomalyAlert.Create(
+            Guid.NewGuid(), Guid.NewGuid(), _today.AddDays(-1), AnomalySeverity.Info, "Gasto inusual", _fixedCreatedAt);
+        alert.Acknowledge(_fixedCreatedAt);
+        alerts.Seed(alert);
+
+        var existing = Notification.ForAnomaly(alert.Id, alert.Date, "Comida", _fixedCreatedAt);
+        notifications.Seed(existing);
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications, anomalyAlertRepository: alerts);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.DoesNotContain(notifications.Notifications, n => n.Id == existing.Id);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NearThenExceeded_ReplacesUndismissedNearRowWithExceeded()
+    {
+        var budgets = new FakeBudgetRepository();
+        var expenses = new FakeExpenseRepository();
+        var categories = new FakeCategoryRepository();
+        var notifications = new FakeNotificationRepository();
+
+        var categoryId = Guid.NewGuid();
+        categories.SetCategories([new Category { Id = categoryId, Name = "Comida" }]);
+        var budget = Budget.Create(_today.Year, _today.Month, categoryId, Money.Create(1000m, Currency.DOP));
+        budgets.Seed(budget);
+        expenses.CategoryNames[categoryId] = "Comida";
+        await expenses.AddAsync(CreateExpense(categoryId, 1050m));
+
+        var monthStart = new DateOnly(_today.Year, _today.Month, 1);
+        var nearRow = Notification.ForBudget(
+            budget.Id, monthStart, "Comida", 85m, NotificationTier.Near, _fixedCreatedAt);
+        notifications.Seed(nearRow);
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications,
+            budgetRepository: budgets,
+            expenseRepository: expenses,
+            categoryRepository: categories);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Notification only = Assert.Single(notifications.Notifications);
+        Assert.Equal(NotificationTier.Exceeded, only.Tier);
+        Assert.NotEqual(nearRow.Id, only.Id);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_IndeterminateBudget_KeepsItsExistingNotification()
+    {
+        var budgets = new FakeBudgetRepository();
+        var categories = new FakeCategoryRepository();
+        var notifications = new FakeNotificationRepository();
+
+        var categoryId = Guid.NewGuid();
+        categories.SetCategories([new Category { Id = categoryId, Name = "Viajes" }]);
+        var budget = Budget.Create(_today.Year, _today.Month, categoryId, Money.Create(500m, Currency.USD));
+        budgets.Seed(budget);
+
+        var monthStart = new DateOnly(_today.Year, _today.Month, 1);
+        var nearRow = Notification.ForBudget(
+            budget.Id, monthStart, "Viajes", 85m, NotificationTier.Near, _fixedCreatedAt);
+        notifications.Seed(nearRow);
+
+        // USD -> DOP fails, so the budget line is indeterminate (cannot evaluate != no longer qualifies).
+        var converter = new FakeCurrencyConverter(onConvert: (_, _) => Result.Failure("ExchangeRateUnavailable", "No rate."));
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications,
+            budgetRepository: budgets,
+            categoryRepository: categories,
+            currencyConverter: converter);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Contains(notifications.Notifications, n => n.Id == nearRow.Id);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_FourKindsEnabled_ReadsAllSourcesSequentiallyNeverOverlapping()
+    {
+        var guard = new ConcurrencyGuard();
+        var alerts = new TrackingAnomalyAlertRepository(new FakeAnomalyAlertRepository(), guard);
+        var categories = new TrackingCategoryRepository(new FakeCategoryRepository(), guard);
+        var budgetRepository = new FakeBudgetRepository();
+        var categoryId = Guid.NewGuid();
+        budgetRepository.Seed(Budget.Create(_today.Year, _today.Month, categoryId, Money.Create(1000m, Currency.DOP)));
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            budgetRepository: budgetRepository,
+            categoryRepository: categories,
+            anomalyAlertRepository: alerts);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.False(guard.OverlapDetected);
+        Assert.True(alerts.GetAllCallCount > 0);
+        Assert.True(categories.GetAllCallCount > 0);
+    }
+
     private static DetectNotificationsUseCase CreateUseCase(
         INotificationRepository? notificationRepository = null,
         IDebtPaymentRepository? debtPaymentRepository = null,
         IDebtRepository? debtRepository = null,
         IRecurringRuleRepository? recurringRuleRepository = null,
+        IBudgetRepository? budgetRepository = null,
+        IExpenseRepository? expenseRepository = null,
+        ICategoryRepository? categoryRepository = null,
+        ICurrencyConverter? currencyConverter = null,
+        IAnomalyAlertRepository? anomalyAlertRepository = null,
         ISettingsStore? settingsStore = null,
         RecordingLogger<DetectNotificationsUseCase>? logger = null)
-        => new(
+    {
+        ICategoryRepository categories = categoryRepository ?? new FakeCategoryRepository();
+        var budgetVsActual = new GetBudgetVsActualQuery(
+            budgetRepository ?? new FakeBudgetRepository(),
+            expenseRepository ?? new FakeExpenseRepository(),
+            categories,
+            currencyConverter ?? new FakeCurrencyConverter());
+
+        return new(
             notificationRepository ?? new FakeNotificationRepository(),
             debtPaymentRepository ?? new FakeDebtPaymentRepository(),
             debtRepository ?? new FakeDebtRepository(),
             recurringRuleRepository ?? new FakeRecurringRuleRepository(),
+            budgetVsActual,
+            anomalyAlertRepository ?? new FakeAnomalyAlertRepository(),
+            categories,
             settingsStore ?? new InMemorySettingsStore(),
             new FakeClock { Today = _today, UtcNow = _fixedCreatedAt },
             logger ?? new RecordingLogger<DetectNotificationsUseCase>());
+    }
+
+    private static Expense CreateExpense(Guid categoryId, decimal amount)
+        => Expense.Create(
+            categoryId,
+            new DateOnly(_today.Year, _today.Month, 10),
+            Money.Create(amount, Currency.DOP),
+            "Test expense",
+            null,
+            _fixedCreatedAt);
 
     private static Debt CreateDebt(string description, DateOnly scheduledDate)
         => Debt.Create(
@@ -367,6 +619,88 @@ public sealed class DetectNotificationsUseCaseTests
         public Task<RecurringRule?> GetByIdAsync(Guid id, CancellationToken ct = default) => _inner.GetByIdAsync(id, ct);
 
         public async Task<IReadOnlyList<RecurringRule>> GetAllAsync(CancellationToken ct = default)
+        {
+            GetAllCallCount++;
+            await _guard.EnterAsync().ConfigureAwait(false);
+            try
+            {
+                return await _inner.GetAllAsync(ct).ConfigureAwait(false);
+            }
+            finally
+            {
+                _guard.Exit();
+            }
+        }
+    }
+
+    private sealed class TrackingAnomalyAlertRepository : IAnomalyAlertRepository
+    {
+        private readonly FakeAnomalyAlertRepository _inner;
+        private readonly ConcurrencyGuard _guard;
+
+        public TrackingAnomalyAlertRepository(FakeAnomalyAlertRepository inner, ConcurrencyGuard guard)
+        {
+            _inner = inner;
+            _guard = guard;
+        }
+
+        public int GetAllCallCount { get; private set; }
+
+        public Task<Result> AddAsync(AnomalyAlert alert, CancellationToken ct = default) => _inner.AddAsync(alert, ct);
+
+        public Task<Result> UpdateAsync(AnomalyAlert alert, CancellationToken ct = default) => _inner.UpdateAsync(alert, ct);
+
+        public Task<Result> RemoveAsync(Guid id, CancellationToken ct = default) => _inner.RemoveAsync(id, ct);
+
+        public Task<AnomalyAlert?> GetByIdAsync(Guid id, CancellationToken ct = default) => _inner.GetByIdAsync(id, ct);
+
+        public Task<IReadOnlyList<AnomalyAlert>> GetByMonthAsync(DateRange month, CancellationToken ct = default)
+            => _inner.GetByMonthAsync(month, ct);
+
+        public Task<IReadOnlyList<AnomalyAlert>> GetByTransactionIdsAsync(
+            IReadOnlyCollection<Guid> ids, CancellationToken ct = default)
+            => _inner.GetByTransactionIdsAsync(ids, ct);
+
+        public Task<Result> ApplyReconciliationAsync(AnomalyReconciliationPlan plan, CancellationToken ct = default)
+            => _inner.ApplyReconciliationAsync(plan, ct);
+
+        public async Task<IReadOnlyList<AnomalyAlert>> GetAllAsync(CancellationToken ct = default)
+        {
+            GetAllCallCount++;
+            await _guard.EnterAsync().ConfigureAwait(false);
+            try
+            {
+                return await _inner.GetAllAsync(ct).ConfigureAwait(false);
+            }
+            finally
+            {
+                _guard.Exit();
+            }
+        }
+    }
+
+    private sealed class TrackingCategoryRepository : ICategoryRepository
+    {
+        private readonly FakeCategoryRepository _inner;
+        private readonly ConcurrencyGuard _guard;
+
+        public TrackingCategoryRepository(FakeCategoryRepository inner, ConcurrencyGuard guard)
+        {
+            _inner = inner;
+            _guard = guard;
+        }
+
+        public int GetAllCallCount { get; private set; }
+
+        public Task<Result> AddAsync(Category category, CancellationToken ct = default) => _inner.AddAsync(category, ct);
+
+        public Task<Result> UpdateAsync(Category category, CancellationToken ct = default) => _inner.UpdateAsync(category, ct);
+
+        public Task<Result> RemoveAsync(Guid id, CancellationToken ct = default) => _inner.RemoveAsync(id, ct);
+
+        public Task<Category?> GetByIdAsync(Guid id, CancellationToken ct = default) => _inner.GetByIdAsync(id, ct);
+
+        public async Task<IReadOnlyList<Category>> GetAllAsync(CancellationToken ct = default)
         {
             GetAllCallCount++;
             await _guard.EnterAsync().ConfigureAwait(false);

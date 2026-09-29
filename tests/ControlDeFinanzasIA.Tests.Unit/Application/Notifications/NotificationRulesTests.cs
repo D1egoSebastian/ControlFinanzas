@@ -1,4 +1,7 @@
 using ControlDeFinanzasIA.Application.Notifications;
+using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
+using ControlDeFinanzasIA.Domain.Alerts;
+using ControlDeFinanzasIA.Domain.Budgets;
 using ControlDeFinanzasIA.Domain.Debts;
 using ControlDeFinanzasIA.Domain.Enums;
 using ControlDeFinanzasIA.Domain.Notifications;
@@ -18,6 +21,7 @@ namespace ControlDeFinanzasIA.Tests.Unit.Application.Notifications;
 public sealed class NotificationRulesTests
 {
     private static readonly DateOnly _today = new(2026, 9, 26);
+    private static readonly DateOnly _monthStart = new(2026, 9, 1);
     private static readonly DateTime _now = new(2026, 9, 26, 8, 0, 0, DateTimeKind.Utc);
 
     // --- DebtInstallments: S-8 window boundary ---
@@ -146,6 +150,131 @@ public sealed class NotificationRulesTests
 
         Assert.Empty(candidates);
     }
+
+    // --- Budgets: highest tier only, indeterminate lines protected ---
+
+    [Theory]
+    [InlineData(79.99, null)] // just below Near: no candidate
+    [InlineData(80.00, NotificationTier.Near)] // Near lower bound
+    [InlineData(99.99, NotificationTier.Near)] // just below Exceeded: still Near only
+    [InlineData(100.00, NotificationTier.Exceeded)] // Exceeded lower bound: Exceeded only, never both
+    [InlineData(250.00, NotificationTier.Exceeded)]
+    public void Budgets_PercentConsumed_ProducesHighestTierOnly(double percent, NotificationTier? expectedTier)
+    {
+        BudgetVsActualLine line = CreateLine("Comida", (decimal)percent);
+
+        BudgetNotificationOutcome outcome = NotificationRules.Budgets([line], _monthStart, _now);
+
+        if (expectedTier is null)
+        {
+            Assert.Empty(outcome.Candidates);
+            return;
+        }
+
+        Notification candidate = Assert.Single(outcome.Candidates);
+        Assert.Equal(NotificationKind.BudgetThreshold, candidate.Kind);
+        Assert.Equal(expectedTier, candidate.Tier);
+        Assert.Equal(line.BudgetId, candidate.SourceId);
+        Assert.Equal(_monthStart, candidate.ReferenceDate);
+        Assert.Equal("Comida", candidate.SubjectLabel);
+        Assert.Equal((decimal)percent, candidate.Percent);
+        Assert.Empty(outcome.UnknownBudgetIds);
+    }
+
+    [Fact]
+    public void Budgets_IndeterminateLine_ProducesNoCandidateAndReportsBudgetId()
+    {
+        var indeterminate = new BudgetVsActualLine(
+            Guid.NewGuid(), Guid.NewGuid(), "Viajes", BudgetDop: null, ActualDop: 500m, PercentConsumed: null, Status: null);
+        BudgetVsActualLine known = CreateLine("Comida", 90m);
+
+        BudgetNotificationOutcome outcome = NotificationRules.Budgets([indeterminate, known], _monthStart, _now);
+
+        Notification candidate = Assert.Single(outcome.Candidates);
+        Assert.Equal(known.BudgetId, candidate.SourceId);
+        Guid unknownId = Assert.Single(outcome.UnknownBudgetIds);
+        Assert.Equal(indeterminate.BudgetId, unknownId);
+    }
+
+    [Fact]
+    public void Budgets_OkLine_IsNeitherCandidateNorUnknown()
+    {
+        BudgetVsActualLine line = CreateLine("Comida", 10m);
+
+        BudgetNotificationOutcome outcome = NotificationRules.Budgets([line], _monthStart, _now);
+
+        Assert.Empty(outcome.Candidates);
+        Assert.Empty(outcome.UnknownBudgetIds);
+    }
+
+    // --- Anomalies: unacknowledged, 60-day window ---
+
+    [Theory]
+    [InlineData(0, true)] // today: in
+    [InlineData(-60, true)] // exactly 60 days old: in
+    [InlineData(-61, false)] // 61 days old: out (purge would resurrect it)
+    public void Anomalies_AlertDateOffsetFromToday_RespectsRetentionWindow(int offsetDays, bool expectedIncluded)
+    {
+        AnomalyAlert alert = CreateAlert(_today.AddDays(offsetDays));
+
+        IReadOnlyList<Notification> candidates = NotificationRules.Anomalies(
+            [alert], new Dictionary<Guid, string>(), _today, _now);
+
+        Assert.Equal(expectedIncluded, candidates.Count == 1);
+    }
+
+    [Fact]
+    public void Anomalies_UnacknowledgedAlert_BuildsAnomalyCandidateWithCategoryLabel()
+    {
+        AnomalyAlert alert = CreateAlert(_today.AddDays(-2));
+        var categoryNames = new Dictionary<Guid, string> { [alert.CategoryId] = "Restaurantes" };
+
+        IReadOnlyList<Notification> candidates = NotificationRules.Anomalies([alert], categoryNames, _today, _now);
+
+        Notification candidate = Assert.Single(candidates);
+        Assert.Equal(NotificationKind.Anomaly, candidate.Kind);
+        Assert.Equal(alert.Id, candidate.SourceId);
+        Assert.Equal(alert.Date, candidate.ReferenceDate);
+        Assert.Equal("Restaurantes", candidate.SubjectLabel);
+    }
+
+    [Fact]
+    public void Anomalies_AcknowledgedAlert_IsExcluded()
+    {
+        AnomalyAlert alert = CreateAlert(_today.AddDays(-1));
+        alert.Acknowledge(_now);
+
+        IReadOnlyList<Notification> candidates = NotificationRules.Anomalies(
+            [alert], new Dictionary<Guid, string>(), _today, _now);
+
+        Assert.Empty(candidates);
+    }
+
+    [Fact]
+    public void Anomalies_UnknownCategory_UsesEmptyLabel()
+    {
+        AnomalyAlert alert = CreateAlert(_today);
+
+        IReadOnlyList<Notification> candidates = NotificationRules.Anomalies(
+            [alert], new Dictionary<Guid, string>(), _today, _now);
+
+        Assert.Equal(string.Empty, Assert.Single(candidates).SubjectLabel);
+    }
+
+    private static BudgetVsActualLine CreateLine(string categoryName, decimal percent)
+    {
+        BudgetStatus status =
+            percent >= BudgetEvaluator.ExceededThresholdPercent ? BudgetStatus.Exceeded :
+            percent >= BudgetEvaluator.NearThresholdPercent ? BudgetStatus.Near :
+            BudgetStatus.Ok;
+
+        return new BudgetVsActualLine(
+            Guid.NewGuid(), Guid.NewGuid(), categoryName, 1000m, percent * 10m, percent, status);
+    }
+
+    private static AnomalyAlert CreateAlert(DateOnly date)
+        => AnomalyAlert.Create(
+            Guid.NewGuid(), Guid.NewGuid(), date, AnomalySeverity.Warning, "Gasto inusual", _now);
 
     private static DebtPayment CreatePayment(DateOnly scheduledDate)
     {

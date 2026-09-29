@@ -1,3 +1,6 @@
+using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
+using ControlDeFinanzasIA.Domain.Alerts;
+using ControlDeFinanzasIA.Domain.Budgets;
 using ControlDeFinanzasIA.Domain.Debts;
 using ControlDeFinanzasIA.Domain.Notifications;
 using ControlDeFinanzasIA.Domain.Recurring;
@@ -121,4 +124,116 @@ public static class NotificationRules
 
         return candidates;
     }
+
+    /// <summary>
+    /// Evalúa presupuestos del mes actual (R-5, Reconciliation #6): una línea
+    /// con <see cref="BudgetStatus.Exceeded"/> produce un candidato
+    /// <see cref="NotificationTier.Exceeded"/> y una con
+    /// <see cref="BudgetStatus.Near"/> uno <see cref="NotificationTier.Near"/>
+    /// — nunca ambos para el mismo presupuesto (solo el nivel más alto). Una
+    /// línea indeterminada (<see cref="BudgetVsActualLine.IsIndeterminate"/>,
+    /// p. ej. tasa de cambio faltante) no produce candidato y su
+    /// <see cref="BudgetVsActualLine.BudgetId"/> se reporta en
+    /// <see cref="BudgetNotificationOutcome.UnknownBudgetIds"/>: "no se puede
+    /// evaluar" no es "ya no califica".
+    /// </summary>
+    /// <param name="lines">Líneas de <c>GetBudgetVsActualQuery</c> del mes actual.</param>
+    /// <param name="monthStart">Primer día del mes evaluado (fecha de referencia del aviso).</param>
+    /// <param name="now">Momento UTC de creación para los candidatos nuevos.</param>
+    /// <returns>Los candidatos calificados y los ids de presupuestos no evaluables.</returns>
+    public static BudgetNotificationOutcome Budgets(
+        IReadOnlyList<BudgetVsActualLine> lines,
+        DateOnly monthStart,
+        DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(lines);
+
+        var candidates = new List<Notification>();
+        var unknownBudgetIds = new HashSet<Guid>();
+
+        foreach (BudgetVsActualLine line in lines)
+        {
+            if (line.Status is not { } status || line.PercentConsumed is not { } percent)
+            {
+                unknownBudgetIds.Add(line.BudgetId);
+                continue;
+            }
+
+            NotificationTier? tier = status switch
+            {
+                BudgetStatus.Exceeded => NotificationTier.Exceeded,
+                BudgetStatus.Near => NotificationTier.Near,
+                _ => null,
+            };
+
+            if (tier is null)
+            {
+                continue;
+            }
+
+            candidates.Add(Notification.ForBudget(
+                line.BudgetId, monthStart, line.CategoryName, percent, tier.Value, now));
+        }
+
+        return new BudgetNotificationOutcome(candidates, unknownBudgetIds);
+    }
+
+    /// <summary>
+    /// Evalúa alertas de anomalía (R-6, Reconciliation #4): califica una
+    /// <see cref="AnomalyAlert"/> no reconocida cuya <see cref="AnomalyAlert.Date"/>
+    /// es a lo sumo <see cref="RetentionDays"/> días anterior a
+    /// <paramref name="today"/>. Sin ese límite, una alerta más vieja sería
+    /// purgada y recreada en cada corrida, rompiendo la garantía de que una
+    /// purga nunca resucita un aviso.
+    /// </summary>
+    /// <param name="alerts">Alertas de anomalía existentes.</param>
+    /// <param name="categoryNames">
+    /// Mapa <c>CategoryId</c> → nombre (etiqueta del sujeto). Una categoría
+    /// ausente produce una etiqueta vacía.
+    /// </param>
+    /// <param name="today">Fecha de referencia de la corrida.</param>
+    /// <param name="now">Momento UTC de creación para los candidatos nuevos.</param>
+    /// <returns>Los candidatos <see cref="NotificationKind.Anomaly"/> calificados.</returns>
+    public static IReadOnlyList<Notification> Anomalies(
+        IReadOnlyList<AnomalyAlert> alerts,
+        IReadOnlyDictionary<Guid, string> categoryNames,
+        DateOnly today,
+        DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(alerts);
+        ArgumentNullException.ThrowIfNull(categoryNames);
+
+        DateOnly earliest = today.AddDays(-RetentionDays);
+
+        var candidates = new List<Notification>();
+
+        foreach (AnomalyAlert alert in alerts)
+        {
+            if (alert.IsAcknowledged || alert.Date < earliest)
+            {
+                continue;
+            }
+
+            string label = categoryNames.TryGetValue(alert.CategoryId, out string? categoryName)
+                ? categoryName
+                : string.Empty;
+
+            candidates.Add(Notification.ForAnomaly(alert.Id, alert.Date, label, now));
+        }
+
+        return candidates;
+    }
 }
+
+/// <summary>
+/// Resultado de <see cref="NotificationRules.Budgets"/>: los candidatos
+/// <see cref="NotificationKind.BudgetThreshold"/> del mes y los ids de los
+/// presupuestos que no pudieron evaluarse (línea indeterminada). El caller
+/// convierte estos últimos en claves protegidas para el reconciliador, de
+/// modo que un presupuesto no evaluable conserve sus avisos existentes.
+/// </summary>
+/// <param name="Candidates">Candidatos de presupuesto (solo el nivel más alto por presupuesto).</param>
+/// <param name="UnknownBudgetIds">Ids de presupuestos con línea indeterminada.</param>
+public sealed record BudgetNotificationOutcome(
+    IReadOnlyList<Notification> Candidates,
+    IReadOnlySet<Guid> UnknownBudgetIds);

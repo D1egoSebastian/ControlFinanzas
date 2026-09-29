@@ -191,29 +191,29 @@ with the purge, toggle-gated reads, and sequential-await rule (R-15) in place.
 Depends on 4. Goal: all four detectable kinds are wired into `DetectNotificationsUseCase`, and the
 list/mark-read/dismiss use cases exist for the UI to consume.
 
-- [ ] 5.1 Extend `NotificationRulesTests.cs` (budget + anomaly): 79.99% → no candidate, 80% →
+- [x] 5.1 Extend `NotificationRulesTests.cs` (budget + anomaly): 79.99% → no candidate, 80% →
   Near, 99.99% → Near, 100%+ → Exceeded only (never both); an indeterminate line (missing FX rate)
   produces no candidate and its budget id is reported for `protectedKeys`; an acknowledged
   `AnomalyAlert` is excluded; `Date == today − 60` in, `Date == today − 61` out (Reconciliation #4).
   (R-5, R-6, D-3)
-- [ ] 5.2 Extend `DetectNotificationsUseCaseTests.cs`: full S-1 end-to-end over fakes across all
+- [x] 5.2 Extend `DetectNotificationsUseCaseTests.cs`: full S-1 end-to-end over fakes across all
   four kinds (installment due in 2 days, subscription due in 1 day, budget at Exceeded, an
   unacknowledged anomaly) yields the combined candidate set and reconcile plan. (R-1..R-7)
-- [ ] 5.3 Write failing tests for `GetNotificationsQuery`, `MarkNotificationsReadUseCase`, and
+- [x] 5.3 Write failing tests for `GetNotificationsQuery`, `MarkNotificationsReadUseCase`, and
   `DismissNotificationUseCase`: list ordering is unread-first, then `ReferenceDate` ascending, then
   `Kind`, then `Id`, capped at 20 (R-10); `UnreadCount` counts all undismissed-and-unread rows
   regardless of the cap (R-10); dismissing a missing/already-purged id returns `Success` (idempotent,
   D-6); marking already-purged ids is a silent no-op. (R-8, R-10, D-6)
-- [ ] 5.4 Modify `NotificationRules.cs`: append `Budgets(lines, monthStart, now)` (highest-tier-only,
+- [x] 5.4 Modify `NotificationRules.cs`: append `Budgets(lines, monthStart, now)` (highest-tier-only,
   `unknownBudgetIds` for indeterminate lines) and `Anomalies(alerts, categoryNames, today, now)`
   (`!IsAcknowledged && Date >= today − 60`). Run 5.1 green. (R-5, R-6, D-3)
-- [ ] 5.5 Modify `DetectNotificationsUseCase.cs`: wire budget and anomaly reads into the sequential
+- [x] 5.5 Modify `DetectNotificationsUseCase.cs`: wire budget and anomaly reads into the sequential
   source loop, add the budget `protectedKeys` set for indeterminate lines, extend
   `evaluatedKinds`. Run 5.2 green. (R-1, R-5, R-6, R-7, D-5)
-- [ ] 5.6 Create `src/…Application/UseCases/Notifications/GetNotifications/
+- [x] 5.6 Create `src/…Application/UseCases/Notifications/GetNotifications/
   GetNotificationsQuery.cs`, `MarkNotificationsRead/MarkNotificationsReadUseCase.cs`, and
   `DismissNotification/DismissNotificationUseCase.cs` per D-6. Run 5.3 green. (R-8, R-10, D-6)
-- [ ] 5.7 Run all four gates. All green before opening PR S4.
+- [x] 5.7 Run all four gates. All green before opening PR S4.
 
 ## 6. UI core (S5a)
 
