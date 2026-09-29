@@ -14,6 +14,12 @@ namespace ControlDeFinanzasIA.UI.System;
 /// </remarks>
 public sealed class SystemPathResolver : IPathResolver
 {
+    /// <summary>
+    /// Name of the environment variable that overrides the data directory
+    /// (for throwaway runs such as smoke tests).
+    /// </summary>
+    internal const string DataDirectoryEnvironmentVariable = "CONTROLDEFINANZASIA_DATA_DIR";
+
     private readonly string _dataDirectory;
 
     /// <summary>
@@ -28,8 +34,18 @@ public sealed class SystemPathResolver : IPathResolver
     /// <c>spec/features/phase-01/F-008-composition-root.md</c>).
     /// </remarks>
     public SystemPathResolver()
+        : this(Environment.GetEnvironmentVariable(DataDirectoryEnvironmentVariable))
     {
-        _dataDirectory = ResolveDataDirectory();
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SystemPathResolver"/> class
+    /// with an explicit override value (testable seam).
+    /// </summary>
+    /// <param name="dataDirectoryOverride">Candidate override; see <see cref="ResolveDataDirectory(string?)"/>.</param>
+    internal SystemPathResolver(string? dataDirectoryOverride)
+    {
+        _dataDirectory = ResolveDataDirectory(dataDirectoryOverride);
 
         try
         {
@@ -66,8 +82,24 @@ public sealed class SystemPathResolver : IPathResolver
     /// </summary>
     public string DatabaseFilePath => Path.Combine(_dataDirectory, "data.db");
 
-    private static string ResolveDataDirectory()
+    /// <summary>
+    /// Resolves the data directory. A non-blank, absolute <paramref name="dataDirectoryOverride"/>
+    /// (from <see cref="DataDirectoryEnvironmentVariable"/>) wins; null, whitespace-only or
+    /// relative values are ignored and the OS default is returned.
+    /// </summary>
+    /// <param name="dataDirectoryOverride">Candidate override value.</param>
+    /// <returns>The data directory path.</returns>
+    internal static string ResolveDataDirectory(string? dataDirectoryOverride)
     {
+        if (!string.IsNullOrWhiteSpace(dataDirectoryOverride))
+        {
+            string trimmed = dataDirectoryOverride.Trim();
+            if (Path.IsPathRooted(trimmed) && Path.IsPathFullyQualified(trimmed))
+            {
+                return trimmed;
+            }
+        }
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             return Path.Combine(

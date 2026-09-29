@@ -165,6 +165,7 @@ dotnet build -c Release
 
 # Run the app
 dotnet run --project src/ControlDeFinanzasIA.UI
+# Set CONTROLDEFINANZASIA_DATA_DIR (absolute path) to run against a throwaway data directory
 
 # Run all tests
 dotnet test -c Release --no-build

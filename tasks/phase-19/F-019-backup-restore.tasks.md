@@ -452,7 +452,7 @@ the startup `.bak` cleanup in `App`, and the D20 architecture guard. Invoke no v
   hook runs after a successful migration and is skipped when the migration step throws (extract the ordering into
   a testable helper in `App`/`Bootstrap` if needed, without changing existing behavior). Run green after 5.2-5.7.
   (S-25, S-32)
-- [ ] 5.9 **Smoke launch on a throwaway data directory.** First confirm how `SystemPathResolver` chooses
+- [x] 5.9 **Smoke launch on a throwaway data directory.** First confirm how `SystemPathResolver` chooses
   `DataDirectory` (read `src/…UI/System/SystemPathResolver.cs`) and how to override it (env var or setting). Launch
   `dotnet run --project src/ControlDeFinanzasIA.UI` with that override pointing at a fresh temp folder; the app
   starts, migrations run, no exception, exit. If no override exists, do NOT launch against the real profile: record
@@ -462,10 +462,10 @@ the startup `.bak` cleanup in `App`, and the D20 architecture guard. Invoke no v
   opening PR S5. (R-24)
 
 **S5 apply notes:**
-- 5.9 NOT RUN: `SystemPathResolver` has no data-directory override (Windows uses `SpecialFolder.ApplicationData`, which does
-  not honor the `APPDATA` env var), so per the safety rule no launch was made against the real profile. Coverage relies on
-  `BackupCompositionTests` (real `Bootstrap` container, scope + build validation) and `StartupSequenceTests`. The manual
-  smoke stays open until a data-directory override exists (out of S5 scope; the tasks do not authorize adding one).
+- 5.9 RUN via override: `CONTROLDEFINANZASIA_DATA_DIR` (absolute path; blank/relative values ignored, OS default otherwise)
+  now redirects `SystemPathResolver`. Launched `dotnet run -c Release --no-build` against a fresh temp dir: 17 migrations
+  applied, `data.db` created there, process stayed up ~25 s with 0 exceptions/fail/crit log lines (EF rebuild-table
+  warnings only, pre-existing), then killed. Real `%APPDATA%ControlDeFinanzasIA` listing identical before/after.
 - 5.7 deviation: instead of a helper in `App`, the ordering lives in `Bootstrap.ApplyMigrationsAndCompletePendingRestore`
   (public, testable; `RunStartupSequence` skips the completion when migrations throw and swallows/logs completion errors).
   `App` calls it in place of the former `Bootstrap.ApplyMigrations(Services)` line.
