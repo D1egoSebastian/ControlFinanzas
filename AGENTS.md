@@ -11,9 +11,35 @@ the project state changes, update this file.
   **Entity Framework Core** (Code First, versioned migrations),
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
-- **Status (today):** Phases 0–17 fully archived. Phase 18 (PDF/Excel
-  export) is next per the roadmap — check `.atl/sdd/f-018p18-export/` and
-  `git log --oneline` for in-flight work before planning. Phase 17 (in-app
+- **Status (today):** Phases 0–18 fully archived. Phase 19 (backup and
+  restore) is next per the roadmap — check `.atl/sdd/` and
+  `git log --oneline` for in-flight work before planning. Phase 18
+  (PDF/Excel export) shipped "Exportar PDF" / "Exportar Excel" buttons on
+  the Dashboard (the displayed month summary) and on Expenses (the current
+  filter, every page, not just the visible one). QuestPDF Community and
+  ClosedXML live behind `IReportWriter` in Infrastructure only (NetArchTest
+  enforces it; the QuestPDF license is set in `AddReportExporters()` via
+  `QuestPdfConfiguration`), and `IFileSaveDialog` is implemented in UI over
+  Avalonia `StorageProvider`. Reports reuse the existing queries and
+  `ICurrencyConverter`: totals are DOP-normalized, every line keeps its
+  original amount + currency, and a missing rate leaves the DOP cell blank
+  (never 0) and adds a footer note. The XLSX has two sheets, `Summary`
+  (styled) and `Data` (flat, stable English headers, the Phase 20 import
+  contract). Each export renders in memory first and copies to the target
+  only on success, so a failed render never creates or truncates a file;
+  cancelling the dialog is silent. No schema change, no migration, no new
+  setting; Debts export and CSV are documented follow-ups. 1908/1908 tests
+  green (1550 unit + 358 integration), build 0/0, format exit 0. Verify
+  history: the first independent verification FAILED because
+  `QuestPdfReportWriter.WriteExpenseListAsync` was a stub (fixed in
+  3515cb9); the second, exhaustive one PASSED WITH WARNINGS, 0 critical,
+  and a permanent end-to-end test (`ReportExportEndToEndTests`, real use
+  cases + real writers, {Pdf, Xlsx} x {es-DO, en}) closed its main warning.
+  Not done by hand: the real save dialog, opening the files in a PDF/Excel
+  viewer, and a visual check in both locales (tasks 8.2/8.3). See
+  `spec/features/phase-18/F-018-export.done.md`, `tasks/phase-18/`, and
+  `.atl/sdd/f-018p18-export/`.
+  Phase 17 (in-app
   notifications) shipped a shell bell + unread badge + popup (`9+` above 9,
   20-row cap, mark-read on open, per-item permanent dismiss, manual
   refresh, no click-through) fed by a deterministic

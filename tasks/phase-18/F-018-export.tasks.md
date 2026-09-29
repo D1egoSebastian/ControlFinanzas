@@ -1,6 +1,6 @@
 # Tasks — F-018 PDF and Excel Export
 
-> Governing inputs: `spec/features/phase-18/F-018-export.spec.md` (its final "Reconciliation with design"
+> Governing inputs: `spec/features/phase-18/F-018-export.done.md` (its final "Reconciliation with design"
 > section governs where wording differs) and `.atl/sdd/f-018p18-export/design.md` (per-slice sections binding).
 > Requirement ids (R-n) and scenario ids (S-n) below refer to the spec. Design decisions are cited as D-n.
 > Strict TDD: within each slice, failing tests come first, then implementation.
@@ -339,32 +339,32 @@ Reconciliation #12), not implemented.
 
 ## 8. Cierre
 
-- [ ] 8.1 Run the full gate suite across the whole phase: `dotnet build -c Release` (0 warnings/errors),
+- [x] 8.1 (2026-09-29: build 0 warnings/0 errors; 1550 unit + 358 integration = 1908 green; `dotnet format style --verify-no-changes` exit 0; NetArchTest incl. `F018_QuestPdf_License_Se_Asigna_En_Un_Unico_Lugar` and `ExportResourcesTests` green) Run the full gate suite across the whole phase: `dotnet build -c Release` (0 warnings/errors),
   `dotnet test -c Release --no-build` (unit + integration), `dotnet format style --verify-no-changes` exit 0,
   NetArchTest R-1..R-5, source scan that `QuestPDF.Settings.License` appears once, resx completeness. All
   green. (R-11, R-12, R-13, S-14, S-15)
-- [ ] 8.2 Manual check on Windows, real save dialog, both locales (the dialog cannot be automated): Dashboard
+- [ ] 8.2 (NOT RUN BY HAND: the native save dialog cannot be automated and no agent session drove it; the app was only launch-smoked in S4/S5 without screenshots) Manual check on Windows, real save dialog, both locales (the dialog cannot be automated): Dashboard
   "Exportar PDF" and "Exportar Excel" open the native dialog with the suggested name (kind + `yyyy-MM`) and
   the right file-type filter; cancel writes nothing and shows no message and both buttons re-enable (R-8,
   S-10); overwriting an existing larger file produces a valid file (D-3); Expenses export after a calendar
   day drill-down contains only that day (R-7). Record results with screenshots.
-- [ ] 8.3 Manual check in external viewers: open the exported PDF in a PDF viewer (footer with generation date,
+- [ ] 8.3 (NOT RUN BY HAND: no PDF viewer or Excel/LibreOffice was used to open the output; file validity is covered only by automated checks — `%PDF-` prefix and size, and ClosedXML round-trip in `ClosedXmlReportWriterTests` and `ReportExportEndToEndTests`) Manual check in external viewers: open the exported PDF in a PDF viewer (footer with generation date,
   unfolded categories, budget table, missing-rate note when applicable, es-DO and en) and the XLSX in
   Excel or LibreOffice (exactly two sheets "Summary" and "Data", seven invariant headers, numeric and date
   cells, blank `AmountDOP` on a missing rate, no formula execution from a `=...` description). (R-4, R-5,
   R-6, S-1, S-2, S-4)
-- [ ] 8.4 Update `docs/roadmap.md` §Fase 18: mark the phase's completion criteria complete, with the Debts
+- [x] 8.4 (`docs/roadmap.md` §Fase 18 marked COMPLETADA with follow-ups) Update `docs/roadmap.md` §Fase 18: mark the phase's completion criteria complete, with the Debts
   export and payment-method-filter gap recorded as follow-ups.
-- [ ] 8.5 Update `docs/AI_HANDOFF.md` with the Phase 18 summary, including: buffering happens once in the use
+- [x] 8.5 (`docs/AI_HANDOFF.md`: TL;DR, phase table, "Phase 18 — what's done", pending list, gotchas #31-#33) Update `docs/AI_HANDOFF.md` with the Phase 18 summary, including: buffering happens once in the use
   case (`ReportOutput`), writers are pure DTO → Stream; sheet names and Data headers are invariant English
   (Phase 20 contract); Summary totals are authoritative over the per-line `AmountDOP`; `QuestPdfConfiguration`
   glyph check is off deliberately; `IAsyncRelayCommand.ExecuteAsync` bypasses `CanExecute`, hence the body
   guard. (Reconciliation #2, #5, #7)
-- [ ] 8.6 Update `AGENTS.md` project status: Phase 18 shipped (PDF and XLSX export of the month summary and
+- [x] 8.6 (`AGENTS.md` status line: Phases 0-18 archived, Phase 19 next) Update `AGENTS.md` project status: Phase 18 shipped (PDF and XLSX export of the month summary and
   the filtered Expenses list, libraries Infrastructure-only, test counts) and Phase 19 as next; remove the
   "Phase 18 is next" wording. Appended/edited in place, no restructuring. (R-12)
-- [ ] 8.7 Write `verify-report.md` in `.atl/sdd/f-018p18-export/`, independently re-verifying every
+- [x] 8.7 (`.atl/sdd/f-018p18-export/verify-report.md`; the manual checks 8.2/8.3 are recorded there as not run by hand) Write `verify-report.md` in `.atl/sdd/f-018p18-export/`, independently re-verifying every
   Acceptance Criteria checklist line against source and tests before archiving, including all 12
   Reconciliation points and the manual checks 8.2/8.3 (mark honestly if any was not run by hand).
-- [ ] 8.8 Archive the spec (`F-018-export.spec.md` → `.done.md` with `git mv`, acceptance criteria checked with
+- [x] 8.8 (`git mv` to `F-018-export.done.md`; `archive-report.md` written) Archive the spec (`F-018-export.spec.md` → `.done.md` with `git mv`, acceptance criteria checked with
   evidence) and write `archive-report.md` in `.atl/sdd/f-018p18-export/`. (Acceptance Criteria)

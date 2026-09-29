@@ -1,7 +1,7 @@
 # F-018 — PDF and Excel Export
 
 > **Phase:** 18 — Exportación a PDF y Excel
-> **Status:** 📝 Spec (2026-09-29) — pending design
+> **Status:** ✅ Completed and archived (2026-09-29) — verify PASS WITH WARNINGS, 0 critical
 > **SDD:** `.atl/sdd/f-018p18-export/`
 > **Input:** `.atl/sdd/f-018p18-export/proposal.md`, `.atl/sdd/f-018p18-export/exploration.md`
 > **Depends on:** Phase 4 (expense queries / filters), Phase 5 (`ICurrencyConverter`), Phase 8 (Dashboard),
@@ -308,25 +308,68 @@ PDF library for tests, export of income/goals/budget views, any change to existi
 
 ## Acceptance Criteria
 
-- [ ] **(roadmap)** Exporting the current month to PDF and Excel produces valid files with correct data
-  (S-1, S-2, S-3, S-5, S-7).
-- [ ] Every report line keeps original amount + currency; totals are DOP; missing rates are flagged in the
-  footer and never zeroed (S-3, S-4, S-6).
-- [ ] PDF is valid (`%PDF-`, non-empty) in es-DO and en without exceptions (S-8).
-- [ ] XLSX has exactly two sheets, "Summary" and "Data", with the invariant seven headers and numeric/date
-  cells (S-2).
-- [ ] Filtered Expenses export contains every matching row across all pages (S-9).
-- [ ] Cancelling the dialog writes nothing and shows no error (S-10).
-- [ ] A failure leaves no partial file and is shown as a localized status, never an exception (S-11).
-- [ ] Commands cannot double-execute (S-12); labels originate in the ViewModel (S-13).
-- [ ] QuestPDF license set once in `AddReportExporters()`, pins + banner in `Directory.Packages.props`;
-  libraries Infrastructure-only; NetArchTest R-1..R-5 green (S-14).
-- [ ] New UI strings exist in resx, es-DO and Designer (S-15).
+Verified 2026-09-29 against source and tests (second independent verification, then the closing gate run:
+build 0/0, 1550 unit + 358 integration = 1908 green, `dotnet format style --verify-no-changes` exit 0).
+Test names are relative to `tests/ControlDeFinanzasIA.Tests.Unit` (U) or `.Tests.Integration` (I).
+
+- [x] **(roadmap)** Exporting the current month to PDF and Excel produces valid files with correct data
+  (S-1, S-2, S-3, S-5, S-7). Evidence: U `Application/Exports/ExportMonthSummaryReportUseCaseTests`
+  (`ExecuteAsync_SummaryMatchesGetMonthSummaryQuery`, `ExecuteAsync_MoreThanFiveCategories_StayUnfoldedWithoutOtras`,
+  `ExecuteAsync_EmptyMonth_ProducesValidEmptyReport`); I `Reports/ReportExportEndToEndTests`
+  (`MonthSummary_RealUseCaseAndWriter_ProducesAValidFile`, real use case + real writers, Pdf/Xlsx x es-DO/en,
+  temp SQLite file: PDF starts with `%PDF-` and is > 1 KB; XLSX reopens with `XLWorkbook`, sheets `Summary`
+  and `Data`, 5 data rows = 3 expenses + 2 incomes).
+- [x] Every report line keeps original amount + currency; totals are DOP; missing rates are flagged in the
+  footer and never zeroed (S-3, S-4, S-6). Evidence: U `ExecuteAsync_UsdLineAtRate60_ConvertsToDop_DopLineEqualsAmount`,
+  `ExecuteAsync_LineWithoutRate_KeepsAmountAndFlagsMissingRates`,
+  `ExecuteAsync_IndeterminateBudgetLines_PassThroughWithNullStatus`; I `ClosedXmlReportWriterTests` (blank
+  `AmountDOP` on a missing rate, indeterminate budget marker), `QuestPdfReportWriterTests`
+  (`WriteMonthSummary_MissingRates_ProducesValidPdfDifferentFromComplete`,
+  `WriteMonthSummary_IndeterminateBudgetLines_ProducesValidPdf`); `ReportExportEndToEndTests` (a USD line with no
+  rate yields a blank `AmountDOP` cell and the export still succeeds).
+- [x] PDF is valid (`%PDF-`, non-empty) in es-DO and en without exceptions (S-8). Evidence: I
+  `QuestPdfReportWriterTests` (`WriteMonthSummary_EsDo_ProducesValidPdf`, `WriteMonthSummary_En_ProducesValidPdf`,
+  `WriteMonthSummary_LabelsAreHonored_LocalesDiffer`, `WriteExpenseList_EsDo_ProducesValidPdf`,
+  `WriteExpenseList_En_ProducesValidPdf`) and `ReportExportEndToEndTests`. Limit: PDF content is only asserted
+  as prefix/size/differs (R-17 forbids a second PDF library).
+- [x] XLSX has exactly two sheets, "Summary" and "Data", with the invariant seven headers and numeric/date
+  cells (S-2). Evidence: I `ClosedXmlReportWriterTests` (`MonthSummary_HasExactlyTwoInvariantSheetNames`, the
+  Data-headers test over both locales, formula-injection cases) and `ReportExportEndToEndTests`.
+- [x] Filtered Expenses export contains every matching row across all pages (S-9). Evidence: U
+  `ExportExpenseListReportUseCaseTests.ExecuteAsync_450MatchingRows_AreReadAsThreePagesOf200And200And50`,
+  `ExecuteAsync_IgnoresIncomingPage_AndOverwritesPageSizeTo200`; I `ReportExportEndToEndTests.ExpenseList_...`
+  (list `Data` sheet holds only the 3 expenses, no incomes).
+- [x] Cancelling the dialog writes nothing and shows no error (S-10). Evidence: U
+  `UI/DashboardViewModelExportTests.ExportPdf_Cancel_NeverCallsUseCase_ShowsNoMessage_AndClearsFlag`,
+  `UI/ExpensesViewModelTests.Export_Cancel_WritesNothingNoMessageAndNoUseCaseCall`.
+- [x] A failure leaves no partial file and is shown as a localized status, never an exception (S-11).
+  Evidence: U `ExecuteAsync_WriterThrows_ReportRenderFailedAndTargetNeverOpened`,
+  `ExecuteAsync_WriterReturnsFailure_ReportRenderFailedAndTargetNeverOpened`,
+  `ExecuteAsync_RepositoryThrows_ReturnsFailureInsteadOfThrowing`, `DashboardViewModelExportTests`
+  (`Export_WriterFailure_ShowsRenderFailedMessage_AndCommandIsUsableAgain`,
+  `Export_UnexpectedException_IsSwallowedAndShowsGenericMessage`),
+  `ExpensesViewModelTests.Export_RenderFailure_SetsFormErrorAndNoStatusMessage`.
+- [x] Commands cannot double-execute (S-12); labels originate in the ViewModel (S-13). Evidence: U
+  `DashboardViewModelExportTests.Export_TwoConcurrentInvocations_OpenExactlyOneDialog_ThenAllowsAnother`,
+  `ExpensesViewModelTests.Export_WhileExporting_SecondInvocationIsIgnored`,
+  `DashboardViewModelExportTests.Export_LabelsComeFromResxAndCurrentCulture`.
+- [x] QuestPDF license set once in `AddReportExporters()`, pins + banner in `Directory.Packages.props`;
+  libraries Infrastructure-only; NetArchTest R-1..R-5 green (S-14). Evidence: U
+  `Architecture/ArchitectureTests.F018_QuestPdf_License_Se_Asigna_En_Un_Unico_Lugar` plus the forbidden-namespace
+  arrays for QuestPDF/ClosedXML/DocumentFormat.OpenXml; banner in `Directory.Packages.props` (QuestPDF 2026.9.1,
+  ClosedXML 0.105.1); I `ReportServiceCollectionExtensionsTests` (writer registration, idempotence, resolved PDF
+  writer renders). Note: the license is assigned in `QuestPdfConfiguration.Apply()`, reached from
+  `AddReportExporters()` and also from the writer constructor (see Post-apply reconciliation).
+- [x] New UI strings exist in resx, es-DO and Designer (S-15). Evidence: U
+  `UI/ExportResourcesTests` (`ExportKeys_CoverTheDesignedSet`, `Key_IsDefinedAndNonEmpty_InBothLocales`).
 - [ ] Manual verification recorded: real save dialog on Windows, opening the PDF and XLSX in external
-  viewers (the dialog cannot be automated).
-- [ ] Build clean, full suite green, `dotnet format style --verify-no-changes` exit 0,
+  viewers (the dialog cannot be automated). NOT DONE: nobody drove the native dialog or opened the files in a
+  PDF viewer / Excel / LibreOffice, and the UI was never eyeballed in es-DO and en (tasks 8.2 and 8.3 stay
+  unchecked). Only launch-only smoke runs exist (S4, S5). Left open and non-blocking; to be run by the user.
+- [x] Build clean, full suite green, `dotnet format style --verify-no-changes` exit 0,
   `docs/architecture.md` reconciled (`CsvExporter`/`ExportView` mentions), `AGENTS.md` updated, spec renamed
-  to `.done.md` after archive.
+  to `.done.md` after archive. Evidence: closing gate run (build 0 warnings/0 errors; 1550 + 358 = 1908
+  green; format exit 0); `docs/architecture.md` §11e; `AGENTS.md` status line; this file's name.
 
 ## Reconciliation with design (2026-09-29, orchestrator)
 
@@ -346,3 +389,38 @@ All 12 points of `.atl/sdd/f-018p18-export/design.md` "Spec Reconciliation" are 
 12. Debts export is a documented follow-up, not an acceptance criterion.
 
 Open item carried into apply: slice S2 must verify exact QuestPDF/ClosedXML versions and nuspec dependencies (and SkiaSharp compatibility with LiveCharts' 2.88.9) before pinning.
+
+## Post-apply reconciliation (2026-09-29, phase closer)
+
+Divergences between the design/spec and the shipped code that were not documented while applying. None changes
+a requirement; they are recorded so a future reader does not "fix" them.
+
+1. **Extra error code `ReportDataFailed`.** R-14 lists no code for a failure while reading the data; both use
+   cases return `ReportDataFailed` (defined in `ReportErrorCodes`) when the queries or repositories throw or a
+   query returns a failure. The other codes are `ReportWriterUnavailable`, `ReportRenderFailed`,
+   `ReportSaveFailed`, plus `InvalidFilter` for the list.
+2. **`WriteExpenseListAsync` landed in two steps.** The XLSX implementation shipped in S3 (`825568d`); the PDF
+   implementation was a stub through S5/S6 and was only implemented in the fix commit `3515cb9`, after the first
+   independent verification FAILED on it. Task 6.5 was ticked while the PDF half did not exist.
+3. **QuestPDF setting renamed.** The design called it `CheckIfAllTextGlyphsAreAvailable`; in QuestPDF 2026.9.1 it
+   is `ThrowOnMissingTextGlyphs`, set to `false` in `QuestPdfConfiguration` (comment in code records the old name).
+4. **`ExportErrorMessage` helper.** `DashboardViewModel.ExportErrorMessage(string? code)` maps failure codes to
+   localized messages (unknown or missing code falls back to a generic message);
+   `ExpensesViewModel` has the equivalent `ExportErrorKey` mapping. Tested by
+   `ExportErrorMessage_KnownCodes_MapToSpecificMessages` and `ExportErrorKey_MapsCodesToResxKeys`.
+5. **Expenses failure text lives in `FormError`.** Reconciliation #10 said Expenses reuses
+   `StatusMessage`/`FormError`; in practice success goes to `StatusMessage` and failures go to `FormError`,
+   which is rendered far from the export buttons (view-only follow-up).
+6. **`QuestPdfConfiguration.Apply()` also runs from the writer constructor.** R-11 says the license is set only
+   in `AddReportExporters()`; it is assigned in exactly one place (`QuestPdfConfiguration`), reached from
+   `AddReportExporters()` and from the `QuestPdfReportWriter` constructor so a writer built directly still
+   works. The scan test `F018_QuestPdf_License_Se_Asigna_En_Un_Unico_Lugar` passes.
+7. **`ReportFilterSummary`** (date range, category name, tag count) is an extra DTO in
+   `Application/DTOs/Reports/`; it was not named in R-1/R-7 and is now listed in `docs/architecture.md` §11e.
+8. **Strict TDD was not literal in S1b and S2.** Tests were written together with the implementation in those
+   slices rather than strictly failing-first.
+9. **End-to-end coverage added at close.** `ReportExportEndToEndTests` (verification warning W1) was added in
+   the closing commit; before it, no test ran the real use cases with the real writers together.
+
+Not a divergence for this phase: `Tests.Integration.csproj` referencing the UI project dates from Phase 17
+(S5a), and no Phase 18 change was needed there.

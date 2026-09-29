@@ -1272,7 +1272,7 @@ datos.
 
 ---
 
-### Fase 18 — Exportación a PDF y Excel ✅ IMPLEMENTADA (2026-09-29, pendiente de archivo)
+### Fase 18 — Exportación a PDF y Excel ✅ COMPLETADA (2026-09-29)
 
 **Objetivo**
 Exportar el reporte actual (dashboard, vista de gastos, vista de
@@ -1304,15 +1304,24 @@ una feature "de producto" en el mismo sentido.
 - Exportar el mes actual a PDF y a Excel produce archivos válidos con
   los datos correctos. ✅
 
-**Estado actual (2026-09-29) — ✅ IMPLEMENTADA, pendiente de verify/archive**
+**Estado actual (2026-09-29) — ✅ FASE COMPLETADA**
 - ✅ Botones "Exportar PDF / Excel" en el Dashboard (mes mostrado) y en Gastos (filtro actual, todas las
   páginas). `IReportWriter` con `QuestPdfReportWriter` (QuestPDF 2026.9.1, licencia Community) y
   `ClosedXmlReportWriter` (ClosedXML 0.105.1, hojas `Summary` y `Data`); `IFileSaveDialog` como puerto de UI;
   render en memoria antes de escribir. Sin migración, sin nuevas claves de configuración. Detalle en
   `docs/architecture.md` §11e.
-- ✅ Gates: 1886 tests verdes (1550 unit + 336 integration). Aplicada en slices S1a–S6.
-- ⏳ Cierre (verify + archive) y la verificación manual del diálogo real y de abrir ambos archivos fuera de
-  la app siguen pendientes.
+- ✅ Gates: build limpio, 1908/1908 tests verdes (1550 unit + 358 integration, subiendo desde 1700/1700 al
+  cierre de Fase 17), `dotnet format style` limpio, NetArchTest verde. Aplicada en slices S1a–S6 más un
+  commit de corrección (`36c9463`, `5a8f2fe`, `b734fbd`, `825568d`, `61dee0e`, `e741559`, `c01a732`,
+  `3515cb9`).
+- ✅ Verificación: la primera verify independiente FALLÓ (el writer PDF de la lista de gastos era un stub,
+  corregido en `3515cb9`); la segunda, exhaustiva, terminó en PASS WITH WARNINGS, 0 críticos. La prueba de
+  extremo a extremo `ReportExportEndToEndTests` (casos de uso y writers reales, {Pdf, Xlsx} x {es-DO, en})
+  cerró la advertencia principal.
+- ✅ SDD archivado: `spec/features/phase-18/F-018-export.done.md`.
+- ⚠️ Pendiente no bloqueante: la verificación manual del diálogo real de guardado, abrir ambos archivos en un
+  visor PDF y en Excel/LibreOffice y la revisión visual en es-DO y en (tareas 8.2/8.3) NO se ejecutaron a
+  mano.
 - 📌 Seguimientos documentados, no implementados: exportación de Deudas (~250 líneas estimadas) y salida CSV
   (el entregable original decía "Excel/CSV"; esta fase entrega solo PDF y XLSX).
 

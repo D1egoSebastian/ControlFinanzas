@@ -9,8 +9,9 @@
 ## 1. TL;DR
 
 - **What it is:** `ControlDeFinanzasIA` — a cross-platform (.NET 8 + Avalonia MVVM) desktop app for personal-finance control with AI assist. 100% local data. DOP + USD.
-- **Current phase:** **Phase 17 archived** (in-app notifications). Phases 0–17 fully archived. Next per the roadmap: Phase 18 (PDF/Excel export) — check `.atl/sdd/f-018p18-export/` and `git log --oneline` for any in-flight work before starting.
-- **Test count:** 1700/1700 passing (1405 unit + 295 integration) as of 2026-09-28, Phase 17 close (up from 1522 at Phase 16 close). Build 0 warnings/0 errors, `dotnet format style --verify-no-changes` exit 0, NetArchTest 11/11, `ModelSnapshotConsistencyTests` 3/3. The one-off `DashboardViewModelTests` anomaly recorded at Phase 16 close (gotcha #26) did not recur in this close's gate run.
+- **Current phase:** **Phase 18 archived** (PDF/Excel export). Phases 0–18 fully archived. Next per the roadmap: Phase 19 (backup and restore) — check `.atl/sdd/` and `git log --oneline` for any in-flight work before starting.
+- **Test count:** 1908/1908 passing (1550 unit + 358 integration) as of 2026-09-29, Phase 18 close (up from 1700 at Phase 17 close). Build 0 warnings/0 errors, `dotnet format style --verify-no-changes` exit 0, NetArchTest green (R-1..R-5 plus the Phase 18 library-confinement and single-license-assignment rules), `ModelSnapshotConsistencyTests` green (no schema change in Phase 18).
+- **Phase 18 shipped PDF and Excel export: "Exportar PDF" / "Exportar Excel" buttons on the Dashboard (the displayed month summary) and on Expenses (the current filter, every page).** `ExportMonthSummaryReportUseCase` composes the existing `GetMonthSummaryQuery`, `GetCategoryBreakdownQuery` (unfolded, no "Otras") and `GetBudgetVsActualQuery` plus every expense and income of the month (paged at 200); `ExportExpenseListReportUseCase` reads the filter page by page until done. Both build a fully computed DTO (`Application/DTOs/Reports/`) and hand it to the `IReportWriter` whose `Format` matches; `ReportOutput` renders into a `MemoryStream` and copies to the `SaveTarget` only on success, so a failed render never creates or truncates the file. `QuestPdfReportWriter` (QuestPDF Community, text and tables only) and `ClosedXmlReportWriter` (two sheets: styled `Summary`, flat `Data` with stable English headers `Date, Type, Description, Category, Amount, Currency, AmountDOP` — the Phase 20 import contract) live in `Infrastructure/Reports/`, registered by `AddReportExporters()`. `IFileSaveDialog` (Application port) is implemented by `AvaloniaFileSaveDialog` over `TopLevel.StorageProvider`; cancel is silent. Totals are DOP-normalized, each line keeps its original amount + currency, and a missing rate leaves `AmountDOP` blank (em dash in the PDF), never 0, with a localized footer note. `ReportLabels` are built by the ViewModel from resx, so writers are locale-agnostic. No schema change, no migration, no new setting. Verification history: the first independent verify FAILED (the PDF `WriteExpenseListAsync` was a stub, fixed in `3515cb9`); the second, exhaustive one PASSED WITH WARNINGS, 0 critical; warning W1 was closed with `ReportExportEndToEndTests`. See gotchas #31-#33 below.
 - **Phase 17 shipped in-app notifications: a bell + unread badge + popup in a new header row of the shell, fed by a deterministic detection run.** `DetectNotificationsUseCase` reads four existing sources sequentially (debt installments in `[today-7, today+3]` with overdue derived at display time, recurring charges in `[today, today+3]`, current-month budget Near/Exceeded — highest tier only —, unacknowledged `AnomalyAlert` rows) plus a periodic digest (`Off`/`Daily`/`Weekly`, default Weekly), and hands candidates to `NotificationReconciler`, which persists them in a `Notification` table keyed by a single unique `DedupKey` string (idempotent; a dismissed key is never recreated; an undismissed row whose source stops qualifying is removed; facts on undismissed rows are refreshed without touching `Id`/`CreatedAt`/`ReadAt`; 60-day purge; one `SaveChangesAsync` per run). `ScopedNotificationCenter` gives every run its own DI scope, guards against concurrent runs (manual refresh is a no-op while one is in flight; startup/settings runs are queued), and swallows and logs every failure. Runs happen at app start (`mainWindow.Opened`), after saving the Settings "Notificaciones" section (4 per-kind toggles, default on, plus the digest frequency picker, via new `SettingKeys`/`ISettingsStore` — `AppSettings` untouched), and via the popup's refresh button. The badge shows the full unread count (`9+` above 9), the popup lists at most 20 rows unread-first and marks them read on open, per-row dismiss is permanent, and there is no click-through. `Notification` stores facts only; `NotificationTextFormatter` renders text at display time from resx. See gotchas #28-#30 below.
 - **Phase 16 shipped a "Pedir plan con IA" button on every goal row that asks the LLM for a short, motivational explanation of the exact deterministic figure `SavingsPlanCalculator` (Phase 11, unmodified) already computes.** A new `GenerateSavingsPlanUseCase` takes only `GoalId`, reloads the goal and its contributions server-side, recomputes via `Goal.CalculateProgress` + `SavingsPlanCalculator.Calculate`, and classifies the plan into exactly one state (`Live`/`AlreadyMet`/`TargetDateInPast`, `AlreadyMet` wins when both apply) so the prompt only ever receives that state's figures. A pure `SavingsPlanNarrationGuard` extracts every digit run from the model's cleaned output and drops the narration to `Unavailable` if any run isn't among the figures — plus the sanitized goal name — actually sent, closing the loop against invented numbers. `GoalRow` converted from an immutable record to an `ObservableObject` (keeping its exact 13-parameter PascalCase constructor via a scoped `IDE1006` suppression) so a per-row `IsGeneratingPlan` flag plus `[RelayCommand(AllowConcurrentExecutions = true)]` let one row's request run without disabling any other row's button. Not configured, a provider failure, or a guard rejection all leave the card's number untouched, showing only a localized fallback caption. See gotcha #26 below for the transient Dashboard test-run anomaly and gotcha #27 for the guard's documented membership-not-position limitation.
 - **Phase 15 shipped a chat screen that answers plain-language finance questions grounded in local data, with every figure computed deterministically before the model ever sees it.** `BuildChatContextQuery` composes 6 already-existing queries (month summary, category breakdown — fetched UNFOLDED so no category is ever hidden past the dashboard's top-5 default —, budget vs. actual, goals, debts + schedule, upcoming payments), each section degrading independently on failure. `ChatContextRenderer`, a pure static class, formats that snapshot into a culture-correct, name-sanitized prompt block capped at 6,000 characters by construction, dropping whole sections in a fixed order when needed. `AskFinanceChatUseCase` copies `CategorizeExpenseUseCase`'s guard skeleton and is success-shaped for every outcome (rejected, not configured, any AI failure — never `Result.Failure` or an uncaught exception). The conversation lives in memory only, cleared via a brand-new opt-in `INavigationAware` hook because `NavigationService.GoBack` reactivates the same `ChatViewModel` instance instead of resolving a new one. See gotcha #24 below for the `AsyncRelayCommand` CanExecute-not-self-checked footgun found in slice 5 and gotcha #25 for the `InternalsVisibleTo` test-only seam introduced in slice 4.
@@ -34,7 +35,7 @@
 | Type | Cross-platform desktop (Windows, macOS, Linux), single-user, local data only |
 | UI pattern | MVVM strict with **CommunityToolkit.Mvvm** (`[ObservableProperty]`, `[RelayCommand]`) |
 | Localization | `es-DO` default + `en` via `IStringLocalizer` / resx |
-| Status | Phases 0–17 ✅ archived; Phase 18 (PDF/Excel export) next |
+| Status | Phases 0–18 ✅ archived; Phase 19 (backup and restore) next |
 
 ---
 
@@ -62,6 +63,7 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 | 15 | Chat con IA sobre tus finanzas | 1 umbrella `F-015` covering 6 strictly-chained slices (context builder/renderer/use case+prompts/navigation hook+clipboard port/view model/view+routing) | 1 | 0 | 100% | `spec/phases/phase-15/features.md` + `spec/features/phase-15/F-015-ai-finance-chat.done.md` |
 | 16 | Plan de ahorro con IA para metas | 1 umbrella `F-016` covering 4 strictly-chained slices (guard+DTO+prompts/use case/row+ViewModel/view+docs) | 1 | 0 | 100% | `spec/phases/phase-16/features.md` + `spec/features/phase-16/F-016-ai-savings-plan.done.md` |
 | 17 | Notificaciones in-app | 1 umbrella `F-017` covering 9 strictly-chained slices (domain/persistence+migration/settings+reconciler/debt+recurring detection/budget+anomaly detection+read/dismiss/UI service+list VM/shell bell+startup trigger/settings section/digest) | 1 | 0 | 100% | `spec/phases/phase-17/features.md` + `spec/features/phase-17/F-017-notifications.done.md` |
+| 18 | Exportación a PDF y Excel | 1 umbrella `F-018` covering 7 strictly-chained slices (S1a ports+DTOs+paging / S1b month-summary use case / S2 PDF writer+packages+DI / S3 XLSX writer / S4 Dashboard export UI / S5 Expenses list export / S6 docs) plus one fix commit | 1 | 0 | 100% | `spec/phases/phase-18/features.md` + `spec/features/phase-18/F-018-export.done.md` |
 
 \* Phase 11's Acceptance Criteria checklist is 100% satisfied; one documented, non-blocking gap exists
 between the spec's R-1/S-2 prose (UI goal editing) and the shipped UI (create/contribute/view/delete
@@ -137,9 +139,15 @@ only) — see the TL;DR above.
   mark-read/dismiss (S4), `ScopedNotificationCenter` + list VM + formatter (S5a), shell bell/badge/popup +
   startup trigger (S5b), Settings "Notificaciones" section (S6), periodic digest (S7).
 
+**Phase 18** — `spec/features/phase-18/` (1 done, archived 2026-09-29)
+- `F-018-export.done.md` (umbrella). All 7 strictly-chained slices complete plus one fix commit: ports, DTOs
+  and paging (S1a `36c9463`), month-summary use case (S1b `5a8f2fe`), QuestPDF writer + package pins + DI
+  (S2 `b734fbd`), ClosedXML writer (S3 `825568d`), Dashboard export UI (S4 `61dee0e`), filtered Expenses
+  export (S5 `e741559`), docs reconciliation (S6 `c01a732`), PDF expense-list writer fix (`3515cb9`).
+
 ---
 
-## 4. Phase 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 & 17 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20, 2026-09-20, 2026-09-21, 2026-09-23, 2026-09-23, 2026-09-23, 2026-09-26, 2026-09-28)
+## 4. Phase 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 & 18 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20, 2026-09-20, 2026-09-21, 2026-09-23, 2026-09-23, 2026-09-23, 2026-09-26, 2026-09-28, 2026-09-29)
 
 ### What's done (backend)
 
@@ -616,14 +624,55 @@ The full task breakdown is at `tasks/phase-16/F-016-ai-savings-plan.tasks.md`.
 The full task breakdown is at `tasks/phase-17/F-017-notifications.tasks.md`. Task 10.2 (manual run in both
 locales, incl. the S-12 forced-failure check) is deliberately left unchecked: it was not run manually.
 
+### Phase 18 — what's done
+
+- Application: `Abstractions/{ReportFormat,IReportWriter,IFileSaveDialog,SaveTarget,ReportLabels}.cs`,
+  `DTOs/Reports/{MonthSummaryReport,ExpenseListReport,ReportFilterSummary,ReportTransactionLine,
+  ReportTransactionKind}.cs`, `UseCases/Exports/Common/{ReportPaging,ReportLineBuilder,ReportOutput,
+  ReportErrorCodes}.cs`, `UseCases/Exports/ExportMonthSummaryReport/` and `ExportExpenseListReport/`.
+  Failure codes: `ReportWriterUnavailable`, `ReportDataFailed`, `ReportRenderFailed`, `ReportSaveFailed`
+  (plus `InvalidFilter` for the list). Neither use case throws except for cancellation.
+- Infrastructure: `Reports/{QuestPdfReportWriter,ClosedXmlReportWriter,QuestPdfConfiguration,
+  ReportServiceCollectionExtensions}.cs`. `Directory.Packages.props` pins QuestPDF 2026.9.1 (Community
+  license, revenue-gated: re-verify on every bump) and ClosedXML 0.105.1 (MIT) behind a comment banner.
+  QuestPDF and ClosedXML types are Infrastructure-only (NetArchTest).
+- UI: `Services/AvaloniaFileSaveDialog.cs`, `Formatting/ReportLabelsFactory.cs`, export commands on
+  `DashboardViewModel` (two new constructor parameters) and `ExpensesViewModel` (two optional ones),
+  buttons in `DashboardView.axaml` / `ExpensesView.axaml`, a Fase 18 block in `Bootstrap.cs`, and the
+  report/status resx keys in `Strings.resx`, `Strings.es-DO.resx` and `Strings.Designer.cs`.
+- Deliberate rules a future reader must not "fix": (a) buffering happens once in `ReportOutput`; writers
+  are pure DTO -> Stream; (b) sheet names and `Data` headers are invariant English (Phase 20 contract);
+  (c) Summary totals from the Dashboard queries are authoritative over the per-line `AmountDOP`;
+  (d) `QuestPdfConfiguration` turns off QuestPDF's missing-glyph exception on purpose (text renders with a
+  replacement glyph instead of failing the export); (e) `IAsyncRelayCommand.ExecuteAsync` bypasses
+  `CanExecute`, hence the explicit body guard against double execution; (f) the month-summary PDF has no
+  transaction list (only the XLSX `Data` sheet does); (g) no CSV, no Debts export in v1.
+- Applied in 8 commits (`36c9463`, `5a8f2fe`, `b734fbd`, `825568d`, `61dee0e`, `e741559`, `c01a732`,
+  `3515cb9`). S4 and S5 carried launch-only smoke runs (no screenshot).
+- Verification: verify #1 FAILED (the PDF expense-list writer was a stub, fixed in `3515cb9`); verify #2
+  (exhaustive) PASS WITH WARNINGS, 0 critical. W1 (no test ran real use cases + real writers together) was
+  closed by `tests/ControlDeFinanzasIA.Tests.Integration/Reports/ReportExportEndToEndTests.cs`
+  ({Pdf, Xlsx} x {es-DO, en}, month and list, temp SQLite file, a USD line without a rate). W2: PDF content
+  is only asserted as `%PDF-` / size / differs between locales (spec R-17 forbids a second PDF library).
+  See `.atl/sdd/f-018p18-export/verify-report.md` and `archive-report.md`.
+- Gates: build clean, 1908/1908 tests (1550 unit + 358 integration, up from 1700 at Phase 17 close),
+  `dotnet format style` clean, NetArchTest green.
+- Spec archived to `spec/features/phase-18/F-018-export.done.md`; divergences from the design are in its
+  "Post-apply reconciliation" subsection.
+
+The full task breakdown is at `tasks/phase-18/F-018-export.tasks.md`. Tasks 8.2 and 8.3 (real save dialog,
+opening the files in a PDF viewer and Excel/LibreOffice, both locales on screen) are deliberately left
+unchecked: they were not run by hand.
+
 ---
 
 ## 5. What's pending (next up)
 
 Ordered by priority. Each item references its source-of-truth spec/plan.
 
-1. **Phase 18 — PDF/Excel export** — `docs/roadmap.md` §Fase 18. Check `.atl/sdd/f-018p18-export/` and
-   `git log --oneline` for any in-flight work before planning from scratch.
+1. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19. Check `.atl/sdd/` and
+   `git log --oneline` for any in-flight work before planning from scratch. Phase 18 use cases are named
+   `Export*ReportUseCase`; the name `ExportDataUseCase` is reserved for the backup.
 2. **Follow-up, not phase-blocking**: Phase 16's `SavingsPlanNarrationGuard.IsGrounded` is a
    membership check, not a positional one (documented, accepted design cost) — do not "fix" it into a
    positional check; the goal name's digit runs are deliberately included in the allowed set (Spec
@@ -701,12 +750,18 @@ Ordered by priority. Each item references its source-of-truth spec/plan.
     `ScopedNotificationCenter` captures `SynchronizationContext.Current` at construction, so it must be
     resolved on the UI thread; the unread accent stripe on popup rows is effectively never visible
     (opening the popup marks the rows read).
-17. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19
-18. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20
+17. **Follow-up, not phase-blocking**: Phase 18 verify suggestions. The report writers swallow the inner
+    exception into a coded `Result.Failure` and only the code is logged by the use case; the Expenses
+    export failure text is shown in `FormError`, far from the export buttons (small view-only
+    follow-up); the export UI was never eyeballed in es-DO/en and the real save dialog was never driven
+    (tasks 8.2/8.3); Debts export (spec R-16, ~250 lines predicted) and CSV output are documented
+    follow-ups; `QuestPdfConfiguration.Apply()` also runs from the writer constructor (allowed by the
+    design; the scan test passes).
+18. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20 (consumes the Phase 18 `Data` sheet contract)
 19. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
 
 **MVP (no IA) = phases 0–12, fully complete. Phases 13–16 = first four shipped AI features. Phase 17
-(notifications) is deterministic and AI-free.** Phase 18+ continues the roadmap.
+(notifications) and Phase 18 (export) are deterministic and AI-free.** Phase 19+ continues the roadmap.
 
 ---
 
@@ -980,7 +1035,7 @@ dotnet ef migrations add <Name> `
 
 ### Where to start
 
-1. **Read `spec/` first.** Phase 17 (in-app notifications) is archived at `spec/features/phase-17/F-017-notifications.done.md`. Phase 18 (PDF/Excel export) is next per the roadmap — check `.atl/sdd/f-018p18-export/` and `git log --oneline` for in-flight work before planning from scratch.
+1. **Read `spec/` first.** Phase 18 (PDF/Excel export) is archived at `spec/features/phase-18/F-018-export.done.md`. Phase 19 (backup and restore) is next per the roadmap — check `.atl/sdd/` and `git log --oneline` for in-flight work before planning from scratch.
 2. **Check tasks:** `tasks/phase-17/F-017-notifications.tasks.md` is the closed checklist for the last fully completed phase (9 strictly chained slices; only the manual task 10.2 is deliberately unchecked) — use it as the pattern reference for a multi-slice breakdown.
 3. **Read constitution** if touching architecture or stack: `spec/constitution/mission.md`, `spec/constitution/tech-stack.md`.
 4. **Check the SDD working dir** for any in-flight change: `.atl/sdd/<change-id>/`.
@@ -1185,6 +1240,22 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
     budget-read-failure skips the digest without advancing the cursor, duplicated `RetentionDays`, etc.).
     The `budgetReadFailed` branch in `DetectNotificationsUseCase` looks unreachable because
     `GetBudgetVsActualQuery` never returns `Failure` today — it is defensive, keep it.
+31. **Phase 18 writers are pure DTO -> Stream; atomicity lives in `ReportOutput`.** The use case renders
+    into a `MemoryStream` and only then opens the `SaveTarget` and copies, so a failed render never creates
+    or truncates the destination. Never move buffering into a writer and never pass a live file stream to
+    one. Overwriting a longer existing file yields the new content only (covered by
+    `ExecuteAsync_ExistingLongerTarget_IsTruncatedToNewContent`).
+32. **Phase 18 spec-vs-code traps.** A missing exchange rate is a blank `AmountDOP` (XLSX) / em dash (PDF),
+    never 0, and the Summary totals are authoritative over the per-line DOP figure. The XLSX sheet names and
+    `Data` headers are English in both locales on purpose (Phase 20 reads them). The QuestPDF setting the
+    design called `CheckIfAllTextGlyphsAreAvailable` is named `ThrowOnMissingTextGlyphs` in 2026.9.
+    `QuestPDF.Settings.License` may be assigned in exactly one file (`QuestPdfConfiguration`, reached from
+    `AddReportExporters()`); the architecture scan test `F018_QuestPdf_License_Se_Asigna_En_Un_Unico_Lugar`
+    enforces it.
+33. **A checklist said "done" while the PDF expense-list writer was a stub.** Phase 18's first independent
+    verify FAILED on exactly that: `QuestPdfReportWriter.WriteExpenseListAsync` did not render the rows,
+    and only shape-level checks existed. The fix (`3515cb9`) implemented it, and `ReportExportEndToEndTests`
+    now exercises real use cases with real writers. Keep verifying against source, not against the task list.
 
 ---
 
@@ -1196,7 +1267,7 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 # 1. Confirm the build is clean before you do anything
 dotnet build -c Release
 
-# 2. Confirm the existing 1700 tests still pass
+# 2. Confirm the existing 1908 tests still pass
 dotnet test -c Release --no-build
 
 # 3. Confirm CI's format gate is green
@@ -1205,8 +1276,8 @@ dotnet format style --verify-no-changes
 # 4. Confirm the architecture rules still hold
 dotnet test --no-build -c Release --filter "FullyQualifiedName~Architecture"
 
-# 5. Phase 17 is archived; Phase 18 (export) is next. Check for in-flight work first.
-Get-ChildItem .\.atl\sdd\f-018p18-export; git log --oneline -10
+# 5. Phase 18 is archived; Phase 19 (backup/restore) is next. Check for in-flight work first.
+Get-ChildItem .\.atl\sdd; git log --oneline -10
 ```
 
 If all five succeed, the working tree is healthy. If any fail, **stop and fix before reading further code** — fixing a broken build first will save you time.

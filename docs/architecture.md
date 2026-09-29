@@ -665,7 +665,7 @@ tipo y los descartes porque tiene su propio apagado.
 
 ## 11e. Exportación de reportes a PDF y Excel (Fase 18)
 
-**Fase 18, implementado (pendiente de archivo).** Como la Fase 17, no usa `ILLMClient`: el reporte es una
+**Fase 18, implementado y archivado (2026-09-29).** Como la Fase 17, no usa `ILLMClient`: el reporte es una
 proyección determinista de lecturas existentes (`GetMonthSummaryQuery`, `GetCategoryBreakdownQuery`,
 `GetBudgetVsActualQuery`, el repositorio de gastos y `ICurrencyConverter`), sin reglas de negocio nuevas,
 sin migración y sin claves de configuración nuevas.
@@ -678,7 +678,8 @@ sin migración y sin claves de configuración nuevas.
 - `IFileSaveDialog` (Application/Abstractions): `PickAsync` devuelve un `SaveTarget?` (`null` = el usuario
   canceló, no es un error). `SaveTarget` abre el stream de forma perezosa y no expone tipos de Avalonia.
 - DTOs en `Application/DTOs/Reports/`: `MonthSummaryReport`, `ExpenseListReport`, `ReportTransactionLine`,
-  `ReportTransactionKind`, `ExportReportResult`. Todo el texto visible llega en `ReportLabels`, armado por
+  `ReportTransactionKind`, `ReportFilterSummary` (descripción del filtro de la lista: rango de fechas,
+  nombre de categoría y cantidad de etiquetas), `ExportReportResult`. Todo el texto visible llega en `ReportLabels`, armado por
   `ReportLabelsFactory` (UI) desde resx `es-DO`/`en`.
 
 ### Casos de uso y salida en memoria
