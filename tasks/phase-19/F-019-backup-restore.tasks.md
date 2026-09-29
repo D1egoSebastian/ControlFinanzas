@@ -118,7 +118,7 @@ Depends on nothing (Phases 0-18 archived). Goal: library-free ports, records, er
 Depends on 1. Goal: `SqliteBackupService.CreateAsync` produces a valid, key-free, hash-verified ZIP from a consistent
 snapshot, writing to the destination only after every check passes. Confirm the two assumptions carried into apply.
 
-- [ ] 2.1 **Technology confirmation (first task of the slice, before production code).** Write a throwaway-free,
+- [x] 2.1 **Technology confirmation (first task of the slice, before production code).** Write a throwaway-free,
   permanent characterization test `tests/…Integration/Backup/SqliteBehaviorAssumptionsTests.cs` against the pinned
   Microsoft.Data.Sqlite 8.0.11 proving: (a) `SqliteConnection.BackupDatabase` copies a file DB while a second
   connection commits rows in a loop and the copy passes `integrity_check`; (b) with `Pooling=False` the OS handle is
@@ -126,12 +126,12 @@ snapshot, writing to the destination only after every check passes. Confirm the 
   (Windows); (c) `PRAGMA secure_delete=ON` + `DELETE` + `VACUUM` leaves no trace of a marker string in the file
   bytes, while a plain `DELETE` does. Record the outcome in the PR description; if any assertion contradicts the
   design, STOP and report before implementing. (R-3, R-6, R-13, DD-3)
-- [ ] 2.2 Create `tests/…Integration/Backup/BackupTestDb.cs` (fixture): `<temp>\backup-<guid>\` data dir,
+- [x] 2.2 Create `tests/…Integration/Backup/BackupTestDb.cs` (fixture): `<temp>\backup-<guid>\` data dir,
   `StubPathResolver`, real file DB created via `AppDbContext.Database.Migrate()`, seeded across every table
   (accounts, categories, expenses, incomes, budgets, goals, debts, recurring, notifications, anomaly alerts, saved
   views, tags, `Settings` with `ai.apiKey = "sk-test-SECRET-123"`), helper `LiveSha256()`, and `Dispose` doing
   `SqliteConnection.ClearAllPools()` plus recursive delete (the `ReportExportEndToEndTests` precedent). (R-16, R-10)
-- [ ] 2.3 Write failing `tests/…Integration/Backup/SqliteBackupServiceCreateTests.cs` against the REAL
+- [x] 2.3 Write failing `tests/…Integration/Backup/SqliteBackupServiceCreateTests.cs` against the REAL
   `SqliteBackupService` on the fixture, with `PhysicalBackupFileSystem`, `FakeClock` and a no-op `Delay`:
   (a) the ZIP has exactly the entries `manifest.json` and `data.db`, nothing else (S-3, R-2); (b) manifest fields:
   `formatVersion 1`, `exportedAt` equals `clock.UtcNow.ToString("O")`, `appVersion` from options, `schemaVersion`
@@ -148,11 +148,11 @@ snapshot, writing to the destination only after every check passes. Confirm the 
   `backups\.work\` and the data directory contain no leftover temp file after success, failure and cancellation
   (R-7); (l) any `IOException` maps to `IoError` (R-17); (m) creation never enables WAL (`journal_mode` of the copy
   is `delete`) (R-3). (R-2..R-7, R-17, S-3, S-5, S-6, S-7)
-- [ ] 2.4 Create `src/…Infrastructure/Backup/{BackupOptions,IBackupFileSystem,PhysicalBackupFileSystem}.cs` per DD-3
+- [x] 2.4 Create `src/…Infrastructure/Backup/{BackupOptions,IBackupFileSystem,PhysicalBackupFileSystem}.cs` per DD-3
   (public seam because Infrastructure has no `InternalsVisibleTo`; `BackupOptions` with retry delays, injectable
   `Delay`, size caps, `SafetyBackupsToKeep`). `PhysicalBackupFileSystem` is a 1:1 wrapper over `System.IO` +
   `DriveInfo`, with `Replace` calling `File.Replace(..., ignoreMetadataErrors: true)`. (R-11, R-13, DD-3)
-- [ ] 2.5 Create `src/…Infrastructure/Backup/BackupZip.cs` (manifest JSON via `System.Text.Json`, camelCase, strict
+- [x] 2.5 Create `src/…Infrastructure/Backup/BackupZip.cs` (manifest JSON via `System.Text.Json`, camelCase, strict
   read; capped entry reader/writer; deterministic `Optimal` compression) with unit-level use only through the
   service. Create `src/…Infrastructure/Backup/SqliteBackupService.cs` with the single-flight `SemaphoreSlim`,
   per-call work directory `<DataDir>\backups\.work\<guid>\` deleted in `finally`, pipeline bodies in `Task.Run`,
@@ -164,16 +164,37 @@ snapshot, writing to the destination only after every check passes. Confirm the 
   `CreateAsync` is added to a `sealed partial class SqliteBackupService` that is not yet registered for
   `IBackupService` (registration happens in 2.6 only for the concrete type). Whichever is chosen, no method with
   `throw new NotImplementedException()` may exist. Run 2.3 green. (R-2..R-7, R-24, DD-3, DD-4)
-- [ ] 2.6 Create `src/…Infrastructure/Backup/BackupServiceCollectionExtensions.cs` (`AddBackup(this IServiceCollection,
+- [x] 2.6 Create `src/…Infrastructure/Backup/BackupServiceCollectionExtensions.cs` (`AddBackup(this IServiceCollection,
   string appVersion)` with `TryAddSingleton`; no `Bootstrap` change yet) and a test
   `BackupServiceCollectionExtensionsTests` resolving the registered singletons, calling `AddBackup` twice
   idempotently. (R-24, DD-3)
-- [ ] 2.7 Verify no new package: `git diff --name-only` for the slice contains no `Directory.Packages.props` or
+- [x] 2.7 Verify no new package: `git diff --name-only` for the slice contains no `Directory.Packages.props` or
   `.csproj`. (R-24)
-- [ ] 2.8 Run all four gates plus the no-stubs grep over `src/ControlDeFinanzasIA.Infrastructure/Backup` and
+- [x] 2.8 Run all four gates plus the no-stubs grep over `src/ControlDeFinanzasIA.Infrastructure/Backup` and
   `tests/ControlDeFinanzasIA.Tests.Integration/Backup` (no `NotImplementedException|TODO|FIXME|HACK`). Confirm
   `dotnet test` includes the new integration tests by name (`--filter FullyQualifiedName~Backup`, N > 0). All green
   before opening PR S2. (R-24)
+
+**S2 apply notes (findings that bind later slices):**
+- `BackupDatabase` (Microsoft.Data.Sqlite 8.0.11) does NOT wait on a busy source: it throws SQLite error 5 at once
+  (extended codes such as 261 `BUSY_RECOVERY` appear against a WAL database; `SqliteErrorCode` is the extended code,
+  so mask with `& 0xFF`). The copy is consistent whenever it succeeds. `CreateAsync` therefore retries with a fresh
+  destination file (`BackupOptions.SnapshotRetryDelays`, `BackupOptions.Delay`); this is an addition to DD-4 step 1.
+- `Pooling=False` releases the OS handle on `Dispose`; pooled connections keep it until `ClearAllPools()` (Windows).
+  `secure_delete` + `DELETE` + `VACUUM` removes the bytes; a plain `DELETE` leaves them. All confirmed by tests.
+- **The live database is in WAL mode** (EF Core 8 creates SQLite files in WAL). The design assumed a rollback
+  journal. Consequences for S4: the live `data.db` may have `data.db-wal` / `data.db-shm` next to it, and swapping
+  `data.db` while a stale `-wal` remains would apply the OLD database's frames to the restored file. S4a/S4b MUST
+  checkpoint/close all connections and remove (or verify absent) `data.db-wal` and `data.db-shm` around the swap and
+  add tests for it; the `data.db-journal` hot-journal gate alone is not enough. The exported/restored copy is
+  normalized with `PRAGMA journal_mode = DELETE`.
+- The create pipeline opens the live file `ReadOnly`; on a WAL database this can leave empty `data.db-wal` /
+  `data.db-shm` sidecars (normal for a WAL database, harmless).
+- `SqliteBackupService` is a `sealed partial class` that does not yet implement `IBackupService` (no placeholder
+  members); its constructor omits `IMigrationCatalog` until S3 needs it; `AddBackup` registers the concrete type only.
+  `BackupOptions` only carries the fields S2 uses (`SwapRetryDelays`, size caps and `SafetyBackupsToKeep` arrive with
+  the slices that read them).
+- An integrity check also runs on the raw copy before redaction (VACUUM could otherwise hide page damage).
 
 ## 3. Inspect pipeline and migration catalog (S3)
 
