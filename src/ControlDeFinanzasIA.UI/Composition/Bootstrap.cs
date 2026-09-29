@@ -64,6 +64,7 @@ using ControlDeFinanzasIA.Application.UseCases.Transactions.DeleteTransaction;
 using ControlDeFinanzasIA.Infrastructure.ExchangeRates;
 using ControlDeFinanzasIA.Infrastructure.Llm;
 using ControlDeFinanzasIA.Infrastructure.Persistence;
+using ControlDeFinanzasIA.Infrastructure.Reports;
 using ControlDeFinanzasIA.UI.Formatting;
 using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.Services;
@@ -257,6 +258,10 @@ public static class Bootstrap
         services.AddTransient<UpdateNotificationSettingsUseCase>();
         services.AddSingleton<INotificationCenter, ScopedNotificationCenter>();
         services.AddSingleton<NotificationListViewModel>();
+
+        // Fase 18: exportacion a PDF/Excel (F-018, slice S2). Solo los escritores
+        // de informes; los casos de uso y el dialogo de guardado llegan en S4.
+        services.AddReportExporters();
 
         ServiceProvider tempProvider = services.BuildServiceProvider();
         try

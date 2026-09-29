@@ -65,7 +65,12 @@ public sealed class ArchitectureTests
     [
         "Microsoft.EntityFrameworkCore",
         "Avalonia.Controls",
-        "System.Net.Http"
+        "System.Net.Http",
+
+        // F-018 (slice S2, D-9): report libraries are Infrastructure-only.
+        "QuestPDF",
+        "ClosedXML",
+        "DocumentFormat.OpenXml"
     ];
 
     private static readonly string[] _forbiddenPackagesForUi =
@@ -80,7 +85,12 @@ public sealed class ArchitectureTests
         // Microsoft.Extensions.Http type in UI IL — this is exactly the
         // mistake R4_UI_No_Depende_De_Paquetes_Prohibidos_EfCore_HttpClient
         // exists to catch, extended to also catch it here.
-        "Microsoft.Extensions.Http"
+        "Microsoft.Extensions.Http",
+
+        // F-018 (slice S2, D-9): report libraries are Infrastructure-only.
+        "QuestPDF",
+        "ClosedXML",
+        "DocumentFormat.OpenXml"
     ];
 
     /// <summary>
@@ -345,6 +355,27 @@ public sealed class ArchitectureTests
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// F-018 (S2, R-11, S-14): the QuestPDF license is assigned in exactly one
+    /// place (<c>QuestPdfConfiguration</c>, reached from <c>AddReportExporters()</c>).
+    /// </summary>
+    [Fact]
+    public void F018_QuestPdf_License_Se_Asigna_En_Un_Unico_Lugar()
+    {
+        string testAssemblyLocation = typeof(ArchitectureTests).Assembly.Location;
+        string repoRoot = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(testAssemblyLocation)!, "..", "..", "..", "..", ".."));
+
+        string[] offenders = Directory
+            .EnumerateFiles(Path.Combine(repoRoot, "src"), "*.cs", SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                && !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .Where(path => System.Text.RegularExpressions.Regex.IsMatch(File.ReadAllText(path), @"Settings\.License\s*="))
+            .Select(path => Path.GetFileName(path))
+            .ToArray();
+
+        Assert.Equal(new[] { "QuestPdfConfiguration.cs" }, offenders);
     }
 
     private static string GetProjectFilePath(Assembly assembly)

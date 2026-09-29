@@ -17,6 +17,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- F-018 (slice S2, D-9): report writers. Versions and license banner live in Directory.Packages.props. -->
+    <PackageReference Include="QuestPDF" />
+    <PackageReference Include="ClosedXML" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!--
       F-013 (slice 2, D-4): prompt templates shipped as embedded resources.
       WithCulture=false + an explicit LogicalName are required: the file

@@ -115,6 +115,30 @@
     <PackageVersion Include="Microsoft.Extensions.Http" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="8.10.0" />
 
+    <!-- ============================================================
+         Report export (F-018 Phase 18). Infrastructure-only (R-2/R-4):
+         Application holds only IReportWriter; UI only calls
+         AddReportExporters(). NetArchTest forbids QuestPDF/ClosedXML/
+         DocumentFormat.OpenXml types in Application and UI.
+         QuestPDF 2026.9.1 - Community License (LICENSE.md v3.0, effective
+           6 July 2026): free for individual personal projects, and for
+           organizations under USD 1M annual gross revenue. This app is a
+           personal, zero-revenue project -> eligible (categories 1 and 6).
+           The license is version-specific: RE-READ the LICENSE.md inside
+           the nupkg (questpdf.com/license) on EVERY version bump. Set once
+           via AddReportExporters() (QuestPDF.Settings.License =
+           LicenseType.Community). No network or telemetry. Uses its own
+           native Skia build: the nuspec has no SkiaSharp dependency, so it
+           cannot conflict with LiveCharts' SkiaSharp 2.88.9 (verified at
+           pin time).
+         ClosedXML 0.105.1 - MIT. Transitives verified MIT/Apache-2.0 at
+           pin time; SixLabors.Fonts must stay on 1.x (Apache-2.0).
+         Rejected: EPPlus (Polyform NC since v5), NPOI (conditional EULA
+           on binaries since 2.8.0), PdfSharp/MigraDoc (fallback only).
+         ============================================================ -->
+    <PackageVersion Include="QuestPDF" Version="2026.9.1" />
+    <PackageVersion Include="ClosedXML" Version="0.105.1" />
+
   </ItemGroup>
 
   <!--

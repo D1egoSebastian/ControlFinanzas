@@ -118,52 +118,52 @@ renders through a picked writer into memory, and copies to the target only on su
 Depends on 2. Goal: `QuestPdfReportWriter` writes valid PDFs in both locales, packages are pinned with the
 license banner, and the QuestPDF license is set once inside `AddReportExporters()`.
 
-- [ ] 3.1 **Version verification and pin task (first task of the slice).** Run
+- [x] 3.1 **Version verification and pin task (first task of the slice).** Run
   `dotnet package search QuestPDF --exact-match` and `dotnet package search ClosedXML --exact-match` (or check
   nuget.org) and record the newest stable versions. Inspect each nuspec: QuestPDF must be >= 2024.3.0 with no
   `SkiaSharp` package dependency (own native Skia build); ClosedXML must not pull SixLabors.Fonts >= 2 (Six
   Labors Split License) and must be MIT with MIT/Apache-2.0 transitives. Re-read the QuestPDF Community license
   terms for the chosen version and confirm eligibility (personal, zero revenue). Record the findings (versions,
   nuspec dependencies, license reading) in the PR description. (R-11, D-9)
-- [ ] 3.2 Append the banner `ItemGroup` block to `Directory.Packages.props` (text from D-9: Infrastructure-only,
+- [x] 3.2 Append the banner `ItemGroup` block to `Directory.Packages.props` (text from D-9: Infrastructure-only,
   Community-license eligibility reasoning, revenue-gated and version-specific, re-verify on every bump,
   rejected alternatives) with exact `PackageVersion` pins for QuestPDF and ClosedXML from 3.1. Add the two
   `PackageReference` entries (no versions) to `ControlDeFinanzasIA.Infrastructure.csproj` only. (R-11, R-12)
-- [ ] 3.3 SkiaSharp compatibility gate: `dotnet build -c Release` shows no NU1605/NU1608; `dotnet list
+- [x] 3.3 SkiaSharp compatibility gate: `dotnet build -c Release` shows no NU1605/NU1608; `dotnet list
   src/ControlDeFinanzasIA.UI package --include-transitive` shows exactly one SkiaSharp version (2.88.9, from
   LiveChartsCore.SkiaSharpView.Avalonia 2.0.5). If QuestPDF depends on SkiaSharp, apply mitigation (a) pick a
   QuestPDF version that does not; only if impossible mitigation (b) transitive pin, then re-check the Dashboard
   charts. Record the output. (R-11, D-9)
-- [ ] 3.4 Write failing `tests/…Unit/Architecture/ArchitectureTests.cs` additions (appended): add `"QuestPDF"`,
+- [x] 3.4 Write failing `tests/…Unit/Architecture/ArchitectureTests.cs` additions (appended): add `"QuestPDF"`,
   `"ClosedXML"` and `"DocumentFormat.OpenXml"` to both forbidden-namespace arrays (Application/Domain and UI
   sides) so the rules fail if any of those types leak; plus a source-scan test asserting
   `QuestPDF.Settings.License` is assigned in exactly one place, `QuestPdfConfiguration`/`AddReportExporters()`.
   (R-11, R-12, S-14)
-- [ ] 3.5 Write failing `tests/…Integration/Reports/QuestPdfReportWriterTests.cs`: month-summary output is
+- [x] 3.5 Write failing `tests/…Integration/Reports/QuestPdfReportWriterTests.cs`: month-summary output is
   non-empty, longer than 1 KB and starts with `%PDF-` under es-DO and en labels/cultures (S-8); es-DO and en
   outputs differ (labels honored, R-10); does not throw for an empty month (S-7), missing rates (footer note
   present, S-4), indeterminate budget lines (marker, never 0%/100%, S-6) and a description containing
   `ñ á €` plus an emoji (glyph check off, D-10); a failing render is returned as `Result.Failure`, not thrown
   (R-5, R-14); when no rate is missing the footer note is absent (R-4). (R-4, R-5, R-10)
-- [ ] 3.6 Write failing `tests/…Integration/Reports/ReportServiceCollectionExtensionsTests.cs`: after
+- [x] 3.6 Write failing `tests/…Integration/Reports/ReportServiceCollectionExtensionsTests.cs`: after
   `AddReportExporters()` the container resolves two `IReportWriter` with distinct formats; calling it twice is
   idempotent (`TryAddEnumerable`); a PDF renders without any other global initialization. (R-1, R-11)
-- [ ] 3.7 Create `src/…Infrastructure/Reports/QuestPdfConfiguration.cs` (idempotent `Apply()`: License =
+- [x] 3.7 Create `src/…Infrastructure/Reports/QuestPdfConfiguration.cs` (idempotent `Apply()`: License =
   Community, `CheckIfAllTextGlyphsAreAvailable = false`) and
   `ReportServiceCollectionExtensions.cs` (`AddReportExporters()` per D-10, the only place the license is set
   from DI; the writer constructor calls the same idempotent `Apply()`). (R-11, D-10)
-- [ ] 3.8 Create `src/…Infrastructure/Reports/QuestPdfReportWriter.cs`: `WriteMonthSummaryAsync` per D-6
+- [x] 3.8 Create `src/…Infrastructure/Reports/QuestPdfReportWriter.cs`: `WriteMonthSummaryAsync` per D-6
   (Letter, 36pt margin, base size 10; summary table, unfolded category table with share and total row, budget
   table with `—` + indeterminate label, `ReportNoData` for empty sections, footer with generation date,
   missing-rates note only when flagged, page label); text and tables only; all text and formatting from
   `labels`/`labels.Culture`, never resx or `CurrentUICulture`; work wrapped in `Task.Run(..., ct)`; library
   exceptions converted to `Result.Failure("ReportRenderFailed")`. `WriteExpenseListAsync` returns a
   not-yet-implemented failure until S5. Run 3.5 and 3.6 green. (R-4, R-5, R-10, R-14, D-12)
-- [ ] 3.9 Smoke export on Windows: render one month-summary PDF to a temp path through a throwaway test or
+- [x] 3.9 Smoke export on Windows: render one month-summary PDF to a temp path through a throwaway test or
   script and confirm it opens in a viewer; confirm no runtime SkiaSharp native conflict with the Dashboard
   charts by launching the app (`dotnet run --project src/ControlDeFinanzasIA.UI`) and viewing the Dashboard.
   Screenshot only, no simulated clicks. (R-5, D-9)
-- [ ] 3.10 Run all four gates. All green before opening PR S2. (R-11, R-12)
+- [x] 3.10 Run all four gates. All green before opening PR S2. (R-11, R-12)
 
 ## 4. XLSX writer (S3)
 
