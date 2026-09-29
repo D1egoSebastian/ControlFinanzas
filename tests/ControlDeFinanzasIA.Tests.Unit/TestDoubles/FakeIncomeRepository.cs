@@ -14,6 +14,7 @@ namespace ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 public sealed class FakeIncomeRepository : IIncomeRepository
 {
     private readonly List<Income> _addedIncomes = new();
+    private readonly List<int> _requestedPages = new();
     private Result _addResult = Result.Success(null!);
     private Exception? _getByFilterException;
 
@@ -44,6 +45,18 @@ public sealed class FakeIncomeRepository : IIncomeRepository
     /// Gets the result returned by <see cref="GetByFilterAsync"/>.
     /// </summary>
     public PagedResult<Income> FilterResult { get; private set; } = new(new List<Income>(), 0, 1, 50);
+
+    /// <summary>
+    /// When <c>true</c>, <see cref="GetByFilterAsync"/> pages the in-memory added items
+    /// (date range and page/page size honored) instead of returning <see cref="FilterResult"/>
+    /// on every call. Additive mode for export tests (F-018, D-5); off by default.
+    /// </summary>
+    public bool PageAddedItems { get; set; }
+
+    /// <summary>
+    /// Gets the page numbers requested through <see cref="GetByFilterAsync"/>, in call order.
+    /// </summary>
+    public IReadOnlyList<int> RequestedPages => _requestedPages;
 
     /// <summary>
     /// Gets the number of times <see cref="GetByFilterAsync"/> has been called.
@@ -142,6 +155,18 @@ public sealed class FakeIncomeRepository : IIncomeRepository
         if (_getByFilterException is not null)
         {
             return Task.FromException<PagedResult<Income>>(_getByFilterException);
+        }
+
+        _requestedPages.Add(filter.Page);
+
+        if (PageAddedItems)
+        {
+            var matching = _addedIncomes
+                .Where(x => (filter.DateFrom is null || x.Date >= filter.DateFrom)
+                    && (filter.DateTo is null || x.Date <= filter.DateTo))
+                .ToList();
+            var pageItems = matching.Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize).ToList();
+            return Task.FromResult(new PagedResult<Income>(pageItems, matching.Count, filter.Page, filter.PageSize));
         }
 
         return Task.FromResult(FilterResult);

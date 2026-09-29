@@ -77,7 +77,7 @@ Application, with the paging helper and test doubles ready for the use case in S
 Depends on 1. Goal: `ExportMonthSummaryReportUseCase` builds the fully computed DTO from existing queries,
 renders through a picked writer into memory, and copies to the target only on success.
 
-- [ ] 2.1 Write failing `tests/…Unit/Application/Exports/ExportMonthSummaryReportUseCaseTests.cs` with
+- [x] 2.1 Write failing `tests/…Unit/Application/Exports/ExportMonthSummaryReportUseCaseTests.cs` with
   `FakeReportWriter`, `SaveTargets.Recording()` and `FakeCurrencyConverter(onConvert)`:
   (a) DTO summary equals `GetMonthSummaryQuery`'s DOP totals and previous-month figures (R-2, S-1);
   (b) more than 5 categories stay unfolded, no "Otras", rows sum to `CategoriesTotalDop` (R-2, S-5);
@@ -90,28 +90,28 @@ renders through a picked writer into memory, and copies to the target only on su
   (h) `Labels` reaches the writer by reference, unchanged (R-10);
   (i) empty month produces a valid DTO with zero totals and empty sections, no failure (R-2, S-7);
   (j) `GeneratedOn == IClock.Today` (Reconciliation #9).
-- [ ] 2.2 Add to the same test file the failure and safety cases: writer returns failure or throws gives
+- [x] 2.2 Add to the same test file the failure and safety cases: writer returns failure or throws gives
   `ReportRenderFailed` with 0 opens and 0 bytes on the target (R-9, R-14, S-11); `IOException` on open gives
   `ReportSaveFailed` (R-9, R-14); no writer for the requested format gives `ReportWriterUnavailable` and no
   repository call (R-1); no exception ever escapes and a cancelled token is not reported as failure (R-14);
   writing over a longer existing buffer is truncated via `SetLength` (R-9, D-3).
-- [ ] 2.3 Additive page-aware mode for `tests/…Unit/TestDoubles/FakeExpenseRepository.cs` and
+- [x] 2.3 Additive page-aware mode for `tests/…Unit/TestDoubles/FakeExpenseRepository.cs` and
   `FakeIncomeRepository.cs` (currently the fake returns the same page on every call); existing behavior and
   tests stay unchanged. (R-7, D-5)
-- [ ] 2.4 Create `src/…Application/UseCases/Exports/Common/ReportLineBuilder.cs`: maps expense/income to
+- [x] 2.4 Create `src/…Application/UseCases/Exports/Common/ReportLineBuilder.cs`: maps expense/income to
   `ReportTransactionLine`, converting with `ICurrencyConverter.ConvertAsync(Money, Currency.DOP)` (never
   `DisplayAsync`); failure sets `AmountDop = null` and reports a missing rate. (R-3, R-4, D-3)
-- [ ] 2.5 Create `src/…Application/UseCases/Exports/Common/ReportOutput.cs`: pick the writer by `Format` from
+- [x] 2.5 Create `src/…Application/UseCases/Exports/Common/ReportOutput.cs`: pick the writer by `Format` from
   `IEnumerable<IReportWriter>`, render into a `MemoryStream`, open the target and copy only on success,
   `SetLength(Position)` when seekable, map failures to codes. (R-1, R-9, R-14, Reconciliation #2)
-- [ ] 2.6 Create `src/…Application/UseCases/Exports/ExportMonthSummaryReport/
+- [x] 2.6 Create `src/…Application/UseCases/Exports/ExportMonthSummaryReport/
   {ExportMonthSummaryReportCommand,ExportMonthSummaryReportUseCase}.cs` per D-3: pick writer first; run the
   three queries sequentially (`GetCategoryBreakdownQuery` with `ChatContextLimits.UnfoldedTopCount`); page
   expenses/incomes with `ReportPaging` over `MonthPeriod.Range(anchor)`; resolve category names with one
   `ICategoryRepository.GetAllAsync`; catch everything except `OperationCanceledException`, log and map to a
   code. Run 2.1 and 2.2 green. The name uses "Report", not `ExportDataUseCase`. (R-2, R-3, R-4, R-7, R-9,
   R-12, R-14)
-- [ ] 2.7 Run all four gates. All green before opening PR S1b. (R-12)
+- [x] 2.7 Run all four gates. All green before opening PR S1b. (R-12)
 
 ## 3. PDF writer, packages and DI (S2)
 
