@@ -20,13 +20,19 @@ public sealed partial class ShellViewModel : ViewModelBase
     /// </summary>
     /// <param name="navService">The navigation service used to drive content changes.</param>
     /// <param name="localizer">The localizer for UI strings.</param>
-    public ShellViewModel(INavigationService navService, IStringLocalizer<Strings> localizer)
+    /// <param name="notifications">The route-agnostic notification list shown by the header bell (F-017).</param>
+    public ShellViewModel(
+        INavigationService navService,
+        IStringLocalizer<Strings> localizer,
+        NotificationListViewModel notifications)
     {
         ArgumentNullException.ThrowIfNull(navService);
         ArgumentNullException.ThrowIfNull(localizer);
+        ArgumentNullException.ThrowIfNull(notifications);
 
         _navService = navService;
         _localizer = localizer;
+        Notifications = notifications;
 
         _navService.CurrentChanged += OnNavigationCurrentChanged;
 
@@ -44,6 +50,11 @@ public sealed partial class ShellViewModel : ViewModelBase
             ,new RouteMenuItem(RouteNames.Settings, _localizer["SidebarSettings"])
         ];
     }
+
+    /// <summary>
+    /// Gets the notification list bound by the header bell, badge and flyout (F-017, R-3).
+    /// </summary>
+    public NotificationListViewModel Notifications { get; }
 
     /// <summary>
     /// Gets or sets the currently displayed content view-model.

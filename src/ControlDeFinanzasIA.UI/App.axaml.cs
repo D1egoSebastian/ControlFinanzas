@@ -7,6 +7,7 @@ using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Settings;
 using ControlDeFinanzasIA.UI.Composition;
 using ControlDeFinanzasIA.UI.Navigation;
+using ControlDeFinanzasIA.UI.Services;
 using ControlDeFinanzasIA.UI.ViewModels;
 using ControlDeFinanzasIA.UI.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -91,7 +92,40 @@ public partial class App : Avalonia.Application
 
         desktop.MainWindow = mainWindow;
 
+        // F-017 D-10: one detection run after the window shows. Opened fires once, after
+        // ApplyMigrations and the culture read above, so the table exists and the formatter
+        // sees the persisted culture. The center runs detection off the UI thread and never
+        // throws for a data failure (R-15); this trigger adds a last-resort guard so that
+        // nothing here can ever take startup down.
+        INotificationCenter notificationCenter = Services.GetRequiredService<INotificationCenter>();
+        mainWindow.Opened += (_, _) => StartNotificationDetection(notificationCenter, logger);
+
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>
+    /// Fires the startup notification detection run without awaiting it (fire-and-forget).
+    /// </summary>
+    /// <remarks>
+    /// The center already swallows and logs every non-cancellation failure (R-15); the
+    /// try/catch and the faulted-task continuation are defense in depth so an unexpected
+    /// synchronous throw or a faulted task can never surface as an unhandled exception.
+    /// </remarks>
+    private static void StartNotificationDetection(INotificationCenter center, ILogger logger)
+    {
+        try
+        {
+            Task run = center.RefreshAsync();
+            _ = run.ContinueWith(
+                t => logger.LogWarning(t.Exception, "Startup notification detection failed."),
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted,
+                TaskScheduler.Default);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Startup notification detection could not start.");
+        }
     }
 
     /// <summary>

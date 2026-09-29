@@ -32,7 +32,7 @@ public sealed class ShellViewModelTests
         {
             { RouteNames.Dashboard, CreateDashboardViewModel() }
         });
-        ShellViewModel shell = new(fakeNav, CreateLocalizer());
+        ShellViewModel shell = new(fakeNav, CreateLocalizer(), CreateNotifications());
         RouteMenuItem dashboardItem = new(RouteNames.Dashboard, "Panel");
 
         // Act
@@ -47,7 +47,7 @@ public sealed class ShellViewModelTests
     {
         // Arrange
         FakeNavigationService fakeNav = new();
-        ShellViewModel shell = new(fakeNav, CreateLocalizer());
+        ShellViewModel shell = new(fakeNav, CreateLocalizer(), CreateNotifications());
 
         // Act & Assert
         fakeNav.CanGoBack = false;
@@ -62,7 +62,7 @@ public sealed class ShellViewModelTests
     {
         // Arrange
         FakeNavigationService fakeNav = new();
-        ShellViewModel shell = new(fakeNav, CreateLocalizer());
+        ShellViewModel shell = new(fakeNav, CreateLocalizer(), CreateNotifications());
         DashboardViewModel dashboard = CreateDashboardViewModel();
 
         // Act
@@ -84,7 +84,7 @@ public sealed class ShellViewModelTests
         FakeNavigationService fakeNav = new();
 
         // Act
-        ShellViewModel shell = new(fakeNav, CreateLocalizer());
+        ShellViewModel shell = new(fakeNav, CreateLocalizer(), CreateNotifications());
 
         // Assert
         Assert.Equal(10, shell.MenuItems.Count);
@@ -96,7 +96,7 @@ public sealed class ShellViewModelTests
     {
         // Arrange
         FakeNavigationService fakeNav = new();
-        ShellViewModel shell = new(fakeNav, CreateLocalizer());
+        ShellViewModel shell = new(fakeNav, CreateLocalizer(), CreateNotifications());
 
         // Act
         fakeNav.CurrentViewModel = CreateChatViewModel();
@@ -107,6 +107,36 @@ public sealed class ShellViewModelTests
         Assert.Equal(RouteNames.Chat, shell.SelectedMenuItem!.Route);
         Assert.Equal(RouteNames.Chat, shell.CurrentMenuItem!.Route);
     }
+
+    // ------------------------------------------------------------------
+    // F-017 slice S5b (R-3): the shell exposes the notification list.
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public void Notifications_ExposesTheInjectedNotificationListViewModel()
+    {
+        // Arrange
+        NotificationListViewModel notifications = CreateNotifications();
+
+        // Act
+        ShellViewModel shell = new(new FakeNavigationService(), CreateLocalizer(), notifications);
+
+        // Assert
+        Assert.Same(notifications, shell.Notifications);
+    }
+
+    [Fact]
+    public void Constructor_NullNotifications_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(
+            () => new ShellViewModel(new FakeNavigationService(), CreateLocalizer(), null!));
+    }
+
+    private static NotificationListViewModel CreateNotifications()
+        => new(
+            new FakeNotificationCenter(),
+            new FakeClock { Today = new DateOnly(2026, 9, 20) },
+            NullLogger<NotificationListViewModel>.Instance);
 
     private static IStringLocalizer<Strings> CreateLocalizer()
         => new FakeStringLocalizer<Strings>(new Dictionary<string, string>

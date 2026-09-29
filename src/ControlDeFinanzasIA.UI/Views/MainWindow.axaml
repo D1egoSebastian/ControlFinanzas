@@ -10,28 +10,199 @@
         Title="{x:Static resources:Strings.WindowTitle}"
         MinWidth="800"
         MinHeight="600">
-    <DockPanel>
-        <ListBox DockPanel.Dock="Left"
-                 ItemsSource="{Binding MenuItems}"
-                 MinWidth="180">
-            <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="nav:RouteMenuItem">
-                    <Button Command="{Binding #ShellRoot.DataContext.NavigateToCommand}"
-                            CommandParameter="{Binding .}"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Left"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Padding="12,8">
-                        <TextBlock Text="{Binding DisplayName}" />
-                    </Button>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+    <Window.Styles>
+        <!--
+            F-017 bell: a flat, borderless toggle that dims to paper-grey at rest and
+            lights amber on hover or while the notification flyout is open. Fluent's
+            ToggleButton template paints its own background per pseudo-class, so the
+            overrides target the template's ContentPresenter.
+        -->
+        <Style Selector="ToggleButton.bell">
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Foreground" Value="{StaticResource PaperDimBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ToggleButton.bell /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+        </Style>
+        <Style Selector="ToggleButton.bell:pointerover">
+            <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
+        </Style>
+        <Style Selector="ToggleButton.bell:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#22E8A33D" />
+        </Style>
+        <Style Selector="ToggleButton.bell:checked">
+            <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
+        </Style>
+        <Style Selector="ToggleButton.bell:checked /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#22E8A33D" />
+        </Style>
+        <Style Selector="ToggleButton.bell:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#33E8A33D" />
+        </Style>
+    </Window.Styles>
 
-        <ContentControl Content="{Binding Current, Converter={x:Static converters:CurrentViewConverter.Instance}}"
-                        HorizontalContentAlignment="Stretch"
-                        VerticalContentAlignment="Stretch"
-                        MinHeight="400" />
-    </DockPanel>
+    <Grid RowDefinitions="Auto,*">
+        <!-- Header row (F-017 D-10): owns the notification bell; fixed 44px ledger rule below. -->
+        <Border Grid.Row="0"
+                Height="44"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource HairlineBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid Margin="0,0,12,0"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Center">
+                <ToggleButton x:Name="BellToggle"
+                              Classes="bell"
+                              IsChecked="{Binding Notifications.IsOpen, Mode=TwoWay}"
+                              AutomationProperties.Name="{Binding Notifications.BellAutomationName}"
+                              ToolTip.Tip="{x:Static resources:Strings.NotificationsTitle}">
+                    <PathIcon Width="18"
+                              Height="18"
+                              Data="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+                </ToggleButton>
+
+                <!-- Unread badge: amber pill pinned to the bell's top-right corner. -->
+                <Border IsVisible="{Binding Notifications.HasUnread}"
+                        IsHitTestVisible="False"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Margin="0,-2,-4,0"
+                        MinWidth="16"
+                        Height="16"
+                        Padding="4,0"
+                        CornerRadius="8"
+                        Background="{StaticResource AmberBrush}">
+                    <TextBlock Text="{Binding Notifications.BadgeText}"
+                               FontFamily="{StaticResource FontMono}"
+                               FontSize="10"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource InkBrush}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Border>
+
+                <!--
+                    Flyout: a Popup (not Button.Flyout) because it needs a bindable IsOpen so that
+                    opening can mark rows read from the ViewModel without code-behind (D-10).
+                    The bell is a pass-through element so a click on it toggles instead of
+                    light-dismissing and immediately re-opening.
+                -->
+                <Popup IsOpen="{Binding Notifications.IsOpen, Mode=TwoWay}"
+                       PlacementTarget="{Binding #BellToggle}"
+                       Placement="BottomEdgeAlignedRight"
+                       VerticalOffset="8"
+                       IsLightDismissEnabled="True"
+                       OverlayInputPassThroughElement="{Binding #BellToggle}">
+                    <Border Width="360"
+                            Background="{StaticResource SurfaceBrush}"
+                            BorderBrush="{StaticResource HairlineBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource RadiusMedium}"
+                            BoxShadow="0 10 28 0 #99000000"
+                            DataContext="{Binding Notifications}">
+                        <StackPanel>
+                            <!-- Popup header: title + refresh, closed by an amber rule. -->
+                            <Border BorderBrush="{StaticResource AmberBrush}"
+                                    BorderThickness="0,0,0,2"
+                                    Padding="16,10,8,8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{x:Static resources:Strings.NotificationsTitle}"
+                                               FontFamily="{StaticResource FontDisplay}"
+                                               FontSize="18"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource PaperBrush}"
+                                               VerticalAlignment="Center" />
+                                    <Button Grid.Column="1"
+                                            Classes="ledger-btn"
+                                            Content="{x:Static resources:Strings.NotificationsRefreshButton}"
+                                            Command="{Binding RefreshCommand}"
+                                            FontSize="13"
+                                            VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+
+                            <ScrollViewer MaxHeight="400"
+                                          HorizontalScrollBarVisibility="Disabled"
+                                          VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding Items}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:NotificationItemViewModel">
+                                            <Border BorderBrush="{StaticResource HairlineBrush}"
+                                                    BorderThickness="0,0,0,1">
+                                                <Grid ColumnDefinitions="3,*,Auto">
+                                                    <!-- Unread accent (R-16: rows are informational, not clickable). -->
+                                                    <Border Grid.Column="0"
+                                                            IsVisible="{Binding IsUnread}"
+                                                            Background="{StaticResource AmberBrush}" />
+                                                    <StackPanel Grid.Column="1"
+                                                                Margin="13,10,8,10"
+                                                                Spacing="2">
+                                                        <TextBlock Text="{Binding Title}"
+                                                                   FontFamily="{StaticResource FontBody}"
+                                                                   FontSize="14"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{StaticResource PaperBrush}"
+                                                                   TextWrapping="Wrap" />
+                                                        <TextBlock Text="{Binding Body}"
+                                                                   Classes="ledger-status" />
+                                                    </StackPanel>
+                                                    <Button Grid.Column="2"
+                                                            Classes="ledger-btn"
+                                                            Content="{x:Static resources:Strings.NotificationsDismissButton}"
+                                                            Command="{Binding $parent[ItemsControl].DataContext.DismissCommand}"
+                                                            CommandParameter="{Binding .}"
+                                                            FontSize="12"
+                                                            Margin="0,4,8,0"
+                                                            VerticalAlignment="Top" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <TextBlock IsVisible="{Binding IsEmpty}"
+                                       Text="{x:Static resources:Strings.NotificationsEmpty}"
+                                       Classes="ledger-status"
+                                       HorizontalAlignment="Center"
+                                       Margin="16,24" />
+                        </StackPanel>
+                    </Border>
+                </Popup>
+            </Grid>
+        </Border>
+
+        <DockPanel Grid.Row="1">
+            <ListBox DockPanel.Dock="Left"
+                     ItemsSource="{Binding MenuItems}"
+                     MinWidth="180">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="nav:RouteMenuItem">
+                        <Button Command="{Binding #ShellRoot.DataContext.NavigateToCommand}"
+                                CommandParameter="{Binding .}"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="12,8">
+                            <TextBlock Text="{Binding DisplayName}" />
+                        </Button>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <ContentControl Content="{Binding Current, Converter={x:Static converters:CurrentViewConverter.Instance}}"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch"
+                            MinHeight="400" />
+        </DockPanel>
+    </Grid>
 </Window>

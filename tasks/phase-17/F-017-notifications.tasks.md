@@ -266,16 +266,16 @@ list/item ViewModels exist and are wired into DI, without touching the shell yet
 Depends on 6. Goal: the bell, badge, and flyout render in a new `MainWindow.axaml` header row
 owned by `ShellViewModel`, triggered once after the main window shows.
 
-- [ ] 7.1 Modify `tests/…Unit/UI/ShellViewModelTests.cs`: add a `CreateNotifications()` helper
+- [x] 7.1 Modify `tests/…Unit/UI/ShellViewModelTests.cs`: add a `CreateNotifications()` helper
   building `new NotificationListViewModel(new FakeNotificationCenter(), new FakeClock{…},
   NullLogger…)` and pass it as the third argument at all 5 `new(fakeNav, CreateLocalizer())` call
   sites; every existing assertion stays unchanged. (D-15)
-- [ ] 7.2 Modify `src/…UI/ViewModels/ShellViewModel.cs`: add a third constructor parameter
+- [x] 7.2 Modify `src/…UI/ViewModels/ShellViewModel.cs`: add a third constructor parameter
   `NotificationListViewModel notifications`, exposed as `public NotificationListViewModel
   Notifications { get; }`; menu/navigation logic untouched. Run 7.1 green. (R-3)
-- [ ] 7.3 Invoke the `.claude/skills/frontend-design` skill for the new header row before touching
+- [x] 7.3 Invoke the `.claude/skills/frontend-design` skill for the new header row before touching
   XAML — existing tokens only (`SurfaceBrush`, `HairlineBrush`, `AmberBrush`). (R-3)
-- [ ] 7.4 Modify `src/…UI/Views/MainWindow.axaml`: root becomes `<Grid RowDefinitions="Auto,*">`;
+- [x] 7.4 Modify `src/…UI/Views/MainWindow.axaml`: root becomes `<Grid RowDefinitions="Auto,*">`;
   row 0 is a header `Border` with a right-aligned bell `ToggleButton` (`IsChecked="{Binding
   Notifications.IsOpen}"`, `AutomationProperties.Name="{Binding Notifications.
   BellAutomationName}"`), an unread badge bound to `Notifications.BadgeText`/`HasUnread`, and a
@@ -283,13 +283,13 @@ owned by `ShellViewModel`, triggered once after the main window shows.
   `Placement="BottomEdgeAlignedRight"`) containing the refresh button, an `ItemsControl` in a
   `ScrollViewer` with per-row dismiss, and an empty-state `TextBlock`; row 1 is the existing
   `DockPanel`, unchanged; clicking a row does nothing (R-16). (R-3, R-8, R-16, D-10)
-- [ ] 7.5 Modify `src/…UI/App.axaml.cs`: after `desktop.MainWindow = mainWindow;`, resolve
+- [x] 7.5 Modify `src/…UI/App.axaml.cs`: after `desktop.MainWindow = mainWindow;`, resolve
   `INotificationCenter` and add `mainWindow.Opened += (_, _) => _ =
   notificationCenter.RefreshAsync();`. (R-15, D-10)
-- [ ] 7.6 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`): confirm the
+- [x] 7.6 Smoke-launch the app (`dotnet run --project src/ControlDeFinanzasIA.UI`): confirm the
   new header row, bell, badge, and popup render with no DI/startup failure. Screenshot only, no
   simulated clicks.
-- [ ] 7.7 Run all four gates. All green before opening PR S5b.
+- [x] 7.7 Run all four gates. All green before opening PR S5b.
 
 ## 8. Settings UI (S6)
 
