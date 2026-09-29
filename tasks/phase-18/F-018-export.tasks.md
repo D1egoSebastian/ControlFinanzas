@@ -323,17 +323,17 @@ the ports, use-case plumbing and resx from earlier slices.
 Depends on 6. Goal: docs and phase notes match the shipped state; Debts export recorded as a follow-up (R-16,
 Reconciliation #12), not implemented.
 
-- [ ] 7.1 Reconcile `docs/architecture.md`: replace or correct the `CsvExporter`/`ExportView` mentions with the
+- [x] 7.1 Reconcile `docs/architecture.md`: replace or correct the `CsvExporter`/`ExportView` mentions with the
   shipped design (`IReportWriter`, `IFileSaveDialog`, `QuestPdfReportWriter`, `ClosedXmlReportWriter`,
   `AvaloniaFileSaveDialog`, DTOs in `Application/DTOs/Reports/`, no CSV in this phase). (R-12, R-17)
-- [ ] 7.2 Create `spec/phases/phase-18/features.md` following the pattern of `spec/phases/phase-10/` through
+- [x] 7.2 Create `spec/phases/phase-18/features.md` following the pattern of `spec/phases/phase-10/` through
   `phase-17/`, recording the Debts export as a follow-up with the predicted ~250-line estimate, the
   Expenses payment-method-filter gap (pre-existing, out of scope), and the CSV exclusion. (R-16, R-17)
-- [ ] 7.3 Confirm no new setting, migration or schema change, and zero diff to existing queries or
+- [x] 7.3 Confirm no new setting, migration or schema change, and zero diff to existing queries or
   `ICurrencyConverter` (R-17): `git diff --name-only <phase base>^ HEAD` filtered by `Migrations/`,
   `SettingKeys`, `AppSettings`, `GetMonthSummaryQuery`, `GetCategoryBreakdownQuery`,
   `GetBudgetVsActualQuery`, `GetTransactionsQuery`, `ICurrencyConverter`, `CurrencyConverter` is empty.
-- [ ] 7.4 Run all four gates. All green before opening PR S6.
+- [x] 7.4 Run all four gates. All green before opening PR S6.
 
 ## 8. Cierre
 

@@ -295,7 +295,7 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 - **`PathResolver`** (implementa `IPathResolver`) devuelve el directorio de datos según el SO, definido en `tech-stack.md`.
 - **`BackupService`** exporta el archivo SQLite a un `.zip` que contiene el `.db` y un `manifest.json` con la versión del schema. El import valida el manifest antes de reemplazar.
 - **`CsvImporter`** lee un CSV, aplica un `CsvImportProfile` (mapeo de columnas + formato de fecha + separador decimal), devuelve las entidades detectadas, las pasa por validación y las inserta en una transacción. Perfil guardable.
-- **`CsvExporter`** para el reporte a Excel/CSV (no es el backup completo, es un reporte).
+- **Reportes PDF / XLSX (Fase 18, implementado):** `QuestPdfReportWriter` y `ClosedXmlReportWriter` en `Infrastructure/Reports/` implementan `IReportWriter`; ver §11e. No existe `CsvExporter`: la Fase 18 no produce CSV (el backup completo es la Fase 19, distinto de un reporte).
 
 ### LLM clients
 
@@ -314,7 +314,7 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 - **`Program.cs`** — entry point, crea el host genérico (`Microsoft.Extensions.Hosting`), configura DI, logging y arranca Avalonia.
 - **`App.axaml` / `App.axaml.cs`** — `Application` raíz, carga tema, registra `DataTemplate`s que asocian View ↔ ViewModel, resuelve el `ShellViewModel` inicial.
 - **`MainWindow.axaml`** — ventana única con layout de shell (sidebar + header + content + status bar).
-- **`Views/`** — UserControls (`DashboardView`, `ExpensesView`, `DebtsView`, `GoalsView`, `BudgetsView`, `SubscriptionsView`, `FixedExpensesView`, `RecurringView`, `SettingsView`, `ImportView`, `ExportView`, `ChatView`).
+- **`Views/`** — UserControls (`DashboardView`, `ExpensesView`, `DebtsView`, `GoalsView`, `BudgetsView`, `SubscriptionsView`, `FixedExpensesView`, `RecurringView`, `SettingsView`, `ImportView`, `ChatView`). La exportación (Fase 18) no tiene vista propia: son botones "Exportar PDF / Excel" en `DashboardView` y `ExpensesView`.
 - **`ViewModels/`** — uno por vista. Heredan de `ObservableObject` (CommunityToolkit).
 - **`Navigation/`** — `INavigationService` + `NavigationService` + `RouteNames` (constantes).
 
@@ -663,6 +663,59 @@ tipo y los descartes porque tiene su propio apagado.
 
 ---
 
+## 11e. Exportación de reportes a PDF y Excel (Fase 18)
+
+**Fase 18, implementado (pendiente de archivo).** Como la Fase 17, no usa `ILLMClient`: el reporte es una
+proyección determinista de lecturas existentes (`GetMonthSummaryQuery`, `GetCategoryBreakdownQuery`,
+`GetBudgetVsActualQuery`, el repositorio de gastos y `ICurrencyConverter`), sin reglas de negocio nuevas,
+sin migración y sin claves de configuración nuevas.
+
+### Puertos y DTOs
+
+- `IReportWriter` (Application/Abstractions): `Format` (`ReportFormat.Pdf`/`Xlsx`) más
+  `WriteMonthSummaryAsync` y `WriteExpenseListAsync`; recibe un DTO ya calculado, un `ReportLabels` y un
+  `Stream`, y devuelve `Result`. No consulta datos ni lee recursos.
+- `IFileSaveDialog` (Application/Abstractions): `PickAsync` devuelve un `SaveTarget?` (`null` = el usuario
+  canceló, no es un error). `SaveTarget` abre el stream de forma perezosa y no expone tipos de Avalonia.
+- DTOs en `Application/DTOs/Reports/`: `MonthSummaryReport`, `ExpenseListReport`, `ReportTransactionLine`,
+  `ReportTransactionKind`, `ExportReportResult`. Todo el texto visible llega en `ReportLabels`, armado por
+  `ReportLabelsFactory` (UI) desde resx `es-DO`/`en`.
+
+### Casos de uso y salida en memoria
+
+`ExportMonthSummaryReportUseCase` y `ExportExpenseListReportUseCase` (`Application/UseCases/Exports/`)
+construyen el DTO, eligen el writer registrado para el `ReportFormat` (`ReportOutput.PickWriter`) y guardan.
+La lista de gastos se lee completa (todas las páginas, de a 200, `ReportPaging`), con el filtro capturado
+antes de abrir el diálogo. `ReportOutput.RenderAndSaveAsync` renderiza primero a un `MemoryStream` y solo
+después abre y escribe el destino, de modo que un render fallido nunca crea ni trunca el archivo. Los fallos
+son valores `Result` con códigos estables (`ReportWriterUnavailable`, `ReportDataFailed`,
+`ReportRenderFailed`, `ReportSaveFailed`; el de gastos añade `InvalidFilter`); solo se propaga la cancelación.
+
+### Writers (solo Infraestructura)
+
+- `QuestPdfReportWriter`: QuestPDF 2026.9.1 con licencia Community (personal, sin ingresos); la versión está
+  fijada de forma exacta y `Directory.Packages.props` lleva un banner que exige releer la licencia en cada
+  actualización.
+- `ClosedXmlReportWriter`: ClosedXML 0.105.1 (MIT). Libro con hoja `Summary` con estilo y hoja plana `Data`
+  con encabezados invariantes en inglés.
+- `AddReportExporters()` registra ambos como `IReportWriter` (singletons) y aplica la configuración global de
+  QuestPDF una sola vez en `QuestPdfConfiguration` (licencia; `ThrowOnMissingTextGlyphs = false`). Application
+  no referencia QuestPDF ni ClosedXML (NetArchTest).
+
+### Superficie de UI
+
+`AvaloniaFileSaveDialog` (UI/Services) implementa `IFileSaveDialog` sobre `TopLevel.StorageProvider`.
+`DashboardViewModel` expone `ExportPdfCommand`/`ExportExcelCommand` (mes mostrado) y `ExpensesViewModel` los
+mismos comandos (filtro actual, ignorando `PaymentMethodIds` porque la lista visible tampoco lo aplica). Un
+único `IsExporting` compartido es la guarda contra doble invocación; cancelar el diálogo no escribe nada ni
+muestra mensaje. En `ExpensesViewModel` el caso de uso y el diálogo son opcionales (`CanExport` los exige).
+
+### Seguimientos documentados (fuera de esta fase)
+
+Exportación de Deudas (~250 líneas estimadas) y salida CSV: no implementadas.
+
+---
+
 ## 12. Persistencia — detalles adicionales
 
 ### Ruta del archivo
@@ -775,7 +828,7 @@ tipo y los descartes porque tiene su propio apagado.
 ### Integration tests (`Tests.Integration`)
 
 - **EF Core**: repos contra un archivo SQLite temporal (no en memoria, para acercarse al comportamiento real). Patrón `IDbContextFactory` para paralelizar.
-- **CsvImporter/CsvExporter**: roundtrip con archivos sintéticos.
+- **CsvImporter**: roundtrip con archivos sintéticos.
 - **BackupService**: roundtrip export → import, con verificación de integridad.
 - **Llm clients (marcados "external")**: solo se ejecutan si `CONTROL_FINANZAS_RUN_EXTERNAL_AI_TESTS=1` y hay API key. Hacen requests reales a OpenRouter con un modelo gratuito.
 

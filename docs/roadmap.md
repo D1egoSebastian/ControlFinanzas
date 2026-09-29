@@ -1272,7 +1272,7 @@ datos.
 
 ---
 
-### Fase 18 — Exportación a PDF y Excel
+### Fase 18 — Exportación a PDF y Excel ✅ IMPLEMENTADA (2026-09-29, pendiente de archivo)
 
 **Objetivo**
 Exportar el reporte actual (dashboard, vista de gastos, vista de
@@ -1302,7 +1302,19 @@ una feature "de producto" en el mismo sentido.
 
 **Criterios de fase completada**
 - Exportar el mes actual a PDF y a Excel produce archivos válidos con
-  los datos correctos.
+  los datos correctos. ✅
+
+**Estado actual (2026-09-29) — ✅ IMPLEMENTADA, pendiente de verify/archive**
+- ✅ Botones "Exportar PDF / Excel" en el Dashboard (mes mostrado) y en Gastos (filtro actual, todas las
+  páginas). `IReportWriter` con `QuestPdfReportWriter` (QuestPDF 2026.9.1, licencia Community) y
+  `ClosedXmlReportWriter` (ClosedXML 0.105.1, hojas `Summary` y `Data`); `IFileSaveDialog` como puerto de UI;
+  render en memoria antes de escribir. Sin migración, sin nuevas claves de configuración. Detalle en
+  `docs/architecture.md` §11e.
+- ✅ Gates: 1886 tests verdes (1550 unit + 336 integration). Aplicada en slices S1a–S6.
+- ⏳ Cierre (verify + archive) y la verificación manual del diálogo real y de abrir ambos archivos fuera de
+  la app siguen pendientes.
+- 📌 Seguimientos documentados, no implementados: exportación de Deudas (~250 líneas estimadas) y salida CSV
+  (el entregable original decía "Excel/CSV"; esta fase entrega solo PDF y XLSX).
 
 ---
 

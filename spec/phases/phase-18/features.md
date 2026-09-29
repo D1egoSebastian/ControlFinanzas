@@ -65,5 +65,12 @@ Chained slices, each ≤ ~400 changed lines.
 - `docs/roadmap.md` §Fase 18
 - `spec/features/phase-18/F-018-export.spec.md` — formal spec
 - `.atl/sdd/f-018p18-export/{exploration,proposal}.md` — traceability
-- `docs/architecture.md` — to be reconciled (`CsvExporter` / `ExportView` mentions)
+- `docs/architecture.md` §11e — reconciled in S6 (`CsvExporter` / `ExportView` mentions removed)
+
+## 6. Follow-ups (not implemented)
+
+- **Debts export:** recorded as a follow-up (spec R-16); predicted ~250 lines, above the ~150-line stretch limit.
+- **Expenses payment-method filter gap:** pre-existing (the visible list ignores `PaymentMethodIds`), so the
+  export ignores it too; out of scope.
+- **CSV output:** excluded from v1 despite the roadmap's "Excel/CSV" wording.
 - `spec/phases/phase-17/features.md` — format precedent
