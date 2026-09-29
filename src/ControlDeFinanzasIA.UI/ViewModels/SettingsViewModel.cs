@@ -60,7 +60,8 @@ public sealed partial class SettingsViewModel : ViewModelBase
         GetNotificationSettingsQuery getNotificationSettingsQuery,
         UpdateNotificationSettingsUseCase updateNotificationSettingsUseCase,
         INotificationCenter notificationCenter,
-        ILogger<SettingsViewModel> logger)
+        ILogger<SettingsViewModel> logger,
+        BackupSettingsViewModel? backup = null)
     {
         ArgumentNullException.ThrowIfNull(getAppSettingsQuery);
         ArgumentNullException.ThrowIfNull(updateThemeUseCase);
@@ -81,6 +82,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
         _updateNotificationSettingsUseCase = updateNotificationSettingsUseCase;
         _notificationCenter = notificationCenter;
         _logger = logger;
+        Backup = backup;
 
         Themes = Enum.GetValues<AppTheme>();
         AiProviders = Enum.GetValues<AiProvider>();
@@ -198,6 +200,14 @@ public sealed partial class SettingsViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     private bool _isSavingNotifications;
+
+    // --- Respaldo y restauracion (F-019) ---
+
+    /// <summary>
+    /// Gets the view-model of the Backup section, or <see langword="null"/> when none was composed
+    /// (the section is then hidden).
+    /// </summary>
+    public BackupSettingsViewModel? Backup { get; }
 
     // --- Acerca de (no persistence) ---
 

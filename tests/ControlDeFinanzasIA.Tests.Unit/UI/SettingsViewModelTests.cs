@@ -1,6 +1,9 @@
 using System.Reflection;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Settings;
+using ControlDeFinanzasIA.Application.UseCases.Backup.CreateBackup;
+using ControlDeFinanzasIA.Application.UseCases.Backup.InspectBackup;
+using ControlDeFinanzasIA.Application.UseCases.Backup.RestoreBackup;
 using ControlDeFinanzasIA.Application.UseCases.Notifications.GetNotificationSettings;
 using ControlDeFinanzasIA.Application.UseCases.Notifications.UpdateNotificationSettings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.GetAppSettings;
@@ -390,7 +393,38 @@ public sealed class SettingsViewModelTests
             p => p.ParameterType.Namespace?.StartsWith("Avalonia", StringComparison.Ordinal) == true);
     }
 
-    private static SettingsViewModel CreateViewModel(ISettingsStore store, FakeNotificationCenter? center = null)
+    [Fact]
+    public void Backup_IsNull_WhenNoBackupViewModelIsProvided()
+    {
+        SettingsViewModel viewModel = CreateViewModel(new FakeSettingsStore());
+
+        Assert.Null(viewModel.Backup);
+    }
+
+    [Fact]
+    public void Backup_IsExposed_WhenABackupViewModelIsProvided()
+    {
+        var backupService = new FakeBackupService();
+        var backup = new BackupSettingsViewModel(
+            new CreateBackupUseCase(backupService, NullLogger<CreateBackupUseCase>.Instance),
+            new InspectBackupUseCase(backupService, NullLogger<InspectBackupUseCase>.Instance),
+            new RestoreBackupUseCase(backupService, NullLogger<RestoreBackupUseCase>.Instance),
+            new FakeFileSaveDialog(),
+            new FakeFileOpenDialog(),
+            new FakeNotificationCenter(),
+            new FakeAppRestartService(),
+            new FakeClock(),
+            NullLogger<BackupSettingsViewModel>.Instance);
+
+        SettingsViewModel viewModel = CreateViewModel(new FakeSettingsStore(), backup: backup);
+
+        Assert.Same(backup, viewModel.Backup);
+    }
+
+    private static SettingsViewModel CreateViewModel(
+        ISettingsStore store,
+        FakeNotificationCenter? center = null,
+        BackupSettingsViewModel? backup = null)
     {
         var getAppSettingsQuery = new GetAppSettingsQuery(store);
         var updateThemeUseCase = new UpdateThemeUseCase(store, NullLogger<UpdateThemeUseCase>.Instance);
@@ -409,6 +443,7 @@ public sealed class SettingsViewModelTests
             new GetNotificationSettingsQuery(store),
             new UpdateNotificationSettingsUseCase(store),
             center ?? new FakeNotificationCenter(),
-            NullLogger<SettingsViewModel>.Instance);
+            NullLogger<SettingsViewModel>.Instance,
+            backup);
     }
 }

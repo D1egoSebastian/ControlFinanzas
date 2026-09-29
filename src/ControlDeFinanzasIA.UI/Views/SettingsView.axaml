@@ -156,6 +156,102 @@
                 </StackPanel>
             </Border>
 
+            <!--
+                Respaldo y restauracion (F-019, R-19..R-23, DD-9). Hidden when no Backup view-model
+                was composed. The visibility binding lives on this outer Border because the inner
+                panel re-targets DataContext to the Backup view-model.
+            -->
+            <Border Classes="ledger-row" Padding="16"
+                    IsVisible="{Binding Backup, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}">
+                <StackPanel DataContext="{Binding Backup}"
+                            x:DataType="vm:BackupSettingsViewModel"
+                            Spacing="12">
+                    <TextBlock Text="{x:Static resources:Strings.BackupSectionTitle}" Classes="ledger-title" />
+
+                    <TextBlock Text="{x:Static resources:Strings.BackupSectionDescription}"
+                               Classes="ledger-status" />
+
+                    <!-- Actions: replaced by the restart panel once a restore succeeded (terminal state). -->
+                    <StackPanel Orientation="Horizontal" Spacing="12"
+                                IsVisible="{Binding AreActionsVisible}">
+                        <Button Content="{x:Static resources:Strings.BackupExportButton}"
+                                Command="{Binding ExportCommand}"
+                                Classes="ledger-btn-primary" />
+                        <Button Content="{x:Static resources:Strings.BackupRestoreButton}"
+                                Command="{Binding ChooseRestoreFileCommand}"
+                                Classes="ledger-btn" />
+                    </StackPanel>
+
+                    <!-- Indeterminate progress with the localized caption of the running step. -->
+                    <StackPanel Spacing="6" IsVisible="{Binding IsBusy}">
+                        <ProgressBar IsIndeterminate="True"
+                                     Height="3"
+                                     Foreground="{StaticResource AmberBrush}"
+                                     Background="{StaticResource HairlineBrush}" />
+                        <TextBlock Text="{Binding WorkingMessage}" Classes="ledger-status" />
+                    </StackPanel>
+
+                    <!-- Outcome of the last operation: empty after a cancel, terracotta on failure. -->
+                    <TextBlock Text="{Binding StatusMessage}"
+                               IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                               Classes="ledger-status"
+                               Classes.export-error="{Binding IsError}" />
+
+                    <!-- Inline destructive confirmation: backup facts, then the irreversible warning. -->
+                    <Border IsVisible="{Binding IsConfirmVisible}"
+                            Background="#221F232B"
+                            BorderBrush="{StaticResource AmberBrush}"
+                            BorderThickness="3,1,1,1"
+                            CornerRadius="{StaticResource RadiusSmall}"
+                            Padding="16">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="{x:Static resources:Strings.BackupConfirmTitle}"
+                                       Classes="ledger-section" />
+                            <TextBlock Text="{Binding PendingSummary}"
+                                       Foreground="{StaticResource PaperBrush}"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{x:Static resources:Strings.BackupConfirmWarning}"
+                                       Foreground="{StaticResource AmberBrush}"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap" />
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Button Content="{x:Static resources:Strings.BackupCancelButton}"
+                                        Command="{Binding CancelRestoreCommand}"
+                                        Classes="ledger-btn" />
+                                <Button Content="{x:Static resources:Strings.BackupConfirmButton}"
+                                        Command="{Binding ConfirmRestoreCommand}"
+                                        Classes="ledger-btn-danger"
+                                        BorderBrush="{StaticResource TerracottaBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="{StaticResource RadiusSmall}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Restart panel: the restored data only loads after a restart (terminal state). -->
+                    <Border IsVisible="{Binding IsRestartPanelVisible}"
+                            Background="#221F232B"
+                            BorderBrush="{StaticResource AmberBrush}"
+                            BorderThickness="3,1,1,1"
+                            CornerRadius="{StaticResource RadiusSmall}"
+                            Padding="16">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="{x:Static resources:Strings.BackupRestartRequiredNotice}"
+                                       Foreground="{StaticResource AmberBrush}"
+                                       TextWrapping="Wrap" />
+                            <Button Content="{x:Static resources:Strings.BackupRestartNowButton}"
+                                    Command="{Binding RestartNowCommand}"
+                                    HorizontalAlignment="Left"
+                                    Classes="ledger-btn-primary" />
+                            <TextBlock Text="{x:Static resources:Strings.BackupRestartFallback}"
+                                       IsVisible="{Binding RestartFailed}"
+                                       Foreground="{StaticResource TerracottaBrush}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
             <!-- Acerca de — no controls, no save (D-10) -->
             <Border Classes="ledger-row" Padding="16">
                 <StackPanel Spacing="10">

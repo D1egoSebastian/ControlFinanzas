@@ -1,3 +1,4 @@
+using System.Reflection;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.UseCases.Backup.CreateBackup;
 using ControlDeFinanzasIA.Application.UseCases.Backup.InspectBackup;
@@ -5,6 +6,7 @@ using ControlDeFinanzasIA.Application.UseCases.Backup.RestoreBackup;
 using ControlDeFinanzasIA.Infrastructure.Backup;
 using ControlDeFinanzasIA.UI.Composition;
 using ControlDeFinanzasIA.UI.Services;
+using ControlDeFinanzasIA.UI.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -82,6 +84,31 @@ public sealed class BackupCompositionTests
         // ValidateScopes = true: a captured scoped dependency would throw here.
         Assert.NotNull(provider.GetRequiredService<SqliteBackupService>());
         Assert.NotNull(provider.GetRequiredService<CreateBackupUseCase>());
+    }
+
+    [Fact]
+    public void BackupSettingsViewModel_IsASingleton_SoRestartRequiredSurvivesNavigation()
+    {
+        using ServiceProvider provider = BuildProvider();
+
+        BackupSettingsViewModel first = provider.GetRequiredService<BackupSettingsViewModel>();
+
+        Assert.Same(first, provider.GetRequiredService<BackupSettingsViewModel>());
+    }
+
+    [Fact]
+    public void SettingsViewModel_CanReceiveTheBackupViewModel_FromTheContainer()
+    {
+        using ServiceProvider provider = BuildProvider();
+        IServiceProviderIsService isService = provider.GetRequiredService<IServiceProviderIsService>();
+
+        ParameterInfo backupParameter = Assert.Single(
+            typeof(SettingsViewModel).GetConstructors().Single().GetParameters(),
+            p => p.ParameterType == typeof(BackupSettingsViewModel));
+
+        // Resolving SettingsViewModel itself would start a load against the real profile database.
+        Assert.True(isService.IsService(backupParameter.ParameterType));
+        Assert.True(backupParameter.HasDefaultValue);
     }
 
     [Fact]

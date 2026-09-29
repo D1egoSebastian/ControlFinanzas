@@ -280,6 +280,8 @@ public static class Bootstrap
         services.AddTransient<RestoreBackupUseCase>();
         services.AddSingleton<IFileOpenDialog, AvaloniaFileOpenDialog>();
         services.AddSingleton<IAppRestartService, AppRestartService>();
+        // Singleton: el estado terminal "reinicio requerido" debe sobrevivir a la navegacion.
+        services.AddSingleton<BackupSettingsViewModel>();
 
         ServiceProvider tempProvider = services.BuildServiceProvider();
         try

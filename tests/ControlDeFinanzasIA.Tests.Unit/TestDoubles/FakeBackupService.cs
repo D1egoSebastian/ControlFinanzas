@@ -30,6 +30,9 @@ public sealed class FakeBackupService : IBackupService
     /// <summary>When set, every async member awaits it before returning.</summary>
     public TaskCompletionSource? Gate { get; set; }
 
+    /// <summary>Gets or sets a callback invoked as soon as <see cref="RestoreAsync"/> is entered (call-order assertions).</summary>
+    public Action? OnRestoreEntered { get; set; }
+
     /// <summary>Number of <see cref="CreateAsync"/> calls.</summary>
     public int CreateCalls { get; private set; }
 
@@ -74,6 +77,7 @@ public sealed class FakeBackupService : IBackupService
     public async Task<Result> RestoreAsync(Func<CancellationToken, Task<Stream>> openRead, CancellationToken ct = default)
     {
         RestoreCalls++;
+        OnRestoreEntered?.Invoke();
         LastOpenRead = openRead;
         await WaitAsync(ct);
         return RestoreException is not null ? throw RestoreException : RestoreResult;

@@ -496,7 +496,7 @@ restore, and the app can relaunch itself. No visible UI yet beyond resources.
   files and in `Strings.Designer.cs`, both files define the same key set, no value is empty, and each format string
   formats without exception with the documented number of arguments (`BackupErrorNewerSchema` needs `{0}`..`{3}`).
   Test under es-DO and en, restoring the culture afterwards. (R-22, S-31)
-- [ ] 6a.4 Wire the localized default title in `AvaloniaFileOpenDialog` to `Strings.BackupRestoreDialogTitle` and the
+- [x] 6a.4 Wire the localized default title in `AvaloniaFileOpenDialog` to `Strings.BackupRestoreDialogTitle` and the
   backup save default to `Strings.BackupExportDialogTitle` where the VM does not pass one; extend the 5.x tests that
   cover the dialog fallback if they asserted `null`. (R-22, DD-8)
 - [x] 6a.5 Write failing `tests/…Integration/Backup/ScopedNotificationCenterSuspendTests.cs` against the REAL
@@ -547,7 +547,7 @@ Depends on 6a. Goal: the Backup block in Settings, driven by a fully testable Vi
 panel, busy guards, silent cancel, error mapping and the restart flow. Invoke the `.claude/skills/frontend-design`
 skill for the visual pass before ticking the view task.
 
-- [ ] 6b.1 Write failing `tests/…Unit/UI/BackupSettingsViewModelTests.cs` using `FakeBackupService`-backed real use
+- [x] 6b.1 Write failing `tests/…Unit/UI/BackupSettingsViewModelTests.cs` using `FakeBackupService`-backed real use
   cases (real `CreateBackupUseCase`/`InspectBackupUseCase`/`RestoreBackupUseCase` over the fake service),
   `FakeFileSaveDialog`, `FakeFileOpenDialog`, `FakeNotificationCenter`, `FakeAppRestartService` and `FakeClock`:
   (a) **export cancel**: save dialog returns `null`: no use case call, no status or error message, `State` Idle,
@@ -572,19 +572,19 @@ skill for the visual pass before ticking the view task.
   other backup commands are disabled (R-21); (n) an unexpected exception inside any command maps to the `IoError`
   text, is logged, and the state returns to Idle (never stuck busy); `OperationCanceledException` shows no failure
   message; (o) `IsBusy` is true only in Exporting/Inspecting/Restoring. (R-17, R-19..R-21, S-2, S-24, S-26..S-30)
-- [ ] 6b.2 Create `src/…UI/ViewModels/BackupSettingsViewModel.cs` (Transient) per DD-9: `BackupPanelState` enum,
+- [x] 6b.2 Create `src/…UI/ViewModels/BackupSettingsViewModel.cs` (Transient) per DD-9: `BackupPanelState` enum,
   `[ObservableProperty]` state with `NotifyCanExecuteChangedFor` on all five commands, `IsBusy`,
   `StatusMessage`, `IsError`, `PendingInfo`, `PendingSummary`, `RestartFailed`, `_pendingSource`, `_suspension`;
   commands `Export`, `ChooseRestoreFile`, `ConfirmRestore`, `CancelRestore`, `RestartNow`, each starting with a
   synchronous state check before the first `await`, `try/catch/finally`, and the error-code mapper (unknown code →
   generic `BackupErrorIoError`). No logic in code-behind. Run 6b.1 green. (R-17, R-19..R-21, R-23, DD-9)
-- [ ] 6b.3 Modify `src/…UI/ViewModels/SettingsViewModel.cs`: append the optional ctor parameter
+- [x] 6b.3 Modify `src/…UI/ViewModels/SettingsViewModel.cs`: append the optional ctor parameter
   `BackupSettingsViewModel? backup = null`, expose `Backup`. Write failing test in the existing Settings VM tests
   file (appended): `Backup` is exposed when provided and `null` otherwise, and the two existing fixture files
   (`SettingsViewModelTests.cs`, `SettingsViewModelTestConnectionTests.cs`) compile and pass unchanged; add a
   resolved-from-container test that the real `Bootstrap` injects a non-null `Backup`. Register
   `BackupSettingsViewModel` Transient in the `Bootstrap` block. (R-23, DD-9)
-- [ ] 6b.4 Modify `src/…UI/Views/SettingsView.axaml`: one new `<Border Classes="ledger-row" Padding="16">`
+- [x] 6b.4 Modify `src/…UI/Views/SettingsView.axaml`: one new `<Border Classes="ledger-row" Padding="16">`
   block placed BEFORE "Acerca de" (About stays last) with `DataContext="{Binding Backup}"`,
   `x:DataType="vm:BackupSettingsViewModel"`, `IsVisible` bound with `ObjectConverters.IsNotNull` on the host
   binding, title and description, Export and Restore buttons, indeterminate `ProgressBar` bound to `IsBusy`, status
@@ -600,9 +600,47 @@ skill for the visual pass before ticking the view task.
   complete a restore here (restore validation is covered by integration tests; the real restore is a manual check
   on a COPY of the data in 9.2). Record screenshots or console output. If the data-dir override is unavailable,
   press no buttons and say so. (R-22, R-23)
-- [ ] 6b.6 Run all four gates plus the no-stubs grep over the slice's files (`ViewModels`, `Views`, tests).
+- [x] 6b.6 Run all four gates plus the no-stubs grep over the slice's files (`ViewModels`, `Views`, tests).
   Confirm N > 0 for `BackupSettingsViewModelTests` and `BackupResourcesTests`. All green before opening PR S6b.
   (R-21..R-24)
+
+**S6b apply notes:**
+- 6a.4 ticked: `AvaloniaFileOpenDialog` defaults to `Strings.BackupRestoreDialogTitle` (S6a) and the ViewModel passes
+  `Strings.BackupExportDialogTitle` (save) and `Strings.BackupRestoreDialogTitle` (open) explicitly; asserted by
+  `Export_Success_ShowsFileName_AndPassesSuggestedNameFilterAndTitle` and
+  `ChooseRestoreFile_InspectSuccess_ShowsConfirmation_WithoutRestoring`.
+- 6a.8 stays open: S6b's launch (see 6b.5) covered the default locale only, so the "es-DO and en" wording of 6a.8 is not met.
+- 6b.2/6b.3 deviation: `BackupSettingsViewModel` is registered as a SINGLETON, not Transient. `NavigationService`
+  re-resolves transient view-models on every visit, so a fresh instance would come back in `Idle` after a successful
+  restore and allow a second restore, which would wait forever on the notification suspension held until process exit
+  (and a second export over the restored file). Singleton keeps `RestartRequired` terminal for the session
+  (Reconciliation #8). The use cases it depends on stay Transient (stateless). Guarded by
+  `BackupCompositionTests.BackupSettingsViewModel_IsASingleton_...`.
+- 6b.2: the ViewModel has an extra optional last ctor parameter `string? appVersion = null` (defaults to the assembly's
+  informational version, the same value stored in manifests) so the newer-schema message can show "this app's version"
+  and tests can pin it. `WorkingMessage` (derived from `State`) carries the progress caption so `StatusMessage` stays
+  empty after a cancelled picker. `AreActionsVisible` hides the export/restore buttons once `RestartRequired` is reached.
+- 6b.2: on success, `RestoreOutcome.ApiKeyLost` appends `BackupApiKeyNotRestoredNotice`; `ApiKeyCarriedOver` appends
+  `BackupApiKeyKeptNotice`; `BackupInfo.LocalApiKeyWillBeLost` adds `BackupConfirmApiKeyLostNote` to the confirmation
+  summary. `BackupRestartRequiredNotice` (S6a key) is shown in the restart panel. No new resx key was needed.
+- 6b.3: the "resolved from the container" check asserts the singleton registration and that the container can supply the
+  `SettingsViewModel` ctor parameter (`IServiceProviderIsService`); it deliberately does not construct `SettingsViewModel`
+  because its constructor starts a load against the (real) profile database.
+- 6b.4: frontend-design pass within the existing "Libro Mayor" system (no new tokens/colors, no new styles): title in
+  `ledger-title`, description/progress captions in `ledger-status`, Export = `ledger-btn-primary`, Restore = `ledger-btn`,
+  thin amber indeterminate `ProgressBar`, failure text via `Classes.export-error`, confirmation and restart panels as
+  amber-bordered inset cards (3 px leading edge), destructive confirm = `ledger-btn-danger` with a terracotta outline,
+  Cancel placed first so the destructive action is the last, least reachable button. The visibility binding sits on the
+  outer Border because the inner panel re-targets `DataContext` to `Backup`. `dotnet build` shows 0 warnings (compiled
+  bindings resolve). Checked by `SettingsViewBackupBlockTests` (single block, after Notificaciones, before Acerca de,
+  About still last, no hardcoded literals, all five commands bound).
+- 6b.5 NOT ticked: launched with `CONTROLDEFINANZASIA_DATA_DIR` on a scratchpad dir, default locale only, ~22 s, no
+  unhandled exception (only the known EF rebuild-table warnings), then killed; the real `%APPDATA%` listing was identical
+  before/after. No computer-use tooling was available to this executor, so Settings was NOT opened and NO screenshot was
+  taken: the visual pass (both locales) remains a manual check for 8.5.
+- Strict TDD honesty: the test file was written before the ViewModel, but the tests were NOT executed in a red state
+  (they referenced types that did not exist yet, so they could not compile). The ViewModel was then written in one step
+  and all tests passed on the first run: there was no intermediate red/green cycle per behavior.
 
 ## 7. End-to-end and docs (S7)
 
