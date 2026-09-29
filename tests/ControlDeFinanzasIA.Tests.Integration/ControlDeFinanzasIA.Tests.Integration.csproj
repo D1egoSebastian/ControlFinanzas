@@ -21,6 +21,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ControlDeFinanzasIA.Infrastructure\ControlDeFinanzasIA.Infrastructure.csproj" />
+    <!-- F-017 (S5a, D-9): ScopedNotificationCenter lives in the UI layer and is tested against a real container. -->
+    <ProjectReference Include="..\..\src\ControlDeFinanzasIA.UI\ControlDeFinanzasIA.UI.csproj" />
   </ItemGroup>
 
 </Project>

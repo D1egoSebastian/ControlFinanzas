@@ -37,6 +37,12 @@ using ControlDeFinanzasIA.Application.UseCases.Goals.GetGoals;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.GetIncomes;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.RegisterIncome;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.UpdateIncome;
+using ControlDeFinanzasIA.Application.UseCases.Notifications.DetectNotifications;
+using ControlDeFinanzasIA.Application.UseCases.Notifications.DismissNotification;
+using ControlDeFinanzasIA.Application.UseCases.Notifications.GetNotifications;
+using ControlDeFinanzasIA.Application.UseCases.Notifications.GetNotificationSettings;
+using ControlDeFinanzasIA.Application.UseCases.Notifications.MarkNotificationsRead;
+using ControlDeFinanzasIA.Application.UseCases.Notifications.UpdateNotificationSettings;
 using ControlDeFinanzasIA.Application.UseCases.Recurring.CreateFixedExpense;
 using ControlDeFinanzasIA.Application.UseCases.Recurring.CreateSubscription;
 using ControlDeFinanzasIA.Application.UseCases.Recurring.DeactivateRecurringRule;
@@ -240,6 +246,17 @@ public static class Bootstrap
 
         // Fase 16: plan de ahorro con IA para metas (F-016, slice S2).
         services.AddTransient<GenerateSavingsPlanUseCase>();
+
+        // Fase 17: notificaciones (F-017, slice S5a). Los casos de uso se resuelven
+        // solo dentro del scope propio de ScopedNotificationCenter (D-9, D-14).
+        services.AddTransient<DetectNotificationsUseCase>();
+        services.AddTransient<GetNotificationsQuery>();
+        services.AddTransient<MarkNotificationsReadUseCase>();
+        services.AddTransient<DismissNotificationUseCase>();
+        services.AddTransient<GetNotificationSettingsQuery>();
+        services.AddTransient<UpdateNotificationSettingsUseCase>();
+        services.AddSingleton<INotificationCenter, ScopedNotificationCenter>();
+        services.AddSingleton<NotificationListViewModel>();
 
         ServiceProvider tempProvider = services.BuildServiceProvider();
         try

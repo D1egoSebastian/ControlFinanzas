@@ -1122,4 +1122,98 @@ public class Strings
     /// Gets the localized label for the button that requests an AI savings-plan narration (F-016, R-13, D-9).
     /// </summary>
     public static string GoalsRequestPlanButton => ResourceManager.GetString("GoalsRequestPlanButton", Culture)!;
+    /// <summary>
+    /// Gets the localized title of the notifications flyout (F-017, R-3, D-13).
+    /// </summary>
+    public static string NotificationsTitle => ResourceManager.GetString("NotificationsTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label of the notifications refresh button (F-017, R-14, D-13).
+    /// </summary>
+    public static string NotificationsRefreshButton => ResourceManager.GetString("NotificationsRefreshButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label of the per-notification dismiss button (F-017, R-10, D-13).
+    /// </summary>
+    public static string NotificationsDismissButton => ResourceManager.GetString("NotificationsDismissButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized empty-state message of the notifications flyout (F-017, D-13).
+    /// </summary>
+    public static string NotificationsEmpty => ResourceManager.GetString("NotificationsEmpty", Culture)!;
+
+    /// <summary>
+    /// Gets the localized automation-name format of the notifications bell; {0} is the unread count (F-017, D-13).
+    /// </summary>
+    public static string NotificationsBellAutomationFormat => ResourceManager.GetString("NotificationsBellAutomationFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title of a debt-installment notification (F-017, R-11, D-10).
+    /// </summary>
+    public static string NotificationDebtDueTitle => ResourceManager.GetString("NotificationDebtDueTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized body format of a not-yet-overdue debt installment: label, money, relative date (F-017, R-11, D-10).
+    /// </summary>
+    public static string NotificationDebtDueFormat => ResourceManager.GetString("NotificationDebtDueFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized body format of an overdue debt installment: label, money, short date (F-017, R-11, D-10).
+    /// </summary>
+    public static string NotificationDebtOverdueFormat => ResourceManager.GetString("NotificationDebtOverdueFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title of a recurring-charge notification (F-017, R-11, D-10).
+    /// </summary>
+    public static string NotificationRecurringDueTitle => ResourceManager.GetString("NotificationRecurringDueTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized body format of a recurring charge: label, money, relative date (F-017, R-11, D-10).
+    /// </summary>
+    public static string NotificationRecurringDueFormat => ResourceManager.GetString("NotificationRecurringDueFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title of a near-threshold budget notification (F-017, R-11, D-10).
+    /// </summary>
+    public static string NotificationBudgetNearTitle => ResourceManager.GetString("NotificationBudgetNearTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title of an exceeded budget notification (F-017, R-11, D-10).
+    /// </summary>
+    public static string NotificationBudgetExceededTitle => ResourceManager.GetString("NotificationBudgetExceededTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized body format of a budget notification: label, percent (F-017, R-11, D-10).
+    /// </summary>
+    public static string NotificationBudgetFormat => ResourceManager.GetString("NotificationBudgetFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title of an anomaly notification (F-017, R-11, D-10).
+    /// </summary>
+    public static string NotificationAnomalyTitle => ResourceManager.GetString("NotificationAnomalyTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized body format of an anomaly notification: label, short date (F-017, R-11, D-10).
+    /// </summary>
+    public static string NotificationAnomalyFormat => ResourceManager.GetString("NotificationAnomalyFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized fallback used when a notification subject label is empty (F-017, D-10).
+    /// </summary>
+    public static string NotificationUnnamedSubject => ResourceManager.GetString("NotificationUnnamedSubject", Culture)!;
+
+    /// <summary>
+    /// Gets the localized relative-date word for the current day (F-017, D-10).
+    /// </summary>
+    public static string NotificationDateToday => ResourceManager.GetString("NotificationDateToday", Culture)!;
+
+    /// <summary>
+    /// Gets the localized relative-date word for the next day (F-017, D-10).
+    /// </summary>
+    public static string NotificationDateTomorrow => ResourceManager.GetString("NotificationDateTomorrow", Culture)!;
+
+    /// <summary>
+    /// Gets the localized relative-date format for N days ahead (F-017, D-10).
+    /// </summary>
+    public static string NotificationDateInDaysFormat => ResourceManager.GetString("NotificationDateInDaysFormat", Culture)!;
 }

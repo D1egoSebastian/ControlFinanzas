@@ -706,4 +706,61 @@ Mostrando conversiones aproximadas.
   <data name="GoalsRequestPlanButton" xml:space="preserve">
     <value>Pedir plan con IA</value>
   </data>
+  <data name="NotificationsTitle" xml:space="preserve">
+    <value>Notificaciones</value>
+  </data>
+  <data name="NotificationsRefreshButton" xml:space="preserve">
+    <value>Actualizar</value>
+  </data>
+  <data name="NotificationsDismissButton" xml:space="preserve">
+    <value>Descartar</value>
+  </data>
+  <data name="NotificationsEmpty" xml:space="preserve">
+    <value>No tienes avisos pendientes.</value>
+  </data>
+  <data name="NotificationsBellAutomationFormat" xml:space="preserve">
+    <value>Notificaciones, {0} sin leer</value>
+  </data>
+  <data name="NotificationDebtDueTitle" xml:space="preserve">
+    <value>Cuota de deuda por vencer</value>
+  </data>
+  <data name="NotificationDebtDueFormat" xml:space="preserve">
+    <value>Cuota de {0}: {1}, vence {2}.</value>
+  </data>
+  <data name="NotificationDebtOverdueFormat" xml:space="preserve">
+    <value>Cuota de {0}: {1}, vencida desde {2}.</value>
+  </data>
+  <data name="NotificationRecurringDueTitle" xml:space="preserve">
+    <value>Cargo próximo</value>
+  </data>
+  <data name="NotificationRecurringDueFormat" xml:space="preserve">
+    <value>{0}: {1}, se cobra {2}.</value>
+  </data>
+  <data name="NotificationBudgetNearTitle" xml:space="preserve">
+    <value>Presupuesto casi agotado</value>
+  </data>
+  <data name="NotificationBudgetExceededTitle" xml:space="preserve">
+    <value>Presupuesto excedido</value>
+  </data>
+  <data name="NotificationBudgetFormat" xml:space="preserve">
+    <value>{0}: {1} % del presupuesto consumido.</value>
+  </data>
+  <data name="NotificationAnomalyTitle" xml:space="preserve">
+    <value>Gasto inusual</value>
+  </data>
+  <data name="NotificationAnomalyFormat" xml:space="preserve">
+    <value>Gasto inusual en {0} el {1}.</value>
+  </data>
+  <data name="NotificationUnnamedSubject" xml:space="preserve">
+    <value>Sin nombre</value>
+  </data>
+  <data name="NotificationDateToday" xml:space="preserve">
+    <value>hoy</value>
+  </data>
+  <data name="NotificationDateTomorrow" xml:space="preserve">
+    <value>mañana</value>
+  </data>
+  <data name="NotificationDateInDaysFormat" xml:space="preserve">
+    <value>en {0} días</value>
+  </data>
 </root>

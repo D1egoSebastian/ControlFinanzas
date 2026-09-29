@@ -220,46 +220,46 @@ list/mark-read/dismiss use cases exist for the UI to consume.
 Depends on 5. Goal: a per-run-scoped notification center, a text formatter, and route-agnostic
 list/item ViewModels exist and are wired into DI, without touching the shell yet.
 
-- [ ] 6.1 Write failing `tests/…Unit/UI/NotificationTextFormatterTests.cs`: each kind's title/body
+- [x] 6.1 Write failing `tests/…Unit/UI/NotificationTextFormatterTests.cs`: each kind's title/body
   in both `es-DO` and `en`; overdue vs. due body is derived from `ReferenceDate < today`, never
   stored (R-11); an empty subject label falls back to `NotificationUnnamedSubject`; money uses
   `{amount:N2} {currency}` in `CurrentCulture`; relative-date keys for today/tomorrow/N-days. (R-11,
   D-10)
-- [ ] 6.2 Write failing `tests/…Unit/UI/NotificationListViewModelTests.cs`: `BadgeText` is `""` at
+- [x] 6.2 Write failing `tests/…Unit/UI/NotificationListViewModelTests.cs`: `BadgeText` is `""` at
   0, `"1"` at 1, `"9"` at 9, `"9+"` at 10 and 12 (S-11); setting `IsOpen = true` calls
   `MarkReadAsync` with only the currently-listed unread ids and does not trigger a refresh (R-8,
   R-14); `RefreshCommand` sets `IsRefreshing` and a second invocation while one is in flight makes
   no second `TryRefreshAsync` call; `DismissCommand` calls the center and the list reloads via
   `Changed`. (R-8, R-10, R-14, D-10)
-- [ ] 6.3 Write failing `tests/…Integration/UI/ScopedNotificationCenterTests.cs`: each operation
+- [x] 6.3 Write failing `tests/…Integration/UI/ScopedNotificationCenterTests.cs`: each operation
   runs inside its own `IServiceScopeFactory.CreateScope()`; the `SemaphoreSlim` gate makes
   `TryRefreshAsync` return `false` while a run is in flight; `Changed` fires in `finally` for a
   successful refresh, a failed refresh, dismiss, and mark-read; an exception from
   `DetectNotificationsUseCase` is caught, logged, and swallowed, never propagated. (R-15, D-9)
-- [ ] 6.4 Create `tests/…Unit/TestDoubles/FakeNotificationCenter.cs`: records calls, `TryRefresh`
+- [x] 6.4 Create `tests/…Unit/TestDoubles/FakeNotificationCenter.cs`: records calls, `TryRefresh`
   gateable by the test, can raise `Changed` — a Phase-17-owned double (D-15).
-- [ ] 6.5 Modify `src/…UI/Resources/Strings.resx`, `Strings.es-DO.resx`, `Strings.Designer.cs`
+- [x] 6.5 Modify `src/…UI/Resources/Strings.resx`, `Strings.es-DO.resx`, `Strings.Designer.cs`
   (appended block): shell keys (`NotificationsTitle`, `NotificationsRefreshButton`,
   `NotificationsDismissButton`, `NotificationsEmpty`, `NotificationsBellAutomationFormat`) and
   kind keys (titles/body formats per kind from D-10, `NotificationUnnamedSubject`, the 3
   relative-date keys). (R-11, D-13)
-- [ ] 6.6 Create `src/…UI/Formatting/NotificationTextFormatter.cs`: pure static
+- [x] 6.6 Create `src/…UI/Formatting/NotificationTextFormatter.cs`: pure static
   `Format(NotificationDto, DateOnly today, CultureInfo culture) → (Title, Body)`. Run 6.1 green.
   (R-11, D-10)
-- [ ] 6.7 Create `src/…UI/Services/{INotificationCenter,ScopedNotificationCenter}.cs`: the 5-method
+- [x] 6.7 Create `src/…UI/Services/{INotificationCenter,ScopedNotificationCenter}.cs`: the 5-method
   port and the `Task.Run` + per-scope `AppDbContext` + `SemaphoreSlim(1,1)` gate + captured
   `SynchronizationContext` `Changed` event implementation, catching and logging every non-
   cancellation exception. Run 6.3 green. (R-15, D-9)
-- [ ] 6.8 Create `src/…UI/ViewModels/{NotificationListViewModel,NotificationItemViewModel}.cs`:
+- [x] 6.8 Create `src/…UI/ViewModels/{NotificationListViewModel,NotificationItemViewModel}.cs`:
   observable `Items`/`UnreadCount`/`IsOpen`/`IsRefreshing`/`IsEmpty`, computed `BadgeText`/
   `HasUnread`, `OnIsOpenChanged` mark-read-only-listed-rows, `RefreshCommand`, `DismissCommand`. Run
   6.2 green. (R-8, R-10, R-14, D-10)
-- [ ] 6.9 Modify `src/…UI/Composition/Bootstrap.cs`: append the Fase 17 block (after the latest
+- [x] 6.9 Modify `src/…UI/Composition/Bootstrap.cs`: append the Fase 17 block (after the latest
   landed Phase 15/16 block) registering `DetectNotificationsUseCase`, `GetNotificationsQuery`,
   `MarkNotificationsReadUseCase`, `DismissNotificationUseCase`, `GetNotificationSettingsQuery`,
   `UpdateNotificationSettingsUseCase` as transient, and `INotificationCenter`/
   `NotificationListViewModel` as singleton. (D-14)
-- [ ] 6.10 Run all four gates. All green before opening PR S5a.
+- [x] 6.10 Run all four gates. All green before opening PR S5a.
 
 ## 7. Shell surface (S5b)
 
