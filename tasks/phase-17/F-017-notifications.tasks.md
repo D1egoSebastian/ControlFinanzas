@@ -358,31 +358,43 @@ per-kind toggles and dismissals, and the project docs record the phase's status.
 
 ## 10. Cierre
 
-- [ ] 10.1 Run the full gate suite across the whole phase: build, `dotnet test` (unit +
+- [x] 10.1 Run the full gate suite across the whole phase: build, `dotnet test` (unit +
   integration), `dotnet format style --verify-no-changes`, NetArchTest R-1..R-5,
   `ModelSnapshotConsistencyTests`. All green. Confirm zero changes to `AppSettings`,
   `DebtPayment`, `RecurringRule`, `Budget`, `AnomalyAlert`, `GetUpcomingPaymentsQuery`,
   `GetBudgetVsActualQuery`, `DetectAnomaliesUseCase`, `NavigationService`, `CurrentViewConverter`,
-  `NavigationServiceTests`, or `FakeSettingsStore` (R-18, Out of Scope).
+  `NavigationServiceTests`, or `FakeSettingsStore` (R-18, Out of Scope). Evidence: `verify-report.md`
+  Gates table - build 0/0, 1700/1700 (1405 unit + 295 integration), format exit 0, NetArchTest 11/11,
+  `ModelSnapshotConsistencyTests` 3/3; `git diff --name-only e915961^ HEAD` filtered by every listed
+  file name is empty.
 - [ ] 10.2 Manual run against an existing dev DB in both locales: app open shows the relevant
   notices (S-1); a budget crossing 80%/100% fires Near then Exceeded and removes the undismissed
   Near (S-2, S-3); silencing a kind in Settings stops new notices and removes existing undismissed
   ones (S-3, S-7); the badge renders `9+` above 9 unread and the flyout caps at 20, unread-first
   (S-11); a forced reconcile-save failure (S-12) leaves the app usable and a later manual refresh
-  succeeds.
-- [ ] 10.3 Write `verify-report.md` in `.atl/sdd/f-017p17-notifications/`, independently
+  succeeds. **NOT RUN MANUALLY (left unchecked deliberately).** The app was only launched through the
+  automated smoke launches in S5b and S6 (no crashes); a real-data run in both locales and a real-data
+  forced-failure check were not performed. Source- and test-level evidence covers the scenarios
+  instead (see `verify-report.md` W3, W5 and the spec's Acceptance Criteria evidence).
+- [x] 10.3 Write `verify-report.md` in `.atl/sdd/f-017p17-notifications/`, independently
   re-verifying every Acceptance Criteria checklist line against source and tests before archiving —
   including all 13 Spec Reconciliation points (fact refresh on undismissed rows, digest ignoring
   toggles/dismissals, single `DedupKey` string, anomaly 60-day source cutoff, deactivated recurring
   rule exclusion, indeterminate budgets kept, purge+apply in one `SaveChangesAsync`, digest
   window/cursor details, manual-refresh no-op + queued startup/settings runs, flyout marking only
   listed rows, `NavigationServiceTests` needing no change while both `SettingsViewModel` fixtures
-  do, the `ToggleButton`+`Popup` flyout shape, and overdue derived at display time).
-- [ ] 10.4 Archive the spec (`F-017-notifications.spec.md` → `.done.md`) and write
-  `archive-report.md` in `.atl/sdd/f-017p17-notifications/`.
-- [ ] 10.5 Create `spec/phases/phase-17/features.md` following the pattern of
-  `spec/phases/phase-10/` through `phase-16/`.
-- [ ] 10.6 Update `docs/roadmap.md` §Fase 17: mark the phase's completion criteria complete.
-- [ ] 10.7 Update `docs/AI_HANDOFF.md` with the Phase 17 summary, including the fact-refresh-on-
+  do, the `ToggleButton`+`Popup` flyout shape, and overdue derived at display time). Evidence:
+  `.atl/sdd/f-017p17-notifications/verify-report.md` - PASS WITH WARNINGS, 0 critical; the design
+  divergences are recorded in the spec's "Post-apply reconciliation" subsection.
+- [x] 10.4 Archive the spec (`F-017-notifications.spec.md` → `.done.md`) and write
+  `archive-report.md` in `.atl/sdd/f-017p17-notifications/`. Evidence:
+  `spec/features/phase-17/F-017-notifications.done.md` (renamed with `git mv`, all 8 acceptance
+  criteria checked with evidence) and `.atl/sdd/f-017p17-notifications/archive-report.md`.
+- [x] 10.5 Create `spec/phases/phase-17/features.md` following the pattern of
+  `spec/phases/phase-10/` through `phase-16/`. Evidence: `spec/phases/phase-17/features.md`.
+- [x] 10.6 Update `docs/roadmap.md` §Fase 17: mark the phase's completion criteria complete.
+  Evidence: `docs/roadmap.md` §Fase 17 "Estado actual (2026-09-28)".
+- [x] 10.7 Update `docs/AI_HANDOFF.md` with the Phase 17 summary, including the fact-refresh-on-
   undismissed-rows rule and the digest's toggle/dismissal-independent counting, so a future reader
-  does not "fix" either as a bug.
+  does not "fix" either as a bug. Evidence: `docs/AI_HANDOFF.md` TL;DR, §3, §4 "Phase 17 - what's
+  done", §5, §11 gotchas.

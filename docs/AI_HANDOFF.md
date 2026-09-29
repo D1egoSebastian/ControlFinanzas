@@ -1,7 +1,7 @@
 # AI_HANDOFF.md — ControlDeFinanzasIA
 
 > Self-contained handoff document for any AI agent picking up the project tomorrow.
-> Verified against the filesystem on **2026-09-26**. All claims are sourced from
+> Verified against the filesystem on **2026-09-28**. All claims are sourced from
 > `AGENTS.md`, `spec/`, `docs/`, or the repo's actual state.
 
 ---
@@ -9,8 +9,9 @@
 ## 1. TL;DR
 
 - **What it is:** `ControlDeFinanzasIA` — a cross-platform (.NET 8 + Avalonia MVVM) desktop app for personal-finance control with AI assist. 100% local data. DOP + USD.
-- **Current phase:** **Phase 16 archived** (AI savings plan for goals). Phases 0–16 fully archived. **Phase 17 (in-app notifications) is next and already mid-apply, concurrently with this close** — see the honest in-progress note in §5 below; do not assume it is done.
-- **Test count:** 1522/1522 passing (1236 unit + 286 integration) as of 2026-09-26, Phase 16 close (up from 1422 at Phase 15 close). The integration count also includes Phase 17's concurrently-landed `Notification` persistence tests. Re-run 5 consecutive times independently during `sdd-verify`; one run showed a transient, non-reproducible failure batch in `DashboardViewModelTests` (a file untouched by Phase 16) that did not recur in 4 subsequent full-suite runs nor 2 isolated re-runs — see gotcha #26 below. Release unit-test host runs cleanly end to end, no Debug fallback needed.
+- **Current phase:** **Phase 17 archived** (in-app notifications). Phases 0–17 fully archived. Next per the roadmap: Phase 18 (PDF/Excel export) — check `.atl/sdd/f-018p18-export/` and `git log --oneline` for any in-flight work before starting.
+- **Test count:** 1700/1700 passing (1405 unit + 295 integration) as of 2026-09-28, Phase 17 close (up from 1522 at Phase 16 close). Build 0 warnings/0 errors, `dotnet format style --verify-no-changes` exit 0, NetArchTest 11/11, `ModelSnapshotConsistencyTests` 3/3. The one-off `DashboardViewModelTests` anomaly recorded at Phase 16 close (gotcha #26) did not recur in this close's gate run.
+- **Phase 17 shipped in-app notifications: a bell + unread badge + popup in a new header row of the shell, fed by a deterministic detection run.** `DetectNotificationsUseCase` reads four existing sources sequentially (debt installments in `[today-7, today+3]` with overdue derived at display time, recurring charges in `[today, today+3]`, current-month budget Near/Exceeded — highest tier only —, unacknowledged `AnomalyAlert` rows) plus a periodic digest (`Off`/`Daily`/`Weekly`, default Weekly), and hands candidates to `NotificationReconciler`, which persists them in a `Notification` table keyed by a single unique `DedupKey` string (idempotent; a dismissed key is never recreated; an undismissed row whose source stops qualifying is removed; facts on undismissed rows are refreshed without touching `Id`/`CreatedAt`/`ReadAt`; 60-day purge; one `SaveChangesAsync` per run). `ScopedNotificationCenter` gives every run its own DI scope, guards against concurrent runs (manual refresh is a no-op while one is in flight; startup/settings runs are queued), and swallows and logs every failure. Runs happen at app start (`mainWindow.Opened`), after saving the Settings "Notificaciones" section (4 per-kind toggles, default on, plus the digest frequency picker, via new `SettingKeys`/`ISettingsStore` — `AppSettings` untouched), and via the popup's refresh button. The badge shows the full unread count (`9+` above 9), the popup lists at most 20 rows unread-first and marks them read on open, per-row dismiss is permanent, and there is no click-through. `Notification` stores facts only; `NotificationTextFormatter` renders text at display time from resx. See gotchas #28-#30 below.
 - **Phase 16 shipped a "Pedir plan con IA" button on every goal row that asks the LLM for a short, motivational explanation of the exact deterministic figure `SavingsPlanCalculator` (Phase 11, unmodified) already computes.** A new `GenerateSavingsPlanUseCase` takes only `GoalId`, reloads the goal and its contributions server-side, recomputes via `Goal.CalculateProgress` + `SavingsPlanCalculator.Calculate`, and classifies the plan into exactly one state (`Live`/`AlreadyMet`/`TargetDateInPast`, `AlreadyMet` wins when both apply) so the prompt only ever receives that state's figures. A pure `SavingsPlanNarrationGuard` extracts every digit run from the model's cleaned output and drops the narration to `Unavailable` if any run isn't among the figures — plus the sanitized goal name — actually sent, closing the loop against invented numbers. `GoalRow` converted from an immutable record to an `ObservableObject` (keeping its exact 13-parameter PascalCase constructor via a scoped `IDE1006` suppression) so a per-row `IsGeneratingPlan` flag plus `[RelayCommand(AllowConcurrentExecutions = true)]` let one row's request run without disabling any other row's button. Not configured, a provider failure, or a guard rejection all leave the card's number untouched, showing only a localized fallback caption. See gotcha #26 below for the transient Dashboard test-run anomaly and gotcha #27 for the guard's documented membership-not-position limitation.
 - **Phase 15 shipped a chat screen that answers plain-language finance questions grounded in local data, with every figure computed deterministically before the model ever sees it.** `BuildChatContextQuery` composes 6 already-existing queries (month summary, category breakdown — fetched UNFOLDED so no category is ever hidden past the dashboard's top-5 default —, budget vs. actual, goals, debts + schedule, upcoming payments), each section degrading independently on failure. `ChatContextRenderer`, a pure static class, formats that snapshot into a culture-correct, name-sanitized prompt block capped at 6,000 characters by construction, dropping whole sections in a fixed order when needed. `AskFinanceChatUseCase` copies `CategorizeExpenseUseCase`'s guard skeleton and is success-shaped for every outcome (rejected, not configured, any AI failure — never `Result.Failure` or an uncaught exception). The conversation lives in memory only, cleared via a brand-new opt-in `INavigationAware` hook because `NavigationService.GoBack` reactivates the same `ChatViewModel` instance instead of resolving a new one. See gotcha #24 below for the `AsyncRelayCommand` CanExecute-not-self-checked footgun found in slice 5 and gotcha #25 for the `InternalsVisibleTo` test-only seam introduced in slice 4.
 - **Phase 14 shipped three AI-facing dashboard sections while keeping every number deterministic**: a month-end forecast, persisted anomaly alerts, and an AI-written insight summary. Two new pure Domain services — `AnomalyDetector` (robust median/MAD z-score, `MAD=0` ratio fallback, never divides by zero) and `MonthEndForecaster` (run-rate/history blend with explicit `InsufficientData`/`ClosedMonth`/`FutureMonth` states) — compute every figure with **zero** `ILLMClient` dependency. The LLM only narrates figures it is handed, via two success-shaped use cases (`GetInsightsUseCase`, `GetAnomalyNarrativeUseCase`) that copy Phase 13's guard skeleton but never fail — not-configured, offline, and every AI error all resolve to a fallback payload plus a correlation-id Warning log, never an exception or `Result.Failure`. One new composite query (`GetDashboardInsightsQuery`) splits a deterministic step (forecast + reconciled anomalies, sequential, zero LLM) from a non-blocking narration step (insights + one batched anomaly-narration call, `WhenAll`, at most 2 concurrent calls) — the dashboard's numeric sections render immediately regardless of AI state. See gotcha #23 below for the `AnomalySeverity`-as-string persistence deviation and gotcha #22 for Phase 13's flaky-test lesson this phase's own timing-sensitive tests followed.
@@ -33,7 +34,7 @@
 | Type | Cross-platform desktop (Windows, macOS, Linux), single-user, local data only |
 | UI pattern | MVVM strict with **CommunityToolkit.Mvvm** (`[ObservableProperty]`, `[RelayCommand]`) |
 | Localization | `es-DO` default + `en` via `IStringLocalizer` / resx |
-| Status | Phases 0–16 ✅ archived; Phase 17 (in-app notifications) next, already mid-apply concurrently with Phase 16's close |
+| Status | Phases 0–17 ✅ archived; Phase 18 (PDF/Excel export) next |
 
 ---
 
@@ -60,6 +61,7 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 | 14 | AI insights, month-end forecast, anomaly detection | 1 umbrella `F-014` covering 10 work units (domain math/alert entity+persistence/forecast use case/detection+acknowledge/AI plumbing/AI use cases/composite+DI/VM deterministic pass/VM narration pass/view) | 1 | 0 | 100% | `spec/phases/phase-14/features.md` + `spec/features/phase-14/F-014-ai-insights-forecast-anomalies.done.md` |
 | 15 | Chat con IA sobre tus finanzas | 1 umbrella `F-015` covering 6 strictly-chained slices (context builder/renderer/use case+prompts/navigation hook+clipboard port/view model/view+routing) | 1 | 0 | 100% | `spec/phases/phase-15/features.md` + `spec/features/phase-15/F-015-ai-finance-chat.done.md` |
 | 16 | Plan de ahorro con IA para metas | 1 umbrella `F-016` covering 4 strictly-chained slices (guard+DTO+prompts/use case/row+ViewModel/view+docs) | 1 | 0 | 100% | `spec/phases/phase-16/features.md` + `spec/features/phase-16/F-016-ai-savings-plan.done.md` |
+| 17 | Notificaciones in-app | 1 umbrella `F-017` covering 9 strictly-chained slices (domain/persistence+migration/settings+reconciler/debt+recurring detection/budget+anomaly detection+read/dismiss/UI service+list VM/shell bell+startup trigger/settings section/digest) | 1 | 0 | 100% | `spec/phases/phase-17/features.md` + `spec/features/phase-17/F-017-notifications.done.md` |
 
 \* Phase 11's Acceptance Criteria checklist is 100% satisfied; one documented, non-blocking gap exists
 between the spec's R-1/S-2 prose (UI goal editing) and the shipped UI (create/contribute/view/delete
@@ -128,9 +130,16 @@ only) — see the TL;DR above.
   `RequestPlanCommand`/`IsGeneratingPlan` with `AllowConcurrentExecutions = true`, and the
   `GoalsView.axaml` button + narration/fallback captions.
 
+**Phase 17** — `spec/features/phase-17/` (1 done, archived 2026-09-28)
+- `F-017-notifications.done.md` (umbrella). All 9 strictly-chained slices complete: `Notification`
+  aggregate + keys (S1a), persistence + additive migration `AddNotifications` (S1b), per-kind settings
+  keys + `NotificationReconciler` (S2), debt/recurring detection (S3), budget/anomaly detection +
+  mark-read/dismiss (S4), `ScopedNotificationCenter` + list VM + formatter (S5a), shell bell/badge/popup +
+  startup trigger (S5b), Settings "Notificaciones" section (S6), periodic digest (S7).
+
 ---
 
-## 4. Phase 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 & 16 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20, 2026-09-20, 2026-09-21, 2026-09-23, 2026-09-23, 2026-09-23, 2026-09-26)
+## 4. Phase 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 & 17 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20, 2026-09-20, 2026-09-21, 2026-09-23, 2026-09-23, 2026-09-23, 2026-09-26, 2026-09-28)
 
 ### What's done (backend)
 
@@ -559,18 +568,62 @@ The full task breakdown is at `tasks/phase-15/F-015-ai-finance-chat.tasks.md`.
 
 The full task breakdown is at `tasks/phase-16/F-016-ai-savings-plan.tasks.md`.
 
+### Phase 17 — what's done
+
+- Domain: `Domain/Notifications/{Notification,NotificationKind,NotificationTier,DigestFrequency,
+  NotificationCurrencyTotal,NotificationKeys}.cs` — `Notification` is a `sealed class` with private
+  setters, per-kind `For*` factories that reject facts belonging to another kind, idempotent
+  `MarkRead`/`Dismiss` (first timestamp wins), `RefreshFacts` (throws when dismissed) and
+  `HasSameFacts`; it stores facts only, with the subject label sanitized and capped at 120 chars.
+  `NotificationKeys` builds the single `DedupKey` string per kind (`debt:{id:N}`,
+  `recurring:{id:N}:{yyyy-MM-dd}`, `budget:{id:N}:{yyyy-MM}:{Near|Exceeded}`, `anomaly:{id:N}`,
+  `digest:{Daily|Weekly}:{yyyy-MM-dd}`).
+- Application: `Application/Notifications/{NotificationRules,DigestComposer,DigestPeriod,
+  NotificationReconciler,NotificationSettings,NotificationSettingsReader}.cs` and
+  `Application/UseCases/Notifications/{DetectNotifications,GetNotifications,MarkNotificationsRead,
+  DismissNotification,GetNotificationSettings,UpdateNotificationSettings}/`. Detection reads each
+  enabled source sequentially (no `Task.WhenAll`); the reconciler plans add / remove / refresh-facts /
+  purge (60 days) and never recreates a dismissed key; a new `Exceeded` row removes an undismissed `Near`
+  for the same budget and month; the digest is composed only from complete reads and its `yyyy-MM-dd`
+  cursor (`SettingKeys.NotificationsDigestLastPeriodStart`) is written only after a successful
+  reconcile. 6 new `SettingKeys` (4 toggles, digest frequency, digest cursor) through `ISettingsStore`;
+  `AppSettings` is untouched.
+- Infrastructure: `NotificationConfiguration`, `NotificationRepository` (`ApplyReconciliationAsync` =
+  one `SaveChangesAsync`; on `DbUpdateException` it detaches only its own entries and never calls
+  `ChangeTracker.Clear()`), migration `20260926064030_AddNotifications` (additive only: `CreateTable` +
+  3 `CreateIndex` in `Up`, `DropTable` only in `Down`).
+- UI: `Services/{INotificationCenter,ScopedNotificationCenter}.cs`,
+  `ViewModels/{NotificationListViewModel,NotificationItemViewModel}.cs`,
+  `Formatting/NotificationTextFormatter.cs`, `ShellViewModel` (owns the bell state),
+  `MainWindow.axaml` (new header row, `ToggleButton` bell + badge + `Popup`, list in a
+  `ScrollViewer MaxHeight="400"`), `SettingsView.axaml`/`SettingsViewModel` ("Notificaciones" section,
+  save triggers exactly one run), `App.axaml.cs` (`mainWindow.Opened` -> `RefreshAsync`,
+  fire-and-forget). 32 new resx keys in `Strings.resx`, `Strings.es-DO.resx` and `Strings.Designer.cs`.
+- Deliberate rules a future reader must not "fix": (a) undismissed rows have their facts refreshed on
+  every run without touching `Id`/`CreatedAt`/`ReadAt` (a Near notice showing 85% must follow the budget
+  to 95%, and must never re-badge an already-read row); (b) the digest counts from the full sources and
+  ignores per-kind toggles and dismissals (it has its own on/off via the frequency `Off`); (c) an
+  indeterminate (missing-FX-rate) budget keeps its existing notice instead of being removed.
+- Applied in 9 strictly-chained commits (`1b0c9cf`, `c9130a5`, `73bba65`, `94f32e3`, `8effc0d`,
+  `bac31b2`, `5e72036`, `c879ce2`, `d0c9552`), interleaved with Phase 16's own commits. S1b, S5b and S6
+  carried automated smoke launches (no crash). Verify verdict: PASS WITH WARNINGS, 0 critical (see
+  `.atl/sdd/f-017p17-notifications/verify-report.md`); the nine divergences from the design are recorded in
+  the spec's "Post-apply reconciliation" subsection.
+- Gates: build clean, 1700/1700 tests (1405 unit + 295 integration, up from 1522 at Phase 16 close),
+  `dotnet format style` clean, NetArchTest 11/11, `ModelSnapshotConsistencyTests` 3/3.
+- Spec archived to `spec/features/phase-17/F-017-notifications.done.md`.
+
+The full task breakdown is at `tasks/phase-17/F-017-notifications.tasks.md`. Task 10.2 (manual run in both
+locales, incl. the S-12 forced-failure check) is deliberately left unchecked: it was not run manually.
+
 ---
 
 ## 5. What's pending (next up)
 
 Ordered by priority. Each item references its source-of-truth spec/plan.
 
-1. **Phase 17 — In-app notifications** — `docs/roadmap.md` §Fase 17. **Already mid-apply, in
-   progress concurrently with Phase 16's own close** by other agents in this same working tree: as of
-   this handoff update, the `Notification` domain entity/kinds and its persistence + migration
-   (slices S1a/S1b of 9 planned slices) have landed (`1b0c9cf`, `c9130a5`), but the phase is NOT
-   complete — do not report it as done. Confirm the real state with `git log --oneline` and
-   `tasks/phase-17/*.tasks.md`'s checkbox state before continuing it.
+1. **Phase 18 — PDF/Excel export** — `docs/roadmap.md` §Fase 18. Check `.atl/sdd/f-018p18-export/` and
+   `git log --oneline` for any in-flight work before planning from scratch.
 2. **Follow-up, not phase-blocking**: Phase 16's `SavingsPlanNarrationGuard.IsGrounded` is a
    membership check, not a positional one (documented, accepted design cost) — do not "fix" it into a
    positional check; the goal name's digit runs are deliberately included in the allowed set (Spec
@@ -635,13 +688,25 @@ Ordered by priority. Each item references its source-of-truth spec/plan.
     same live-model prompt-tuning caveat as Phase 13's categorization prompt and Phase 14's
     insights/anomaly-narration prompts — all tests use a deterministic fake `ILLMClient`; real-model
     response quality was not re-verified interactively as part of this phase's SDD close.
-15. **Phase 18 — PDF/Excel export** — `docs/roadmap.md` §Fase 18
-16. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19
-17. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20
-18. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
+15. **Follow-up, not phase-blocking**: Phase 17 verify warnings. The manual task 10.2 run (both
+    locales, real dev DB, S-12 forced reconcile-save failure) was NOT performed; the
+    `mainWindow.Opened` -> `RefreshAsync` startup trigger has no automated test; "exactly one
+    `SaveChangesAsync` per run" is proven structurally, not by a save-count test; S-4 idempotency is
+    tested at the reconciler level only, not end to end through the use case.
+16. **Follow-up, not phase-blocking**: Phase 17 cleanups. The `budgetReadFailed` branch in
+    `DetectNotificationsUseCase` (~lines 212-227) is defensive and untested because
+    `GetBudgetVsActualQuery` never returns `Failure` today; `MainWindow.axaml` hardcodes
+    `#22E8A33D`/`#33E8A33D` (precedent `ChatView.axaml:29`) instead of a design token;
+    `RetentionDays = 60` is declared in both `NotificationRules` and `NotificationReconciler`;
+    `ScopedNotificationCenter` captures `SynchronizationContext.Current` at construction, so it must be
+    resolved on the UI thread; the unread accent stripe on popup rows is effectively never visible
+    (opening the popup marks the rows read).
+17. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19
+18. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20
+19. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
 
-**MVP (no IA) = phases 0–12, fully complete. Phases 13–16 = first four shipped AI features.** Phase
-17+ (notifications, in progress) continues the roadmap.
+**MVP (no IA) = phases 0–12, fully complete. Phases 13–16 = first four shipped AI features. Phase 17
+(notifications) is deterministic and AI-free.** Phase 18+ continues the roadmap.
 
 ---
 
@@ -915,8 +980,8 @@ dotnet ef migrations add <Name> `
 
 ### Where to start
 
-1. **Read `spec/` first.** Phase 16 (AI savings plan for goals) is archived at `spec/features/phase-16/F-016-ai-savings-plan.done.md`. Phase 17 (in-app notifications) is next and already mid-apply — check `tasks/phase-17/*.tasks.md`'s checkbox state and `git log --oneline` before assuming where it left off; do not re-plan from scratch.
-2. **Check tasks:** `tasks/phase-16/F-016-ai-savings-plan.tasks.md` is the closed checklist for the last fully completed phase — use it as the pattern reference for a 4-work-unit strictly-chained-PR breakdown.
+1. **Read `spec/` first.** Phase 17 (in-app notifications) is archived at `spec/features/phase-17/F-017-notifications.done.md`. Phase 18 (PDF/Excel export) is next per the roadmap — check `.atl/sdd/f-018p18-export/` and `git log --oneline` for in-flight work before planning from scratch.
+2. **Check tasks:** `tasks/phase-17/F-017-notifications.tasks.md` is the closed checklist for the last fully completed phase (9 strictly chained slices; only the manual task 10.2 is deliberately unchecked) — use it as the pattern reference for a multi-slice breakdown.
 3. **Read constitution** if touching architecture or stack: `spec/constitution/mission.md`, `spec/constitution/tech-stack.md`.
 4. **Check the SDD working dir** for any in-flight change: `.atl/sdd/<change-id>/`.
 
@@ -1101,6 +1166,25 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
     the allowed digit set deliberately includes the **sanitized goal name's** digit runs, not just the
     sent figures (Spec Reconciliation #1) — a goal named "Carro 2027" would otherwise reject every
     narration that names it.
+28. **Phase 17's reconciler refreshes facts on UNDISMISSED rows, and the digest ignores toggles and
+    dismissals — both deliberate, neither a bug.** A Near budget notice that says 85% while the budget
+    has moved to 95% would be a live-data bug, so `RefreshFacts` updates fact columns without touching
+    `Id`/`CreatedAt`/`ReadAt` (an already-read row is never re-badged). The digest counts from the full
+    sources regardless of per-kind toggles and existing dismissals because it has its own switch
+    (frequency `Off`); stacking toggle AND dismissal AND digest-off suppression would be a correctness
+    risk for no benefit. Do not "fix" either.
+29. **Phase 17 shell/DI footguns.** `ScopedNotificationCenter` captures `SynchronizationContext.Current`
+    in its constructor to marshal `Changed` onto the UI thread, so it must be resolved on the UI thread.
+    `Tests.Integration.csproj` gained a reference to the UI project in S5a (for
+    `ScopedNotificationCenterTests`, which runs against a real container). The
+    notification popup is a `ToggleButton` + `Popup` with two-way `IsOpen`, NOT `Button.Flyout`.
+    "Overdue" is derived at display time from the stored reference date, never stored.
+30. **Phase 17 undocumented design divergences (now recorded) and one dead-looking branch.** Nine
+    divergences from `design.md` are listed in the spec's "Post-apply reconciliation" subsection
+    (`DigestComposer` as its own class, `DigestPeriod.WindowEnd`, the `NotificationDigestNoTotals` key,
+    budget-read-failure skips the digest without advancing the cursor, duplicated `RetentionDays`, etc.).
+    The `budgetReadFailed` branch in `DetectNotificationsUseCase` looks unreachable because
+    `GetBudgetVsActualQuery` never returns `Failure` today — it is defensive, keep it.
 
 ---
 
@@ -1112,7 +1196,7 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 # 1. Confirm the build is clean before you do anything
 dotnet build -c Release
 
-# 2. Confirm the existing 1522 tests still pass
+# 2. Confirm the existing 1700 tests still pass
 dotnet test -c Release --no-build
 
 # 3. Confirm CI's format gate is green
@@ -1121,8 +1205,8 @@ dotnet format style --verify-no-changes
 # 4. Confirm the architecture rules still hold
 dotnet test --no-build -c Release --filter "FullyQualifiedName~Architecture"
 
-# 5. Phase 16 is archived; Phase 17 (notifications) is mid-apply. Check its real progress first.
-Get-Content -Raw .\tasks\phase-17\*.tasks.md | Select-String -Pattern "\[x\]|\[ \]"
+# 5. Phase 17 is archived; Phase 18 (export) is next. Check for in-flight work first.
+Get-ChildItem .\.atl\sdd\f-018p18-export; git log --oneline -10
 ```
 
 If all five succeed, the working tree is healthy. If any fail, **stop and fix before reading further code** — fixing a broken build first will save you time.

@@ -1,7 +1,7 @@
 # F-017 — Notificaciones
 
 > **Phase:** 17 — Notificaciones
-> **Status:** Draft — ready for design
+> **Status:** ✅ Archived (2026-09-28) — see `.atl/sdd/f-017p17-notifications/{verify-report,archive-report}.md`
 > **SDD:** `.atl/sdd/f-017p17-notifications/`
 > **Input:** `.atl/sdd/f-017p17-notifications/proposal.md`, `.atl/sdd/f-017p17-notifications/exploration.md`
 > **Depends on:** Phase 7 (debts, archived), Phase 10 (budgets, archived), Phase 14 (AI insights /
@@ -312,6 +312,31 @@ needs no change but both `SettingsViewModel` fixtures do; the flyout is a
 derived at display time, never stored; no `Subscription`/`FixedExpense` subtype
 distinction is persisted.
 
+### Post-apply reconciliation (2026-09-28, verify pass)
+
+Divergences between the shipped code and `design.md`, found during verification. The history above is
+unchanged; these are additive and all were confirmed against source.
+
+1. `DigestComposer.cs` is a separate class in `Application/Notifications/`, not part of
+   `NotificationRules` (which owns only debt, recurring, budget and anomaly rules).
+2. `DigestPeriod` gained a `WindowEnd(frequency, today)` helper (`[today, today+6]` weekly, `today`
+   daily) used by both `DigestComposer` and `DetectNotificationsUseCase`.
+3. A new resx key, `NotificationDigestNoTotals`, was added (resx, es-DO, Designer): the placeholder shown
+   in place of per-currency totals when a digest has no payments, avoiding empty parentheses.
+4. If the budget read fails, the digest is skipped for that run and the cursor is NOT advanced, so the
+   next run retries the same period.
+5. `ControlDeFinanzasIA.Tests.Integration.csproj` now references the UI project (needed by
+   `ScopedNotificationCenterTests`).
+6. `RetentionDays = 60` is declared twice, in `NotificationRules` and `NotificationReconciler`; the
+   values must stay in step.
+7. The popup list is a `ScrollViewer MaxHeight="400"` around the `ItemsControl`, not a popup-level
+   `MaxHeight` of 480.
+8. `DetectNotificationsUseCase` extra behavior: when the budget query returns `Failure`,
+   `BudgetThreshold` is left out of `evaluatedKinds`, so existing budget rows are kept rather than
+   removed.
+9. The unread accent stripe on rows is effectively never visible, because opening the popup marks the
+   listed rows read (R-8).
+
 ## Out of Scope
 
 OS-native toasts, an "all notifications" route, click-through navigation, snooze, per-item horizons, and
@@ -321,17 +346,44 @@ notification text.
 
 ## Acceptance Criteria
 
-- [ ] **(roadmap)** When the app opens, the bell shows the relevant notices for today (due items within 3
+Evidence is from the verify pass (`.atl/sdd/f-017p17-notifications/verify-report.md`); test names are
+the ones found in `tests/`.
+
+- [x] **(roadmap)** When the app opens, the bell shows the relevant notices for today (due items within 3
   days, overdue installments, the current budget tier, unacknowledged anomalies, and the digest when due).
-- [ ] **(roadmap)** Budget notices fire when spending crosses 80% and 100%, and a dismissed Near never
-  hides a later Exceeded.
-- [ ] **(roadmap)** The user can silence each notice kind and the digest; a silenced kind produces no new
-  rows and its existing undismissed rows are removed.
-- [ ] Rerunning detection is idempotent (S-4), and a dismissed notice never reappears (S-5).
-- [ ] Horizon edges are correct: day 3 forward is included, day 4 is not; installments beyond 7 days
-  overdue are not notified (S-8).
-- [ ] The digest is created at most once per period with no backfill after a long absence (S-9), and the
+  Evidence: `DetectNotificationsUseCaseTests` cover all four sources plus the digest; `App.axaml.cs`
+  wires `mainWindow.Opened` to `INotificationCenter.RefreshAsync`; the shell header/bell rendered in the
+  S5b automated smoke launch. The startup trigger itself has no automated test and no manual run was
+  performed (verify W3/W5).
+- [x] **(roadmap)** Budget notices fire when spending crosses 80% and 100%, and a dismissed Near never
+  hides a later Exceeded. Evidence: `ExecuteAsync_NearThenExceeded_ReplacesUndismissedNearRowWithExceeded`,
+  `Plan_ExceededCandidate_RemovesUndismissedNearForSameBudgetAndMonth`,
+  `Plan_DismissedNearPlusLaterExceededCandidate_AddsExceededUnaffected`.
+- [x] **(roadmap)** The user can silence each notice kind and the digest; a silenced kind produces no new
+  rows and its existing undismissed rows are removed. Evidence:
+  `ExecuteAsync_DisabledKindWithExistingUndismissedRows_RemovesThem`,
+  `ExecuteAsync_BudgetTogglesOff_DoesNotReadBudgetsAndRemovesExistingBudgetRows`,
+  `Plan_DisabledKindEvaluatedWithZeroCandidates_RemovesBothReadAndUnreadUndismissedRows`; the Settings
+  section (4 toggles + digest picker) is covered by `SettingsViewModelTests`.
+- [x] Rerunning detection is idempotent (S-4), and a dismissed notice never reappears (S-5). Evidence:
+  `Plan_TwoPassesSameFacts_SecondPassIsNoOpAndKeepsOriginalCreatedAt` (reconciler level only; S-4 is not
+  tested end to end through the use case, verify suggestion) and the unique `DedupKey` index test
+  `UniqueIndex_DuplicateDedupKey_ReturnsFailureAndDoesNotPoisonContext`.
+- [x] Horizon edges are correct: day 3 forward is included, day 4 is not; installments beyond 7 days
+  overdue are not notified (S-8). Evidence: `DebtInstallments_DateOffsetFromToday_RespectsWindow`,
+  `RecurringCharges_DateOffsetFromToday_RespectsForwardOnlyWindow` (offset-parameterized theories).
+- [x] The digest is created at most once per period with no backfill after a long absence (S-9), and the
   60-day purge and reconcile-conflict handling leave the shared `AppDbContext` usable (S-10, S-12).
-- [ ] The badge renders `9+` above 9 unread and the flyout caps at 20 rows, unread-first (S-11).
-- [ ] Build is clean, the full suite is green, `dotnet format style --verify-no-changes` exits 0,
-  NetArchTest R-1..R-5 is green, and `ModelSnapshotConsistencyTests` is green.
+  Evidence: `ExecuteAsync_WeeklyWithFiveWeekStaleCursor_CreatesExactlyOneDigestAndJumpsCursorToThisMonday`,
+  `Plan_PurgesRowsOlderThan60Days_DismissedIncluded_KeepsRowAtExactly60Days`,
+  `ExecuteAsync_ReconcileSaveFails_ReturnsFailureAndLogsWarningWithoutThrowing`,
+  `Changed_FiresAfterFailedRefresh_AndTheFailureIsSwallowedAndLogged`, and no executed
+  `ChangeTracker.Clear()` in Phase 17 code. The forced-failure run against real data was not performed
+  manually (verify W3).
+- [x] The badge renders `9+` above 9 unread and the flyout caps at 20 rows, unread-first (S-11).
+  Evidence: `ExecuteAsync_MoreThanCapRows_CapsItemsButUnreadCountCountsAll` and
+  `NotificationListViewModelTests`.
+- [x] Build is clean, the full suite is green, `dotnet format style --verify-no-changes` exits 0,
+  NetArchTest R-1..R-5 is green, and `ModelSnapshotConsistencyTests` is green. Evidence: build 0/0,
+  1700/1700 (1405 unit + 295 integration), format exit 0, NetArchTest 11/11,
+  `ModelSnapshotConsistencyTests` 3/3.

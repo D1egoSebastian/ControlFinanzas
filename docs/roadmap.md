@@ -1202,7 +1202,7 @@ depender de la IA.
 
 ---
 
-### Fase 17 — Notificaciones
+### Fase 17 — Notificaciones ✅ COMPLETADA (2026-09-28)
 
 **Objetivo**
 Avisos in-app (y opcionalmente del sistema) por: pagos próximos,
@@ -1234,9 +1234,41 @@ datos.
   ser largo.
 
 **Criterios de fase completada**
-- Al abrir la app, la bandeja muestra avisos relevantes del día.
-- Las alertas de presupuesto se disparan al pasar el 80% / 100%.
-- El usuario puede silenciar tipos de aviso.
+- Al abrir la app, la bandeja muestra avisos relevantes del día. ✅
+- Las alertas de presupuesto se disparan al pasar el 80% / 100%. ✅
+- El usuario puede silenciar tipos de aviso. ✅
+
+**Estado actual (2026-09-28) — ✅ FASE COMPLETADA**
+- ✅ Campana + insignia + popup en una nueva fila de encabezado de `MainWindow.axaml`, propiedad de
+  `ShellViewModel`; sin ruta nueva ni click-through. La insignia muestra el conteo completo de no leídas
+  (`9+` por encima de 9); el popup lista como máximo 20 filas, no leídas primero; abrirlo marca como leídas
+  las filas listadas; cada fila se puede descartar de forma permanente; botón de refresco manual.
+- ✅ `DetectNotificationsUseCase`: 4 tipos detectados (`DebtInstallmentDue` en `[hoy-7, hoy+3]`,
+  `RecurringChargeDue` en `[hoy, hoy+3]`, `BudgetThreshold` Near/Exceeded solo del mes actual y solo el
+  nivel más alto, `Anomaly` para `AnomalyAlert` sin reconocer) más un resumen periódico (`Digest`,
+  `Off`/`Daily`/`Weekly`, por defecto Weekly). Lecturas secuenciales, cada corrida en su propio scope de DI,
+  todo fallo se registra y se traga; se dispara al abrir la ventana principal, al guardar la sección de
+  Configuración y con el refresco manual.
+- ✅ `NotificationReconciler` + `Notification`: tabla persistida con una única cadena `DedupKey` con índice
+  único (idempotente), un solo `SaveChangesAsync` por corrida, purga de filas con más de 60 días, filas
+  descartadas nunca recreadas, filas sin descartar cuyo origen deja de calificar se eliminan, y los hechos
+  de filas sin descartar se refrescan sin tocar `Id`/`CreatedAt`/`ReadAt`. Migración
+  `20260926064030_AddNotifications`, solo aditiva.
+- ✅ El resumen se genera como máximo una vez por período con un cursor `yyyy-MM-dd` que se escribe solo
+  tras un reconcile exitoso, nunca rellena períodos perdidos, cuenta desde las fuentes completas sin importar
+  los interruptores ni los descartes, y mantiene totales por moneda (nunca los suma entre monedas).
+- ✅ Configuración: sección "Notificaciones" con 4 interruptores por tipo (por defecto activos) y el
+  selector de frecuencia del resumen, vía nuevos `SettingKeys`/`ISettingsStore` (`AppSettings` sin tocar).
+  El texto se formatea al mostrarse desde resx (`es-DO`/`en`); `Notification` guarda solo hechos.
+- ✅ Gates: build limpio, 1700/1700 tests verdes (1405 unit + 295 integration, subiendo desde 1522/1522 al
+  cierre de Fase 16), `dotnet format style` limpio, NetArchTest 11/11, `ModelSnapshotConsistencyTests` 3/3.
+- ✅ Aplicado en 9 slices encadenados (`1b0c9cf`, `c9130a5`, `73bba65`, `94f32e3`, `8effc0d`, `bac31b2`,
+  `5e72036`, `c879ce2`, `d0c9552`). Veredicto de verify: PASS WITH WARNINGS, 0 críticos.
+- ✅ SDD archivado: `spec/features/phase-17/F-017-notifications.done.md`.
+- ⚠️ Pendientes no bloqueantes (ver `spec/phases/phase-17/features.md` §5): la comprobación manual de la
+  tarea 10.2 (ambos idiomas, DB real, fallo forzado S-12) NO se ejecutó manualmente; el disparador de
+  arranque no tiene prueba automatizada; "exactamente un SaveChanges" está probado estructuralmente, no
+  con una prueba de conteo; la rama defensiva `budgetReadFailed` es inalcanzable hoy y no tiene prueba.
 
 ---
 

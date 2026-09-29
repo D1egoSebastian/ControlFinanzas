@@ -615,6 +615,54 @@ una sola está generando; la guarda real "a lo sumo una solicitud por fila" vive
 
 ---
 
+## 11d. Notificaciones in-app (Fase 17)
+
+**Fase 17, implementado.** A diferencia de §11a–§11c, esta fase **no usa `ILLMClient` ni genera
+texto con IA**: toda regla reutiliza una lectura existente y un umbral existente (deudas, reglas
+recurrentes, presupuestos, `AnomalyAlert`), y una tabla `Notification` persistida se reconcilia en cada
+corrida de detección, siguiendo el patrón de `AnomalyAlert` de la Fase 14.
+
+### Detección determinista y reconciliación idempotente
+
+`DetectNotificationsUseCase` lee cada fuente habilitada de forma secuencial (nunca `Task.WhenAll`, porque
+todas comparten el mismo `AppDbContext` del scope) y arma candidatos con funciones puras
+(`NotificationRules`, `DigestComposer`). `NotificationReconciler` planifica agregar / eliminar /
+refrescar hechos / purgar contra las filas existentes, y `NotificationRepository.ApplyReconciliationAsync`
+aplica el plan completo en un único `SaveChangesAsync`; ante un `DbUpdateException` desengancha solo las
+entradas propias, nunca `ChangeTracker.Clear()`. La clave de idempotencia es una única cadena `DedupKey`
+con índice único (no un índice compuesto, por la semántica de NULL distintos de SQLite): una fila
+descartada nunca se recrea, una fila sin descartar cuyo origen deja de calificar se elimina, y los hechos
+de filas sin descartar se refrescan sin tocar `Id`/`CreatedAt`/`ReadAt`. Las filas con fecha de
+referencia de más de 60 días se purgan en el mismo guardado. `Notification` guarda solo hechos; el texto
+se formatea al mostrarse (`NotificationTextFormatter`, resx `es-DO`/`en`).
+
+### Cuándo corre: scope propio, fire-and-forget, todo fallo tragado
+
+`ScopedNotificationCenter` abre un scope de DI propio (un `AppDbContext` fresco) por corrida. Corre al
+abrir la ventana principal (`mainWindow.Opened`), al guardar la sección "Notificaciones" de
+Configuración y con el botón de refresco manual del popup; no hay timer. Una corrida manual mientras otra
+está en vuelo es un no-op; las de arranque y de guardado de configuración se encolan y corren una vez
+después. Toda excepción se registra y se traga: nunca bloquea ni tumba el arranque. Captura
+`SynchronizationContext.Current` en su constructor para publicar `Changed` en el hilo de UI.
+
+### Superficie en el shell: sin ruta nueva
+
+`ShellViewModel` es dueño de la campana, la insignia y el estado abierto/cerrado; la lista es un
+`NotificationListViewModel` agnóstico de ruta (reutilizable por una futura página "ver todas"). La
+insignia muestra el conteo completo de no leídas (`9+` por encima de 9); el popup (un `ToggleButton` +
+`Popup`, no `Button.Flyout`) lista como máximo 20 filas, no leídas primero, y abrirlo marca como leídas las
+filas listadas. Descartar es una acción distinta, por fila y permanente. Sin click-through en v1.
+
+### Resumen periódico
+
+El `Digest` (`Off`/`Daily`/`Weekly`, por defecto Weekly) lo genera la primera corrida en o después del
+inicio del período cuando el cursor `yyyy-MM-dd` (guardado vía `ISettingsStore` solo tras un reconcile
+exitoso) va por detrás. Nunca rellena períodos perdidos; con todos los conteos en cero avanza el cursor sin
+crear fila; los totales se mantienen por moneda (nunca se suman entre monedas); ignora los interruptores por
+tipo y los descartes porque tiene su propio apagado.
+
+---
+
 ## 12. Persistencia — detalles adicionales
 
 ### Ruta del archivo
