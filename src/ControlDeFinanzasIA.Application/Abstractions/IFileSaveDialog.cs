@@ -11,4 +11,16 @@ public interface IFileSaveDialog
         string suggestedFileName,
         ReportFormat format,
         CancellationToken ct = default);
+
+    /// <summary>Shows the save dialog for an arbitrary file type (F-019, DD-1).</summary>
+    /// <param name="suggestedFileName">File name proposed to the user.</param>
+    /// <param name="filter">File type the dialog offers.</param>
+    /// <param name="title">Optional dialog title; <c>null</c> lets the implementation use its default.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The chosen target, or <c>null</c> when the user cancelled. Cancelling is not an error.</returns>
+    Task<SaveTarget?> PickAsync(
+        string suggestedFileName,
+        FileTypeFilter filter,
+        string? title = null,
+        CancellationToken ct = default);
 }

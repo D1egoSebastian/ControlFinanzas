@@ -34,24 +34,39 @@ public sealed class AvaloniaFileSaveDialog : IFileSaveDialog
     }
 
     /// <inheritdoc />
-    public async Task<SaveTarget?> PickAsync(string suggestedFileName, ReportFormat format, CancellationToken ct = default)
+    public Task<SaveTarget?> PickAsync(string suggestedFileName, ReportFormat format, CancellationToken ct = default)
+    {
+        FileTypeFilter filter = format == ReportFormat.Pdf
+            ? new FileTypeFilter(Strings.ExportPdfFileTypeName, "pdf", _pdfMimeType)
+            : new FileTypeFilter(Strings.ExportExcelFileTypeName, "xlsx", _xlsxMimeType);
+
+        return PickAsync(suggestedFileName, filter, Strings.ExportDialogTitle, ct);
+    }
+
+    /// <inheritdoc />
+    public async Task<SaveTarget?> PickAsync(
+        string suggestedFileName,
+        FileTypeFilter filter,
+        string? title = null,
+        CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(suggestedFileName);
+        ArgumentNullException.ThrowIfNull(filter);
 
         IStorageProvider? storage = ResolveStorageProvider();
         if (storage is null)
         {
-            _logger.LogWarning("No window is available to show the save dialog; the export is skipped.");
+            _logger.LogWarning("No window is available to show the save dialog; the save is skipped.");
             return null;
         }
 
         IStorageFile? file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = Strings.ExportDialogTitle,
+            Title = title,
             SuggestedFileName = suggestedFileName,
-            DefaultExtension = format == ReportFormat.Pdf ? "pdf" : "xlsx",
+            DefaultExtension = filter.Extension,
             ShowOverwritePrompt = true,
-            FileTypeChoices = [CreateFileType(format)],
+            FileTypeChoices = [CreateFileType(filter)],
         });
 
         // A null file means the user cancelled: not an error.
@@ -60,17 +75,11 @@ public sealed class AvaloniaFileSaveDialog : IFileSaveDialog
             : new SaveTarget(file.Name, _ => file.OpenWriteAsync(), owner: file);
     }
 
-    private static FilePickerFileType CreateFileType(ReportFormat format) => format == ReportFormat.Pdf
-        ? new FilePickerFileType(Strings.ExportPdfFileTypeName)
-        {
-            Patterns = ["*.pdf"],
-            MimeTypes = [_pdfMimeType],
-        }
-        : new FilePickerFileType(Strings.ExportExcelFileTypeName)
-        {
-            Patterns = ["*.xlsx"],
-            MimeTypes = [_xlsxMimeType],
-        };
+    private static FilePickerFileType CreateFileType(FileTypeFilter filter) => new(filter.DisplayName)
+    {
+        Patterns = [$"*.{filter.Extension}"],
+        MimeTypes = [filter.MimeType],
+    };
 
     private static IStorageProvider? ResolveStorageProvider()
     {

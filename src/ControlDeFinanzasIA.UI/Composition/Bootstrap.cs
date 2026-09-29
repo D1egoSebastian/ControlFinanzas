@@ -1,5 +1,8 @@
 using System.Reflection;
 using ControlDeFinanzasIA.Application.Abstractions;
+using ControlDeFinanzasIA.Application.UseCases.Backup.CreateBackup;
+using ControlDeFinanzasIA.Application.UseCases.Backup.InspectBackup;
+using ControlDeFinanzasIA.Application.UseCases.Backup.RestoreBackup;
 using ControlDeFinanzasIA.Application.UseCases.Budgets.CreateOrUpdateBudget;
 using ControlDeFinanzasIA.Application.UseCases.Budgets.DeleteBudget;
 using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetsForMonth;
@@ -63,6 +66,7 @@ using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateAiSettings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateLocale;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateTheme;
 using ControlDeFinanzasIA.Application.UseCases.Transactions.DeleteTransaction;
+using ControlDeFinanzasIA.Infrastructure.Backup;
 using ControlDeFinanzasIA.Infrastructure.ExchangeRates;
 using ControlDeFinanzasIA.Infrastructure.Llm;
 using ControlDeFinanzasIA.Infrastructure.Persistence;
@@ -268,6 +272,14 @@ public static class Bootstrap
         services.AddTransient<ExportExpenseListReportUseCase>();
         services.AddSingleton<IFileSaveDialog, AvaloniaFileSaveDialog>();
 
+        // Fase 19: respaldo y restauracion (F-019). Servicio de respaldo (singleton, sin
+        // dependencias scoped), casos de uso transitorios y dialogo de apertura de Avalonia.
+        services.AddBackup(ReadAppVersion());
+        services.AddTransient<CreateBackupUseCase>();
+        services.AddTransient<InspectBackupUseCase>();
+        services.AddTransient<RestoreBackupUseCase>();
+        services.AddSingleton<IFileOpenDialog, AvaloniaFileOpenDialog>();
+
         ServiceProvider tempProvider = services.BuildServiceProvider();
         try
         {
@@ -323,4 +335,61 @@ public static class Bootstrap
         ILogger logger = loggerFactory.CreateLogger("Bootstrap");
         logger.LogInformation("Migrations applied");
     }
+
+    /// <summary>
+    /// Startup sequence: applies migrations, then completes a pending restore (F-019, R-14, DD-10).
+    /// </summary>
+    /// <param name="services">The application's root service provider.</param>
+    /// <param name="logger">Logger used to report a failed completion.</param>
+    /// <remarks>
+    /// A restore itself never goes through <see cref="ApplyMigrations(IServiceProvider)"/>; only
+    /// the next start migrates a restored older-schema database.
+    /// </remarks>
+    public static void ApplyMigrationsAndCompletePendingRestore(IServiceProvider services, ILogger logger)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        RunStartupSequence(() => ApplyMigrations(services), () => CompletePendingRestore(services), logger);
+    }
+
+    /// <summary>
+    /// Runs <paramref name="applyMigrations"/>, and only if it returned, <paramref name="completePendingRestore"/>.
+    /// </summary>
+    /// <param name="applyMigrations">The migration step; an exception propagates and skips the completion.</param>
+    /// <param name="completePendingRestore">The best-effort cleanup step; its failures are logged and swallowed.</param>
+    /// <param name="logger">Logger used to report a failed completion.</param>
+    public static void RunStartupSequence(Action applyMigrations, Action completePendingRestore, ILogger logger)
+    {
+        ArgumentNullException.ThrowIfNull(applyMigrations);
+        ArgumentNullException.ThrowIfNull(completePendingRestore);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        applyMigrations();
+
+        try
+        {
+            completePendingRestore();
+        }
+        catch (Exception ex)
+        {
+            // The cleanup is an optimization of disk usage; it must never take startup down.
+            logger.LogWarning(ex, "Completing a pending restore failed; startup continues.");
+        }
+    }
+
+    /// <summary>Resolves <see cref="IBackupService"/> and runs its startup cleanup hook.</summary>
+    /// <param name="services">The application's root service provider.</param>
+    public static void CompletePendingRestore(IServiceProvider services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        services.GetRequiredService<IBackupService>().CompletePendingRestore();
+    }
+
+    private static string ReadAppVersion()
+        => typeof(Bootstrap).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion
+            ?? "0.0.0";
 }

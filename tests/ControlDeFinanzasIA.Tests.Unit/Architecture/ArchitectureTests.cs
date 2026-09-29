@@ -70,7 +70,10 @@ public sealed class ArchitectureTests
         // F-018 (slice S2, D-9): report libraries are Infrastructure-only.
         "QuestPDF",
         "ClosedXML",
-        "DocumentFormat.OpenXml"
+        "DocumentFormat.OpenXml",
+
+        // F-019 (slice S5, D-20): SQLite access is Infrastructure-only.
+        "Microsoft.Data.Sqlite"
     ];
 
     private static readonly string[] _forbiddenPackagesForUi =
@@ -90,7 +93,10 @@ public sealed class ArchitectureTests
         // F-018 (slice S2, D-9): report libraries are Infrastructure-only.
         "QuestPDF",
         "ClosedXML",
-        "DocumentFormat.OpenXml"
+        "DocumentFormat.OpenXml",
+
+        // F-019 (slice S5, D-20): SQLite access is Infrastructure-only.
+        "Microsoft.Data.Sqlite"
     ];
 
     /// <summary>

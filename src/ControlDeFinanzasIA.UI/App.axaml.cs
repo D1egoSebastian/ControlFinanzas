@@ -73,7 +73,9 @@ public partial class App : Avalonia.Application
             startTime,
             pathResolver.DataDirectory);
 
-        Bootstrap.ApplyMigrations(Services);
+        // F-019 (R-14): the pending-restore cleanup runs only after the migrations succeeded and
+        // never crashes startup; a restore itself never goes through ApplyMigrations.
+        Bootstrap.ApplyMigrationsAndCompletePendingRestore(Services, logger);
 
         ApplyPersistedUiCulture(Services, logger);
 

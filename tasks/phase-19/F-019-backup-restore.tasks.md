@@ -415,36 +415,36 @@ failure-injection suite and one REAL file-lock test.
 Depends on 4b. Goal: inspect/restore use cases, the real open dialog, the generic save overload, DI in `Bootstrap`,
 the startup `.bak` cleanup in `App`, and the D20 architecture guard. Invoke no visual change yet.
 
-- [ ] 5.1 Write failing `tests/…Unit/Application/Backup/{InspectBackupUseCaseTests,RestoreBackupUseCaseTests}.cs`:
+- [x] 5.1 Write failing `tests/…Unit/Application/Backup/{InspectBackupUseCaseTests,RestoreBackupUseCaseTests}.cs`:
   pass-through of `BackupInfo`/`RestoreOutcome`, failure code/details pass-through, thrown exception becomes
   `IoError`, `OperationCanceledException` propagates, the picker stream is opened only by the service. (R-1, R-17,
   DD-2)
-- [ ] 5.2 Create `src/…Application/UseCases/Backup/InspectBackup/InspectBackupUseCase.cs` and
+- [x] 5.2 Create `src/…Application/UseCases/Backup/InspectBackup/InspectBackupUseCase.cs` and
   `…/RestoreBackup/RestoreBackupUseCase.cs` per DD-2. Run 5.1 green. (R-1, DD-2)
-- [ ] 5.3 Append the generic `PickAsync(string suggestedFileName, FileTypeFilter filter, string? title = null,
+- [x] 5.3 Append the generic `PickAsync(string suggestedFileName, FileTypeFilter filter, string? title = null,
   CancellationToken ct = default)` overload to `src/…Application/Abstractions/IFileSaveDialog.cs` (existing member
   untouched). Update `tests/…Unit/TestDoubles/FakeFileSaveDialog.cs` in the same commit (records `LastFilter`,
   `LastTitle`; both overloads share its call counter and blocking TCS) and every other `IFileSaveDialog`
   implementer found by `rg "IFileSaveDialog" tests src`. The solution must compile. (R-1, DD-1)
-- [ ] 5.4 Modify `src/…UI/Services/AvaloniaFileSaveDialog.cs`: new overload holds the picker body; the
+- [x] 5.4 Modify `src/…UI/Services/AvaloniaFileSaveDialog.cs`: new overload holds the picker body; the
   `ReportFormat` overload delegates by mapping to `new FileTypeFilter(Strings.ExportPdfFileTypeName, "pdf",
   "application/pdf")` (or xlsx) and `Strings.ExportDialogTitle`, so report behavior is unchanged. Existing Phase 18
   Dashboard/Expenses export tests stay green untouched. (R-1, DD-8)
-- [ ] 5.5 Create `src/…UI/Services/AvaloniaFileOpenDialog.cs` (`ResolveStorageProvider` like the save dialog,
+- [x] 5.5 Create `src/…UI/Services/AvaloniaFileOpenDialog.cs` (`ResolveStorageProvider` like the save dialog,
   `OpenFilePickerAsync` with `AllowMultiple=false`, empty result → `null`, otherwise `new OpenTarget(file.Name, _
   => file.OpenReadAsync(), owner: file)`; no `TopLevel` → warning + `null`). Its title default uses a resx key that
   is added in S6a; until then it takes `title` from the caller and falls back to `Strings.ExportDialogTitle`-free
   literal-free behavior: the fallback MUST be a non-UI-text `null` title, and S6a wires the localized title. (R-1,
   DD-8)
-- [ ] 5.6 Append the composition block to `src/…UI/Composition/Bootstrap.cs`: `services.AddBackup(ReadAppVersion())`
+- [x] 5.6 Append the composition block to `src/…UI/Composition/Bootstrap.cs`: `services.AddBackup(ReadAppVersion())`
   (informational version of the UI assembly, same read as `SettingsViewModel.ReadInformationalVersion`), the three
   use cases Transient, `IFileOpenDialog → AvaloniaFileOpenDialog` Singleton. Nothing existing reordered.
   (R-24, DD-10)
-- [ ] 5.7 Modify `src/…UI/App.axaml.cs`: immediately after `Bootstrap.ApplyMigrations(Services);` call a small
+- [x] 5.7 Modify `src/…UI/App.axaml.cs`: immediately after `Bootstrap.ApplyMigrations(Services);` call a small
   `CompletePendingRestore(Services, logger)` helper that resolves `IBackupService` and calls
   `CompletePendingRestore()` inside `try/catch` (log Warning, never crash startup). It is NOT reached if
   `ApplyMigrations` throws. (R-14, S-25, DD-10)
-- [ ] 5.8 Write failing tests: `tests/…Unit/Architecture/ArchitectureTests.cs` (append `"Microsoft.Data.Sqlite"` to
+- [x] 5.8 Write failing tests: `tests/…Unit/Architecture/ArchitectureTests.cs` (append `"Microsoft.Data.Sqlite"` to
   `_forbiddenPackagesForDomainAndApplication` and `_forbiddenPackagesForUi`; R-1..R-5 and existing rules stay
   green) (R-24, S-32, D-20); `tests/…Unit/Composition/BackupCompositionTests.cs` using the real `Bootstrap`
   container (resolve the three use cases, `IBackupService` is `SqliteBackupService`, `IMigrationCatalog` is
@@ -457,9 +457,21 @@ the startup `.bak` cleanup in `App`, and the D20 architecture guard. Invoke no v
   `dotnet run --project src/ControlDeFinanzasIA.UI` with that override pointing at a fresh temp folder; the app
   starts, migrations run, no exception, exit. If no override exists, do NOT launch against the real profile: record
   "smoke not run: no data-dir override" and rely on `BackupCompositionTests`. Record output. (DD-10)
-- [ ] 5.10 Run all four gates plus the no-stubs grep over the slice's files (Application use cases, `UI/Services`,
+- [x] 5.10 Run all four gates plus the no-stubs grep over the slice's files (Application use cases, `UI/Services`,
   `Composition`, `App.axaml.cs`, tests). Confirm the Phase 18 export tests still pass unchanged. All green before
   opening PR S5. (R-24)
+
+**S5 apply notes:**
+- 5.9 NOT RUN: `SystemPathResolver` has no data-directory override (Windows uses `SpecialFolder.ApplicationData`, which does
+  not honor the `APPDATA` env var), so per the safety rule no launch was made against the real profile. Coverage relies on
+  `BackupCompositionTests` (real `Bootstrap` container, scope + build validation) and `StartupSequenceTests`. The manual
+  smoke stays open until a data-directory override exists (out of S5 scope; the tasks do not authorize adding one).
+- 5.7 deviation: instead of a helper in `App`, the ordering lives in `Bootstrap.ApplyMigrationsAndCompletePendingRestore`
+  (public, testable; `RunStartupSequence` skips the completion when migrations throw and swallows/logs completion errors).
+  `App` calls it in place of the former `Bootstrap.ApplyMigrations(Services)` line.
+- 5.8: the guard forbids `Microsoft.Data.Sqlite` only (as listed); `System.IO.Compression` was not added.
+- The generic `IFileSaveDialog.PickAsync(string, FileTypeFilter, string?, CancellationToken)` is what the report overload now
+  delegates to; `AvaloniaFileOpenDialog` passes a `null` title through until S6a wires the localized one.
 
 ## 6a. Strings, notification suspension and restart service (S6a)
 
