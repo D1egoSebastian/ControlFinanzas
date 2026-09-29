@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+             xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
              xmlns:dto="using:ControlDeFinanzasIA.Application.DTOs"
              xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
              xmlns:avaloniaConverters="using:Avalonia.Data.Converters"
@@ -48,7 +49,19 @@
                 </StackPanel>
             </Border>
             <TextBlock Text="{Binding StatusMessage}" Foreground="#71C7A4" TextWrapping="Wrap" />
-            <TextBlock Text="Movimientos" Foreground="#E8E4D9" FontSize="20" FontWeight="Bold" />
+            <!-- Report export (F-018): secondary buttons beside the list title; outcome shows via StatusMessage/FormError. -->
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBlock Grid.Column="0" Text="Movimientos" Foreground="#E8E4D9" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" />
+                <Button Grid.Column="1"
+                        Content="{x:Static resources:Strings.ExportPdfButton}"
+                        Command="{Binding ExportPdfCommand}"
+                        Classes="ledger-btn" />
+                <Button Grid.Column="2"
+                        Content="{x:Static resources:Strings.ExportExcelButton}"
+                        Command="{Binding ExportExcelCommand}"
+                        Classes="ledger-btn"
+                        Margin="8,0,0,0" />
+            </Grid>
             <ItemsControl ItemsSource="{Binding Expenses}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="dto:ExpenseDto">

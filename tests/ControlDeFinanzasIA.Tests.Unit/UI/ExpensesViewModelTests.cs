@@ -9,6 +9,7 @@ using ControlDeFinanzasIA.Application.UseCases.Catalog.GetPaymentMethods;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.GetTransactions;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.RegisterExpense;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.UpdateExpense;
+using ControlDeFinanzasIA.Application.UseCases.Exports.ExportExpenseListReport;
 using ControlDeFinanzasIA.Application.UseCases.SavedViews.ApplySavedView;
 using ControlDeFinanzasIA.Application.UseCases.SavedViews.DeleteSavedView;
 using ControlDeFinanzasIA.Application.UseCases.SavedViews.GetSavedViews;
@@ -533,7 +534,10 @@ public sealed class ExpensesViewModelTests
         FakeIncomeRepository? incomeRepo = null,
         FakeCategoryRepository? categoryRepo = null,
         FakeTagRepository? tagRepo = null,
-        FakeSavedViewRepository? savedViewRepo = null)
+        FakeSavedViewRepository? savedViewRepo = null,
+        ExportExpenseListReportUseCase? exportUseCase = null,
+        IFileSaveDialog? fileSaveDialog = null,
+        IStringLocalizer<Strings>? localizerOverride = null)
     {
         clock ??= new FakeClock
         {
@@ -606,7 +610,7 @@ public sealed class ExpensesViewModelTests
             new ConfigurationBuilder().AddInMemoryCollection().Build(),
             NullLogger<CurrencyConverter>.Instance);
 
-        IStringLocalizer<Strings> localizer = new FakeStringLocalizer<Strings>();
+        IStringLocalizer<Strings> localizer = localizerOverride ?? new FakeStringLocalizer<Strings>();
 
         return new ExpensesViewModel(
             registerUseCase,
@@ -624,7 +628,251 @@ public sealed class ExpensesViewModelTests
             currencyConverter,
             clock,
             NullLogger<ExpensesViewModel>.Instance,
-            localizer);
+            localizer,
+            null,
+            exportUseCase,
+            fileSaveDialog);
+    }
+
+    // ---- F-018 S5: filtered expense list export ----
+
+    [Fact]
+    public void Export_WithoutOptionalDependencies_CannotExecute()
+    {
+        ExpensesViewModel viewModel = CreateViewModel();
+
+        Assert.False(viewModel.ExportPdfCommand.CanExecute(null));
+        Assert.False(viewModel.ExportExcelCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Export_WithoutOptionalDependencies_ExecuteIsANoOp()
+    {
+        ExpensesViewModel viewModel = CreateViewModel();
+
+        await viewModel.ExportPdfCommand.ExecuteAsync(null);
+
+        Assert.Null(viewModel.StatusMessage);
+        Assert.Null(viewModel.FormError);
+    }
+
+    [Fact]
+    public void Export_WithDependencies_CanExecute()
+    {
+        ExportRig rig = new();
+        ExpensesViewModel viewModel = rig.CreateViewModel();
+
+        Assert.True(viewModel.ExportPdfCommand.CanExecute(null));
+        Assert.True(viewModel.ExportExcelCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Export_Cancel_WritesNothingNoMessageAndNoUseCaseCall()
+    {
+        ExportRig rig = new();
+        rig.Dialog.Result = null;
+        ExpensesViewModel viewModel = rig.CreateViewModel();
+
+        await viewModel.ExportPdfCommand.ExecuteAsync(null);
+
+        Assert.Equal(1, rig.Dialog.CallCount);
+        Assert.Equal(0, rig.PdfWriter.CallCount);
+        Assert.Null(viewModel.StatusMessage);
+        Assert.Null(viewModel.FormError);
+        Assert.False(viewModel.IsExporting);
+    }
+
+    [Fact]
+    public async Task Export_Success_SetsStatusMessageWithFileNameAndFormat()
+    {
+        ExportRig rig = new();
+        using SaveTargets.RecordingSaveTarget target = SaveTargets.Recording();
+        rig.Dialog.Result = target;
+        ExpensesViewModel viewModel = rig.CreateViewModel();
+
+        await viewModel.ExportExcelCommand.ExecuteAsync(null);
+
+        Assert.Equal("Saved recorded.bin", viewModel.StatusMessage);
+        Assert.Null(viewModel.FormError);
+        Assert.Equal(ReportFormat.Xlsx, rig.Dialog.LastFormat);
+        Assert.Equal("expenses-2026-01-15.xlsx", rig.Dialog.LastSuggestedFileName);
+        Assert.Equal(1, rig.XlsxWriter.CallCount);
+        Assert.Equal(0, rig.PdfWriter.CallCount);
+        Assert.NotNull(rig.XlsxWriter.CapturedLabels);
+    }
+
+    [Fact]
+    public async Task Export_PdfSuggestedName_UsesPdfExtension()
+    {
+        ExportRig rig = new();
+        using SaveTargets.RecordingSaveTarget target = SaveTargets.Recording();
+        rig.Dialog.Result = target;
+        ExpensesViewModel viewModel = rig.CreateViewModel();
+
+        await viewModel.ExportPdfCommand.ExecuteAsync(null);
+
+        Assert.Equal("expenses-2026-01-15.pdf", rig.Dialog.LastSuggestedFileName);
+    }
+
+    [Theory]
+    [InlineData("ReportRenderFailed", "ExportRenderFailedMessage")]
+    [InlineData("ReportSaveFailed", "ExportSaveFailedMessage")]
+    [InlineData("ReportDataFailed", "ExportDataFailedMessage")]
+    [InlineData("ReportWriterUnavailable", "ExportWriterUnavailableMessage")]
+    [InlineData("InvalidFilter", "ExportFailedMessage")]
+    [InlineData(null, "ExportFailedMessage")]
+    public void ExportErrorKey_MapsCodesToResxKeys(string? code, string expected) => Assert.Equal(expected, ExpensesViewModel.ExportErrorKey(code));
+
+    [Fact]
+    public async Task Export_RenderFailure_SetsFormErrorAndNoStatusMessage()
+    {
+        ExportRig rig = new();
+        using SaveTargets.RecordingSaveTarget target = SaveTargets.Recording();
+        rig.Dialog.Result = target;
+        rig.PdfWriter.FailWith = new Error("Boom", "broke");
+        ExpensesViewModel viewModel = rig.CreateViewModel();
+
+        await viewModel.ExportPdfCommand.ExecuteAsync(null);
+
+        Assert.Equal("ExportRenderFailedMessage", viewModel.FormError);
+        Assert.Null(viewModel.StatusMessage);
+        Assert.False(viewModel.IsExporting);
+    }
+
+    [Fact]
+    public async Task Export_DialogThrows_SetsGenericFormErrorAndResetsFlag()
+    {
+        ExportRig rig = new();
+        rig.Dialog.ThrowWith = new InvalidOperationException("dialog crash");
+        ExpensesViewModel viewModel = rig.CreateViewModel();
+
+        await viewModel.ExportPdfCommand.ExecuteAsync(null);
+
+        Assert.Equal("ExportFailedMessage", viewModel.FormError);
+        Assert.False(viewModel.IsExporting);
+    }
+
+    [Fact]
+    public async Task Export_WhileExporting_SecondInvocationIsIgnored()
+    {
+        ExportRig rig = new();
+        var gate = new TaskCompletionSource();
+        rig.Dialog.Gate = gate.Task;
+        ExpensesViewModel viewModel = rig.CreateViewModel();
+
+        Task first = viewModel.ExportPdfCommand.ExecuteAsync(null);
+        Assert.True(viewModel.IsExporting);
+        Assert.False(viewModel.ExportExcelCommand.CanExecute(null));
+
+        await viewModel.ExportExcelCommand.ExecuteAsync(null);
+        await viewModel.ExportPdfCommand.ExecuteAsync(null);
+        gate.SetResult();
+        await first;
+
+        Assert.Equal(1, rig.Dialog.CallCount);
+        Assert.False(viewModel.IsExporting);
+    }
+
+    [Fact]
+    public async Task Export_PassesCurrentFilterWithoutPaymentMethodIds_AndIgnoresPage()
+    {
+        ExportRig rig = new();
+        using SaveTargets.RecordingSaveTarget target = SaveTargets.Recording();
+        rig.Dialog.Result = target;
+        ExpensesViewModel viewModel = rig.CreateViewModel();
+        var category = Guid.NewGuid();
+        var tag = Guid.NewGuid();
+        viewModel.CurrentFilter = new ExpenseFilter
+        {
+            Page = 4,
+            PageSize = 20,
+            CategoryId = category,
+            DateFrom = new DateOnly(2026, 1, 1),
+            DateTo = new DateOnly(2026, 1, 31),
+            TagIds = new[] { tag },
+            PaymentMethodIds = new[] { Guid.NewGuid() },
+        };
+
+        await viewModel.ExportPdfCommand.ExecuteAsync(null);
+
+        ExpenseFilter sent = rig.Expenses.LastExpenseFilter!;
+        Assert.Equal(category, sent.CategoryId);
+        Assert.Equal(new DateOnly(2026, 1, 1), sent.DateFrom);
+        Assert.Equal(new DateOnly(2026, 1, 31), sent.DateTo);
+        Assert.Equal(new[] { tag }, sent.TagIds);
+        Assert.Null(sent.PaymentMethodIds);
+        Assert.Equal(1, sent.Page);
+        Assert.Equal(200, sent.PageSize);
+    }
+
+    [Fact]
+    public async Task Export_FilterIsCapturedBeforeDialogOpens()
+    {
+        ExportRig rig = new();
+        using SaveTargets.RecordingSaveTarget target = SaveTargets.Recording();
+        rig.Dialog.Result = target;
+        var gate = new TaskCompletionSource();
+        rig.Dialog.Gate = gate.Task;
+        ExpensesViewModel viewModel = rig.CreateViewModel();
+        var original = Guid.NewGuid();
+        viewModel.CurrentFilter = new ExpenseFilter { CategoryId = original };
+
+        Task export = viewModel.ExportPdfCommand.ExecuteAsync(null);
+        viewModel.CurrentFilter = new ExpenseFilter { CategoryId = Guid.NewGuid() };
+        gate.SetResult();
+        await export;
+
+        Assert.Equal(original, rig.Expenses.LastExpenseFilter!.CategoryId);
+    }
+
+    [Fact]
+    public async Task Export_EmptyFilter_StillProducesAValidFile()
+    {
+        ExportRig rig = new();
+        using SaveTargets.RecordingSaveTarget target = SaveTargets.Recording();
+        rig.Dialog.Result = target;
+        ExpensesViewModel viewModel = rig.CreateViewModel();
+
+        await viewModel.ExportPdfCommand.ExecuteAsync(null);
+
+        Assert.NotNull(rig.PdfWriter.CapturedExpenseList);
+        Assert.Empty(rig.PdfWriter.CapturedExpenseList!.Lines);
+        Assert.Equal("Saved recorded.bin", viewModel.StatusMessage);
+    }
+
+    private sealed class ExportRig
+    {
+        public FakeExpenseRepository Expenses { get; } = new() { PageAddedItems = true };
+
+        public FakeFileSaveDialog Dialog { get; } = new();
+
+        public FakeReportWriter PdfWriter { get; } = new(ReportFormat.Pdf);
+
+        public FakeReportWriter XlsxWriter { get; } = new(ReportFormat.Xlsx);
+
+        public ExpensesViewModel CreateViewModel()
+        {
+            var useCase = new ExportExpenseListReportUseCase(
+                Expenses,
+                new FakeCategoryRepository(),
+                new FakeCurrencyConverter(),
+                new IReportWriter[] { PdfWriter, XlsxWriter },
+                new FakeClock { Today = new DateOnly(2026, 1, 15) },
+                NullLogger<ExportExpenseListReportUseCase>.Instance);
+
+            var localizer = new FakeStringLocalizer<Strings>(
+                new Dictionary<string, string>
+                {
+                    ["ExportSucceededMessage"] = "Saved {0}",
+                    ["ExportExpenseListFileName"] = "expenses-{0}",
+                });
+
+            return ExpensesViewModelTests.CreateViewModel(
+                expenseRepo: Expenses,
+                exportUseCase: useCase,
+                fileSaveDialog: Dialog,
+                localizerOverride: localizer);
+        }
     }
 
     private static Category CreateCategory(Guid id, string name)

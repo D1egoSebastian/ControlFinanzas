@@ -13,6 +13,8 @@ using ControlDeFinanzasIA.Application.UseCases.Expenses.CategorizeExpense;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.GetTransactions;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.RegisterExpense;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.UpdateExpense;
+using ControlDeFinanzasIA.Application.UseCases.Exports.Common;
+using ControlDeFinanzasIA.Application.UseCases.Exports.ExportExpenseListReport;
 using ControlDeFinanzasIA.Application.UseCases.SavedViews.ApplySavedView;
 using ControlDeFinanzasIA.Application.UseCases.SavedViews.DeleteSavedView;
 using ControlDeFinanzasIA.Application.UseCases.SavedViews.GetSavedViews;
@@ -22,6 +24,7 @@ using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Enums;
 using ControlDeFinanzasIA.Domain.ValueObjects;
 using ControlDeFinanzasIA.Domain.Views;
+using ControlDeFinanzasIA.UI.Formatting;
 using ControlDeFinanzasIA.UI.Resources;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
@@ -52,6 +55,8 @@ public sealed partial class ExpensesViewModel : ViewModelBase
     private readonly ILogger<ExpensesViewModel> _logger;
     private readonly IStringLocalizer<Strings> _localizer;
     private readonly CategorizeExpenseUseCase? _categorizeExpenseUseCase;
+    private readonly ExportExpenseListReportUseCase? _exportExpenseList;
+    private readonly IFileSaveDialog? _fileSaveDialog;
 
     /// <summary>
     /// Monotonically increasing token used by <see cref="RefreshAsync"/> to discard the result of a
@@ -102,7 +107,9 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         IClock clock,
         ILogger<ExpensesViewModel> logger,
         IStringLocalizer<Strings> localizer,
-        CategorizeExpenseUseCase? categorizeExpenseUseCase = null)
+        CategorizeExpenseUseCase? categorizeExpenseUseCase = null,
+        ExportExpenseListReportUseCase? exportExpenseList = null,
+        IFileSaveDialog? fileSaveDialog = null)
     {
         ArgumentNullException.ThrowIfNull(registerUseCase);
         ArgumentNullException.ThrowIfNull(getTransactionsQuery);
@@ -138,6 +145,8 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         _logger = logger;
         _localizer = localizer;
         _categorizeExpenseUseCase = categorizeExpenseUseCase;
+        _exportExpenseList = exportExpenseList;
+        _fileSaveDialog = fileSaveDialog;
 
         _date = _clock.Today;
         _currentFilter = new ExpenseFilter { Page = 1, PageSize = 20 };
@@ -686,6 +695,104 @@ public sealed partial class ExpensesViewModel : ViewModelBase
     /// </summary>
     [RelayCommand]
     private Task ConfirmDeleteAsync(ExpenseDto dto) => DeleteExpenseAsync(dto);
+
+    /// <summary>
+    /// Gets or sets a value indicating whether a report export is in flight. Shared by both export
+    /// commands: it is the single source of truth for the double-invocation guard (F-018, D-11).
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExportPdfCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ExportExcelCommand))]
+    private bool _isExporting;
+
+    /// <summary>Exports the current filter (all pages) as a PDF report.</summary>
+    [RelayCommand(CanExecute = nameof(CanExport), AllowConcurrentExecutions = true)]
+    private Task ExportPdfAsync() => ExportAsync(ReportFormat.Pdf);
+
+    /// <summary>Exports the current filter (all pages) as an Excel workbook.</summary>
+    [RelayCommand(CanExecute = nameof(CanExport), AllowConcurrentExecutions = true)]
+    private Task ExportExcelAsync() => ExportAsync(ReportFormat.Xlsx);
+
+    private bool CanExport() => !IsExporting && _exportExpenseList is not null && _fileSaveDialog is not null;
+
+    /// <summary>Maps a use-case failure code to the resx key of its localized message.</summary>
+    internal static string ExportErrorKey(string? code) => code switch
+    {
+        ReportErrorCodes.RenderFailed => "ExportRenderFailedMessage",
+        ReportErrorCodes.SaveFailed => "ExportSaveFailedMessage",
+        ReportErrorCodes.DataFailed => "ExportDataFailedMessage",
+        ReportErrorCodes.WriterUnavailable => "ExportWriterUnavailableMessage",
+        _ => "ExportFailedMessage",
+    };
+
+    private async Task ExportAsync(ReportFormat format)
+    {
+        // The real guard: ExecuteAsync does not consult CanExecute, and the two commands have
+        // independent single-flight state, so the shared flag is checked before the first await.
+        if (IsExporting || _exportExpenseList is null || _fileSaveDialog is null)
+        {
+            return;
+        }
+
+        IsExporting = true;
+        FormError = null;
+        StatusMessage = null;
+
+        try
+        {
+            // Captured up front: editing the filter while the dialog is open must not retarget the
+            // export. PaymentMethodIds is dropped because the visible list ignores it (Reconciliation #4);
+            // Page/PageSize are overwritten by the use case.
+            ExpenseFilter filter = CurrentFilter with { PaymentMethodIds = null };
+
+            using SaveTarget? target = await _fileSaveDialog.PickAsync(SuggestedExportFileName(format), format);
+            if (target is null)
+            {
+                // Cancelled: nothing is written and no message is shown.
+                return;
+            }
+
+            Result result = await _exportExpenseList.ExecuteAsync(
+                new ExportExpenseListReportCommand(filter, format, ReportLabelsFactory.Create()),
+                target);
+
+            if (result.IsSuccess)
+            {
+                StatusMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    _localizer["ExportSucceededMessage"].Value,
+                    target.DisplayName);
+            }
+            else
+            {
+                FormError = _localizer[ExportErrorKey(result.Error?.Code)];
+                _logger.LogWarning(
+                    "Expense list export failed: {ErrorCode} {ErrorMessage}",
+                    result.Error?.Code,
+                    result.Error?.Message);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Not a failure: no message.
+        }
+        catch (Exception ex)
+        {
+            FormError = _localizer["ExportFailedMessage"];
+            _logger.LogError(ex, "Unable to export the expense list.");
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
+    private string SuggestedExportFileName(ReportFormat format)
+    {
+        string extension = format == ReportFormat.Pdf ? ".pdf" : ".xlsx";
+        string stamp = _clock.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        return string.Format(CultureInfo.CurrentCulture, _localizer["ExportExpenseListFileName"].Value, stamp) + extension;
+    }
 
     /// <summary>
     /// Refreshes the paginated expense list for the current filter and page.

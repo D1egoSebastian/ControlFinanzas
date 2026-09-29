@@ -29,6 +29,7 @@ using ControlDeFinanzasIA.Application.UseCases.Expenses.CategorizeExpense;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.GetTransactions;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.RegisterExpense;
 using ControlDeFinanzasIA.Application.UseCases.Expenses.UpdateExpense;
+using ControlDeFinanzasIA.Application.UseCases.Exports.ExportExpenseListReport;
 using ControlDeFinanzasIA.Application.UseCases.Exports.ExportMonthSummaryReport;
 using ControlDeFinanzasIA.Application.UseCases.Goals.ContributeToGoal;
 using ControlDeFinanzasIA.Application.UseCases.Goals.CreateGoal;
@@ -264,6 +265,7 @@ public static class Bootstrap
         // caso de uso del resumen mensual y dialogo de guardado de Avalonia (S4).
         services.AddReportExporters();
         services.AddTransient<ExportMonthSummaryReportUseCase>();
+        services.AddTransient<ExportExpenseListReportUseCase>();
         services.AddSingleton<IFileSaveDialog, AvaloniaFileSaveDialog>();
 
         ServiceProvider tempProvider = services.BuildServiceProvider();

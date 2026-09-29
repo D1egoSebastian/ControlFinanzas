@@ -1,4 +1,5 @@
 using ControlDeFinanzasIA.Application.Abstractions;
+using ControlDeFinanzasIA.Application.UseCases.Exports.ExportExpenseListReport;
 using ControlDeFinanzasIA.Application.UseCases.Exports.ExportMonthSummaryReport;
 using ControlDeFinanzasIA.UI.Composition;
 using ControlDeFinanzasIA.UI.Services;
@@ -45,4 +46,13 @@ public sealed class ExportCompositionTests
         ReportFormat[] formats = services.GetServices<IReportWriter>().Select(w => w.Format).OrderBy(f => f).ToArray();
         Assert.Equal(new[] { ReportFormat.Pdf, ReportFormat.Xlsx }, formats);
     }
+
+    [Fact]
+    public void ExpenseListUseCase_ResolvesInsideAScope()
+    {
+        using ServiceProvider provider = BuildProvider();
+        using IServiceScope scope = provider.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<ExportExpenseListReportUseCase>());
     }
+}

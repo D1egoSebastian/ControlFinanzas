@@ -197,7 +197,8 @@ public sealed class FakeExpenseRepository : IExpenseRepository
         if (PageAddedItems)
         {
             var matching = _addedExpenses
-                .Where(x => (filter.DateFrom is null || x.Date >= filter.DateFrom)
+                .Where(x => (filter.CategoryId is null || x.CategoryId == filter.CategoryId)
+                    && (filter.DateFrom is null || x.Date >= filter.DateFrom)
                     && (filter.DateTo is null || x.Date <= filter.DateTo))
                 .ToList();
             var pageItems = matching.Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize).ToList();

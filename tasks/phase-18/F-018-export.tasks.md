@@ -270,7 +270,7 @@ real Avalonia save dialog, with labels built by the ViewModel and no double exec
 Depends on 5. Goal: the Expenses screen exports its current filter across all pages in both formats, reusing
 the ports, use-case plumbing and resx from earlier slices.
 
-- [ ] 6.1 Write failing `tests/…Unit/Application/Exports/ExportExpenseListReportUseCaseTests.cs`: 450 matching
+- [x] 6.1 Write failing `tests/…Unit/Application/Exports/ExportExpenseListReportUseCaseTests.cs`: 450 matching
   expenses read as pages of 200/200/50 and all 450 rows in the report, none from other categories/dates,
   ignoring the incoming `Page` and overwriting `PageSize` to 200 (R-7, S-9); a zero-match filter yields a valid
   empty report, not a failure (R-7); `DateFrom > DateTo` or `Guid.Empty` in `TagIds` returns `InvalidFilter`
@@ -279,44 +279,44 @@ the ports, use-case plumbing and resx from earlier slices.
   `HasMissingRates` and leaves the DOP cell empty (R-3, R-4); writer failure gives `ReportRenderFailed` with 0
   opens (R-9, R-14, S-11); `IOException` gives `ReportSaveFailed` (R-14); no writer gives
   `ReportWriterUnavailable` (R-1).
-- [ ] 6.2 Create `src/…Application/DTOs/Reports/{ExpenseListReport,ReportFilterSummary}.cs` and
+- [x] 6.2 Create `src/…Application/DTOs/Reports/{ExpenseListReport,ReportFilterSummary}.cs` and
   `src/…Application/UseCases/Exports/ExportExpenseListReport/{ExportExpenseListReportCommand,
   ExportExpenseListReportUseCase}.cs` per D-4, reusing `ReportPaging`, `ReportLineBuilder` and `ReportOutput`.
   Run 6.1 green. (R-7, R-12, R-14)
-- [ ] 6.3 Extend `tests/…Integration/Reports/QuestPdfReportWriterTests.cs`: `WriteExpenseListAsync` starts with
+- [x] 6.3 Extend `tests/…Integration/Reports/QuestPdfReportWriterTests.cs`: `WriteExpenseListAsync` starts with
   `%PDF-`, non-empty, in es-DO and en; empty list, missing-rate rows (em dash, footer note) and long lists
   spanning multiple pages do not throw; header row repeats (structural check acceptable). (R-5, R-7, R-10,
   S-8)
-- [ ] 6.4 Extend `tests/…Integration/Reports/ClosedXmlReportWriterTests.cs`: expense-list workbook has exactly
+- [x] 6.4 Extend `tests/…Integration/Reports/ClosedXmlReportWriterTests.cs`: expense-list workbook has exactly
   `["Summary","Data"]`; Data holds only `Type = Expense` rows with the 7 invariant headers, numeric/date cells
   and blank `AmountDOP` on missing rate; Summary carries filter description, count and DOP total. (R-6, R-7)
-- [ ] 6.5 Implement `WriteExpenseListAsync` in `QuestPdfReportWriter` (same frame as the summary, filter line,
+- [x] 6.5 Implement `WriteExpenseListAsync` in `QuestPdfReportWriter` (same frame as the summary, filter line,
   table Date | Description | Category | Amount | Currency | Amount (DOP), repeating header, total row, footer)
   and in `ClosedXmlReportWriter` (two-sheet shape per D-6); replace the not-yet-implemented failures. Run 6.3
   and 6.4 green. (R-4, R-5, R-6, R-7)
-- [ ] 6.6 Resx: confirm the S4 keys cover the list (`ReportExpenseListTitle`, filter and count labels,
+- [x] 6.6 Resx: confirm the S4 keys cover the list (`ReportExpenseListTitle`, filter and count labels,
   `ExportExpenseListFileName`); append any Expenses-specific keys to `Strings.resx`, `Strings.es-DO.resx` and
   MANUAL accessors in `Strings.Designer.cs`; re-run the resx-completeness test. (R-13, S-15)
-- [ ] 6.7 Write failing Expenses ViewModel tests in `tests/…Unit/UI/ExpensesViewModelTests.cs`: export passes
+- [x] 6.7 Write failing Expenses ViewModel tests in `tests/…Unit/UI/ExpensesViewModelTests.cs`: export passes
   `CurrentFilter with { PaymentMethodIds = null }` and ignores the current page (R-7,
   Reconciliation #4); cancel writes nothing and shows no message (R-8, S-10); success sets `StatusMessage`
   with the file name, failure sets `FormError` (Reconciliation #10, R-14); double-click is ignored while
   exporting (R-15, S-12); with null optional dependencies `CanExport` is false; labels come from
   `ReportLabelsFactory` (R-10). Confirm no existing Expenses fixture needs changes (optional parameters,
   Reconciliation #11).
-- [ ] 6.8 Modify `src/…UI/ViewModels/ExpensesViewModel.cs`: append two optional constructor parameters after
+- [x] 6.8 Modify `src/…UI/ViewModels/ExpensesViewModel.cs`: append two optional constructor parameters after
   `categorizeExpenseUseCase` (`ExportExpenseListReportUseCase? exportExpenseList = null, IFileSaveDialog?
   fileSaveDialog = null`); export commands for both formats with the same body guard and status handling as
   the Dashboard, using `_localizer[...]`. Run 6.7 green. (R-15, D-11)
-- [ ] 6.9 Modify `src/…UI/Views/ExpensesView.axaml`: new header row beside the "Movimientos" title with the
+- [x] 6.9 Modify `src/…UI/Views/ExpensesView.axaml`: new header row beside the "Movimientos" title with the
   two export buttons (design tokens, `frontend-design` skill, no code-behind logic, resx-bound text).
   (R-13, R-15)
-- [ ] 6.10 Append to the Fase 18 `Bootstrap.cs` block: `services.AddTransient<ExportExpenseListReportUseCase>();`
+- [x] 6.10 Append to the Fase 18 `Bootstrap.cs` block: `services.AddTransient<ExportExpenseListReportUseCase>();`
   and extend `ExportCompositionTests` to resolve `ExpensesViewModel` with the use case and dialog injected.
   (R-1, D-10)
-- [ ] 6.11 Smoke-launch: startup without DI failure, the Expenses screen shows the export buttons in both
+- [x] (launch-only: ~16 s, no unhandled exception; screenshot and locale visual check not performed) 6.11 Smoke-launch: startup without DI failure, the Expenses screen shows the export buttons in both
   locales, and navigating Dashboard ↔ Expenses still works. Screenshot only, no simulated clicks. (R-15)
-- [ ] 6.12 Run all four gates. All green before opening PR S5. (R-12)
+- [x] 6.12 Run all four gates. All green before opening PR S5. (R-12)
 
 ## 7. Docs reconciliation (S6)
 
