@@ -295,11 +295,11 @@ public sealed partial class DashboardViewModel : ViewModelBase
         ExportStatusMessage = string.Empty;
         IsExportError = false;
 
+        // Captured up front: navigating months while the dialog is open must not retarget the export.
+        DateOnly month = SelectedMonth;
+
         try
         {
-            // Captured up front: navigating months while the dialog is open must not retarget the export.
-            DateOnly month = SelectedMonth;
-
             using SaveTarget? target = await _fileSaveDialog.PickAsync(SuggestedFileName(month, format), format);
             if (target is null)
             {
@@ -334,7 +334,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
         {
             IsExportError = true;
             ExportStatusMessage = Strings.ExportFailedMessage;
-            _logger.LogError(ex, "Unable to export the month summary for {Month}.", SelectedMonth);
+            _logger.LogError(ex, "Unable to export the month summary for {Month}.", month);
         }
         finally
         {

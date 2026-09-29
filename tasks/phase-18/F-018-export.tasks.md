@@ -294,6 +294,8 @@ the ports, use-case plumbing and resx from earlier slices.
   table Date | Description | Category | Amount | Currency | Amount (DOP), repeating header, total row, footer)
   and in `ClosedXmlReportWriter` (two-sheet shape per D-6); replace the not-yet-implemented failures. Run 6.3
   and 6.4 green. (R-4, R-5, R-6, R-7)
+  Note: the PDF half was a stub in the original S5 commit (always returned `ReportRenderFailed`) and was
+  actually implemented in the fix commit `fix(phase-18): implement PDF expense list report writer`.
 - [x] 6.6 Resx: confirm the S4 keys cover the list (`ReportExpenseListTitle`, filter and count labels,
   `ExportExpenseListFileName`); append any Expenses-specific keys to `Strings.resx`, `Strings.es-DO.resx` and
   MANUAL accessors in `Strings.Designer.cs`; re-run the resx-completeness test. (R-13, S-15)

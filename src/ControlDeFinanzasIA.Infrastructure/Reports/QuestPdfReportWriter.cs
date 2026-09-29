@@ -35,7 +35,7 @@ public sealed class QuestPdfReportWriter : IReportWriter
     public ReportFormat Format => ReportFormat.Pdf;
 
     /// <inheritdoc />
-    public async Task<Result> WriteMonthSummaryAsync(
+    public Task<Result> WriteMonthSummaryAsync(
         MonthSummaryReport report,
         ReportLabels labels,
         Stream destination,
@@ -45,13 +45,53 @@ public sealed class QuestPdfReportWriter : IReportWriter
         ArgumentNullException.ThrowIfNull(labels);
         ArgumentNullException.ThrowIfNull(destination);
 
+        return RenderAsync(() => BuildMonthSummary(report, labels), destination, ct);
+    }
+
+    /// <inheritdoc />
+    public Task<Result> WriteExpenseListAsync(
+        ExpenseListReport report,
+        ReportLabels labels,
+        Stream destination,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        ArgumentNullException.ThrowIfNull(labels);
+        ArgumentNullException.ThrowIfNull(destination);
+
+        return RenderAsync(() => BuildExpenseList(report, labels), destination, ct);
+    }
+
+    internal static Document BuildExpenseList(ExpenseListReport report, ReportLabels labels)
+    {
+        return Document.Create(container => container.Page(page =>
+        {
+            page.Size(PageSizes.Letter);
+            page.Margin(36);
+            page.DefaultTextStyle(x => x.FontSize(10));
+
+            page.Header().Text(labels.ReportExpenseListTitle).FontSize(18).Bold();
+
+            page.Content().PaddingVertical(12).Column(col =>
+            {
+                col.Spacing(10);
+                col.Item().Element(c => ComposeFilters(c, report, labels));
+                col.Item().Element(c => ComposeExpenseTable(c, report, labels));
+            });
+
+            page.Footer().Element(c => ComposeFooter(c, report.GeneratedOn, report.HasMissingRates, labels));
+        }));
+    }
+
+    private static async Task<Result> RenderAsync(Func<Document> build, Stream destination, CancellationToken ct)
+    {
         try
         {
             await Task.Run(
                 () =>
                 {
                     ct.ThrowIfCancellationRequested();
-                    BuildMonthSummary(report, labels).GeneratePdf(destination);
+                    build().GeneratePdf(destination);
                 },
                 ct).ConfigureAwait(false);
             return Result.Success(destination.CanSeek ? destination.Length : 0L);
@@ -66,14 +106,119 @@ public sealed class QuestPdfReportWriter : IReportWriter
         }
     }
 
-    /// <inheritdoc />
-    public Task<Result> WriteExpenseListAsync(
-        ExpenseListReport report,
-        ReportLabels labels,
-        Stream destination,
-        CancellationToken ct = default) =>
-        // Implemented in slice S5.
-        Task.FromResult(Result.Failure(_renderFailedCode, "The PDF expense-list report is not implemented yet."));
+    private static void ComposeFooter(IContainer container, DateOnly generatedOn, bool hasMissingRates, ReportLabels labels)
+    {
+        CultureInfo culture = labels.Culture;
+
+        container.Column(col =>
+        {
+            if (hasMissingRates)
+            {
+                col.Item().Text(labels.ReportMissingRatesNote).FontSize(8).FontColor(_errorColor);
+            }
+
+            col.Item().Row(row =>
+            {
+                row.RelativeItem().Text(
+                    string.Format(culture, labels.ReportGeneratedOnFormat, generatedOn.ToString("d", culture)))
+                    .FontSize(8);
+                row.RelativeItem().AlignRight().Text(text =>
+                {
+                    text.DefaultTextStyle(x => x.FontSize(8));
+                    text.Span(labels.ReportPageLabel + " ");
+                    text.CurrentPageNumber();
+                    text.Span(" / ");
+                    text.TotalPages();
+                });
+            });
+        });
+    }
+
+    private static void ComposeFilters(IContainer container, ExpenseListReport report, ReportLabels labels)
+    {
+        CultureInfo culture = labels.Culture;
+        ReportFilterSummary filter = report.Filter;
+
+        container.Column(col =>
+        {
+            col.Item().Text(labels.ReportFiltersLabel).FontSize(13).Bold();
+
+            bool anyFilter = false;
+            if (filter.DateFrom is not null || filter.DateTo is not null)
+            {
+                anyFilter = true;
+                string from = filter.DateFrom?.ToString("d", culture) ?? string.Empty;
+                string to = filter.DateTo?.ToString("d", culture) ?? string.Empty;
+                col.Item().Text(string.Format(culture, labels.ReportFilterPeriodFormat, from, to));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.CategoryName))
+            {
+                anyFilter = true;
+                col.Item().Text(labels.ReportFilterCategoryLabel + ": " + filter.CategoryName);
+            }
+
+            if (filter.TagCount > 0)
+            {
+                anyFilter = true;
+                col.Item().Text(string.Format(culture, labels.ReportFilterTagsFormat, filter.TagCount));
+            }
+
+            if (!anyFilter)
+            {
+                col.Item().Text(labels.ReportFilterAll);
+            }
+
+            col.Item().PaddingTop(4).Text(labels.ReportCountLabel + ": " + report.Lines.Count.ToString("N0", culture)).Bold();
+        });
+    }
+
+    private static void ComposeExpenseTable(IContainer container, ExpenseListReport report, ReportLabels labels)
+    {
+        CultureInfo culture = labels.Culture;
+
+        if (report.Lines.Count == 0)
+        {
+            container.Text(labels.ReportNoData).Italic();
+            return;
+        }
+
+        container.Table(table =>
+        {
+            table.ColumnsDefinition(c =>
+            {
+                c.ConstantColumn(58);
+                c.RelativeColumn(4);
+                c.RelativeColumn(3);
+                c.RelativeColumn(2.5f);
+                c.ConstantColumn(62);
+                c.RelativeColumn(2.5f);
+            });
+
+            table.Header(h =>
+            {
+                h.Cell().Element(HeaderCell).Text(labels.ReportDateColumn).Bold();
+                h.Cell().Element(HeaderCell).Text(labels.ReportDescriptionColumn).Bold();
+                h.Cell().Element(HeaderCell).Text(labels.ReportCategoryColumn).Bold();
+                h.Cell().Element(HeaderCell).AlignRight().Text(labels.ReportAmountColumn).Bold();
+                h.Cell().Element(HeaderCell).Text(labels.ReportCurrencyColumn).Bold();
+                h.Cell().Element(HeaderCell).AlignRight().Text(labels.ReportAmountDopColumn).Bold();
+            });
+
+            foreach (ReportTransactionLine line in report.Lines)
+            {
+                table.Cell().Element(BodyCell).Text(line.Date.ToString("d", culture)).FontSize(9);
+                table.Cell().Element(BodyCell).Text(line.Description).FontSize(9);
+                table.Cell().Element(BodyCell).Text(line.CategoryName).FontSize(9);
+                table.Cell().Element(BodyCell).AlignRight().Text(line.Amount.ToString("N2", culture)).FontSize(9);
+                table.Cell().Element(BodyCell).Text(line.Currency.ToString()).FontSize(9);
+                table.Cell().Element(BodyCell).AlignRight().Text(line.AmountDop is { } dop ? dop.ToString("N2", culture) : _emDash).FontSize(9);
+            }
+
+            table.Cell().ColumnSpan(5).Element(BodyCell).Text(labels.ReportTotalLabel).Bold();
+            table.Cell().Element(BodyCell).AlignRight().Text(FormatMoney(report.TotalDop, culture)).Bold();
+        });
+    }
 
     internal static Document BuildMonthSummary(MonthSummaryReport report, ReportLabels labels)
     {
@@ -99,28 +244,7 @@ public sealed class QuestPdfReportWriter : IReportWriter
                     col.Item().Element(c => ComposeBudgets(c, report, labels));
                 });
 
-                page.Footer().Column(col =>
-                {
-                    if (report.HasMissingRates)
-                    {
-                        col.Item().Text(labels.ReportMissingRatesNote).FontSize(8).FontColor(_errorColor);
-                    }
-
-                    col.Item().Row(row =>
-                    {
-                        row.RelativeItem().Text(
-                            string.Format(culture, labels.ReportGeneratedOnFormat, report.GeneratedOn.ToString("d", culture)))
-                            .FontSize(8);
-                        row.RelativeItem().AlignRight().Text(text =>
-                        {
-                            text.DefaultTextStyle(x => x.FontSize(8));
-                            text.Span(labels.ReportPageLabel + " ");
-                            text.CurrentPageNumber();
-                            text.Span(" / ");
-                            text.TotalPages();
-                        });
-                    });
-                });
+                page.Footer().Element(c => ComposeFooter(c, report.GeneratedOn, report.HasMissingRates, labels));
             }));
     }
 
