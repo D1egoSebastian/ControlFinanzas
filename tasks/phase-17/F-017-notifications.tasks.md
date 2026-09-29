@@ -161,30 +161,30 @@ plans for the four detectable kinds (digest branch deferred to S7).
 Depends on 3. Goal: `DetectNotificationsUseCase` exists end to end for the two due-item kinds,
 with the purge, toggle-gated reads, and sequential-await rule (R-15) in place.
 
-- [ ] 4.1 Write failing `tests/…Unit/Application/Notifications/NotificationRulesTests.cs` (debt +
+- [x] 4.1 Write failing `tests/…Unit/Application/Notifications/NotificationRulesTests.cs` (debt +
   recurring): debt installment due date +3 days in, +4 days out, −7 days in, −8 days out (S-8);
   recurring rule `NextGenerationDate` today in, −1 day out, +3 days in, +4 days out; an inactive
   rule is excluded; a rule with `EndDate < NextGenerationDate` is excluded (Reconciliation #5). (R-4,
   D-3)
-- [ ] 4.2 Write failing `tests/…Unit/Application/UseCases/Notifications/
+- [x] 4.2 Write failing `tests/…Unit/Application/UseCases/Notifications/
   DetectNotificationsUseCaseTests.cs` (due-item scope): sequential reads only, asserted via a fake
   that fails on overlapping calls; a disabled source is not read; a reconcile save failure returns
   `Failure`; an end-to-end pass over fakes covering debt + recurring candidates reconciling into
   `ToAdd`/`ToUpdate`/`ToRemove`. (R-1, R-7, R-15, D-5)
-- [ ] 4.3 Create `tests/…Unit/TestDoubles/FakeNotificationRepository.cs`: a Phase-17-owned double
+- [x] 4.3 Create `tests/…Unit/TestDoubles/FakeNotificationRepository.cs`: a Phase-17-owned double
   recording every call, distinct from any shared fake. (D-15)
-- [ ] 4.4 Create `src/…Application/Notifications/NotificationRules.cs`: static class with
+- [x] 4.4 Create `src/…Application/Notifications/NotificationRules.cs`: static class with
   `DueHorizonDays = 3`, `OverdueLookbackDays = 7`, `RetentionDays = 60`, `FlyoutCap = 20`, and
   `DebtInstallments(...)` + `RecurringCharges(...)` returning `IReadOnlyList<Notification>`
   candidates. Run 4.1 green. (R-4, D-3)
-- [ ] 4.5 Create `src/…Application/UseCases/Notifications/DetectNotifications/
+- [x] 4.5 Create `src/…Application/UseCases/Notifications/DetectNotifications/
   DetectNotificationsUseCase.cs`: ctor per D-5 (no `DetectAnomaliesUseCase`, no LLM); reads
   settings, existing rows, and the two due-item sources sequentially when enabled; builds
   `evaluatedKinds`; calls `NotificationReconciler.Plan` and, when non-empty,
   `ApplyReconciliationAsync`; returns `Success(DetectNotificationsSummary)` or
   `Failure("NotificationReconcileConflict", …)` without catching internally. Run 4.2 green. (R-1,
   R-6, R-7, R-15, D-5)
-- [ ] 4.6 Run all four gates. All green before opening PR S3.
+- [x] 4.6 Run all four gates. All green before opening PR S3.
 
 ## 5. Detection: budget + anomaly; read/dismiss (S4)
 
