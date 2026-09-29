@@ -127,6 +127,35 @@
                 </StackPanel>
             </Border>
 
+            <!-- Notificaciones (F-017, R-12, R-13, R-17, D-11) -->
+            <Border Classes="ledger-row" Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Static resources:Strings.SettingsNotificationsTitle}" Classes="ledger-title" />
+
+                    <CheckBox IsChecked="{Binding NotifyDebtDue}"
+                              Content="{x:Static resources:Strings.SettingsNotificationsDebtDue}" />
+                    <CheckBox IsChecked="{Binding NotifyRecurringDue}"
+                              Content="{x:Static resources:Strings.SettingsNotificationsRecurringDue}" />
+                    <CheckBox IsChecked="{Binding NotifyBudget}"
+                              Content="{x:Static resources:Strings.SettingsNotificationsBudget}" />
+                    <CheckBox IsChecked="{Binding NotifyAnomaly}"
+                              Content="{x:Static resources:Strings.SettingsNotificationsAnomaly}" />
+
+                    <TextBlock Text="{x:Static resources:Strings.SettingsNotificationsDigestLabel}" />
+                    <ComboBox ItemsSource="{Binding DigestFrequencyOptions}"
+                              DisplayMemberBinding="{Binding Label}"
+                              SelectedValue="{Binding DigestFrequency}"
+                              SelectedValueBinding="{Binding Value}"
+                              PlaceholderText="{x:Static resources:Strings.SettingsNotificationsDigestLabel}"
+                              Classes="ledger-input"
+                              HorizontalAlignment="Stretch" />
+
+                    <Button Content="{x:Static resources:Strings.SettingsSaveButton}"
+                            Command="{Binding SaveNotificationsCommand}"
+                            Classes="ledger-btn-primary" />
+                </StackPanel>
+            </Border>
+
             <!-- Acerca de — no controls, no save (D-10) -->
             <Border Classes="ledger-row" Padding="16">
                 <StackPanel Spacing="10">

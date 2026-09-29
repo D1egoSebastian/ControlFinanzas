@@ -296,18 +296,18 @@ owned by `ShellViewModel`, triggered once after the main window shows.
 Depends on 7. Goal: `SettingsView` gains a "Notificaciones" section wired to the same per-section
 save pattern as the rest of the screen, and saving triggers exactly one detection run.
 
-- [ ] 8.1 Modify `tests/…Unit/UI/SettingsViewModelTests.cs` (the sole ctor site at line ~296) and
+- [x] 8.1 Modify `tests/…Unit/UI/SettingsViewModelTests.cs` (the sole ctor site at line ~296) and
   `SettingsViewModelTestConnectionTests.cs` (line ~144): add the 3 new arguments
   (`GetNotificationSettingsQuery`, `UpdateNotificationSettingsUseCase`, `INotificationCenter`) over
   Phase-17-owned doubles; add tests: `LoadAsync` populates the 4 toggles + frequency;
   `SaveNotificationsAsync` success sets `StatusMessage` and calls `RefreshAsync` exactly once;
   failure sets `FormError` and triggers no run. (R-14, R-17, D-11, D-15)
-- [ ] 8.2 Modify `src/…UI/Resources/Strings.resx`/`Strings.es-DO.resx`/`Strings.Designer.cs`
+- [x] 8.2 Modify `src/…UI/Resources/Strings.resx`/`Strings.es-DO.resx`/`Strings.Designer.cs`
   (appended block): `SettingsNotificationsTitle`, `SettingsNotificationsDebtDue`,
   `SettingsNotificationsRecurringDue`, `SettingsNotificationsBudget`,
   `SettingsNotificationsAnomaly`, `SettingsNotificationsDigestLabel`,
   `SettingsNotificationsDigestOff/Daily/Weekly`. (R-17, D-13)
-- [ ] 8.3 Modify `src/…UI/ViewModels/SettingsViewModel.cs`: add the 3 ctor params after
+- [x] 8.3 Modify `src/…UI/ViewModels/SettingsViewModel.cs`: add the 3 ctor params after
   `testAiConnectionUseCase` (`logger` stays last); add `NotifyDebtDue`/`NotifyRecurringDue`/
   `NotifyBudget`/`NotifyAnomaly`/`DigestFrequency` observable state and
   `DigestFrequencyOptions` (the `ThemeOption` shape); extend `LoadAsync` with one
@@ -315,10 +315,10 @@ save pattern as the rest of the screen, and saving triggers exactly one detectio
   call `UpdateNotificationSettingsUseCase`, on failure set `FormError`, on success set
   `StatusMessage` then `_ = _notificationCenter.RefreshAsync();`, no `ConfigureAwait(false)`). Run
   8.1 green. (R-14, R-17, D-11)
-- [ ] 8.4 Modify `src/…UI/Views/SettingsView.axaml`: a new `ledger-row` `Border` between the IA and
+- [x] 8.4 Modify `src/…UI/Views/SettingsView.axaml`: a new `ledger-row` `Border` between the IA and
   Acerca de sections with 4 `CheckBox`es, a `ComboBox` for the digest frequency, and a
   `ledger-btn-primary` save button. (R-17, D-11)
-- [ ] 8.5 Run all four gates. All green before opening PR S6.
+- [x] 8.5 Run all four gates. All green before opening PR S6.
 
 ## 9. Digest (S7)
 

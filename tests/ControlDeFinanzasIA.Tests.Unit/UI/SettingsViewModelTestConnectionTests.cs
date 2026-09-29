@@ -1,5 +1,7 @@
 using ControlDeFinanzasIA.Application.Abstractions.Llm;
 using ControlDeFinanzasIA.Application.Settings;
+using ControlDeFinanzasIA.Application.UseCases.Notifications.GetNotificationSettings;
+using ControlDeFinanzasIA.Application.UseCases.Notifications.UpdateNotificationSettings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.GetAppSettings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.TestAiConnection;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateAiSettings;
@@ -147,6 +149,9 @@ public sealed class SettingsViewModelTestConnectionTests
             updateLocaleUseCase,
             updateAiSettingsUseCase,
             testAiConnectionUseCase,
+            new GetNotificationSettingsQuery(store),
+            new UpdateNotificationSettingsUseCase(store),
+            new FakeNotificationCenter(),
             NullLogger<SettingsViewModel>.Instance);
     }
 }

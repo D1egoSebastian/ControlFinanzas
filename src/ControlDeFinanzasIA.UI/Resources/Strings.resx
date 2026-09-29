@@ -763,4 +763,31 @@ Showing approximate conversions only.
   <data name="NotificationDateInDaysFormat" xml:space="preserve">
     <value>in {0} days</value>
   </data>
+  <data name="SettingsNotificationsTitle" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="SettingsNotificationsDebtDue" xml:space="preserve">
+    <value>Debt installments due</value>
+  </data>
+  <data name="SettingsNotificationsRecurringDue" xml:space="preserve">
+    <value>Recurring charges due</value>
+  </data>
+  <data name="SettingsNotificationsBudget" xml:space="preserve">
+    <value>Budget thresholds</value>
+  </data>
+  <data name="SettingsNotificationsAnomaly" xml:space="preserve">
+    <value>Unusual expenses</value>
+  </data>
+  <data name="SettingsNotificationsDigestLabel" xml:space="preserve">
+    <value>Periodic summary</value>
+  </data>
+  <data name="SettingsNotificationsDigestOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="SettingsNotificationsDigestDaily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="SettingsNotificationsDigestWeekly" xml:space="preserve">
+    <value>Weekly</value>
+  </data>
 </root>

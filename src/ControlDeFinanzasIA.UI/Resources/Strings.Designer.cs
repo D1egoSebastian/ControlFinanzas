@@ -1216,4 +1216,49 @@ public class Strings
     /// Gets the localized relative-date format for N days ahead (F-017, D-10).
     /// </summary>
     public static string NotificationDateInDaysFormat => ResourceManager.GetString("NotificationDateInDaysFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title of the Notificaciones section in Settings (F-017, R-17, D-13).
+    /// </summary>
+    public static string SettingsNotificationsTitle => ResourceManager.GetString("SettingsNotificationsTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label of the debt installment notifications toggle in Settings (F-017, R-17, D-13).
+    /// </summary>
+    public static string SettingsNotificationsDebtDue => ResourceManager.GetString("SettingsNotificationsDebtDue", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label of the recurring charge notifications toggle in Settings (F-017, R-17, D-13).
+    /// </summary>
+    public static string SettingsNotificationsRecurringDue => ResourceManager.GetString("SettingsNotificationsRecurringDue", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label of the budget threshold notifications toggle in Settings (F-017, R-17, D-13).
+    /// </summary>
+    public static string SettingsNotificationsBudget => ResourceManager.GetString("SettingsNotificationsBudget", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label of the anomaly notifications toggle in Settings (F-017, R-17, D-13).
+    /// </summary>
+    public static string SettingsNotificationsAnomaly => ResourceManager.GetString("SettingsNotificationsAnomaly", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label of the periodic summary frequency picker in Settings (F-017, R-17, D-13).
+    /// </summary>
+    public static string SettingsNotificationsDigestLabel => ResourceManager.GetString("SettingsNotificationsDigestLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label of the periodic summary Off option in Settings (F-017, R-17, D-13).
+    /// </summary>
+    public static string SettingsNotificationsDigestOff => ResourceManager.GetString("SettingsNotificationsDigestOff", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label of the periodic summary Daily option in Settings (F-017, R-17, D-13).
+    /// </summary>
+    public static string SettingsNotificationsDigestDaily => ResourceManager.GetString("SettingsNotificationsDigestDaily", Culture)!;
+
+    /// <summary>
+    /// Gets the localized label of the periodic summary Weekly option in Settings (F-017, R-17, D-13).
+    /// </summary>
+    public static string SettingsNotificationsDigestWeekly => ResourceManager.GetString("SettingsNotificationsDigestWeekly", Culture)!;
 }

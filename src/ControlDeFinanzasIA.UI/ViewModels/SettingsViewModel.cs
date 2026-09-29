@@ -3,13 +3,18 @@ using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ControlDeFinanzasIA.Application.Common;
+using ControlDeFinanzasIA.Application.Notifications;
 using ControlDeFinanzasIA.Application.Settings;
+using ControlDeFinanzasIA.Application.UseCases.Notifications.GetNotificationSettings;
+using ControlDeFinanzasIA.Application.UseCases.Notifications.UpdateNotificationSettings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.GetAppSettings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.TestAiConnection;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateAiSettings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateLocale;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateTheme;
+using ControlDeFinanzasIA.Domain.Notifications;
 using ControlDeFinanzasIA.UI.Resources;
+using ControlDeFinanzasIA.UI.Services;
 using Microsoft.Extensions.Logging;
 
 namespace ControlDeFinanzasIA.UI.ViewModels;
@@ -17,7 +22,7 @@ namespace ControlDeFinanzasIA.UI.ViewModels;
 /// <summary>
 /// View-model for the Settings screen (F-012, D-10): a sectioned
 /// preferences form, not a list-CRUD screen. Each section (Apariencia,
-/// Idioma, IA, Acerca de) has its own save affordance mapping 1:1 to its
+/// Idioma, IA, Notificaciones, Acerca de) has its own save affordance mapping 1:1 to its
 /// own update use case — there is no single global "Save all" command.
 /// Acerca de has no save command; it only displays <see cref="AppVersion"/>.
 /// </summary>
@@ -35,6 +40,9 @@ public sealed partial class SettingsViewModel : ViewModelBase
     private readonly UpdateLocaleUseCase _updateLocaleUseCase;
     private readonly UpdateAiSettingsUseCase _updateAiSettingsUseCase;
     private readonly TestAiConnectionUseCase _testAiConnectionUseCase;
+    private readonly GetNotificationSettingsQuery _getNotificationSettingsQuery;
+    private readonly UpdateNotificationSettingsUseCase _updateNotificationSettingsUseCase;
+    private readonly INotificationCenter _notificationCenter;
     private readonly ILogger<SettingsViewModel> _logger;
 
     /// <summary>
@@ -49,6 +57,9 @@ public sealed partial class SettingsViewModel : ViewModelBase
         UpdateLocaleUseCase updateLocaleUseCase,
         UpdateAiSettingsUseCase updateAiSettingsUseCase,
         TestAiConnectionUseCase testAiConnectionUseCase,
+        GetNotificationSettingsQuery getNotificationSettingsQuery,
+        UpdateNotificationSettingsUseCase updateNotificationSettingsUseCase,
+        INotificationCenter notificationCenter,
         ILogger<SettingsViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(getAppSettingsQuery);
@@ -56,6 +67,9 @@ public sealed partial class SettingsViewModel : ViewModelBase
         ArgumentNullException.ThrowIfNull(updateLocaleUseCase);
         ArgumentNullException.ThrowIfNull(updateAiSettingsUseCase);
         ArgumentNullException.ThrowIfNull(testAiConnectionUseCase);
+        ArgumentNullException.ThrowIfNull(getNotificationSettingsQuery);
+        ArgumentNullException.ThrowIfNull(updateNotificationSettingsUseCase);
+        ArgumentNullException.ThrowIfNull(notificationCenter);
         ArgumentNullException.ThrowIfNull(logger);
 
         _getAppSettingsQuery = getAppSettingsQuery;
@@ -63,6 +77,9 @@ public sealed partial class SettingsViewModel : ViewModelBase
         _updateLocaleUseCase = updateLocaleUseCase;
         _updateAiSettingsUseCase = updateAiSettingsUseCase;
         _testAiConnectionUseCase = testAiConnectionUseCase;
+        _getNotificationSettingsQuery = getNotificationSettingsQuery;
+        _updateNotificationSettingsUseCase = updateNotificationSettingsUseCase;
+        _notificationCenter = notificationCenter;
         _logger = logger;
 
         Themes = Enum.GetValues<AppTheme>();
@@ -79,6 +96,9 @@ public sealed partial class SettingsViewModel : ViewModelBase
             .ToList();
         LocaleOptions = Locales
             .Select(locale => new LocaleOption(locale, DisplayNameForLocale(locale)))
+            .ToList();
+        DigestFrequencyOptions = Enum.GetValues<DigestFrequency>()
+            .Select(frequency => new DigestFrequencyOption(frequency, DisplayNameForDigestFrequency(frequency)))
             .ToList();
 
         _ = LoadAsync();
@@ -149,6 +169,36 @@ public sealed partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private string _aiTestConnectionMessage = string.Empty;
 
+    // --- Notificaciones (F-017, D-11) ---
+
+    /// <summary>Gets or sets a value indicating whether debt installment notices are enabled.</summary>
+    [ObservableProperty]
+    private bool _notifyDebtDue = NotificationSettings.Defaults.DebtDue;
+
+    /// <summary>Gets or sets a value indicating whether recurring charge notices are enabled.</summary>
+    [ObservableProperty]
+    private bool _notifyRecurringDue = NotificationSettings.Defaults.RecurringDue;
+
+    /// <summary>Gets or sets a value indicating whether budget threshold notices are enabled.</summary>
+    [ObservableProperty]
+    private bool _notifyBudget = NotificationSettings.Defaults.Budget;
+
+    /// <summary>Gets or sets a value indicating whether unusual expense notices are enabled.</summary>
+    [ObservableProperty]
+    private bool _notifyAnomaly = NotificationSettings.Defaults.Anomaly;
+
+    /// <summary>Gets or sets the periodic summary frequency selected in the picker.</summary>
+    [ObservableProperty]
+    private DigestFrequency _digestFrequency = NotificationSettings.Defaults.Digest;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether a notification-preferences
+    /// save is in flight. Guards <see cref="SaveNotificationsAsync"/>
+    /// against re-entry so one save queues exactly one detection run (R-14).
+    /// </summary>
+    [ObservableProperty]
+    private bool _isSavingNotifications;
+
     // --- Acerca de (no persistence) ---
 
     /// <summary>Gets the informational version of the application assembly.</summary>
@@ -213,6 +263,13 @@ public sealed partial class SettingsViewModel : ViewModelBase
     /// the raw locale code (D-12).
     /// </summary>
     public IReadOnlyList<LocaleOption> LocaleOptions { get; }
+
+    /// <summary>
+    /// Gets the localized (value, label) projection of
+    /// <see cref="DigestFrequency"/> the summary-frequency <c>ComboBox</c>
+    /// binds to (F-017, D-11).
+    /// </summary>
+    public IReadOnlyList<DigestFrequencyOption> DigestFrequencyOptions { get; }
 
     /// <summary>
     /// Persists <see cref="Theme"/> via <see cref="UpdateThemeUseCase"/>
@@ -289,6 +346,50 @@ public sealed partial class SettingsViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Persists the four notification toggles and the summary frequency via
+    /// <see cref="UpdateNotificationSettingsUseCase"/> (F-017, D-11) and,
+    /// only on success, queues exactly one detection run so the bell
+    /// reflects the change (R-14). The refresh is fire-and-forget: the
+    /// center never throws (R-15) and queues behind any run in flight.
+    /// </summary>
+    [RelayCommand]
+    private async Task SaveNotificationsAsync()
+    {
+        if (IsSavingNotifications)
+        {
+            return;
+        }
+
+        IsSavingNotifications = true;
+        try
+        {
+            FormError = string.Empty;
+            StatusMessage = string.Empty;
+
+            var settings = new NotificationSettings(
+                NotifyDebtDue,
+                NotifyRecurringDue,
+                NotifyBudget,
+                NotifyAnomaly,
+                DigestFrequency);
+
+            Result result = await _updateNotificationSettingsUseCase.ExecuteAsync(settings);
+            if (!result.IsSuccess)
+            {
+                FormError = result.Error?.Message ?? Strings.SettingsErrorMessage;
+                return;
+            }
+
+            StatusMessage = Strings.SettingsSavedMessage;
+            _ = _notificationCenter.RefreshAsync();
+        }
+        finally
+        {
+            IsSavingNotifications = false;
+        }
+    }
+
+    /// <summary>
     /// Runs the "Probar conexión" diagnostic against the SAVED (persisted)
     /// AI configuration via <see cref="TestAiConnectionUseCase"/> — never
     /// against unsaved form field values (F-013, slice 7, R-8, D-11).
@@ -357,6 +458,20 @@ public sealed partial class SettingsViewModel : ViewModelBase
             AiBaseUrl = settings.AiBaseUrl;
             AiTemperature = settings.AiTemperature;
             AiMaxTokensPerRequest = settings.AiMaxTokensPerRequest;
+
+            Result notificationsResult = await _getNotificationSettingsQuery.ExecuteAsync().ConfigureAwait(false);
+            if (!notificationsResult.IsSuccess)
+            {
+                FormError = notificationsResult.Error?.Message ?? Strings.SettingsLoadErrorMessage;
+                return;
+            }
+
+            var notifications = (NotificationSettings)notificationsResult.Value!;
+            NotifyDebtDue = notifications.DebtDue;
+            NotifyRecurringDue = notifications.RecurringDue;
+            NotifyBudget = notifications.Budget;
+            NotifyAnomaly = notifications.Anomaly;
+            DigestFrequency = notifications.Digest;
         }
         catch (Exception ex)
         {
@@ -383,6 +498,15 @@ public sealed partial class SettingsViewModel : ViewModelBase
             _ => theme.ToString(),
         };
 
+    private static string DisplayNameForDigestFrequency(DigestFrequency frequency)
+        => frequency switch
+        {
+            DigestFrequency.Off => Strings.SettingsNotificationsDigestOff,
+            DigestFrequency.Daily => Strings.SettingsNotificationsDigestDaily,
+            DigestFrequency.Weekly => Strings.SettingsNotificationsDigestWeekly,
+            _ => frequency.ToString(),
+        };
+
     private static string DisplayNameForLocale(string locale)
         => locale switch
         {
@@ -403,3 +527,9 @@ public sealed record ThemeOption(AppTheme Value, string Label);
 /// Idioma <c>ComboBox</c> (D-12).
 /// </summary>
 public sealed record LocaleOption(string Value, string Label);
+
+/// <summary>
+/// Localized (value, label) projection of a <see cref="DigestFrequency"/>
+/// value for the Notificaciones <c>ComboBox</c> (F-017, D-11).
+/// </summary>
+public sealed record DigestFrequencyOption(DigestFrequency Value, string Label);

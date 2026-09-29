@@ -1,10 +1,14 @@
 using System.Reflection;
+using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Settings;
+using ControlDeFinanzasIA.Application.UseCases.Notifications.GetNotificationSettings;
+using ControlDeFinanzasIA.Application.UseCases.Notifications.UpdateNotificationSettings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.GetAppSettings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.TestAiConnection;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateAiSettings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateLocale;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateTheme;
+using ControlDeFinanzasIA.Domain.Notifications;
 using ControlDeFinanzasIA.Tests.Unit.TestDoubles;
 using ControlDeFinanzasIA.UI.ViewModels;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -271,6 +275,109 @@ public sealed class SettingsViewModelTests
         Assert.True(viewModel.IsAiApiKeyWarningVisible);
     }
 
+    // --- Notificaciones (F-017, slice S6: R-14, R-17, D-11, D-15) ---
+
+    [Fact]
+    public async Task Constructor_LoadsNotificationSettings_PopulatesTogglesAndFrequency()
+    {
+        var store = new InMemorySettingsStore();
+        store.Seed(SettingKeys.NotificationsDebtDueEnabled, "false");
+        store.Seed(SettingKeys.NotificationsAnomalyEnabled, "false");
+        store.Seed(SettingKeys.NotificationsDigestFrequency, nameof(DigestFrequency.Daily));
+
+        SettingsViewModel viewModel = CreateViewModel(store);
+        await Task.Delay(20);
+
+        Assert.False(viewModel.NotifyDebtDue);
+        Assert.True(viewModel.NotifyRecurringDue);
+        Assert.True(viewModel.NotifyBudget);
+        Assert.False(viewModel.NotifyAnomaly);
+        Assert.Equal(DigestFrequency.Daily, viewModel.DigestFrequency);
+    }
+
+    [Fact]
+    public async Task Constructor_NothingPersisted_UsesNotificationDefaults()
+    {
+        SettingsViewModel viewModel = CreateViewModel(new InMemorySettingsStore());
+        await Task.Delay(20);
+
+        Assert.True(viewModel.NotifyDebtDue);
+        Assert.True(viewModel.NotifyRecurringDue);
+        Assert.True(viewModel.NotifyBudget);
+        Assert.True(viewModel.NotifyAnomaly);
+        Assert.Equal(DigestFrequency.Weekly, viewModel.DigestFrequency);
+    }
+
+    [Fact]
+    public void DigestFrequencyOptions_ExposeEveryFrequencyWithDistinctLocalizedLabels()
+    {
+        SettingsViewModel viewModel = CreateViewModel(new InMemorySettingsStore());
+
+        Assert.Equal(
+            new[] { DigestFrequency.Off, DigestFrequency.Daily, DigestFrequency.Weekly },
+            viewModel.DigestFrequencyOptions.Select(o => o.Value).ToArray());
+        Assert.All(viewModel.DigestFrequencyOptions, o => Assert.NotEqual(string.Empty, o.Label));
+        Assert.Equal(
+            viewModel.DigestFrequencyOptions.Count,
+            viewModel.DigestFrequencyOptions.Select(o => o.Label).Distinct().Count());
+    }
+
+    [Fact]
+    public async Task SaveNotificationsAsync_Success_PersistsAllFiveKeysAndRefreshesExactlyOnce()
+    {
+        var store = new InMemorySettingsStore();
+        var center = new FakeNotificationCenter();
+        SettingsViewModel viewModel = CreateViewModel(store, center);
+        await Task.Delay(20);
+        viewModel.FormError = "stale error";
+        viewModel.NotifyDebtDue = false;
+        viewModel.NotifyBudget = false;
+        viewModel.DigestFrequency = DigestFrequency.Off;
+
+        await viewModel.SaveNotificationsCommand.ExecuteAsync(null);
+
+        Assert.Equal(string.Empty, viewModel.FormError);
+        Assert.NotEqual(string.Empty, viewModel.StatusMessage);
+        Assert.False(viewModel.IsRestartRequired);
+        Assert.Equal(1, center.RefreshCalls);
+        Assert.Equal(0, center.TryRefreshCalls);
+        Assert.Equal("false", await store.GetStringAsync(SettingKeys.NotificationsDebtDueEnabled));
+        Assert.Equal("true", await store.GetStringAsync(SettingKeys.NotificationsRecurringDueEnabled));
+        Assert.Equal("false", await store.GetStringAsync(SettingKeys.NotificationsBudgetEnabled));
+        Assert.Equal("true", await store.GetStringAsync(SettingKeys.NotificationsAnomalyEnabled));
+        Assert.Equal(nameof(DigestFrequency.Off), await store.GetStringAsync(SettingKeys.NotificationsDigestFrequency));
+    }
+
+    [Fact]
+    public async Task SaveNotificationsAsync_Failure_SetsFormErrorAndTriggersNoRefresh()
+    {
+        var store = new FakeSettingsStore { FailOnKey = SettingKeys.NotificationsBudgetEnabled };
+        var center = new FakeNotificationCenter();
+        SettingsViewModel viewModel = CreateViewModel(store, center);
+        await Task.Delay(20);
+        viewModel.StatusMessage = "stale status";
+
+        await viewModel.SaveNotificationsCommand.ExecuteAsync(null);
+
+        Assert.NotEqual(string.Empty, viewModel.FormError);
+        Assert.Equal(string.Empty, viewModel.StatusMessage);
+        Assert.Equal(0, center.RefreshCalls);
+        Assert.Equal(0, center.TryRefreshCalls);
+    }
+
+    [Fact]
+    public async Task SaveNotificationsAsync_WritesOnlyNotificationKeys()
+    {
+        var store = new FakeSettingsStore();
+        SettingsViewModel viewModel = CreateViewModel(store);
+        await Task.Delay(20);
+
+        await viewModel.SaveNotificationsCommand.ExecuteAsync(null);
+
+        Assert.Equal(5, store.SetCalls.Count);
+        Assert.All(store.SetCalls, c => Assert.StartsWith("notifications.", c.Key, StringComparison.Ordinal));
+    }
+
     [Fact]
     public void Constructor_TakesNoAvaloniaType()
     {
@@ -283,7 +390,7 @@ public sealed class SettingsViewModelTests
             p => p.ParameterType.Namespace?.StartsWith("Avalonia", StringComparison.Ordinal) == true);
     }
 
-    private static SettingsViewModel CreateViewModel(FakeSettingsStore store)
+    private static SettingsViewModel CreateViewModel(ISettingsStore store, FakeNotificationCenter? center = null)
     {
         var getAppSettingsQuery = new GetAppSettingsQuery(store);
         var updateThemeUseCase = new UpdateThemeUseCase(store, NullLogger<UpdateThemeUseCase>.Instance);
@@ -299,6 +406,9 @@ public sealed class SettingsViewModelTests
             updateLocaleUseCase,
             updateAiSettingsUseCase,
             testAiConnectionUseCase,
+            new GetNotificationSettingsQuery(store),
+            new UpdateNotificationSettingsUseCase(store),
+            center ?? new FakeNotificationCenter(),
             NullLogger<SettingsViewModel>.Instance);
     }
 }

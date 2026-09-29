@@ -763,4 +763,31 @@ Mostrando conversiones aproximadas.
   <data name="NotificationDateInDaysFormat" xml:space="preserve">
     <value>en {0} días</value>
   </data>
+  <data name="SettingsNotificationsTitle" xml:space="preserve">
+    <value>Notificaciones</value>
+  </data>
+  <data name="SettingsNotificationsDebtDue" xml:space="preserve">
+    <value>Cuotas de deuda por vencer</value>
+  </data>
+  <data name="SettingsNotificationsRecurringDue" xml:space="preserve">
+    <value>Cargos recurrentes por vencer</value>
+  </data>
+  <data name="SettingsNotificationsBudget" xml:space="preserve">
+    <value>Umbrales de presupuesto</value>
+  </data>
+  <data name="SettingsNotificationsAnomaly" xml:space="preserve">
+    <value>Gastos inusuales</value>
+  </data>
+  <data name="SettingsNotificationsDigestLabel" xml:space="preserve">
+    <value>Resumen periódico</value>
+  </data>
+  <data name="SettingsNotificationsDigestOff" xml:space="preserve">
+    <value>Desactivado</value>
+  </data>
+  <data name="SettingsNotificationsDigestDaily" xml:space="preserve">
+    <value>Diario</value>
+  </data>
+  <data name="SettingsNotificationsDigestWeekly" xml:space="preserve">
+    <value>Semanal</value>
+  </data>
 </root>
