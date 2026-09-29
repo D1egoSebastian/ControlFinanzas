@@ -478,7 +478,7 @@ the startup `.bak` cleanup in `App`, and the D20 architecture guard. Invoke no v
 Depends on 5. Goal: the localized string set exists and is verified, the notification center can be suspended during
 restore, and the app can relaunch itself. No visible UI yet beyond resources.
 
-- [ ] 6a.1 Resx first (R-22, S-31): append to `src/…UI/Resources/Strings.resx` (es-DO default) and
+- [x] 6a.1 Resx first (R-22, S-31): append to `src/…UI/Resources/Strings.resx` (es-DO default) and
   `Strings.en.resx` the same key set from DD-9: `BackupSectionTitle`, `BackupSectionDescription`,
   `BackupExportButton`, `BackupRestoreButton`, `BackupExportDialogTitle`, `BackupRestoreDialogTitle`,
   `BackupFileTypeName`, `BackupWorkingExport`, `BackupWorkingInspect`, `BackupWorkingRestore`,
@@ -490,27 +490,27 @@ restore, and the app can relaunch itself. No visible UI yet beyond resources.
   version, `{3}` app migration id), `BackupErrorIoError`, `BackupErrorInsufficientSpace`. Neutral, professional
   Spanish for es-DO; check the repo's actual resx file names with `Glob` first and follow them. (R-17, R-22,
   Reconciliation #5)
-- [ ] 6a.2 Append MANUAL accessors for every new key to `src/…UI/Resources/Strings.Designer.cs` (hand-maintained; do
+- [x] 6a.2 Append MANUAL accessors for every new key to `src/…UI/Resources/Strings.Designer.cs` (hand-maintained; do
   not regenerate). (R-22)
-- [ ] 6a.3 Write failing then green `tests/…Unit/UI/BackupResourcesTests.cs`: every new key exists in both resx
+- [x] 6a.3 Write failing then green `tests/…Unit/UI/BackupResourcesTests.cs`: every new key exists in both resx
   files and in `Strings.Designer.cs`, both files define the same key set, no value is empty, and each format string
   formats without exception with the documented number of arguments (`BackupErrorNewerSchema` needs `{0}`..`{3}`).
   Test under es-DO and en, restoring the culture afterwards. (R-22, S-31)
 - [ ] 6a.4 Wire the localized default title in `AvaloniaFileOpenDialog` to `Strings.BackupRestoreDialogTitle` and the
   backup save default to `Strings.BackupExportDialogTitle` where the VM does not pass one; extend the 5.x tests that
   cover the dialog fallback if they asserted `null`. (R-22, DD-8)
-- [ ] 6a.5 Write failing `tests/…Integration/Backup/ScopedNotificationCenterSuspendTests.cs` against the REAL
+- [x] 6a.5 Write failing `tests/…Integration/Backup/ScopedNotificationCenterSuspendTests.cs` against the REAL
   `ScopedNotificationCenter` on a temp SQLite DB (not a fake of it): `SuspendAsync` waits for an in-flight
   refresh to finish before returning; while suspended `TryRefreshAsync` returns `false`, `GetAsync` returns `null`
   without creating a DI scope (assert scope factory not called), `RefreshAsync` queues on the gate and completes
   only after `Dispose`; disposing the handle re-enables all members and releases the gate exactly once (double
   dispose is safe); no notification row is written while suspended. (R-19, DD-7)
-- [ ] 6a.6 Modify `src/…UI/Services/INotificationCenter.cs` (append `Task<IDisposable> SuspendAsync(
+- [x] 6a.6 Modify `src/…UI/Services/INotificationCenter.cs` (append `Task<IDisposable> SuspendAsync(
   CancellationToken ct = default)`), `src/…UI/Services/ScopedNotificationCenter.cs` (gate + `volatile` suspended
   flag per DD-7) and `tests/…Unit/TestDoubles/FakeNotificationCenter.cs` (counts calls, returns a disposable that
   records disposal, order of calls observable). Update every other `INotificationCenter` implementer found by
   `rg "INotificationCenter" src tests`. Run 6a.5 green; existing notification tests stay green. (R-19, DD-7)
-- [ ] 6a.7 Create `src/…UI/Services/{IAppRestartService,AppRestartService}.cs` per DD-8 (`bool TryRestart()`;
+- [x] 6a.7 Create `src/…UI/Services/{IAppRestartService,AppRestartService}.cs` per DD-8 (`bool TryRestart()`;
   `dotnet` host adds the entry assembly path; `Process.Start` with `UseShellExecute=false`; then desktop lifetime
   `Shutdown()`; whole body in `try/catch` returning `false`) and register `IAppRestartService` Singleton in the
   `Bootstrap` block. Add `tests/…Unit/TestDoubles/FakeAppRestartService.cs`. Because process launch and lifetime
@@ -520,9 +520,26 @@ restore, and the app can relaunch itself. No visible UI yet beyond resources.
   explicitly. (R-19, DD-8)
 - [ ] 6a.8 **Smoke launch on a throwaway data directory** (see the safety rule at the top): app starts in es-DO and
   en, no Backup UI yet, no exception. Do not press any restore button (none exists). (DD-9)
-- [ ] 6a.9 Run all four gates plus the no-stubs grep over the slice's files (`Resources`, `UI/Services`, tests).
+- [x] 6a.9 Run all four gates plus the no-stubs grep over the slice's files (`Resources`, `UI/Services`, tests).
   Confirm the resx completeness test and notification tests ran (N > 0). All green before opening PR S6a. (R-22,
   R-24)
+
+**S6a apply notes:**
+- 6a.1: the repo's resx files are `Strings.resx` (neutral, English) and `Strings.es-DO.resx` (Spanish); there is no
+  `Strings.en.resx`. 29 keys were added: the 27 from DD-9 plus `BackupRestartRequiredNotice` and `BackupApiKeyKeptNotice`.
+- 6a.3: test is `tests/…Unit/UI/BackupResourcesTests.cs` (key set, both cultures, designer, format arity, culture restore).
+- 6a.4 NOT ticked: `AvaloniaFileOpenDialog` now defaults to `Strings.BackupRestoreDialogTitle`. The generic
+  `AvaloniaFileSaveDialog` default stays `null` (a backup-specific fallback in a generic dialog would be wrong
+  coupling); S6b's ViewModel must pass `Strings.BackupExportDialogTitle` explicitly. No existing test asserted `null`.
+- 6a.5 deviation from the task text: while suspended `RefreshAsync`/`MarkReadAsync`/`DismissAsync` return immediately as
+  no-ops instead of queuing on the gate (a queued call would hang forever after a successful restore, where the handle
+  is never disposed). The suspended flag is a counter raised BEFORE waiting on the gate, so no new operation starts
+  while the in-flight one drains. Tests live in `tests/…Integration/Backup/ScopedNotificationCenterSuspendTests.cs`
+  and use a `GatedScopeFactory` proxy over the real container (real `ScopedNotificationCenter`, real SQLite file).
+- 6a.7: `AppRestartService` has an internal constructor with injectable launch/shutdown seams (`Func<ProcessStartInfo,
+  bool>`, `Func<bool>`); `BuildStartInfo` is internal and unit tested; `TryRestart` is tested entirely with fake seams.
+  The real relaunch stays a MANUAL check (NOT RUN BY HAND). `IAppRestartService` is registered Singleton in `Bootstrap`.
+- 6a.8 NOT ticked / not run: this slice touches no AXAML and no new UI is visible, so no smoke launch was performed.
 
 ## 6b. BackupSettingsViewModel and Settings view (S6b)
 

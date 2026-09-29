@@ -946,4 +946,91 @@ Mostrando conversiones aproximadas.
   <data name="ExportExpenseListFileName" xml:space="preserve">
     <value>gastos-{0}</value>
   </data>
+  <data name="BackupSectionTitle" xml:space="preserve">
+    <value>Respaldo y restauración</value>
+  </data>
+  <data name="BackupSectionDescription" xml:space="preserve">
+    <value>Guarda una copia de todos tus datos en un archivo o restaura tus datos desde un respaldo anterior. Todo permanece en este equipo y los respaldos nunca incluyen tu clave de API de IA.</value>
+  </data>
+  <data name="BackupExportButton" xml:space="preserve">
+    <value>Crear respaldo</value>
+  </data>
+  <data name="BackupRestoreButton" xml:space="preserve">
+    <value>Restaurar desde respaldo...</value>
+  </data>
+  <data name="BackupExportDialogTitle" xml:space="preserve">
+    <value>Guardar respaldo</value>
+  </data>
+  <data name="BackupRestoreDialogTitle" xml:space="preserve">
+    <value>Elegir un respaldo para restaurar</value>
+  </data>
+  <data name="BackupFileTypeName" xml:space="preserve">
+    <value>Respaldo de finanzas (ZIP)</value>
+  </data>
+  <data name="BackupWorkingExport" xml:space="preserve">
+    <value>Creando respaldo...</value>
+  </data>
+  <data name="BackupWorkingInspect" xml:space="preserve">
+    <value>Verificando el archivo de respaldo...</value>
+  </data>
+  <data name="BackupWorkingRestore" xml:space="preserve">
+    <value>Restaurando tus datos...</value>
+  </data>
+  <data name="BackupExportSucceeded" xml:space="preserve">
+    <value>Respaldo guardado: {0}</value>
+  </data>
+  <data name="BackupConfirmTitle" xml:space="preserve">
+    <value>¿Restaurar este respaldo?</value>
+  </data>
+  <data name="BackupConfirmWarning" xml:space="preserve">
+    <value>Restaurar REEMPLAZA todos los datos actuales de la aplicación con el contenido de este respaldo. Antes se guarda una copia de seguridad de tus datos actuales, pero esta acción no se puede deshacer desde la aplicación.</value>
+  </data>
+  <data name="BackupConfirmDetailsFormat" xml:space="preserve">
+    <value>Respaldo creado el {0} con la versión {1} de la aplicación.</value>
+  </data>
+  <data name="BackupConfirmOlderSchemaNote" xml:space="preserve">
+    <value>Este respaldo proviene de una versión anterior. Se actualizará automáticamente la próxima vez que se inicie la aplicación.</value>
+  </data>
+  <data name="BackupConfirmApiKeyLostNote" xml:space="preserve">
+    <value>La clave de API de IA guardada en este equipo se perderá, porque este respaldo no permite conservarla. Deberás ingresarla de nuevo en Configuración.</value>
+  </data>
+  <data name="BackupConfirmButton" xml:space="preserve">
+    <value>Reemplazar mis datos</value>
+  </data>
+  <data name="BackupCancelButton" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="BackupRestoreSucceeded" xml:space="preserve">
+    <value>Datos restaurados. Se guardó una copia de seguridad de tus datos anteriores como {0} en la carpeta de respaldos.</value>
+  </data>
+  <data name="BackupRestartRequiredNotice" xml:space="preserve">
+    <value>Reinicio requerido: reinicia la aplicación para cargar los datos restaurados. Evita hacer cambios hasta entonces.</value>
+  </data>
+  <data name="BackupRestartNowButton" xml:space="preserve">
+    <value>Reiniciar ahora</value>
+  </data>
+  <data name="BackupRestartFallback" xml:space="preserve">
+    <value>La aplicación no pudo reiniciarse sola. Ciérrala y ábrela de nuevo para terminar la restauración.</value>
+  </data>
+  <data name="BackupApiKeyNotRestoredNotice" xml:space="preserve">
+    <value>No se pudo conservar tu clave de API de IA. Ingrésala de nuevo en Configuración.</value>
+  </data>
+  <data name="BackupApiKeyKeptNotice" xml:space="preserve">
+    <value>Se conservó la clave de API de IA de este equipo.</value>
+  </data>
+  <data name="BackupErrorNotABackup" xml:space="preserve">
+    <value>El archivo seleccionado no es un respaldo válido de esta aplicación.</value>
+  </data>
+  <data name="BackupErrorCorrupt" xml:space="preserve">
+    <value>El archivo de respaldo está dañado y no se puede restaurar. Tus datos actuales no se modificaron.</value>
+  </data>
+  <data name="BackupErrorNewerSchema" xml:space="preserve">
+    <value>Este respaldo fue creado por una versión más reciente (aplicación {0}, esquema {1}) que esta aplicación (aplicación {2}, esquema {3}). Actualiza la aplicación e inténtalo de nuevo. Tus datos actuales no se modificaron.</value>
+  </data>
+  <data name="BackupErrorIoError" xml:space="preserve">
+    <value>No se pudo completar la operación porque no se pudo leer o escribir un archivo. Tus datos actuales no se modificaron.</value>
+  </data>
+  <data name="BackupErrorInsufficientSpace" xml:space="preserve">
+    <value>No hay suficiente espacio libre en el disco para completar la operación. Libera espacio e inténtalo de nuevo. Tus datos actuales no se modificaron.</value>
+  </data>
 </root>

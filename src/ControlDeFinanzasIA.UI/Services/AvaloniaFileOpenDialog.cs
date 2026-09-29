@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using ControlDeFinanzasIA.Application.Abstractions;
+using ControlDeFinanzasIA.UI.Resources;
 using Microsoft.Extensions.Logging;
 
 namespace ControlDeFinanzasIA.UI.Services;
@@ -15,7 +16,7 @@ namespace ControlDeFinanzasIA.UI.Services;
 /// and reads the live main window on every call, so it must run on the UI thread (ViewModel
 /// commands already do). There is no automated test (no <see cref="TopLevel"/> in unit tests);
 /// it is covered by the manual check recorded in the F-019 tasks. When the caller passes no
-/// title the dialog uses the platform default; the localized title is wired by the caller.
+/// title the dialog uses the localized <see cref="Strings.BackupRestoreDialogTitle"/>.
 /// </remarks>
 public sealed class AvaloniaFileOpenDialog : IFileOpenDialog
 {
@@ -44,7 +45,7 @@ public sealed class AvaloniaFileOpenDialog : IFileOpenDialog
 
         IReadOnlyList<IStorageFile> files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = title,
+            Title = title ?? Strings.BackupRestoreDialogTitle,
             AllowMultiple = false,
             FileTypeFilter =
             [

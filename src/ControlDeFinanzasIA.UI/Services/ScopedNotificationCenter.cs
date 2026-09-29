@@ -24,6 +24,11 @@ namespace ControlDeFinanzasIA.UI.Services;
 /// One <see cref="SemaphoreSlim"/> serializes every mutating operation, so a dismiss can never
 /// be overwritten by a concurrent detection run holding a stale snapshot. Reads are not gated.
 /// </para>
+/// <para>
+/// <see cref="SuspendAsync"/> (F-019, DD-7) takes that same gate and raises a flag: while any
+/// suspension is held every database-touching member is a no-op (no scope is created, nothing
+/// is raised), so a restore can swap the database file without a detection run opening it.
+/// </para>
 /// </remarks>
 public sealed class ScopedNotificationCenter : INotificationCenter
 {
@@ -31,6 +36,7 @@ public sealed class ScopedNotificationCenter : INotificationCenter
     private readonly ILogger<ScopedNotificationCenter> _logger;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly SynchronizationContext? _context;
+    private int _suspensions;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScopedNotificationCenter"/> class.
@@ -57,6 +63,11 @@ public sealed class ScopedNotificationCenter : INotificationCenter
     /// <inheritdoc />
     public async Task RefreshAsync(CancellationToken ct = default)
     {
+        if (IsSuspended)
+        {
+            return;
+        }
+
         await _gate.WaitAsync(ct);
         await RunGatedAsync("refresh", DetectAsync, ct);
     }
@@ -64,7 +75,7 @@ public sealed class ScopedNotificationCenter : INotificationCenter
     /// <inheritdoc />
     public async Task<bool> TryRefreshAsync(CancellationToken ct = default)
     {
-        if (!await _gate.WaitAsync(0, ct))
+        if (IsSuspended || !await _gate.WaitAsync(0, ct))
         {
             return false;
         }
@@ -76,6 +87,11 @@ public sealed class ScopedNotificationCenter : INotificationCenter
     /// <inheritdoc />
     public async Task<NotificationListDto?> GetAsync(CancellationToken ct = default)
     {
+        if (IsSuspended)
+        {
+            return null;
+        }
+
         try
         {
             return await Task.Run(
@@ -110,7 +126,7 @@ public sealed class ScopedNotificationCenter : INotificationCenter
     {
         ArgumentNullException.ThrowIfNull(ids);
 
-        if (ids.Count == 0)
+        if (ids.Count == 0 || IsSuspended)
         {
             return;
         }
@@ -129,6 +145,11 @@ public sealed class ScopedNotificationCenter : INotificationCenter
     /// <inheritdoc />
     public async Task DismissAsync(Guid id, CancellationToken ct = default)
     {
+        if (IsSuspended)
+        {
+            return;
+        }
+
         await _gate.WaitAsync(ct);
         await RunGatedAsync(
             "dismiss",
@@ -139,6 +160,26 @@ public sealed class ScopedNotificationCenter : INotificationCenter
             },
             ct);
     }
+
+    /// <inheritdoc />
+    public async Task<IDisposable> SuspendAsync(CancellationToken ct = default)
+    {
+        // Raise the flag first so no NEW operation starts while we wait for the in-flight one.
+        Interlocked.Increment(ref _suspensions);
+        try
+        {
+            await _gate.WaitAsync(ct);
+        }
+        catch
+        {
+            Interlocked.Decrement(ref _suspensions);
+            throw;
+        }
+
+        return new Suspension(this);
+    }
+
+    private bool IsSuspended => Volatile.Read(ref _suspensions) > 0;
 
     private static bool IsCallerCancellation(Exception ex, CancellationToken ct)
         => ex is OperationCanceledException && ct.IsCancellationRequested;
@@ -208,6 +249,24 @@ public sealed class ScopedNotificationCenter : INotificationCenter
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "A notification Changed handler threw.");
+        }
+    }
+
+    private sealed class Suspension(ScopedNotificationCenter owner) : IDisposable
+    {
+        private ScopedNotificationCenter? _owner = owner;
+
+        public void Dispose()
+        {
+            // Idempotent: only the first call lowers the flag and releases the gate.
+            ScopedNotificationCenter? center = Interlocked.Exchange(ref _owner, null);
+            if (center is null)
+            {
+                return;
+            }
+
+            Interlocked.Decrement(ref center._suspensions);
+            center._gate.Release();
         }
     }
 }

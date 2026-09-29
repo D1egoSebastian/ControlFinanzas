@@ -946,4 +946,91 @@ Showing approximate conversions only.
   <data name="ExportExpenseListFileName" xml:space="preserve">
     <value>expenses-{0}</value>
   </data>
+  <data name="BackupSectionTitle" xml:space="preserve">
+    <value>Backup and restore</value>
+  </data>
+  <data name="BackupSectionDescription" xml:space="preserve">
+    <value>Save a copy of all your data to a file, or restore your data from a previous backup. Everything stays on this computer, and backups never include your AI API key.</value>
+  </data>
+  <data name="BackupExportButton" xml:space="preserve">
+    <value>Create backup</value>
+  </data>
+  <data name="BackupRestoreButton" xml:space="preserve">
+    <value>Restore from backup...</value>
+  </data>
+  <data name="BackupExportDialogTitle" xml:space="preserve">
+    <value>Save backup</value>
+  </data>
+  <data name="BackupRestoreDialogTitle" xml:space="preserve">
+    <value>Choose a backup to restore</value>
+  </data>
+  <data name="BackupFileTypeName" xml:space="preserve">
+    <value>Finance backup (ZIP)</value>
+  </data>
+  <data name="BackupWorkingExport" xml:space="preserve">
+    <value>Creating backup...</value>
+  </data>
+  <data name="BackupWorkingInspect" xml:space="preserve">
+    <value>Checking the backup file...</value>
+  </data>
+  <data name="BackupWorkingRestore" xml:space="preserve">
+    <value>Restoring your data...</value>
+  </data>
+  <data name="BackupExportSucceeded" xml:space="preserve">
+    <value>Backup saved: {0}</value>
+  </data>
+  <data name="BackupConfirmTitle" xml:space="preserve">
+    <value>Restore this backup?</value>
+  </data>
+  <data name="BackupConfirmWarning" xml:space="preserve">
+    <value>Restoring REPLACES all the data currently in the app with the contents of this backup. A safety copy of your current data is saved first, but this action cannot be undone from within the app.</value>
+  </data>
+  <data name="BackupConfirmDetailsFormat" xml:space="preserve">
+    <value>Backup created on {0} with app version {1}.</value>
+  </data>
+  <data name="BackupConfirmOlderSchemaNote" xml:space="preserve">
+    <value>This backup comes from an older version. It will be updated automatically the next time the app starts.</value>
+  </data>
+  <data name="BackupConfirmApiKeyLostNote" xml:space="preserve">
+    <value>The AI API key saved on this computer will be lost, because this backup cannot carry it over. You will need to enter it again in Settings.</value>
+  </data>
+  <data name="BackupConfirmButton" xml:space="preserve">
+    <value>Replace my data</value>
+  </data>
+  <data name="BackupCancelButton" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="BackupRestoreSucceeded" xml:space="preserve">
+    <value>Data restored. A safety copy of your previous data was saved as {0} in the backups folder.</value>
+  </data>
+  <data name="BackupRestartRequiredNotice" xml:space="preserve">
+    <value>Restart required: restart the app to load the restored data. Avoid making changes until you do.</value>
+  </data>
+  <data name="BackupRestartNowButton" xml:space="preserve">
+    <value>Restart now</value>
+  </data>
+  <data name="BackupRestartFallback" xml:space="preserve">
+    <value>The app could not restart itself. Close it and open it again to finish the restore.</value>
+  </data>
+  <data name="BackupApiKeyNotRestoredNotice" xml:space="preserve">
+    <value>Your AI API key could not be kept. Enter it again in Settings.</value>
+  </data>
+  <data name="BackupApiKeyKeptNotice" xml:space="preserve">
+    <value>Your AI API key on this computer was kept.</value>
+  </data>
+  <data name="BackupErrorNotABackup" xml:space="preserve">
+    <value>The selected file is not a valid backup of this app.</value>
+  </data>
+  <data name="BackupErrorCorrupt" xml:space="preserve">
+    <value>The backup file is damaged and cannot be restored. Your current data was not changed.</value>
+  </data>
+  <data name="BackupErrorNewerSchema" xml:space="preserve">
+    <value>This backup was created by a newer version (app {0}, schema {1}) than this app (app {2}, schema {3}). Update the app and try again. Your current data was not changed.</value>
+  </data>
+  <data name="BackupErrorIoError" xml:space="preserve">
+    <value>The operation could not be completed because a file could not be read or written. Your current data was not changed.</value>
+  </data>
+  <data name="BackupErrorInsufficientSpace" xml:space="preserve">
+    <value>There is not enough free disk space to complete the operation. Free some space and try again. Your current data was not changed.</value>
+  </data>
 </root>

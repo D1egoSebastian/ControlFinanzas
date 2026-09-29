@@ -1521,4 +1521,149 @@ public class Strings
     /// Gets the localized suggested expense-list file name ({0} = yyyy-MM-dd) (F-018).
     /// </summary>
     public static string ExportExpenseListFileName => ResourceManager.GetString("ExportExpenseListFileName", Culture)!;
+
+    /// <summary>
+    /// Gets the localized Backup section title (F-019).
+    /// </summary>
+    public static string BackupSectionTitle => ResourceManager.GetString("BackupSectionTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized Backup section description (F-019).
+    /// </summary>
+    public static string BackupSectionDescription => ResourceManager.GetString("BackupSectionDescription", Culture)!;
+
+    /// <summary>
+    /// Gets the localized create-backup button label (F-019).
+    /// </summary>
+    public static string BackupExportButton => ResourceManager.GetString("BackupExportButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized restore button label (F-019).
+    /// </summary>
+    public static string BackupRestoreButton => ResourceManager.GetString("BackupRestoreButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized save-backup file dialog title (F-019).
+    /// </summary>
+    public static string BackupExportDialogTitle => ResourceManager.GetString("BackupExportDialogTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized open-backup file dialog title (F-019).
+    /// </summary>
+    public static string BackupRestoreDialogTitle => ResourceManager.GetString("BackupRestoreDialogTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized backup file type name shown in file dialogs (F-019).
+    /// </summary>
+    public static string BackupFileTypeName => ResourceManager.GetString("BackupFileTypeName", Culture)!;
+
+    /// <summary>
+    /// Gets the localized progress text while a backup is created (F-019).
+    /// </summary>
+    public static string BackupWorkingExport => ResourceManager.GetString("BackupWorkingExport", Culture)!;
+
+    /// <summary>
+    /// Gets the localized progress text while a backup file is checked (F-019).
+    /// </summary>
+    public static string BackupWorkingInspect => ResourceManager.GetString("BackupWorkingInspect", Culture)!;
+
+    /// <summary>
+    /// Gets the localized progress text while data is restored (F-019).
+    /// </summary>
+    public static string BackupWorkingRestore => ResourceManager.GetString("BackupWorkingRestore", Culture)!;
+
+    /// <summary>
+    /// Gets the localized export success message ({0} = file name) (F-019).
+    /// </summary>
+    public static string BackupExportSucceeded => ResourceManager.GetString("BackupExportSucceeded", Culture)!;
+
+    /// <summary>
+    /// Gets the localized restore confirmation title (F-019).
+    /// </summary>
+    public static string BackupConfirmTitle => ResourceManager.GetString("BackupConfirmTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized destructive restore warning (F-019).
+    /// </summary>
+    public static string BackupConfirmWarning => ResourceManager.GetString("BackupConfirmWarning", Culture)!;
+
+    /// <summary>
+    /// Gets the localized backup details line ({0} = date, {1} = app version) (F-019).
+    /// </summary>
+    public static string BackupConfirmDetailsFormat => ResourceManager.GetString("BackupConfirmDetailsFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized older-backup note (F-019).
+    /// </summary>
+    public static string BackupConfirmOlderSchemaNote => ResourceManager.GetString("BackupConfirmOlderSchemaNote", Culture)!;
+
+    /// <summary>
+    /// Gets the localized note warning that the local API key will be lost (F-019).
+    /// </summary>
+    public static string BackupConfirmApiKeyLostNote => ResourceManager.GetString("BackupConfirmApiKeyLostNote", Culture)!;
+
+    /// <summary>
+    /// Gets the localized destructive confirm button label (F-019).
+    /// </summary>
+    public static string BackupConfirmButton => ResourceManager.GetString("BackupConfirmButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized cancel button label of the restore confirmation (F-019).
+    /// </summary>
+    public static string BackupCancelButton => ResourceManager.GetString("BackupCancelButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized restore success message ({0} = safety backup file name) (F-019).
+    /// </summary>
+    public static string BackupRestoreSucceeded => ResourceManager.GetString("BackupRestoreSucceeded", Culture)!;
+
+    /// <summary>
+    /// Gets the localized restart-required notice shown after a restore (F-019).
+    /// </summary>
+    public static string BackupRestartRequiredNotice => ResourceManager.GetString("BackupRestartRequiredNotice", Culture)!;
+
+    /// <summary>
+    /// Gets the localized restart button label (F-019).
+    /// </summary>
+    public static string BackupRestartNowButton => ResourceManager.GetString("BackupRestartNowButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized message shown when the automatic restart fails (F-019).
+    /// </summary>
+    public static string BackupRestartFallback => ResourceManager.GetString("BackupRestartFallback", Culture)!;
+
+    /// <summary>
+    /// Gets the localized notice shown when the local API key was lost by a restore (F-019).
+    /// </summary>
+    public static string BackupApiKeyNotRestoredNotice => ResourceManager.GetString("BackupApiKeyNotRestoredNotice", Culture)!;
+
+    /// <summary>
+    /// Gets the localized notice shown when the local API key was carried over (F-019).
+    /// </summary>
+    public static string BackupApiKeyKeptNotice => ResourceManager.GetString("BackupApiKeyKeptNotice", Culture)!;
+
+    /// <summary>
+    /// Gets the localized not-a-backup error message (F-019).
+    /// </summary>
+    public static string BackupErrorNotABackup => ResourceManager.GetString("BackupErrorNotABackup", Culture)!;
+
+    /// <summary>
+    /// Gets the localized corrupt-backup error message (F-019).
+    /// </summary>
+    public static string BackupErrorCorrupt => ResourceManager.GetString("BackupErrorCorrupt", Culture)!;
+
+    /// <summary>
+    /// Gets the localized newer-schema error message ({0} = backup app version, {1} = backup schema, {2} = app version, {3} = app schema) (F-019).
+    /// </summary>
+    public static string BackupErrorNewerSchema => ResourceManager.GetString("BackupErrorNewerSchema", Culture)!;
+
+    /// <summary>
+    /// Gets the localized file I/O error message (F-019).
+    /// </summary>
+    public static string BackupErrorIoError => ResourceManager.GetString("BackupErrorIoError", Culture)!;
+
+    /// <summary>
+    /// Gets the localized insufficient-space error message (F-019).
+    /// </summary>
+    public static string BackupErrorInsufficientSpace => ResourceManager.GetString("BackupErrorInsufficientSpace", Culture)!;
 }

@@ -279,6 +279,7 @@ public static class Bootstrap
         services.AddTransient<InspectBackupUseCase>();
         services.AddTransient<RestoreBackupUseCase>();
         services.AddSingleton<IFileOpenDialog, AvaloniaFileOpenDialog>();
+        services.AddSingleton<IAppRestartService, AppRestartService>();
 
         ServiceProvider tempProvider = services.BuildServiceProvider();
         try

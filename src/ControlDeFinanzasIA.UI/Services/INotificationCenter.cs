@@ -52,4 +52,13 @@ public interface INotificationCenter
     /// <param name="id">Identifier of the notification to dismiss.</param>
     /// <param name="ct">Cancellation token.</param>
     Task DismissAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>
+    /// Waits for the in-flight mutating operation, then turns every database-touching member into
+    /// a no-op until the returned handle is disposed (F-019, DD-7). A restore holds it from
+    /// confirmation until process exit on success and releases it on failure.
+    /// </summary>
+    /// <param name="ct">Cancellation token; cancelling while waiting leaves the center usable.</param>
+    /// <returns>A handle whose disposal (idempotent) resumes the center.</returns>
+    Task<IDisposable> SuspendAsync(CancellationToken ct = default);
 }

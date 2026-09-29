@@ -49,6 +49,17 @@ public sealed class BackupCompositionTests
     }
 
     [Fact]
+    public void AppRestartService_IsTheRealImplementation_AsASingleton()
+    {
+        using ServiceProvider provider = BuildProvider();
+
+        IAppRestartService first = provider.GetRequiredService<IAppRestartService>();
+
+        Assert.IsType<AppRestartService>(first);
+        Assert.Same(first, provider.GetRequiredService<IAppRestartService>());
+    }
+
+    [Fact]
     public void BackupUseCases_ResolveInsideAScope_AsTransients()
     {
         using ServiceProvider provider = BuildProvider();

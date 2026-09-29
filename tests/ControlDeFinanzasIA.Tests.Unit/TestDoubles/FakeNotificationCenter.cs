@@ -12,6 +12,21 @@ public sealed class FakeNotificationCenter : INotificationCenter
     /// <inheritdoc />
     public event EventHandler? Changed;
 
+    /// <summary>Gets every member call in order (for example <c>Suspend</c>, <c>SuspendDisposed</c>), so a test can assert sequencing.</summary>
+    public List<string> CallLog { get; } = new();
+
+    /// <summary>Gets the number of <see cref="SuspendAsync"/> calls.</summary>
+    public int SuspendCalls { get; private set; }
+
+    /// <summary>Gets the number of returned suspension handles that were disposed (once each).</summary>
+    public int SuspensionsDisposed { get; private set; }
+
+    /// <summary>Gets a value indicating whether a returned suspension handle is still undisposed.</summary>
+    public bool IsSuspended => SuspendCalls > SuspensionsDisposed;
+
+    /// <summary>Gets or sets an exception thrown by <see cref="SuspendAsync"/> when set.</summary>
+    public Exception? SuspendException { get; set; }
+
     /// <summary>Gets the ids passed to each <see cref="MarkReadAsync"/> call.</summary>
     public List<IReadOnlyCollection<Guid>> MarkReadCalls { get; } = new();
 
@@ -43,6 +58,7 @@ public sealed class FakeNotificationCenter : INotificationCenter
     public Task RefreshAsync(CancellationToken ct = default)
     {
         RefreshCalls++;
+        CallLog.Add("Refresh");
         return Task.CompletedTask;
     }
 
@@ -50,6 +66,7 @@ public sealed class FakeNotificationCenter : INotificationCenter
     public async Task<bool> TryRefreshAsync(CancellationToken ct = default)
     {
         TryRefreshCalls++;
+        CallLog.Add("TryRefresh");
         if (TryRefreshGate is not null)
         {
             await TryRefreshGate.Task;
@@ -62,6 +79,7 @@ public sealed class FakeNotificationCenter : INotificationCenter
     public Task<NotificationListDto?> GetAsync(CancellationToken ct = default)
     {
         GetCalls++;
+        CallLog.Add("Get");
         return Task.FromResult(ListToReturn);
     }
 
@@ -69,6 +87,7 @@ public sealed class FakeNotificationCenter : INotificationCenter
     public Task MarkReadAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct = default)
     {
         MarkReadCalls.Add(ids.ToArray());
+        CallLog.Add("MarkRead");
         return Task.CompletedTask;
     }
 
@@ -76,11 +95,42 @@ public sealed class FakeNotificationCenter : INotificationCenter
     public Task DismissAsync(Guid id, CancellationToken ct = default)
     {
         DismissCalls.Add(id);
+        CallLog.Add("Dismiss");
         if (RaiseChangedOnDismiss)
         {
             RaiseChanged();
         }
 
         return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task<IDisposable> SuspendAsync(CancellationToken ct = default)
+    {
+        CallLog.Add("Suspend");
+        if (SuspendException is not null)
+        {
+            return Task.FromException<IDisposable>(SuspendException);
+        }
+
+        SuspendCalls++;
+        return Task.FromResult<IDisposable>(new Handle(this));
+    }
+
+    private sealed class Handle(FakeNotificationCenter owner) : IDisposable
+    {
+        private bool _disposed;
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            owner.SuspensionsDisposed++;
+            owner.CallLog.Add("SuspendDisposed");
+        }
     }
 }
