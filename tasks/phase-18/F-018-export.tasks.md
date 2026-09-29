@@ -170,7 +170,7 @@ license banner, and the QuestPDF license is set once inside `AddReportExporters(
 Depends on 3. Goal: `ClosedXmlReportWriter` writes a two-sheet workbook ("Summary" styled, "Data" flat) whose
 "Data" contract is stable for Phase 20.
 
-- [ ] 4.1 Write failing `tests/…Integration/Reports/ClosedXmlReportWriterTests.cs` (round-trip via
+- [x] 4.1 Write failing `tests/…Integration/Reports/ClosedXmlReportWriterTests.cs` (round-trip via
   `new XLWorkbook(ms)`): sheet names are exactly `["Summary","Data"]` in that order (R-6, S-2); the Data header
   row equals `Date, Type, Description, Category, Amount, Currency, AmountDOP` under es-DO labels and under en
   labels (invariant, D8, Reconciliation #5); one Data row per expense and per income (R-6, S-2); `Date` is a
@@ -182,15 +182,15 @@ Depends on 3. Goal: `ClosedXmlReportWriter` writes a two-sheet workbook ("Summar
   empty month still yields two sheets, Data with headers only (R-6, S-7); a description `=1+1` or
   `=HYPERLINK(...)` is stored as text with `HasFormula == false` (D-6); changing the `ReportLabels` strings
   changes Summary text (R-10). Failure from the library returns `Result.Failure`, not an exception (R-14).
-- [ ] 4.2 Create `src/…Infrastructure/Reports/ClosedXmlReportWriter.cs`: `WriteMonthSummaryAsync` per D-6
+- [x] 4.2 Create `src/…Infrastructure/Reports/ClosedXmlReportWriter.cs`: `WriteMonthSummaryAsync` per D-6
   (fixed invariant sheet-name constants; explicit column widths, never `AdjustToContents()`; bold header row,
   frozen panes; numeric cells formatted `#,##0.00`; Data date format `yyyy-mm-dd`; all text assigned as string
   values, never `FormulaA1`); `Task.Run(..., ct)`; exceptions to `Result.Failure("ReportRenderFailed")`.
   `WriteExpenseListAsync` returns a not-yet-implemented failure until S5. Run 4.1 green. (R-4, R-6, R-10,
   R-14)
-- [ ] 4.3 Register `ClosedXmlReportWriter` in `AddReportExporters()` (already declared in D-10); extend
+- [x] 4.3 Register `ClosedXmlReportWriter` in `AddReportExporters()` (already declared in D-10); extend
   `ReportServiceCollectionExtensionsTests` to assert both formats resolve and are distinct. (R-1)
-- [ ] 4.4 Run all four gates (NetArchTest confirms ClosedXML/DocumentFormat.OpenXml types are Infrastructure-only,
+- [x] 4.4 Run all four gates (NetArchTest confirms ClosedXML/DocumentFormat.OpenXml types are Infrastructure-only,
   S-14). All green before opening PR S3. (R-12)
 
 ## 5. Dashboard export UI (S4)

@@ -9,7 +9,7 @@ namespace ControlDeFinanzasIA.Tests.Integration.Reports;
 public sealed class ReportServiceCollectionExtensionsTests
 {
     [Fact]
-    public void AddReportExporters_RegistersPdfWriterWithDistinctFormats()
+    public void AddReportExporters_RegistersPdfAndXlsxWritersWithDistinctFormats()
     {
         var services = new ServiceCollection();
         services.AddReportExporters();
@@ -18,6 +18,8 @@ public sealed class ReportServiceCollectionExtensionsTests
         IReportWriter[] writers = provider.GetServices<IReportWriter>().ToArray();
 
         Assert.Contains(writers, w => w.Format == ReportFormat.Pdf);
+        Assert.Contains(writers, w => w.Format == ReportFormat.Xlsx);
+        Assert.Equal(2, writers.Length);
         Assert.Equal(writers.Length, writers.Select(w => w.Format).Distinct().Count());
     }
 

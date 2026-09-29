@@ -20,6 +20,7 @@ public static class ReportServiceCollectionExtensions
 
         QuestPdfConfiguration.Apply();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IReportWriter, QuestPdfReportWriter>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IReportWriter, ClosedXmlReportWriter>());
 
         return services;
     }
