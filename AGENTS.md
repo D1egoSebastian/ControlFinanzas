@@ -12,10 +12,27 @@ the project state changes, update this file.
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
 - **Status (today):** Phases 0–16 fully archived. Phase 17 (in-app
-  notifications) is next and already mid-apply, concurrently with Phase
-  16's own verify/archive close — check `tasks/phase-17/*.tasks.md`'s
-  checkbox state and `git log --oneline` for its real progress before
-  continuing it; do not assume it is done. Phase 16 (AI savings plan for
+  notifications) is **implemented, pending verify/archive** (all 9 apply
+  slices landed; the `.done.md` rename, verify/archive reports and
+  `docs/roadmap.md` / `docs/AI_HANDOFF.md` updates are the remaining
+  close-out). It adds a shell bell + flyout (unread badge, `9+` above 9,
+  20-row cap, mark-read on open, per-item dismiss, manual refresh) fed by
+  a deterministic `DetectNotificationsUseCase` that runs at startup and
+  after saving settings, reconciling persisted `Notification` rows by a
+  single `DedupKey` string (one `SaveChangesAsync`, 60-day purge, fact
+  refresh on undismissed rows, dismissed rows never recreated). Five
+  kinds: debt installments due/overdue, recurring charges due, budget
+  Near/Exceeded (highest tier only), unacknowledged anomalies, and a
+  periodic digest. The digest (`Off`/`Daily`/`Weekly`, default Weekly) is
+  generated at most once per period via a `yyyy-MM-dd` cursor written only
+  after a successful reconcile, never backfills missed periods, counts
+  from the full sources regardless of per-kind toggles and dismissals, and
+  keeps totals per currency (never summed across currencies). Text is
+  formatted at display time from resx, and the Settings "Notificaciones"
+  section holds the four toggles plus the digest picker. 1700/1700 tests
+  green (1405 unit + 295 integration). See
+  `spec/features/phase-17/F-017-notifications.spec.md`,
+  `tasks/phase-17/`, and `.atl/sdd/f-017p17-notifications/`. Phase 16 (AI savings plan for
   goals) shipped a "Pedir plan con IA" button on every goal row that asks
   the LLM for a short, motivational explanation of the exact deterministic
   figure `SavingsPlanCalculator` (Phase 11, unmodified) already computes.

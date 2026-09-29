@@ -218,4 +218,97 @@ public sealed class NotificationTextFormatterTests
         Assert.Throws<ArgumentNullException>(() => NotificationTextFormatter.Format(null!, _today, CultureInfo.InvariantCulture));
         Assert.Throws<ArgumentNullException>(() => NotificationTextFormatter.Format(dto, _today, null!));
     }
+
+    // --- S7: digest (R-11, D-10, D-12) ---
+
+    private static NotificationDto DigestDto(
+        DigestFrequency frequency,
+        int payments,
+        IReadOnlyList<NotificationCurrencyTotal> totals,
+        int budgets,
+        int anomalies) =>
+        new(
+            Guid.NewGuid(),
+            NotificationKind.Digest,
+            null,
+            _today,
+            string.Empty,
+            null,
+            null,
+            null,
+            null,
+            frequency,
+            payments,
+            budgets,
+            anomalies,
+            totals,
+            false);
+
+    [Theory]
+    [InlineData("es-DO")]
+    [InlineData("en")]
+    public void Digest_Daily_UsesDailyTitleAndJoinsPerCurrencyTotalsWithPlus(string cultureName)
+    {
+        CultureInfo culture = UseCulture(cultureName);
+        NotificationDto dto = DigestDto(
+            DigestFrequency.Daily,
+            payments: 3,
+            totals: [new NotificationCurrencyTotal(Currency.DOP, 2000m), new NotificationCurrencyTotal(Currency.USD, 20m)],
+            budgets: 1,
+            anomalies: 2);
+
+        (string title, string body) = NotificationTextFormatter.Format(dto, _today, culture);
+
+        Assert.Equal(Strings.NotificationDigestDailyTitle, title);
+        string totals = string.Format(culture, "{0:N2} {1}", 2000m, Currency.DOP)
+            + " + "
+            + string.Format(culture, "{0:N2} {1}", 20m, Currency.USD);
+        Assert.Equal(string.Format(culture, Strings.NotificationDigestFormat, 3, totals, 1, 2), body);
+    }
+
+    [Fact]
+    public void Digest_Weekly_UsesWeeklyTitle()
+    {
+        CultureInfo culture = UseCulture("en");
+        NotificationDto dto = DigestDto(
+            DigestFrequency.Weekly, 1, [new NotificationCurrencyTotal(Currency.DOP, 10m)], 0, 0);
+
+        (string title, _) = NotificationTextFormatter.Format(dto, _today, culture);
+
+        Assert.Equal(Strings.NotificationDigestWeeklyTitle, title);
+    }
+
+    [Fact]
+    public void Digest_DailyAndWeeklyTitles_AreDistinct()
+    {
+        UseCulture("en");
+
+        Assert.NotEqual(Strings.NotificationDigestDailyTitle, Strings.NotificationDigestWeeklyTitle);
+    }
+
+    [Fact]
+    public void Digest_NoPayments_ShowsNoTotalsPlaceholderInsteadOfEmptyParentheses()
+    {
+        CultureInfo culture = UseCulture("en");
+        NotificationDto dto = DigestDto(DigestFrequency.Weekly, 0, [], 2, 0);
+
+        (_, string body) = NotificationTextFormatter.Format(dto, _today, culture);
+
+        Assert.Equal(
+            string.Format(culture, Strings.NotificationDigestFormat, 0, Strings.NotificationDigestNoTotals, 2, 0),
+            body);
+    }
+
+    [Fact]
+    public void Digest_TitleIsLocalized()
+    {
+        NotificationDto dto = DigestDto(DigestFrequency.Weekly, 1, [new NotificationCurrencyTotal(Currency.DOP, 10m)], 0, 0);
+
+        CultureInfo es = UseCulture("es-DO");
+        (string esTitle, _) = NotificationTextFormatter.Format(dto, _today, es);
+        CultureInfo en = UseCulture("en");
+        (string enTitle, _) = NotificationTextFormatter.Format(dto, _today, en);
+
+        Assert.NotEqual(esTitle, enTitle);
+    }
 }

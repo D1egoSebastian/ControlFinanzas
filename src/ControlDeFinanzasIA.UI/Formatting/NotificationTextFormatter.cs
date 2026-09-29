@@ -51,12 +51,29 @@ public static class NotificationTextFormatter
             NotificationKind.Anomaly => (
                 Strings.NotificationAnomalyTitle,
                 string.Format(culture, Strings.NotificationAnomalyFormat, label, ShortDate(dto.ReferenceDate, culture))),
-
-            // Digest text arrives with slice S7 (its title/body keys do not exist yet). Digest rows
-            // cannot be created before then, so this is an inert, crash-free placeholder.
+            NotificationKind.Digest => (
+                dto.DigestFrequency == DigestFrequency.Daily
+                    ? Strings.NotificationDigestDailyTitle
+                    : Strings.NotificationDigestWeeklyTitle,
+                string.Format(
+                    culture,
+                    Strings.NotificationDigestFormat,
+                    dto.DigestPaymentCount ?? 0,
+                    DigestTotals(dto, culture),
+                    dto.DigestBudgetCount ?? 0,
+                    dto.DigestAnomalyCount ?? 0)),
             _ => (Strings.NotificationsTitle, string.Empty),
         };
     }
+
+    // Per-currency totals joined with " + " (never summed across currencies, D-12). A digest with
+    // no payments has no totals, so a localized placeholder avoids rendering empty parentheses.
+    private static string DigestTotals(NotificationDto dto, CultureInfo culture)
+        => dto.DigestTotals.Count == 0
+            ? Strings.NotificationDigestNoTotals
+            : string.Join(
+                " + ",
+                dto.DigestTotals.Select(t => string.Format(culture, "{0:N2} {1}", t.Amount, t.Currency)));
 
     private static string Money(NotificationDto dto, CultureInfo culture)
         => string.Format(culture, "{0:N2} {1}", dto.Amount ?? 0m, dto.Currency ?? Currency.DOP);

@@ -60,7 +60,7 @@ public sealed class DetectNotificationsUseCaseTests
     [Fact]
     public async Task ExecuteAsync_DebtDueDisabled_DoesNotReadDebtPaymentSource()
     {
-        var settingsStore = new InMemorySettingsStore();
+        InMemorySettingsStore settingsStore = NewSettingsStore();
         settingsStore.Seed(SettingKeys.NotificationsDebtDueEnabled, "false");
 
         Debt debt = CreateDebt("Préstamo carro", _today.AddDays(1));
@@ -81,7 +81,7 @@ public sealed class DetectNotificationsUseCaseTests
     [Fact]
     public async Task ExecuteAsync_RecurringDueDisabled_DoesNotReadRecurringRuleSource()
     {
-        var settingsStore = new InMemorySettingsStore();
+        InMemorySettingsStore settingsStore = NewSettingsStore();
         settingsStore.Seed(SettingKeys.NotificationsRecurringDueEnabled, "false");
 
         var rules = new FakeRecurringRuleRepository();
@@ -101,7 +101,7 @@ public sealed class DetectNotificationsUseCaseTests
     [Fact]
     public async Task ExecuteAsync_DisabledKindWithExistingUndismissedRows_RemovesThem()
     {
-        var settingsStore = new InMemorySettingsStore();
+        InMemorySettingsStore settingsStore = NewSettingsStore();
         settingsStore.Seed(SettingKeys.NotificationsRecurringDueEnabled, "false");
 
         var notifications = new FakeNotificationRepository();
@@ -278,7 +278,7 @@ public sealed class DetectNotificationsUseCaseTests
     [Fact]
     public async Task ExecuteAsync_BudgetTogglesOff_DoesNotReadBudgetsAndRemovesExistingBudgetRows()
     {
-        var settingsStore = new InMemorySettingsStore();
+        InMemorySettingsStore settingsStore = NewSettingsStore();
         settingsStore.Seed(SettingKeys.NotificationsBudgetEnabled, "false");
 
         var budgets = new FakeBudgetRepository();
@@ -300,7 +300,7 @@ public sealed class DetectNotificationsUseCaseTests
     [Fact]
     public async Task ExecuteAsync_AnomalyToggleOff_DoesNotReadAlertsAndRemovesExistingAnomalyRows()
     {
-        var settingsStore = new InMemorySettingsStore();
+        InMemorySettingsStore settingsStore = NewSettingsStore();
         settingsStore.Seed(SettingKeys.NotificationsAnomalyEnabled, "false");
 
         var alerts = new TrackingAnomalyAlertRepository(new FakeAnomalyAlertRepository(), new ConcurrencyGuard());
@@ -430,6 +430,424 @@ public sealed class DetectNotificationsUseCaseTests
         Assert.True(categories.GetAllCallCount > 0);
     }
 
+    // --- S7: digest (R-13, D-5, D-12, S-9) ---
+
+    private static readonly DateOnly _thisMonday = new(2026, 9, 21);
+
+    private static InMemorySettingsStore NewSettingsStore()
+    {
+        // Digest defaults to Weekly with no cursor (always due); non-digest tests opt out.
+        var store = new InMemorySettingsStore();
+        store.Seed(SettingKeys.NotificationsDigestFrequency, nameof(DigestFrequency.Off));
+        return store;
+    }
+
+    private static InMemorySettingsStore DigestSettings(DigestFrequency frequency, string? cursor = null)
+    {
+        InMemorySettingsStore store = NewSettingsStore();
+        store.Seed(SettingKeys.NotificationsDigestFrequency, frequency.ToString());
+        if (cursor is not null)
+        {
+            store.Seed(SettingKeys.NotificationsDigestLastPeriodStart, cursor);
+        }
+
+        return store;
+    }
+
+    private static Task<string?> ReadCursorAsync(InMemorySettingsStore store)
+        => store.GetStringAsync(SettingKeys.NotificationsDigestLastPeriodStart);
+
+    private static void SeedDebtPayment(
+        FakeDebtRepository debts, FakeDebtPaymentRepository payments, string description, DateOnly scheduledDate)
+    {
+        Debt debt = CreateDebt(description, scheduledDate);
+        debts.Seed(debt);
+        payments.SeedRange(new DebtScheduleGenerator().Generate(debt));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WeeklyWithFiveWeekStaleCursor_CreatesExactlyOneDigestAndJumpsCursorToThisMonday()
+    {
+        InMemorySettingsStore settings = DigestSettings(DigestFrequency.Weekly, cursor: "2026-08-17");
+        var debts = new FakeDebtRepository();
+        var debtPayments = new FakeDebtPaymentRepository();
+        var notifications = new FakeNotificationRepository();
+        SeedDebtPayment(debts, debtPayments, "Prestamo carro", _today.AddDays(2));
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications,
+            debtPaymentRepository: debtPayments,
+            debtRepository: debts,
+            settingsStore: settings);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Notification digest = Assert.Single(notifications.Notifications, n => n.Kind == NotificationKind.Digest);
+        Assert.Equal(_thisMonday, digest.ReferenceDate);
+        Assert.Equal(NotificationKeys.ForDigest(DigestFrequency.Weekly, _thisMonday), digest.DedupKey);
+        Assert.Equal("2026-09-21", await ReadCursorAsync(settings));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DigestDue_SummarizesCountsAndPerCurrencyTotalsOrderedByCurrency()
+    {
+        InMemorySettingsStore settings = DigestSettings(DigestFrequency.Weekly);
+        var debts = new FakeDebtRepository();
+        var debtPayments = new FakeDebtPaymentRepository();
+        var rules = new FakeRecurringRuleRepository();
+        var budgets = new FakeBudgetRepository();
+        var expenses = new FakeExpenseRepository();
+        var categories = new FakeCategoryRepository();
+        var alerts = new FakeAnomalyAlertRepository();
+        var notifications = new FakeNotificationRepository();
+
+        SeedDebtPayment(debts, debtPayments, "Prestamo carro", _today.AddDays(2));
+        rules.Seed(CreateRule("Netflix", _today.AddDays(1)));
+        rules.Seed(CreateRule("Spotify USD", _today.AddDays(3), 20m, Currency.USD));
+
+        var categoryId = Guid.NewGuid();
+        categories.SetCategories([new Category { Id = categoryId, Name = "Comida" }]);
+        budgets.Seed(Budget.Create(_today.Year, _today.Month, categoryId, Money.Create(1000m, Currency.DOP)));
+        expenses.CategoryNames[categoryId] = "Comida";
+        await expenses.AddAsync(CreateExpense(categoryId, 1200m));
+
+        // One unacknowledged alert this month, one from a previous month (not counted).
+        alerts.Seed(AnomalyAlert.Create(
+            Guid.NewGuid(), categoryId, _today.AddDays(-1), AnomalySeverity.Warning, "Gasto inusual", _fixedCreatedAt));
+        alerts.Seed(AnomalyAlert.Create(
+            Guid.NewGuid(), categoryId, _today.AddDays(-40), AnomalySeverity.Warning, "Gasto inusual", _fixedCreatedAt));
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications,
+            debtPaymentRepository: debtPayments,
+            debtRepository: debts,
+            recurringRuleRepository: rules,
+            budgetRepository: budgets,
+            expenseRepository: expenses,
+            categoryRepository: categories,
+            anomalyAlertRepository: alerts,
+            settingsStore: settings);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Notification digest = Assert.Single(notifications.Notifications, n => n.Kind == NotificationKind.Digest);
+        Assert.Equal(DigestFrequency.Weekly, digest.DigestFrequency);
+        Assert.Equal(3, digest.DigestPaymentCount);
+        Assert.Equal(1, digest.DigestBudgetCount);
+        Assert.Equal(1, digest.DigestAnomalyCount);
+        Assert.Equal(
+            new[]
+            {
+                new NotificationCurrencyTotal(Currency.DOP, 2000m),
+                new NotificationCurrencyTotal(Currency.USD, 20m),
+            },
+            digest.DigestTotals);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DigestDue_IgnoresPerKindTogglesAndExistingDismissals()
+    {
+        InMemorySettingsStore settings = DigestSettings(DigestFrequency.Weekly);
+        settings.Seed(SettingKeys.NotificationsDebtDueEnabled, "false");
+        settings.Seed(SettingKeys.NotificationsRecurringDueEnabled, "false");
+        settings.Seed(SettingKeys.NotificationsBudgetEnabled, "false");
+        settings.Seed(SettingKeys.NotificationsAnomalyEnabled, "false");
+
+        var debts = new FakeDebtRepository();
+        var debtPayments = new FakeDebtPaymentRepository();
+        var rules = new FakeRecurringRuleRepository();
+        var alerts = new FakeAnomalyAlertRepository();
+        var notifications = new FakeNotificationRepository();
+
+        SeedDebtPayment(debts, debtPayments, "Prestamo carro", _today.AddDays(2));
+        rules.Seed(CreateRule("Netflix", _today.AddDays(1)));
+        var alert = AnomalyAlert.Create(
+            Guid.NewGuid(), Guid.NewGuid(), _today.AddDays(-1), AnomalySeverity.Info, "Gasto inusual", _fixedCreatedAt);
+        alerts.Seed(alert);
+
+        // The anomaly notice was dismissed earlier; the digest must still count the alert.
+        var dismissedAnomaly = Notification.ForAnomaly(alert.Id, alert.Date, "Comida", _fixedCreatedAt);
+        dismissedAnomaly.Dismiss(_fixedCreatedAt);
+        notifications.Seed(dismissedAnomaly);
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications,
+            debtPaymentRepository: debtPayments,
+            debtRepository: debts,
+            recurringRuleRepository: rules,
+            anomalyAlertRepository: alerts,
+            settingsStore: settings);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Notification digest = Assert.Single(notifications.Notifications, n => n.Kind == NotificationKind.Digest);
+        Assert.Equal(2, digest.DigestPaymentCount);
+        Assert.Equal(1, digest.DigestAnomalyCount);
+
+        // No per-kind notice is created for a silenced kind.
+        Assert.DoesNotContain(notifications.Notifications, n => n.Kind == NotificationKind.DebtInstallmentDue);
+        Assert.DoesNotContain(notifications.Notifications, n => n.Kind == NotificationKind.RecurringChargeDue);
+        Assert.Contains(notifications.Notifications, n => n.Id == dismissedAnomaly.Id && n.IsDismissed);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DigestDueWithDebtToggleOff_StillReadsDebtPaymentSourceOnce()
+    {
+        InMemorySettingsStore settings = DigestSettings(DigestFrequency.Weekly);
+        settings.Seed(SettingKeys.NotificationsDebtDueEnabled, "false");
+        var trackingPayments = new TrackingDebtPaymentRepository(new FakeDebtPaymentRepository(), new ConcurrencyGuard());
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            debtPaymentRepository: trackingPayments, settingsStore: settings);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, trackingPayments.GetPendingByDateRangeCallCount);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WeeklyDigest_CountsOnlyPaymentsFromTodayThroughSixDaysAhead()
+    {
+        InMemorySettingsStore settings = DigestSettings(DigestFrequency.Weekly);
+        var debts = new FakeDebtRepository();
+        var debtPayments = new FakeDebtPaymentRepository();
+        var notifications = new FakeNotificationRepository();
+
+        SeedDebtPayment(debts, debtPayments, "Vencida", _today.AddDays(-1));
+        SeedDebtPayment(debts, debtPayments, "Hoy", _today);
+        SeedDebtPayment(debts, debtPayments, "Limite", _today.AddDays(6));
+        SeedDebtPayment(debts, debtPayments, "Fuera", _today.AddDays(7));
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications,
+            debtPaymentRepository: debtPayments,
+            debtRepository: debts,
+            settingsStore: settings);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Notification digest = Assert.Single(notifications.Notifications, n => n.Kind == NotificationKind.Digest);
+        Assert.Equal(2, digest.DigestPaymentCount);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DailyDigest_CountsOnlyPaymentsDueToday()
+    {
+        InMemorySettingsStore settings = DigestSettings(DigestFrequency.Daily, cursor: "2026-09-25");
+        var debts = new FakeDebtRepository();
+        var debtPayments = new FakeDebtPaymentRepository();
+        var notifications = new FakeNotificationRepository();
+
+        SeedDebtPayment(debts, debtPayments, "Hoy", _today);
+        SeedDebtPayment(debts, debtPayments, "Manana", _today.AddDays(1));
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications,
+            debtPaymentRepository: debtPayments,
+            debtRepository: debts,
+            settingsStore: settings);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Notification digest = Assert.Single(notifications.Notifications, n => n.Kind == NotificationKind.Digest);
+        Assert.Equal(DigestFrequency.Daily, digest.DigestFrequency);
+        Assert.Equal(_today, digest.ReferenceDate);
+        Assert.Equal(1, digest.DigestPaymentCount);
+        Assert.Equal("2026-09-26", await ReadCursorAsync(settings));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DigestDueWithAllZeroCounts_CreatesNoRowButAdvancesCursor()
+    {
+        InMemorySettingsStore settings = DigestSettings(DigestFrequency.Weekly, cursor: "2026-09-14");
+        var notifications = new FakeNotificationRepository();
+
+        DetectNotificationsUseCase useCase = CreateUseCase(notificationRepository: notifications, settingsStore: settings);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.DoesNotContain(notifications.Notifications, n => n.Kind == NotificationKind.Digest);
+        Assert.Equal(0, notifications.ApplyReconciliationCallCount);
+        Assert.Equal("2026-09-21", await ReadCursorAsync(settings));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CursorAlreadyAtCurrentPeriod_CreatesNoDigestAndDoesNotReadDisabledSources()
+    {
+        InMemorySettingsStore settings = DigestSettings(DigestFrequency.Weekly, cursor: "2026-09-21");
+        settings.Seed(SettingKeys.NotificationsDebtDueEnabled, "false");
+        var debts = new FakeDebtRepository();
+        var debtPayments = new FakeDebtPaymentRepository();
+        SeedDebtPayment(debts, debtPayments, "Prestamo carro", _today.AddDays(2));
+        var trackingPayments = new TrackingDebtPaymentRepository(debtPayments, new ConcurrencyGuard());
+        var notifications = new FakeNotificationRepository();
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications, debtPaymentRepository: trackingPayments, settingsStore: settings);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.DoesNotContain(notifications.Notifications, n => n.Kind == NotificationKind.Digest);
+        Assert.Equal(0, trackingPayments.GetPendingByDateRangeCallCount);
+        Assert.Equal("2026-09-21", await ReadCursorAsync(settings));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WeeklyToDailyLaterInTheWeek_CreatesADailyDigest()
+    {
+        // The Weekly digest already ran this Monday; switching to Daily compares the cursor to today.
+        InMemorySettingsStore settings = DigestSettings(DigestFrequency.Daily, cursor: "2026-09-21");
+        var debts = new FakeDebtRepository();
+        var debtPayments = new FakeDebtPaymentRepository();
+        var notifications = new FakeNotificationRepository();
+        SeedDebtPayment(debts, debtPayments, "Hoy", _today);
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications,
+            debtPaymentRepository: debtPayments,
+            debtRepository: debts,
+            settingsStore: settings);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Notification digest = Assert.Single(notifications.Notifications, n => n.Kind == NotificationKind.Digest);
+        Assert.Equal(DigestFrequency.Daily, digest.DigestFrequency);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DailyToWeeklyAfterMonday_WaitsForNextMonday()
+    {
+        InMemorySettingsStore settings = DigestSettings(DigestFrequency.Weekly, cursor: "2026-09-26");
+        var debts = new FakeDebtRepository();
+        var debtPayments = new FakeDebtPaymentRepository();
+        var notifications = new FakeNotificationRepository();
+        SeedDebtPayment(debts, debtPayments, "Hoy", _today);
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications,
+            debtPaymentRepository: debtPayments,
+            debtRepository: debts,
+            settingsStore: settings);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.DoesNotContain(notifications.Notifications, n => n.Kind == NotificationKind.Digest);
+        Assert.Equal("2026-09-26", await ReadCursorAsync(settings));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NewDigest_RemovesOlderUndismissedDigestAndKeepsDismissedOne()
+    {
+        InMemorySettingsStore settings = DigestSettings(DigestFrequency.Weekly, cursor: "2026-09-14");
+        var debts = new FakeDebtRepository();
+        var debtPayments = new FakeDebtPaymentRepository();
+        var notifications = new FakeNotificationRepository();
+        SeedDebtPayment(debts, debtPayments, "Prestamo carro", _today.AddDays(2));
+
+        var olderUndismissed = Notification.ForDigest(
+            DigestFrequency.Weekly, new DateOnly(2026, 9, 14), 1, [], 0, 0, _fixedCreatedAt);
+        var olderDismissed = Notification.ForDigest(
+            DigestFrequency.Weekly, new DateOnly(2026, 9, 7), 1, [], 0, 0, _fixedCreatedAt);
+        olderDismissed.Dismiss(_fixedCreatedAt);
+        notifications.Seed(olderUndismissed);
+        notifications.Seed(olderDismissed);
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications,
+            debtPaymentRepository: debtPayments,
+            debtRepository: debts,
+            settingsStore: settings);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.DoesNotContain(notifications.Notifications, n => n.Id == olderUndismissed.Id);
+        Assert.Contains(notifications.Notifications, n => n.Id == olderDismissed.Id);
+        Notification current = Assert.Single(
+            notifications.Notifications, n => n.Kind == NotificationKind.Digest && !n.IsDismissed);
+        Assert.Equal(_thisMonday, current.ReferenceDate);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DigestOff_RemovesUndismissedDigestAndLeavesCursorUntouched()
+    {
+        InMemorySettingsStore settings = DigestSettings(DigestFrequency.Off);
+        var notifications = new FakeNotificationRepository();
+        var existing = Notification.ForDigest(
+            DigestFrequency.Weekly, _thisMonday, 1, [], 0, 0, _fixedCreatedAt);
+        notifications.Seed(existing);
+
+        DetectNotificationsUseCase useCase = CreateUseCase(notificationRepository: notifications, settingsStore: settings);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.DoesNotContain(notifications.Notifications, n => n.Id == existing.Id);
+        Assert.Null(await ReadCursorAsync(settings));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReconcileSaveFailsWhileDigestDue_DoesNotAdvanceCursor()
+    {
+        InMemorySettingsStore settings = DigestSettings(DigestFrequency.Weekly, cursor: "2026-09-14");
+        var debts = new FakeDebtRepository();
+        var debtPayments = new FakeDebtPaymentRepository();
+        var notifications = new FakeNotificationRepository
+        {
+            ApplyReconciliationResult = Result.Failure("Conflict", "Unique index violation."),
+        };
+        SeedDebtPayment(debts, debtPayments, "Prestamo carro", _today.AddDays(2));
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            notificationRepository: notifications,
+            debtPaymentRepository: debtPayments,
+            debtRepository: debts,
+            settingsStore: settings);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("2026-09-14", await ReadCursorAsync(settings));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DigestDueWithAllSourcesTracked_ReadsSequentiallyNeverOverlapping()
+    {
+        var guard = new ConcurrencyGuard();
+        InMemorySettingsStore settings = DigestSettings(DigestFrequency.Weekly);
+        settings.Seed(SettingKeys.NotificationsDebtDueEnabled, "false");
+        settings.Seed(SettingKeys.NotificationsRecurringDueEnabled, "false");
+        settings.Seed(SettingKeys.NotificationsAnomalyEnabled, "false");
+
+        var trackingPayments = new TrackingDebtPaymentRepository(new FakeDebtPaymentRepository(), guard);
+        var trackingRules = new TrackingRecurringRuleRepository(new FakeRecurringRuleRepository(), guard);
+        var trackingAlerts = new TrackingAnomalyAlertRepository(new FakeAnomalyAlertRepository(), guard);
+
+        DetectNotificationsUseCase useCase = CreateUseCase(
+            debtPaymentRepository: trackingPayments,
+            recurringRuleRepository: trackingRules,
+            anomalyAlertRepository: trackingAlerts,
+            settingsStore: settings);
+
+        Result result = await useCase.ExecuteAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.False(guard.OverlapDetected);
+        Assert.Equal(1, trackingPayments.GetPendingByDateRangeCallCount);
+        Assert.Equal(1, trackingRules.GetAllCallCount);
+        Assert.Equal(1, trackingAlerts.GetAllCallCount);
+    }
+
     private static DetectNotificationsUseCase CreateUseCase(
         INotificationRepository? notificationRepository = null,
         IDebtPaymentRepository? debtPaymentRepository = null,
@@ -458,7 +876,7 @@ public sealed class DetectNotificationsUseCaseTests
             budgetVsActual,
             anomalyAlertRepository ?? new FakeAnomalyAlertRepository(),
             categories,
-            settingsStore ?? new InMemorySettingsStore(),
+            settingsStore ?? NewSettingsStore(),
             new FakeClock { Today = _today, UtcNow = _fixedCreatedAt },
             logger ?? new RecordingLogger<DetectNotificationsUseCase>());
     }
@@ -482,11 +900,12 @@ public sealed class DetectNotificationsUseCaseTests
             frequency: nameof(DebtFrequency.Monthly),
             startDate: scheduledDate);
 
-    private static RecurringRule CreateRule(string name, DateOnly nextGenerationDate)
+    private static RecurringRule CreateRule(
+        string name, DateOnly nextGenerationDate, decimal amount = 500m, Currency currency = Currency.DOP)
         => RecurringRule.Create(
             name,
-            Money.Create(500m, Currency.DOP),
-            Currency.DOP,
+            Money.Create(amount, currency),
+            currency,
             "Monthly",
             startDate: nextGenerationDate,
             endDate: null,

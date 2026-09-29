@@ -1218,6 +1218,26 @@ public class Strings
     public static string NotificationDateInDaysFormat => ResourceManager.GetString("NotificationDateInDaysFormat", Culture)!;
 
     /// <summary>
+    /// Gets the localized title of a daily digest notification (F-017, R-13, D-12).
+    /// </summary>
+    public static string NotificationDigestDailyTitle => ResourceManager.GetString("NotificationDigestDailyTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title of a weekly digest notification (F-017, R-13, D-12).
+    /// </summary>
+    public static string NotificationDigestWeeklyTitle => ResourceManager.GetString("NotificationDigestWeeklyTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized digest body format: payments, per-currency totals, budgets, anomalies (F-017, D-10, D-12).
+    /// </summary>
+    public static string NotificationDigestFormat => ResourceManager.GetString("NotificationDigestFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized placeholder shown in place of the per-currency totals when a digest has no payments (F-017, D-12).
+    /// </summary>
+    public static string NotificationDigestNoTotals => ResourceManager.GetString("NotificationDigestNoTotals", Culture)!;
+
+    /// <summary>
     /// Gets the localized title of the Notificaciones section in Settings (F-017, R-17, D-13).
     /// </summary>
     public static string SettingsNotificationsTitle => ResourceManager.GetString("SettingsNotificationsTitle", Culture)!;

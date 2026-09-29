@@ -1,6 +1,8 @@
+using System.Globalization;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Application.Notifications;
+using ControlDeFinanzasIA.Application.Settings;
 using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
 using ControlDeFinanzasIA.Domain.Alerts;
 using ControlDeFinanzasIA.Domain.Catalog;
@@ -13,14 +15,14 @@ using Microsoft.Extensions.Logging;
 namespace ControlDeFinanzasIA.Application.UseCases.Notifications.DetectNotifications;
 
 /// <summary>
-/// Use case que detecta y reconcilia avisos (F-017, slices S3-S4, D-5):
+/// Use case que detecta y reconcilia avisos (F-017, slices S3-S4 y S7, D-5):
 /// cuotas de deuda próximas o vencidas
 /// (<see cref="NotificationKind.DebtInstallmentDue"/>), cargos recurrentes
 /// próximos a generarse (<see cref="NotificationKind.RecurringChargeDue"/>),
 /// presupuestos en Near/Exceeded del mes actual
-/// (<see cref="NotificationKind.BudgetThreshold"/>) y anomalías sin
-/// reconocer (<see cref="NotificationKind.Anomaly"/>). El tipo
-/// <c>Digest</c> se cablea en el slice S7.
+/// (<see cref="NotificationKind.BudgetThreshold"/>), anomalías sin
+/// reconocer (<see cref="NotificationKind.Anomaly"/>) y, una vez por período,
+/// el resumen periódico (<see cref="NotificationKind.Digest"/>, D-12).
 /// </summary>
 /// <remarks>
 /// Sin dependencia de <c>DetectAnomaliesUseCase</c> ni de ningún cliente
@@ -104,30 +106,69 @@ public sealed class DetectNotificationsUseCase
             .GetAllAsync(ct)
             .ConfigureAwait(false);
 
+        // Resumen periódico (D-5 paso 3, D-12): vence cuando el cursor está atrás del inicio
+        // del período actual. Una frecuencia Off nunca vence y no toca el cursor.
+        DigestFrequency digestFrequency = settings.Digest;
+        DateOnly periodStart = default;
+        bool digestDue = false;
+
+        if (digestFrequency != DigestFrequency.Off)
+        {
+            periodStart = DigestPeriod.Start(digestFrequency, today);
+            string? rawCursor = await _settingsStore
+                .GetStringAsync(SettingKeys.NotificationsDigestLastPeriodStart, defaultValue: null, ct)
+                .ConfigureAwait(false);
+            DateOnly? cursor = NotificationSettingsReader.ParseCursor(rawCursor);
+            digestDue = cursor is null || cursor.Value < periodStart;
+        }
+
         var candidates = new List<Notification>();
 
-        if (settings.DebtDue)
+        // Cuando el resumen vence, las cuatro fuentes se leen completas aunque su toggle
+        // esté apagado: el resumen tiene su propio interruptor (Reconciliation #8).
+        IReadOnlyList<DebtPayment> digestPayments = [];
+        IReadOnlyList<RecurringRule> digestRules = [];
+        IReadOnlyList<BudgetVsActualLine> digestBudgetLines = [];
+        IReadOnlyList<AnomalyAlert> digestAlerts = [];
+
+        if (settings.DebtDue || digestDue)
         {
+            int horizonDays = NotificationRules.DueHorizonDays;
+            if (digestDue)
+            {
+                int digestHorizonDays = DigestPeriod.WindowEnd(digestFrequency, today).DayNumber - today.DayNumber;
+                horizonDays = Math.Max(horizonDays, digestHorizonDays);
+            }
+
             var window = DateRange.Create(
                 today.AddDays(-NotificationRules.OverdueLookbackDays),
-                today.AddDays(NotificationRules.DueHorizonDays));
+                today.AddDays(horizonDays));
 
             IReadOnlyList<DebtPayment> payments = await _debtPaymentRepository
                 .GetPendingByDateRangeAsync(window, ct)
                 .ConfigureAwait(false);
-            IReadOnlyList<Debt> debts = await _debtRepository.GetAllAsync(ct).ConfigureAwait(false);
-            var debtLabels = debts.ToDictionary(d => d.Id, d => d.Description);
+            digestPayments = payments;
 
-            candidates.AddRange(NotificationRules.DebtInstallments(payments, debtLabels, today, now));
+            if (settings.DebtDue)
+            {
+                IReadOnlyList<Debt> debts = await _debtRepository.GetAllAsync(ct).ConfigureAwait(false);
+                var debtLabels = debts.ToDictionary(d => d.Id, d => d.Description);
+
+                candidates.AddRange(NotificationRules.DebtInstallments(payments, debtLabels, today, now));
+            }
         }
 
-        if (settings.RecurringDue)
+        if (settings.RecurringDue || digestDue)
         {
             IReadOnlyList<RecurringRule> rules = await _recurringRuleRepository
                 .GetAllAsync(ct)
                 .ConfigureAwait(false);
+            digestRules = rules;
 
-            candidates.AddRange(NotificationRules.RecurringCharges(rules, today, now));
+            if (settings.RecurringDue)
+            {
+                candidates.AddRange(NotificationRules.RecurringCharges(rules, today, now));
+            }
         }
 
         // Deuda, recurrentes y anomalías se evalúan siempre: un toggle apagado
@@ -141,9 +182,9 @@ public sealed class DetectNotificationsUseCase
         };
         var protectedKeys = new HashSet<string>(StringComparer.Ordinal);
 
-        bool budgetsEvaluable = true;
+        bool budgetReadFailed = false;
 
-        if (settings.Budget)
+        if (settings.Budget || digestDue)
         {
             DateOnly monthStart = MonthPeriod.Anchor(today);
             Result budgetResult = await _budgetVsActualQuery
@@ -152,22 +193,27 @@ public sealed class DetectNotificationsUseCase
 
             if (budgetResult.IsSuccess && budgetResult.Value is BudgetVsActualResult budgetVsActual)
             {
-                BudgetNotificationOutcome outcome = NotificationRules.Budgets(budgetVsActual.Lines, monthStart, now);
-                candidates.AddRange(outcome.Candidates);
+                digestBudgetLines = budgetVsActual.Lines;
 
-                // "No se puede evaluar" (tasa faltante) no es "ya no califica":
-                // se protegen ambas claves de nivel del presupuesto indeterminado.
-                foreach (Guid unknownBudgetId in outcome.UnknownBudgetIds)
+                if (settings.Budget)
                 {
-                    protectedKeys.Add(NotificationKeys.ForBudget(unknownBudgetId, monthStart, NotificationTier.Near));
-                    protectedKeys.Add(NotificationKeys.ForBudget(unknownBudgetId, monthStart, NotificationTier.Exceeded));
+                    BudgetNotificationOutcome outcome = NotificationRules.Budgets(budgetVsActual.Lines, monthStart, now);
+                    candidates.AddRange(outcome.Candidates);
+
+                    // "No se puede evaluar" (tasa faltante) no es "ya no califica":
+                    // se protegen ambas claves de nivel del presupuesto indeterminado.
+                    foreach (Guid unknownBudgetId in outcome.UnknownBudgetIds)
+                    {
+                        protectedKeys.Add(NotificationKeys.ForBudget(unknownBudgetId, monthStart, NotificationTier.Near));
+                        protectedKeys.Add(NotificationKeys.ForBudget(unknownBudgetId, monthStart, NotificationTier.Exceeded));
+                    }
                 }
             }
             else
             {
                 // Sin lectura fiable no se puede afirmar que un aviso dejó de
                 // calificar: se omite el kind y se conservan sus filas.
-                budgetsEvaluable = false;
+                budgetReadFailed = true;
                 _logger.LogWarning(
                     "Budget notification source could not be read: {ErrorCode} {ErrorMessage}",
                     budgetResult.Error?.Code,
@@ -175,26 +221,53 @@ public sealed class DetectNotificationsUseCase
             }
         }
 
-        if (budgetsEvaluable)
+        if (!(settings.Budget && budgetReadFailed))
         {
             evaluatedKinds.Add(NotificationKind.BudgetThreshold);
         }
 
-        if (settings.Anomaly)
+        if (settings.Anomaly || digestDue)
         {
             IReadOnlyList<AnomalyAlert> alerts = await _anomalyAlertRepository
                 .GetAllAsync(ct)
                 .ConfigureAwait(false);
-            IReadOnlyList<Category> categories = await _categoryRepository
-                .GetAllAsync(ct)
-                .ConfigureAwait(false);
-            var categoryNames = categories.ToDictionary(c => c.Id, c => c.Name);
+            digestAlerts = alerts;
 
-            candidates.AddRange(NotificationRules.Anomalies(alerts, categoryNames, today, now));
+            if (settings.Anomaly)
+            {
+                IReadOnlyList<Category> categories = await _categoryRepository
+                    .GetAllAsync(ct)
+                    .ConfigureAwait(false);
+                var categoryNames = categories.ToDictionary(c => c.Id, c => c.Name);
+
+                candidates.AddRange(NotificationRules.Anomalies(alerts, categoryNames, today, now));
+            }
+        }
+
+        // Un resumen se compone solo con lecturas completas: si presupuestos no se pudo leer,
+        // el resumen se omite esta corrida (sin cursor) y se reintenta en la siguiente.
+        bool digestComputable = digestDue && !budgetReadFailed;
+
+        if (digestComputable)
+        {
+            Notification? digest = DigestComposer.Compose(
+                digestFrequency, today, now, digestPayments, digestRules, digestBudgetLines, digestAlerts);
+
+            if (digest is not null)
+            {
+                candidates.Add(digest);
+            }
+        }
+
+        // Digest se evalúa cuando vence (cero candidatos si todos los conteos son cero) o cuando
+        // la frecuencia es Off (sus filas no descartadas se eliminan).
+        if (digestComputable || digestFrequency == DigestFrequency.Off)
+        {
+            evaluatedKinds.Add(NotificationKind.Digest);
         }
 
         NotificationReconciliationPlan plan = NotificationReconciler.Plan(
-            existing, candidates, evaluatedKinds, protectedKeys, today, digestDue: false);
+            existing, candidates, evaluatedKinds, protectedKeys, today, digestDue: digestComputable);
 
         if (!plan.IsEmpty)
         {
@@ -212,6 +285,27 @@ public sealed class DetectNotificationsUseCase
                 return Result.Failure(
                     "NotificationReconcileConflict",
                     applyResult.Error?.Message ?? "Notification reconciliation failed.");
+            }
+        }
+
+        if (digestComputable)
+        {
+            // El cursor solo avanza tras una reconciliación exitosa y aun con todos los conteos en
+            // cero (R-13). Si la escritura falla, la próxima corrida replanea y el DedupKey evita
+            // duplicar la fila.
+            Result cursorResult = await _settingsStore
+                .SetAsync(
+                    SettingKeys.NotificationsDigestLastPeriodStart,
+                    periodStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    ct)
+                .ConfigureAwait(false);
+
+            if (!cursorResult.IsSuccess)
+            {
+                _logger.LogWarning(
+                    "Digest cursor could not be persisted: {ErrorCode} {ErrorMessage}",
+                    cursorResult.Error?.Code,
+                    cursorResult.Error?.Message);
             }
         }
 

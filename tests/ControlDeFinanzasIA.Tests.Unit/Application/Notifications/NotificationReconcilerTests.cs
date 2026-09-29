@@ -364,6 +364,129 @@ public sealed class NotificationReconcilerTests
         Assert.Equal(originalCreatedAt, existingRow.CreatedAt);
     }
 
+    // --- S7: digest branch (R-13, D-4, D-12) ---
+
+    private static readonly IReadOnlySet<NotificationKind> _digestKindOnly =
+        new HashSet<NotificationKind> { NotificationKind.Digest };
+
+    [Fact]
+    public void Plan_NewDigestCandidate_RemovesOlderUndismissedDigest()
+    {
+        Notification older = CreateDigest(new DateOnly(2026, 9, 14));
+        Notification candidate = CreateDigest(new DateOnly(2026, 9, 21));
+
+        NotificationReconciliationPlan plan = NotificationReconciler.Plan(
+            existing: [older],
+            candidates: [candidate],
+            evaluatedKinds: _digestKindOnly,
+            protectedKeys: _noProtectedKeys,
+            today: _today,
+            digestDue: true);
+
+        Assert.Single(plan.ToAdd);
+        Assert.Same(candidate, plan.ToAdd[0]);
+        Assert.Equal([older.Id], plan.ToRemove);
+    }
+
+    [Fact]
+    public void Plan_NewDigestCandidate_RemovesOlderDigestEvenWhenDigestKindIsNotListedAsEvaluated()
+    {
+        Notification older = CreateDigest(new DateOnly(2026, 9, 14));
+        Notification candidate = CreateDigest(new DateOnly(2026, 9, 21));
+
+        NotificationReconciliationPlan plan = NotificationReconciler.Plan(
+            existing: [older],
+            candidates: [candidate],
+            evaluatedKinds: _debtKindOnly,
+            protectedKeys: _noProtectedKeys,
+            today: _today,
+            digestDue: true);
+
+        Assert.Single(plan.ToAdd);
+        Assert.Equal([older.Id], plan.ToRemove);
+    }
+
+    [Fact]
+    public void Plan_NewDigestCandidate_KeepsOlderDismissedDigest()
+    {
+        Notification dismissed = CreateDigest(new DateOnly(2026, 9, 14));
+        dismissed.Dismiss(_createdAt);
+        Notification candidate = CreateDigest(new DateOnly(2026, 9, 21));
+
+        NotificationReconciliationPlan plan = NotificationReconciler.Plan(
+            existing: [dismissed],
+            candidates: [candidate],
+            evaluatedKinds: _digestKindOnly,
+            protectedKeys: _noProtectedKeys,
+            today: _today,
+            digestDue: true);
+
+        Assert.Single(plan.ToAdd);
+        Assert.Empty(plan.ToRemove);
+    }
+
+    [Fact]
+    public void Plan_DigestOff_RemovesUndismissedDigestRowsAndKeepsDismissedOnes()
+    {
+        Notification undismissed = CreateDigest(new DateOnly(2026, 9, 21));
+        Notification dismissed = CreateDigest(new DateOnly(2026, 9, 14));
+        dismissed.Dismiss(_createdAt);
+
+        NotificationReconciliationPlan plan = NotificationReconciler.Plan(
+            existing: [undismissed, dismissed],
+            candidates: [],
+            evaluatedKinds: _digestKindOnly,
+            protectedKeys: _noProtectedKeys,
+            today: _today,
+            digestDue: false);
+
+        Assert.Empty(plan.ToAdd);
+        Assert.Equal([undismissed.Id], plan.ToRemove);
+    }
+
+    [Fact]
+    public void Plan_DigestNotEvaluated_LeavesExistingDigestUntouched()
+    {
+        Notification existingDigest = CreateDigest(new DateOnly(2026, 9, 21));
+
+        NotificationReconciliationPlan plan = NotificationReconciler.Plan(
+            existing: [existingDigest],
+            candidates: [],
+            evaluatedKinds: _debtKindOnly,
+            protectedKeys: _noProtectedKeys,
+            today: _today,
+            digestDue: false);
+
+        Assert.True(plan.IsEmpty);
+    }
+
+    [Fact]
+    public void Plan_DigestDueWithZeroCandidates_RemovesUndismissedOlderDigest()
+    {
+        Notification older = CreateDigest(new DateOnly(2026, 9, 14));
+
+        NotificationReconciliationPlan plan = NotificationReconciler.Plan(
+            existing: [older],
+            candidates: [],
+            evaluatedKinds: _digestKindOnly,
+            protectedKeys: _noProtectedKeys,
+            today: _today,
+            digestDue: true);
+
+        Assert.Empty(plan.ToAdd);
+        Assert.Equal([older.Id], plan.ToRemove);
+    }
+
+    private static Notification CreateDigest(DateOnly periodStart) =>
+        Notification.ForDigest(
+            DigestFrequency.Weekly,
+            periodStart,
+            payments: 2,
+            totals: [new NotificationCurrencyTotal(Currency.DOP, 2000m)],
+            budgets: 1,
+            anomalies: 0,
+            _createdAt);
+
     private static Notification CreateDebtCandidate(decimal amount, DateTime createdAtUtc) =>
         Notification.ForDebtInstallment(
             Guid.NewGuid(),

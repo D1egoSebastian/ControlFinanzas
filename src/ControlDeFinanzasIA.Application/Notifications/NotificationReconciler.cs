@@ -54,9 +54,9 @@ public static class NotificationReconciler
     /// </param>
     /// <param name="today">Fecha de referencia de la corrida, para calcular la ventana de purga.</param>
     /// <param name="digestDue">
-    /// Reservado para la rama del resumen periódico (D-12), cableada en la Fase 17 slice S7. Sin
-    /// efecto en esta versión del algoritmo: el caller ya decide si <see cref="NotificationKind.Digest"/>
-    /// participa de <paramref name="evaluatedKinds"/> en esta corrida.
+    /// Indica que esta corrida genera el resumen periódico (D-12, R-13). Cuando es
+    /// <see langword="true"/> y hay un candidato <see cref="NotificationKind.Digest"/>, toda otra fila
+    /// de resumen no descartada se elimina aunque <see cref="NotificationKind.Digest"/> no figure en <paramref name="evaluatedKinds"/>.
     /// </param>
     /// <returns>El <see cref="NotificationReconciliationPlan"/> a aplicar en una única <c>SaveChangesAsync</c>.</returns>
     public static NotificationReconciliationPlan Plan(
@@ -114,6 +114,9 @@ public static class NotificationReconciler
             }
         }
 
+        // A newly generated digest supersedes every other undismissed digest (R-13, D-4).
+        bool digestSupersedes = digestDue && candidates.Any(c => c.Kind == NotificationKind.Digest);
+
         foreach (Notification row in survivors.Values)
         {
             if (row.IsDismissed || candidateKeys.Contains(row.DedupKey))
@@ -121,7 +124,8 @@ public static class NotificationReconciler
                 continue;
             }
 
-            if (!evaluatedKinds.Contains(row.Kind))
+            bool supersededDigest = digestSupersedes && row.Kind == NotificationKind.Digest;
+            if (!supersededDigest && !evaluatedKinds.Contains(row.Kind))
             {
                 continue;
             }

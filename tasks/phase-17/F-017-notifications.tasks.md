@@ -325,7 +325,7 @@ save pattern as the rest of the screen, and saving triggers exactly one detectio
 Depends on 8. Goal: the digest kind is generated at most once per period with no backfill, ignores
 per-kind toggles and dismissals, and the project docs record the phase's status.
 
-- [ ] 9.1 Write failing tests: `DigestPeriodTests` (Daily → `today`; Weekly → the Monday of the ISO
+- [x] 9.1 Write failing tests: `DigestPeriodTests` (Daily → `today`; Weekly → the Monday of the ISO
   week, including a Sunday input); `NotificationReconcilerTests` digest branch (a new digest
   removes any older undismissed digest; frequency `Off` removes undismissed digest rows);
   `DetectNotificationsUseCaseTests` digest scenarios — a 5-week-stale cursor with `Weekly` produces
@@ -333,28 +333,28 @@ per-kind toggles and dismissals, and the project docs record the phase's status.
   rows for the intervening weeks (S-9); all-zero counts create no row but still advance the cursor;
   digest content ignores per-kind toggles and existing dismissals (Reconciliation #8); the cursor
   is written only after the reconcile save succeeds. (R-13, D-12)
-- [ ] 9.2 Extend `NotificationTextFormatterTests.cs`: `NotificationDigestDailyTitle`/
+- [x] 9.2 Extend `NotificationTextFormatterTests.cs`: `NotificationDigestDailyTitle`/
   `WeeklyTitle`, and the body joining per-currency totals with `" + "`. (R-11, D-10, D-12)
-- [ ] 9.3 Create `src/…Application/Notifications/DigestPeriod.cs`: pure
+- [x] 9.3 Create `src/…Application/Notifications/DigestPeriod.cs`: pure
   `Start(DigestFrequency freq, DateOnly today)`. Run 9.1's period-boundary tests green. (D-12)
-- [ ] 9.4 Modify `src/…Application/Notifications/NotificationReconciler.cs`: implement the digest
+- [x] 9.4 Modify `src/…Application/Notifications/NotificationReconciler.cs`: implement the digest
   branch — evaluate `Digest` only when `digestDue || frequency == Off`; adding a new digest removes
   every other undismissed digest; `Off` removes any undismissed digest row. Run 9.1's reconciler
   tests green. (R-13, D-4, D-12)
-- [ ] 9.5 Modify `src/…Application/UseCases/Notifications/DetectNotifications/
+- [x] 9.5 Modify `src/…Application/UseCases/Notifications/DetectNotifications/
   DetectNotificationsUseCase.cs`: compute `periodStart`/`digestDue`; read all four sources in full
   (toggle- and dismissal-independent) when `digestDue`; build the digest candidate (payment count +
   per-currency totals, budget Near/Exceeded count, current-month unacknowledged anomaly count); set
   `evaluatedKinds` to include `Digest` per D-5 step 5; persist the `yyyy-MM-dd` cursor via
   `SettingKeys.NotificationsDigestLastPeriodStart` only after a successful reconcile. Run 9.1's use-
   case tests green. (R-13, D-5, D-7, D-12)
-- [ ] 9.6 Modify `src/…UI/Formatting/NotificationTextFormatter.cs` and
+- [x] 9.6 Modify `src/…UI/Formatting/NotificationTextFormatter.cs` and
   `Strings.resx`/`Strings.es-DO.resx`/`Strings.Designer.cs` (appended block):
   `NotificationDigestDailyTitle`, `NotificationDigestWeeklyTitle`, `NotificationDigestFormat`. Run
   9.2 green. (R-11, D-10, D-13)
-- [ ] 9.7 Modify `AGENTS.md`: update the Status line to record Phase 17 status, mirroring the
+- [x] 9.7 Modify `AGENTS.md`: update the Status line to record Phase 17 status, mirroring the
   existing per-phase status-line pattern (append-only, per the coexistence gate above).
-- [ ] 9.8 Run all four gates. All green before opening PR S7.
+- [x] 9.8 Run all four gates. All green before opening PR S7.
 
 ## 10. Cierre
 

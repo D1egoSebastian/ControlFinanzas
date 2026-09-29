@@ -763,6 +763,18 @@ Showing approximate conversions only.
   <data name="NotificationDateInDaysFormat" xml:space="preserve">
     <value>in {0} days</value>
   </data>
+  <data name="NotificationDigestDailyTitle" xml:space="preserve">
+    <value>Your daily summary</value>
+  </data>
+  <data name="NotificationDigestWeeklyTitle" xml:space="preserve">
+    <value>Your weekly summary</value>
+  </data>
+  <data name="NotificationDigestFormat" xml:space="preserve">
+    <value>Payments due: {0} ({1}); budgets near or over the limit: {2}; unusual expenses: {3}.</value>
+  </data>
+  <data name="NotificationDigestNoTotals" xml:space="preserve">
+    <value>none</value>
+  </data>
   <data name="SettingsNotificationsTitle" xml:space="preserve">
     <value>Notifications</value>
   </data>
