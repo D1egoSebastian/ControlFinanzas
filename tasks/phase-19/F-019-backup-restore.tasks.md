@@ -73,40 +73,40 @@ the ViewModel and the view. S7 is the end-to-end roundtrip plus docs.
 Depends on nothing (Phases 0-18 archived). Goal: library-free ports, records, error codes, the file-name helper and
 `CreateBackupUseCase` live in Application, with test doubles ready for later slices.
 
-- [ ] 1.1 Write failing `tests/…Unit/Application/Backup/OpenTargetTests.cs` mirroring `SaveTargetTests`:
+- [x] 1.1 Write failing `tests/…Unit/Application/Backup/OpenTargetTests.cs` mirroring `SaveTargetTests`:
   `OpenReadAsync` delegates lazily to the supplied function and can be called N times; `Dispose` disposes the
   owner exactly once; `OpenReadAsync` after `Dispose` throws `ObjectDisposedException`. (R-1, DD-1)
-- [ ] 1.2 Write failing `tests/…Unit/Application/Backup/BackupFileNameTests.cs`: `BackupFileName.Create` with a fixed
+- [x] 1.2 Write failing `tests/…Unit/Application/Backup/BackupFileNameTests.cs`: `BackupFileName.Create` with a fixed
   UTC instant and a fixed non-UTC `TimeZoneInfo` (constructed with `CreateCustomTimeZone`, not `Local`) returns the
   exact pattern `ControlDeFinanzasIA-backup-yyyyMMdd-HHmm.zip` in local time; invariant digits under es-DO and en
   current cultures; a date crossing midnight in the zone changes the day. (R-2, S-4, D-18)
-- [ ] 1.3 Write failing `tests/…Unit/Application/Backup/CreateBackupUseCaseTests.cs` using `FakeBackupService`:
+- [x] 1.3 Write failing `tests/…Unit/Application/Backup/CreateBackupUseCaseTests.cs` using `FakeBackupService`:
   success passes `BackupCreated` through unchanged; a failure `Result` (code and `Details`) passes through
   unchanged; a thrown `IOException` becomes `Result.Failure` with `BackupErrorCodes.IoError` and is logged;
   `OperationCanceledException` propagates; the use case passes `target.OpenWriteAsync` and never opens the target
   itself (opens counted on `SaveTargets.Recording()` stay 0 when the fake service does not call it). (R-1, R-17,
   DD-2)
-- [ ] 1.4 Create `src/…Application/Abstractions/{IBackupService,IMigrationCatalog,IFileOpenDialog,OpenTarget,
+- [x] 1.4 Create `src/…Application/Abstractions/{IBackupService,IMigrationCatalog,IFileOpenDialog,OpenTarget,
   FileTypeFilter}.cs` exactly as in DD-1 (`CreateAsync(Func<CancellationToken, Task<Stream>> openDestination, ...)`,
   `InspectAsync`/`RestoreAsync` with `openRead`, `CompletePendingRestore()`, optional `string? title` on the picker).
   `IFileSaveDialog` is NOT touched in this slice (S5). No type from `Microsoft.Data.Sqlite`, EF Core,
   `System.IO.Compression` or Avalonia. Run 1.1 green. (R-1, DD-1, Reconciliation #1, #2)
-- [ ] 1.5 Create `src/…Application/Backup/{BackupManifest,BackupInfo,BackupCreated,RestoreOutcome,BackupErrorCodes,
+- [x] 1.5 Create `src/…Application/Backup/{BackupManifest,BackupInfo,BackupCreated,RestoreOutcome,BackupErrorCodes,
   BackupFileName}.cs` per DD-1: exactly four codes (`NotABackup`, `Corrupt`, `NewerSchema`, `IoError`), the
   `Details` keys and `ReasonInsufficientSpace` constants, and `BackupFileName.Create(DateTime utcNow, TimeZoneInfo
   zone)` using `TimeZoneInfo.ConvertTimeFromUtc` and invariant culture. Run 1.2 green. (R-1, R-2, R-17,
   Reconciliation #3, D-18)
-- [ ] 1.6 Create `src/…Application/UseCases/Backup/CreateBackup/CreateBackupUseCase.cs`
+- [x] 1.6 Create `src/…Application/UseCases/Backup/CreateBackup/CreateBackupUseCase.cs`
   (`ExecuteAsync(SaveTarget, CancellationToken)`), catching every non-`OperationCanceledException`, logging via
   `ILogger<CreateBackupUseCase>` and mapping to `IoError`. Run 1.3 green. (R-1, R-17, DD-2)
-- [ ] 1.7 Create test doubles `tests/…Unit/TestDoubles/{FakeBackupService,FakeFileOpenDialog,OpenTargets}.cs`:
+- [x] 1.7 Create test doubles `tests/…Unit/TestDoubles/{FakeBackupService,FakeFileOpenDialog,OpenTargets}.cs`:
   `FakeBackupService` records calls per method, returns configurable `Result`s or throws, can block on a
   `TaskCompletionSource`; `FakeFileOpenDialog` returns null or a target, counts calls, records `LastFilter` and
   `LastTitle`; `OpenTargets.Recording()` counts opens and disposals and serves supplied bytes. (R-1, R-20)
-- [ ] 1.8 Confirm `ReportFormat` remained report-only and no existing file changed except by addition:
+- [x] 1.8 Confirm `ReportFormat` remained report-only and no existing file changed except by addition:
   `git diff --name-status` for the slice shows only `A` entries under `Application/Abstractions`,
   `Application/Backup`, `Application/UseCases/Backup` and test doubles. (R-1)
-- [ ] 1.9 Run all four gates: `dotnet build -c Release`, `dotnet test -c Release --no-build`,
+- [x] 1.9 Run all four gates: `dotnet build -c Release`, `dotnet test -c Release --no-build`,
   `dotnet format style --verify-no-changes`, NetArchTest filter (R-1..R-5; Application has no Sqlite/EF/Compression/
   Avalonia reference). Then the no-stubs grep, which must return nothing: `rg -n
   "NotImplementedException|TODO|FIXME|HACK" src/ControlDeFinanzasIA.Application/Backup
