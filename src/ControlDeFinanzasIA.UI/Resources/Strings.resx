@@ -1660,4 +1660,25 @@ Showing approximate conversions only.
   <data name="RecurringDeleted" xml:space="preserve">
     <value>Rule deleted.</value>
   </data>
+  <data name="ShortcutNewExpense" xml:space="preserve">
+    <value>New expense</value>
+  </data>
+  <data name="ShortcutNewIncome" xml:space="preserve">
+    <value>New income</value>
+  </data>
+  <data name="ShortcutGoToSection" xml:space="preserve">
+    <value>Go to a section by its position in the sidebar</value>
+  </data>
+  <data name="ShortcutOpenSettings" xml:space="preserve">
+    <value>Open Settings</value>
+  </data>
+  <data name="ShortcutToggleNotifications" xml:space="preserve">
+    <value>Show or hide notifications</value>
+  </data>
+  <data name="ShortcutEscape" xml:space="preserve">
+    <value>Close the error message or the notifications</value>
+  </data>
+  <data name="ShortcutKeyShift" xml:space="preserve">
+    <value>Shift</value>
+  </data>
 </root>

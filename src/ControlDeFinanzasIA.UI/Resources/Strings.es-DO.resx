@@ -1660,4 +1660,25 @@ Mostrando conversiones aproximadas.
   <data name="RecurringDeleted" xml:space="preserve">
     <value>Regla eliminada correctamente.</value>
   </data>
+  <data name="ShortcutNewExpense" xml:space="preserve">
+    <value>Nuevo gasto</value>
+  </data>
+  <data name="ShortcutNewIncome" xml:space="preserve">
+    <value>Nuevo ingreso</value>
+  </data>
+  <data name="ShortcutGoToSection" xml:space="preserve">
+    <value>Ir a una sección según su posición en la barra lateral</value>
+  </data>
+  <data name="ShortcutOpenSettings" xml:space="preserve">
+    <value>Abrir Configuración</value>
+  </data>
+  <data name="ShortcutToggleNotifications" xml:space="preserve">
+    <value>Mostrar u ocultar las notificaciones</value>
+  </data>
+  <data name="ShortcutEscape" xml:space="preserve">
+    <value>Cerrar el mensaje de error o las notificaciones</value>
+  </data>
+  <data name="ShortcutKeyShift" xml:space="preserve">
+    <value>Shift</value>
+  </data>
 </root>

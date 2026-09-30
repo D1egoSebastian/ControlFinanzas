@@ -3,6 +3,7 @@
              xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
              xmlns:views="using:ControlDeFinanzasIA.UI.Views"
              xmlns:behaviors="using:ControlDeFinanzasIA.UI.Behaviors"
+             xmlns:input="using:ControlDeFinanzasIA.UI.Input"
              xmlns:controls="using:ControlDeFinanzasIA.UI.Controls"
              xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
              xmlns:dto="using:ControlDeFinanzasIA.Application.DTOs"
@@ -109,7 +110,7 @@
                                  Hint="{x:Static resources:Strings.EmptyStateExpensesHint}"
                                  ActionText="{x:Static resources:Strings.EmptyStateCreateFirstAction}"
                                  ActionCommand="{Binding BeginNewEntryCommand}"
-                                 ShortcutText="Ctrl+N"
+                                 ShortcutText="{x:Static input:ShortcutTexts.NewExpense}"
                                  IsVisible="{Binding IsEmptyNoData}" />
             <controls:EmptyState Title="{x:Static resources:Strings.EmptyStateFilteredTitle}"
                                  Hint="{x:Static resources:Strings.EmptyStateFilteredHint}"

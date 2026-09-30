@@ -2711,4 +2711,39 @@ public class Strings
     /// Gets the rule deleted status (F-021).
     /// </summary>
     public static string RecurringDeleted => ResourceManager.GetString("RecurringDeleted", Culture)!;
+
+    /// <summary>
+    /// Gets the name of the new expense shortcut action (F-021).
+    /// </summary>
+    public static string ShortcutNewExpense => ResourceManager.GetString("ShortcutNewExpense", Culture)!;
+
+    /// <summary>
+    /// Gets the name of the new income shortcut action (F-021).
+    /// </summary>
+    public static string ShortcutNewIncome => ResourceManager.GetString("ShortcutNewIncome", Culture)!;
+
+    /// <summary>
+    /// Gets the name of the go-to-section shortcut action (F-021).
+    /// </summary>
+    public static string ShortcutGoToSection => ResourceManager.GetString("ShortcutGoToSection", Culture)!;
+
+    /// <summary>
+    /// Gets the name of the open settings shortcut action (F-021).
+    /// </summary>
+    public static string ShortcutOpenSettings => ResourceManager.GetString("ShortcutOpenSettings", Culture)!;
+
+    /// <summary>
+    /// Gets the name of the toggle notifications shortcut action (F-021).
+    /// </summary>
+    public static string ShortcutToggleNotifications => ResourceManager.GetString("ShortcutToggleNotifications", Culture)!;
+
+    /// <summary>
+    /// Gets the name of the escape shortcut action (F-021).
+    /// </summary>
+    public static string ShortcutEscape => ResourceManager.GetString("ShortcutEscape", Culture)!;
+
+    /// <summary>
+    /// Gets the label of the Shift key used when a shortcut is formatted for Windows and Linux (F-021).
+    /// </summary>
+    public static string ShortcutKeyShift => ResourceManager.GetString("ShortcutKeyShift", Culture)!;
 }
