@@ -73,6 +73,7 @@ using ControlDeFinanzasIA.Infrastructure.Backup;
 using ControlDeFinanzasIA.Infrastructure.ExchangeRates;
 using ControlDeFinanzasIA.Infrastructure.Import;
 using ControlDeFinanzasIA.Infrastructure.Llm;
+using ControlDeFinanzasIA.Infrastructure.Logging;
 using ControlDeFinanzasIA.Infrastructure.Persistence;
 using ControlDeFinanzasIA.Infrastructure.Reports;
 using ControlDeFinanzasIA.UI.Diagnostics;
@@ -132,6 +133,10 @@ public static class Bootstrap
 
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IPathResolver, SystemPathResolver>();
+
+        // Fase 21: rolling log file under <DataDir>/logs (F-021 R-3). Registered here because only Bootstrap
+        // may reference Infrastructure (R-4); Program's ClearProviders() runs before this registration.
+        services.AddRollingFileLogging();
 
         services.AddLocalization();
         services.AddSingleton<INavigationService, NavigationService>();

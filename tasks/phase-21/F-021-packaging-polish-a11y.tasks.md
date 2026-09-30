@@ -194,12 +194,12 @@ No UI type except `Bootstrap` may reference `Infrastructure.Logging` (R-4 of the
 INTEGRATION project (real files, real DI), using temp directories and a fake `IClock`. Size note: if it exceeds ~450
 lines split at "formatter + sink" vs "provider + DI + privacy".
 
-- [ ] 2.1 Write failing `tests/…Integration/Logging/LogEntryFormatterTests.cs` against the REAL `LogEntryFormatter.Format`:
+- [x] 2.1 Write failing `tests/…Integration/Logging/LogEntryFormatterTests.cs` against the REAL `LogEntryFormatter.Format`:
   line is `2026-09-30T14:03:11.123Z INF Category[EventId] message` (UTC ISO-8601, 3-letter level, category, event id);
   exception appended as `type: message` followed by the stack with every continuation line indented 4 spaces; an inner
   exception chain is included; an entry over `MaxEntryChars` ends with `…[truncated]`; the local time zone (set to a
   non-UTC zone in the test) never changes the timestamp. (R-5, S-11, Reconciliation #4)
-- [ ] 2.2 Write failing `tests/…Integration/Logging/RollingFileSinkTests.cs` against the REAL `RollingFileSink` in a temp
+- [x] 2.2 Write failing `tests/…Integration/Logging/RollingFileSinkTests.cs` against the REAL `RollingFileSink` in a temp
   dir with a fake clock: first write creates `app-<utc yyyyMMdd>.log`; with a tiny `MaxFileBytes` the next write rolls to
   `app-YYYYMMDD.1.log`, `.2.log`, and no file exceeds the cap by more than one entry; crossing UTC midnight via the
   clock opens `app-<next date>.log`; a fresh sink over an existing directory resumes today's highest index when under
@@ -207,45 +207,47 @@ lines split at "formatter + sink" vs "provider + DI + privacy".
   `LastWriteTime` values to prove timestamps are ignored); files from a previous "run" are pruned the same way;
   a delete failure (file opened with `FileShare.None`) is reported once to stderr and does NOT disable the sink.
   (R-4, S-6, S-7, S-8, T2, Reconciliation #3)
-- [ ] 2.3 Write failing `tests/…Integration/Logging/RollingFileSinkConcurrencyTests.cs`: 32 threads x 200 lines through the
+- [x] 2.3 Write failing `tests/…Integration/Logging/RollingFileSinkConcurrencyTests.cs`: 32 threads x 200 lines through the
   REAL provider produce a file with exactly 6,400 intact lines (each matches the timestamp-prefixed pattern, none
   interleaved); uses one provider instance and real files. (R-3, S-9)
-- [ ] 2.4 Write failing `tests/…Integration/Logging/RollingFileLoggerFailureTests.cs`: (a) `logs` path is a regular file;
+- [x] 2.4 Write failing `tests/…Integration/Logging/RollingFileLoggerFailureTests.cs`: (a) `logs` path is a regular file;
   (b) the log file is held open with `FileShare.None`; (c) missing/invalid directory. In each case `Log`, `IsEnabled` and
   `Dispose` never throw, `provider.IsDisabled` becomes true after the FIRST failure, exactly one stderr line is written
   (capture `Console.Error`), later calls do not retry (count open attempts through a wrapper-free check: the locked
   file is released and a later call still writes nothing), and a console `ILoggerProvider` composed in the same
   `LoggerFactory` still receives the entries. (R-6, S-10, T3)
-- [ ] 2.5 Write failing `tests/…Integration/Logging/LoggingRegistrationTests.cs` with REAL DI (`ServiceCollection` +
+- [x] 2.5 Write failing `tests/…Integration/Logging/LoggingRegistrationTests.cs` with REAL DI (`ServiceCollection` +
   `AddRollingFileLogging()` + a real `IPathResolver` rooted at a temp dir): the provider is a Singleton resolved by
   `ILoggerFactory`; `Debug` entries and `Microsoft.EntityFrameworkCore` `Information` entries never reach the file, a
   `Microsoft.*` `Warning` does, an app-category `Information` does; the file lands in
   `<DataDir>/logs/app-<utc date>.log` honoring `CONTROLDEFINANZASIA_DATA_DIR` (set and restored inside the test);
   `ClearProviders()` followed by `Bootstrap` registration keeps the provider (simulate `Program`'s order). (R-3, R-5,
   S-4, S-5, DD-1 Registration row)
-- [ ] 2.6 Create `src/…Infrastructure/Logging/{RollingFileLoggerOptions, LogEntryFormatter, RollingFileSink,
+- [x] 2.6 Create `src/…Infrastructure/Logging/{RollingFileLoggerOptions, LogEntryFormatter, RollingFileSink,
   RollingFileLogger, RollingFileLoggerProvider, LoggingServiceCollectionExtensions}.cs` per DD-1 (public types,
   `FileStream(Append, FileShare.ReadWrite | FileShare.Delete)`, UTF-8 no BOM, single `lock`, flush per entry, no
   background thread, scopes ignored, `MinLevel` filter rules via `Configure<LoggerFilterOptions>`; NO new package;
   EF sensitive-data logging not enabled anywhere). Run 2.1-2.5 green. (R-3..R-6, DD-1)
-- [ ] 2.7 Edit `src/…UI/Composition/Bootstrap.cs` (additive): `services.AddRollingFileLogging();`. Do NOT touch
+- [x] 2.7 Edit `src/…UI/Composition/Bootstrap.cs` (additive): `services.AddRollingFileLogging();`. Do NOT touch
   `Program.cs` logging here (R-4: only `Bootstrap` may reference Infrastructure). Write
   `tests/…Integration/Logging/BootstrapLoggingTests.cs`: building the REAL `Bootstrap` service provider against a temp
   `CONTROLDEFINANZASIA_DATA_DIR` and logging once through `ILogger<T>` creates the log file. (R-3, Reconciliation #8 of
   the design)
-- [ ] 2.8 Write failing `tests/…Integration/Logging/LogPrivacyTests.cs` with sentinel key `sk-SENTINEL-9f3a` through the
+- [x] 2.8 Write failing `tests/…Integration/Logging/LogPrivacyTests.cs` with sentinel key `sk-SENTINEL-9f3a` through the
   REAL flows with the REAL file provider: (a) save AI settings via the real settings use case; (b) a real LLM call
   failure (`OpenAICompatibleClient` against a handler that returns 401/timeout, resilience pipeline real); (c) a real
   user export/backup through the real `SqliteBackupService` (the key is redacted in user exports but may live in safety
   ZIPs, which are not logs). After each flow, every file in `logs/` is read in full and MUST NOT contain the sentinel
   (nor the `Authorization` header value). If a flow does log the key, fix the logging call site (test-first), never the
   test. (R-5, S-12, T1)
-- [ ] 2.9 Append to `tests/…Unit/Architecture/ArchitectureTests.cs` (D-16/DD-13): `RollingFileLoggerProvider`,
+- [x] 2.9 Append to `tests/…Unit/Architecture/ArchitectureTests.cs` (D-16/DD-13): `RollingFileLoggerProvider`,
   `RollingFileLogger`, `RollingFileSink`, `LogEntryFormatter` reside in `ControlDeFinanzasIA.Infrastructure.Logging`;
   no type outside Infrastructure except the type named `Bootstrap` depends on that namespace; R-1..R-5 stay green.
   (R-25)
-- [ ] 2.10 **Run gate block G** (grep files: `Infrastructure/Logging/*`, `Bootstrap.cs`, the new test files). Also record
+- [x] 2.10 **Run gate block G** (grep files: `Infrastructure/Logging/*`, `Bootstrap.cs`, the new test files). Also record
   that no test wrote to the real AppData (list the temp roots used).
+
+_Apply notes S2 (Strict TDD): tests were authored before the implementation but the first compile ran with both present, so no separate red run was observed. Two honest reds did occur against real code: (1) a test-side file-share bug in the delete-failure test; (2) a REAL production finding in 2.8: Microsoft.Extensions.Http logs the `Authorization: Bearer <key>` header at Trace in category `System.Net.Http.HttpClient.llm-*`. The file provider never receives Trace (rule Information), but the key existed in the pipeline; fixed at the call site with `.RedactLoggedHeaders(_ => true)` on both named LLM clients in `LlmServiceCollectionExtensions` (test stays as-is, a Trace in-memory provider proves no level leaks the key). Gate G: build 0/0; full suite x3 = 2570 unit + 807 integration (baseline 2569 + 772; +1 arch test, +35 logging/privacy tests), 0 skipped, no intermittents; format exit 0; Architecture filter 19/19; no-stub grep empty; footprint clean (no Packages.props/Migrations/snapshot/SettingKeys). Temp roots: `%TEMP%\cdfia-log-<guid>` (TempDir) and the env-var override for the Bootstrap/privacy tests; real `%APPDATA%\ControlDeFinanzasIA` has no `logs` folder after the runs. Deviations: `RollingFileSink` also exposes `IsDisabled`/`Dispose`; `RollingFileLogger` is internal (created only by the provider); the locked-file and delete-failure tests are Windows-only (`WindowsOnlyFact`, Linux/macOS file-sharing semantics differ) and were run on Windows only. Retention report text contains the word "retention" (asserted). Commit: see git log (slice S2/12)._
 
 ## 3. Unexpected-error reporter, global hooks and startup failure path (S3)
 

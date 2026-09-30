@@ -435,6 +435,46 @@ public sealed class ArchitectureTests
         Assert.True(ui.IsSuccessful, FormatFailingTypes(ui));
     }
 
+    /// <summary>
+    /// F-021 (S2, D-16, DD-13): the rolling file logger types live in Infrastructure.Logging, and nothing
+    /// outside Infrastructure except the composition root depends on that namespace.
+    /// </summary>
+    [Fact]
+    public void F021_Logger_Types_Live_In_Infrastructure_Logging_And_Only_CompositionRoot_Uses_Them()
+    {
+        const string loggingNamespace = "ControlDeFinanzasIA.Infrastructure.Logging";
+        string[] loggerTypes = ["RollingFileLoggerProvider", "RollingFileLogger", "RollingFileSink", "LogEntryFormatter"];
+
+        foreach (string name in loggerTypes)
+        {
+            TestResult located = Types
+                .InAssembly(_infrastructureAssembly)
+                .That()
+                .HaveName(name)
+                .Should()
+                .ResideInNamespace(loggingNamespace)
+                .GetResult();
+            Assert.True(located.IsSuccessful, $"{name}: {FormatFailingTypes(located)}");
+            Assert.Single(Types.InAssembly(_infrastructureAssembly).That().HaveName(name).GetTypes());
+        }
+
+        TestResult ui = Types
+            .InAssembly(_uiAssembly)
+            .That()
+            .DoNotHaveName("Bootstrap")
+            .ShouldNot()
+            .HaveDependencyOn(loggingNamespace)
+            .GetResult();
+        TestResult application = Types
+            .InAssembly(_applicationAssembly)
+            .ShouldNot()
+            .HaveDependencyOn(loggingNamespace)
+            .GetResult();
+
+        Assert.True(ui.IsSuccessful, FormatFailingTypes(ui));
+        Assert.True(application.IsSuccessful, FormatFailingTypes(application));
+    }
+
     private static string GetProjectFilePath(Assembly assembly)
     {
         string assemblyName = assembly.GetName().Name!;

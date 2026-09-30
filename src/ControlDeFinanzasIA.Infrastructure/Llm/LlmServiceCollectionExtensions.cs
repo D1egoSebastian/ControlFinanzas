@@ -64,10 +64,13 @@ public static class LlmServiceCollectionExtensions
         {
             services
                 .AddHttpClient($"llm-{provider}")
+                // F-021 T1: the built-in HttpClient logging prints header values at Trace; never the API key.
+                .RedactLoggedHeaders(_ => true)
                 .AddStandardResilienceHandler(ConfigureMainPipeline);
 
             services
                 .AddHttpClient($"llm-{provider}-diagnostic")
+                .RedactLoggedHeaders(_ => true)
                 .AddResilienceHandler(
                     $"llm-{provider}-diagnostic-pipeline",
                     builder => builder.AddTimeout(_diagnosticTimeout));
