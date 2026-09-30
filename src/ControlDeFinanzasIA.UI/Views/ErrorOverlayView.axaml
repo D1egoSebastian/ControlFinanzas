@@ -1,0 +1,128 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+             xmlns:behaviors="using:ControlDeFinanzasIA.UI.Behaviors"
+             xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
+             x:Class="ControlDeFinanzasIA.UI.Views.ErrorOverlayView"
+             x:DataType="vm:ErrorOverlayViewModel">
+    <!--
+        F-021 (DD-4) unexpected-error overlay, "Libro Mayor": the ledger's amber rule turned red ink for an
+        exception entry. A dimmed scrim swallows pointer input; the card is a focus trap (Tab cycles inside);
+        the short id is the hero, set like a ledger reference line. Hosted by MainWindow (no extra Window).
+    -->
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
+    </UserControl.KeyBindings>
+
+    <UserControl.Styles>
+        <!-- Entrance: 150 ms opacity, no bounce. Runs each time the card gains the "open" class. -->
+        <Style Selector="Border.error-scrim.open, Border.error-card.open">
+            <Style.Animations>
+                <Animation Duration="0:0:0.15" Easing="CubicEaseOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector="TextBlock.error-mono">
+            <Setter Property="FontFamily" Value="{StaticResource FontMono}" />
+            <Setter Property="Foreground" Value="{StaticResource PaperDimBrush}" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid>
+        <!-- Scrim: Ink at 80 %; opaque to hit testing so nothing behind it is clickable. -->
+        <Border Classes="error-scrim"
+                Classes.open="{Binding IsOpen}"
+                Background="{StaticResource InkBrush}"
+                Opacity="0.8" />
+
+        <Border Classes="error-card"
+                Classes.open="{Binding IsOpen}"
+                Width="440"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource HairlineBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource RadiusMedium}"
+                ClipToBounds="True"
+                KeyboardNavigation.TabNavigation="Cycle"
+                AutomationProperties.Name="{x:Static resources:Strings.ErrorOverlayTitle}">
+            <StackPanel>
+                <!-- Red-ink rule: the exception entry of the ledger. -->
+                <Border Height="2" Background="{StaticResource TerracottaBrush}" />
+
+                <StackPanel Margin="28,24,28,24" Spacing="16">
+                    <TextBlock Text="{x:Static resources:Strings.ErrorOverlayTitle}"
+                               FontFamily="{StaticResource FontDisplay}"
+                               FontSize="22"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource PaperBrush}"
+                               TextWrapping="Wrap" />
+
+                    <TextBlock Text="{x:Static resources:Strings.ErrorOverlayBody}"
+                               AutomationProperties.LiveSetting="Polite"
+                               FontFamily="{StaticResource FontBody}"
+                               FontSize="14"
+                               Foreground="{StaticResource PaperDimBrush}"
+                               TextWrapping="Wrap" />
+
+                    <!-- Ledger reference line: hairline rules above and below, the id in mono. -->
+                    <Border BorderBrush="{StaticResource HairlineBrush}"
+                            BorderThickness="0,1,0,1"
+                            Padding="0,12">
+                        <StackPanel Spacing="4">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBlock Classes="error-mono"
+                                           Text="{x:Static resources:Strings.ErrorOverlayIdLabel}"
+                                           VerticalAlignment="Center"
+                                           LetterSpacing="2" />
+                                <TextBlock Text="{Binding ShortId}"
+                                           FontFamily="{StaticResource FontMono}"
+                                           FontSize="20"
+                                           LetterSpacing="2"
+                                           Foreground="{StaticResource PaperBrush}"
+                                           VerticalAlignment="Center"
+                                           IsTabStop="False" />
+                            </StackPanel>
+                            <TextBlock Classes="error-mono"
+                                       Text="{Binding AdditionalText}"
+                                       IsVisible="{Binding AdditionalText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="{x:Static resources:Strings.ErrorOverlayRestartHint}"
+                               FontFamily="{StaticResource FontBody}"
+                               FontSize="13"
+                               Foreground="{StaticResource PaperDimBrush}"
+                               TextWrapping="Wrap" />
+
+                    <DockPanel LastChildFill="False">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
+                            <Button Classes="ledger-btn"
+                                    Content="{x:Static resources:Strings.ErrorOverlayCopy}"
+                                    Command="{Binding CopyCommand}" />
+                            <Button Classes="ledger-btn-primary"
+                                    Content="{x:Static resources:Strings.ErrorOverlayClose}"
+                                    Command="{Binding CloseCommand}"
+                                    behaviors:FocusOnRequest.Token="{Binding InitialFocus}" />
+                        </StackPanel>
+                        <TextBlock DockPanel.Dock="Left"
+                                   Classes="error-mono"
+                                   Text="{x:Static resources:Strings.ErrorOverlayCopied}"
+                                   IsVisible="{Binding IsCopied}"
+                                   Foreground="{StaticResource SageBrush}"
+                                   VerticalAlignment="Center"
+                                   AutomationProperties.LiveSetting="Polite" />
+                    </DockPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

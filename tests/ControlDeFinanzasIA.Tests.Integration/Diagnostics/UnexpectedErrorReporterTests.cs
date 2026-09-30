@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using ControlDeFinanzasIA.Infrastructure.Logging;
 using ControlDeFinanzasIA.Tests.Integration.Logging;
+using ControlDeFinanzasIA.Tests.Integration.TestDoubles;
 using ControlDeFinanzasIA.UI.Diagnostics;
 using ControlDeFinanzasIA.UI.ViewModels;
 using Microsoft.Extensions.Logging;
@@ -22,7 +23,7 @@ public sealed class UnexpectedErrorReporterTests
         var clock = new SettableClock(_now);
         var provider = new RollingFileLoggerProvider(new RollingFileLoggerOptions(logsDirectory), clock);
         ILoggerFactory factory = LoggerFactory.Create(b => b.AddProvider(provider));
-        var overlay = new ErrorOverlayViewModel("1.0.0");
+        var overlay = new ErrorOverlayViewModel(new RecordingClipboardService(), "1.0.0");
         var reporter = new UnexpectedErrorReporter(
             factory.CreateLogger<UnexpectedErrorReporter>(),
             clock,

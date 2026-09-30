@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ControlDeFinanzasIA.UI.Navigation;
@@ -21,10 +22,12 @@ public sealed partial class ShellViewModel : ViewModelBase
     /// <param name="navService">The navigation service used to drive content changes.</param>
     /// <param name="localizer">The localizer for UI strings.</param>
     /// <param name="notifications">The route-agnostic notification list shown by the header bell (F-017).</param>
+    /// <param name="errorOverlay">The in-window unexpected-error overlay (F-021); optional so shells built without one keep working.</param>
     public ShellViewModel(
         INavigationService navService,
         IStringLocalizer<Strings> localizer,
-        NotificationListViewModel notifications)
+        NotificationListViewModel notifications,
+        ErrorOverlayViewModel? errorOverlay = null)
     {
         ArgumentNullException.ThrowIfNull(navService);
         ArgumentNullException.ThrowIfNull(localizer);
@@ -33,6 +36,11 @@ public sealed partial class ShellViewModel : ViewModelBase
         _navService = navService;
         _localizer = localizer;
         Notifications = notifications;
+        ErrorOverlay = errorOverlay;
+        if (errorOverlay is not null)
+        {
+            errorOverlay.PropertyChanged += OnErrorOverlayPropertyChanged;
+        }
 
         _navService.CurrentChanged += OnNavigationCurrentChanged;
 
@@ -55,6 +63,34 @@ public sealed partial class ShellViewModel : ViewModelBase
     /// Gets the notification list bound by the header bell, badge and flyout (F-017, R-3).
     /// </summary>
     public NotificationListViewModel Notifications { get; }
+
+    /// <summary>
+    /// Gets the unexpected-error overlay hosted over the shell (F-021, DD-4), or <see langword="null"/> when the
+    /// shell was built without one.
+    /// </summary>
+    public ErrorOverlayViewModel? ErrorOverlay { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether a modal overlay is open. While it is, the shell content is disabled: it
+    /// leaves the tab order, ignores pointer input and cannot fire an <c>IsDefault</c> button behind the overlay.
+    /// </summary>
+    public bool IsModalOpen => ErrorOverlay?.IsOpen == true;
+
+    private void OnErrorOverlayPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(ErrorOverlayViewModel.IsOpen))
+        {
+            return;
+        }
+
+        if (IsModalOpen)
+        {
+            // The popup is a separate TopLevel: it must not stay open on top of, or behind, the modal.
+            Notifications.IsOpen = false;
+        }
+
+        OnPropertyChanged(nameof(IsModalOpen));
+    }
 
     /// <summary>
     /// Gets or sets the currently displayed content view-model.

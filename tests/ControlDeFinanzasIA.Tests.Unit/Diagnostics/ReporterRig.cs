@@ -22,7 +22,7 @@ internal sealed class ReporterRig : IDisposable
         Clock = new FakeClock { UtcNow = new DateTime(2026, 9, 30, 14, 3, 11, DateTimeKind.Utc) };
         _provider = new RollingFileLoggerProvider(new RollingFileLoggerOptions(Directory), Clock);
         _factory = LoggerFactory.Create(b => b.AddProvider(_provider));
-        Overlay = new ErrorOverlayViewModel("1.0.0");
+        Overlay = new ErrorOverlayViewModel(new FakeClipboardService(), "1.0.0");
         Reporter = new UnexpectedErrorReporter(_factory.CreateLogger<UnexpectedErrorReporter>(), Clock, Overlay);
     }
 

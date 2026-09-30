@@ -323,23 +323,23 @@ _Apply notes S3 (Strict TDD, honest): the production types were drafted BEFORE t
 Depends on 3. Goal: the in-window overlay with Copy/Close/Esc, hosted in `MainWindow` (no new `Window`, ADR-004), the
 background disabled while modal, and the reusable `FocusOnRequest` behavior. Uses `frontend-design` (DD-4 visual).
 
-- [ ] 4.1 Write failing `tests/…Unit/ViewModels/ErrorOverlayViewModelTests.cs` against the REAL `ErrorOverlayViewModel`
+- [x] 4.1 Write failing `tests/…Unit/ViewModels/ErrorOverlayViewModelTests.cs` against the REAL `ErrorOverlayViewModel`
   with a fake `IClipboardService` and fake clock: `CopyAsync` sends exactly
   `ControlDeFinanzasIA {version}\nError ID: {short} ({full Guid})\nTime (UTC): {yyyy-MM-ddTHH:mm:ssZ}` and the text
   contains no `"   at "`, no exception message or type, no path, and none of a set of expense descriptions/amounts
   seeded into the test; `Present` while open increments `AdditionalCount` ("+1 more"), logs nothing itself, keeps the
   FIRST id; `Close` resets everything; after copy the "Copied" caption flag is set; the VM never calls
   `IAppRestartService` (inject a spy: zero calls after close). (R-10, R-11, S-20, S-21, S-22, T5, T6)
-- [ ] 4.2 Add the `ErrorOverlayViewModel` commands (`[RelayCommand] CopyAsync`, `Close`), `InitialFocus`
+- [x] 4.2 Add the `ErrorOverlayViewModel` commands (`[RelayCommand] CopyAsync`, `Close`), `InitialFocus`
   (`FocusRequestToken`) and create `src/…UI/Behaviors/FocusOnRequest.cs` + `src/…UI/Input/FocusRequestToken.cs`
   (DD-5: fresh token per request; waits for `AttachedToVisualTree` when not yet attached;
   `FirstFocusableToken` via `KeyboardNavigationHandler`). No logic in code-behind. Run 4.1 green. (R-10, R-12 prerequisite,
   DD-4, DD-5)
-- [ ] 4.3 Write failing `tests/…Unit/UI/FocusOnRequestTests.cs` (headless, real controls): setting a new token on a
+- [x] 4.3 Write failing `tests/…Unit/UI/FocusOnRequestTests.cs` (headless, real controls): setting a new token on a
   `TextBox` VM property focuses it; the same property set twice (two fresh tokens) focuses twice; a token raised before
   the control is attached focuses it once attached; a disabled control is not focused and does not throw. (R-12, R-14,
   DD-5)
-- [ ] 4.4 Invoke `frontend-design`, then create resx keys (`ErrorOverlayTitle`, `ErrorOverlayBody`,
+- [x] 4.4 Invoke `frontend-design`, then create resx keys (`ErrorOverlayTitle`, `ErrorOverlayBody`,
   `ErrorOverlayRestartHint`, `ErrorOverlayIdLabel`, `ErrorOverlayMore` with `{0}`, `ErrorOverlayCopy`,
   `ErrorOverlayCopied`, `ErrorOverlayClose`) in both resx files + manual Designer accessors, then create
   `src/…UI/Views/ErrorOverlayView.axaml(.cs)` (scrim 80 % Ink, 440 px card on Surface, 2 px Terracotta top rule, mono
@@ -350,19 +350,21 @@ background disabled while modal, and the reusable `FocusOnRequest` behavior. Use
   IsVisible="{Binding ErrorOverlay.IsOpen}"/>`) and `ShellViewModel.cs` (optional 4th constructor parameter
   `ErrorOverlayViewModel? errorOverlay = null`, `ErrorOverlay`, `IsModalOpen`; opening the overlay closes the notifications
   popup) so the existing `ShellViewModelTests` compile unchanged. (R-10, R-11, DD-4)
-- [ ] 4.5 Write `tests/…Unit/UI/ErrorOverlayHeadlessTests.cs` (real `MainWindow`, real `ShellViewModel`, real overlay VM,
+- [x] 4.5 Write `tests/…Unit/UI/ErrorOverlayHeadlessTests.cs` (real `MainWindow`, real `ShellViewModel`, real overlay VM,
   headless): reported error makes the overlay visible over the shell with the localized title and short id in es-DO AND
   en; Close has focus on open; Tab cycles inside the card only; `Esc` and Close dismiss it; the shell stays interactive
   and `IAppRestartService` spy has zero calls after close; with the overlay open, pressing `Enter` does NOT fire the
   background `IsDefault` button (register an expense in a real Expenses VM over a temp DB and assert no row was added);
   the notifications popup is closed when the overlay opens; a second `Present` shows "+1 more" and keeps the first id.
   (R-10, R-11, S-19, S-21, S-22, T5, T8)
-- [ ] 4.6 Write end-to-end `tests/…Integration/Diagnostics/ErrorOverlayEndToEndTests.cs`: real `Bootstrap` provider
+- [x] 4.6 Write end-to-end `tests/…Integration/Diagnostics/ErrorOverlayEndToEndTests.cs`: real `Bootstrap` provider
   against a temp DataDir, headless `MainWindow`, a real command that throws unexpectedly; the overlay's short id equals
   the first 8 hex of the Guid that appears in the REAL log file at `ERR`. (R-7, R-10, S-13, S-19)
-- [ ] 4.7 **Run gate block G** (grep files: `ErrorOverlayView.axaml(.cs)`, `FocusOnRequest.cs`, `FocusRequestToken.cs`,
+- [x] 4.7 **Run gate block G** (grep files: `ErrorOverlayView.axaml(.cs)`, `FocusOnRequest.cs`, `FocusRequestToken.cs`,
   `MainWindow.axaml`, `ShellViewModel.cs`, resx, new tests). Also confirm the existing `ShellViewModelTests` and
   `MainWindow` headless tests pass unmodified.
+
+_Apply notes S4 (Strict TDD, reds observed): to get behavioral reds (not just compile errors) the public surface was first added as inert skeletons (empty `FocusOnRequest` handlers, no-op `CopyAsync`, English-only `AdditionalText`, empty `ErrorOverlayView`, `ShellViewModel` members) and the tests were run: `ErrorOverlayViewModelTests` + `FocusOnRequestTests` = 11 failed / 1 passed of 12 (the passing one is the constructor-shape test, true of the skeleton); `ErrorOverlayHeadlessTests` = 7 failed / 1 passed of 8 (the IsDefault test failed with `Expected: 0` because nothing disabled the background yet). Then implementation: 12/12 and 8/8 green. Not red-first: `ErrorOverlayResourcesTests` (3) and `ShellViewModelOverlayTests` (3) and `ErrorOverlayEndToEndTests` (1) were written after the code they cover. Gate G: build 0/0 (`--no-incremental`); full suite x3 = 2609 unit + 815 integration each run (baseline 2582 + 815; +27 unit: ErrorOverlayViewModelTests 7, FocusOnRequestTests 5, ErrorOverlayHeadlessTests 8 cases, ErrorOverlayResourcesTests 3, ShellViewModelOverlayTests 3, ErrorOverlayEndToEndTests 1), 0 skipped, no intermittents; format exit 0; Architecture filter 20/20; no-stub grep over the slice files empty; footprint clean (no Packages.props, Migrations, snapshot, SettingKeys/AppSettings, csproj); no stray dotnet/testhost process after `dotnet build-server shutdown`. `ShellViewModelTests`, the `MainWindow` icon headless test and all S1-S3 tests pass unmodified. Deviations: (1) `ErrorOverlayViewModel` ctor is now `(IClipboardService, string)`; the 4 S3 call sites (`Bootstrap`, `ReporterRig`, two Integration tests via a new `RecordingClipboardService`) were updated. (2) 4.5 uses the real `ExpensesViewModel` over the existing fake repositories (`ExpensesViewModelTests.CreateViewModel`), not a temp SQLite DB. (3) 4.5 "IAppRestartService spy has zero calls": the overlay has no such dependency by construction, so a spy injected anywhere would be vacuous; proven instead by a reflection test on the constructor and fields (`ItNeverDependsOnTheRestartService_ByConstruction`). (4) No `IsDefault` button exists in the app before S7b, so 4.5 arms the REAL "Registrar gasto" button with `IsDefault = true` inside the test; with the overlay open Enter adds 0 expenses, after close Enter adds 1 (control case). (5) 4.6 lives in `tests/…Unit/Diagnostics/ErrorOverlayEndToEndTests.cs`, not Integration: only the Unit project references `Avalonia.Headless`, and adding it to Integration would be a package change. (6) `MainWindow` binds the overlay `IsVisible` to `{Binding IsOpen, FallbackValue=False}` on the overlay's own DataContext (not `ErrorOverlay.IsOpen` through the shell) so a shell with no overlay hides it. (7) The short id is rendered lowercase to match the log and the copy text exactly. (8) `FirstFocusableToken` has a real test (host `ContentControl`, skips a disabled box) though no consumer exists yet (S5a/S7a). (9) The generic `StringsParityTests` is task 5a.1 and is NOT part of S4; S4 adds only the overlay-specific `ErrorOverlayResourcesTests`. Unverified: a human visual pass of the overlay (headless drawing is off, no frame was captured), the entrance fade (150 ms `Animation` on the `open` class), real OS clipboard copy, `Esc` when focus has been lost to a non-focusable area (window-level `EscapeCommand` arrives in S7a). Commit: see git log (slice S4/12)._
 
 ## 5a. EmptyState control, TerracottaText token, and Expenses (S5a)
 

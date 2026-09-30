@@ -4,6 +4,7 @@
         xmlns:nav="using:ControlDeFinanzasIA.UI.Navigation"
         xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
         xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
+        xmlns:views="using:ControlDeFinanzasIA.UI.Views"
         x:Class="ControlDeFinanzasIA.UI.Views.MainWindow"
         x:Name="ShellRoot"
         x:DataType="vm:ShellViewModel"
@@ -49,7 +50,13 @@
         </Style>
     </Window.Styles>
 
-    <Grid RowDefinitions="Auto,*">
+    <!--
+        F-021 (DD-4): the root is a Panel so the error overlay sits over the whole shell. While it is open
+        the shell Grid is disabled: it leaves the tab order, ignores pointer input and cannot fire an
+        IsDefault button behind the overlay.
+    -->
+    <Panel>
+    <Grid RowDefinitions="Auto,*" IsEnabled="{Binding !IsModalOpen}">
         <!-- Header row (F-017 D-10): owns the notification bell; fixed 44px ledger rule below. -->
         <Border Grid.Row="0"
                 Height="44"
@@ -206,4 +213,8 @@
                             MinHeight="400" />
         </DockPanel>
     </Grid>
+
+    <views:ErrorOverlayView DataContext="{Binding ErrorOverlay}"
+                            IsVisible="{Binding IsOpen, FallbackValue=False}" />
+    </Panel>
 </Window>

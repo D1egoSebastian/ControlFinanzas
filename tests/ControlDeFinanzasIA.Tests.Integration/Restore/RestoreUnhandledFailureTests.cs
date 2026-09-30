@@ -1,6 +1,7 @@
 using ControlDeFinanzasIA.Infrastructure.Logging;
 using ControlDeFinanzasIA.Tests.Integration.Backup;
 using ControlDeFinanzasIA.Tests.Integration.Logging;
+using ControlDeFinanzasIA.Tests.Integration.TestDoubles;
 using ControlDeFinanzasIA.UI.Diagnostics;
 using ControlDeFinanzasIA.UI.ViewModels;
 using Microsoft.Extensions.Logging;
@@ -42,7 +43,7 @@ public sealed class RestoreUnhandledFailureTests : IDisposable
         var clock = new SettableClock(new DateTime(2026, 9, 30, 14, 3, 11, DateTimeKind.Utc));
         using var provider = new RollingFileLoggerProvider(new RollingFileLoggerOptions(temp.Path), clock);
         using ILoggerFactory factory = LoggerFactory.Create(b => b.AddProvider(provider));
-        var overlay = new ErrorOverlayViewModel("1.0.0");
+        var overlay = new ErrorOverlayViewModel(new RecordingClipboardService(), "1.0.0");
         var reporter = new UnexpectedErrorReporter(factory.CreateLogger<UnexpectedErrorReporter>(), clock, overlay);
         using IDisposable hooks = GlobalExceptionHooks.Install(reporter, clock);
 

@@ -1345,4 +1345,28 @@ Mostrando conversiones aproximadas.
   <data name="ImportReasonDuplicateImported" xml:space="preserve">
     <value>Esta fila parece duplicada pero se importa porque no se omiten las duplicadas.</value>
   </data>
+  <data name="ErrorOverlayTitle" xml:space="preserve">
+    <value>Algo salió mal</value>
+  </data>
+  <data name="ErrorOverlayBody" xml:space="preserve">
+    <value>La aplicación encontró un problema inesperado. Tus datos están a salvo en este equipo y los detalles técnicos se guardaron en el registro local.</value>
+  </data>
+  <data name="ErrorOverlayRestartHint" xml:space="preserve">
+    <value>Si el problema continúa, cierra y vuelve a abrir la aplicación.</value>
+  </data>
+  <data name="ErrorOverlayIdLabel" xml:space="preserve">
+    <value>REF</value>
+  </data>
+  <data name="ErrorOverlayMore" xml:space="preserve">
+    <value>+{0} más</value>
+  </data>
+  <data name="ErrorOverlayCopy" xml:space="preserve">
+    <value>Copiar detalles</value>
+  </data>
+  <data name="ErrorOverlayCopied" xml:space="preserve">
+    <value>Copiado</value>
+  </data>
+  <data name="ErrorOverlayClose" xml:space="preserve">
+    <value>Cerrar</value>
+  </data>
 </root>

@@ -139,7 +139,7 @@ public static class Bootstrap
         services.AddRollingFileLogging();
 
         // Fase 21: reporter de errores inesperados y estado del overlay (F-021, slice S3).
-        services.AddSingleton(_ => new ErrorOverlayViewModel(AppVersionInfo.Current));
+        services.AddSingleton(sp => new ErrorOverlayViewModel(sp.GetRequiredService<IClipboardService>(), AppVersionInfo.Current));
         services.AddSingleton<IErrorPresenter>(sp => sp.GetRequiredService<ErrorOverlayViewModel>());
         services.AddSingleton<IUnexpectedErrorReporter, UnexpectedErrorReporter>();
 

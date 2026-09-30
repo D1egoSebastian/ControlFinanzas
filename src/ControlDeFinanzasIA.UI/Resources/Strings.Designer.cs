@@ -2186,4 +2186,44 @@ public class Strings
     /// Gets the reason text for DuplicateImported (F-020).
     /// </summary>
     public static string ImportReasonDuplicateImported => ResourceManager.GetString("ImportReasonDuplicateImported", Culture)!;
+
+    /// <summary>
+    /// Gets the error overlay title (F-021).
+    /// </summary>
+    public static string ErrorOverlayTitle => ResourceManager.GetString("ErrorOverlayTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the error overlay body text (F-021).
+    /// </summary>
+    public static string ErrorOverlayBody => ResourceManager.GetString("ErrorOverlayBody", Culture)!;
+
+    /// <summary>
+    /// Gets the error overlay restart hint (F-021).
+    /// </summary>
+    public static string ErrorOverlayRestartHint => ResourceManager.GetString("ErrorOverlayRestartHint", Culture)!;
+
+    /// <summary>
+    /// Gets the label in front of the error short id (F-021).
+    /// </summary>
+    public static string ErrorOverlayIdLabel => ResourceManager.GetString("ErrorOverlayIdLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the "+{0} more" caption shown when further errors arrive while the overlay is open (F-021).
+    /// </summary>
+    public static string ErrorOverlayMore => ResourceManager.GetString("ErrorOverlayMore", Culture)!;
+
+    /// <summary>
+    /// Gets the error overlay copy button caption (F-021).
+    /// </summary>
+    public static string ErrorOverlayCopy => ResourceManager.GetString("ErrorOverlayCopy", Culture)!;
+
+    /// <summary>
+    /// Gets the caption shown after the error details were copied (F-021).
+    /// </summary>
+    public static string ErrorOverlayCopied => ResourceManager.GetString("ErrorOverlayCopied", Culture)!;
+
+    /// <summary>
+    /// Gets the error overlay close button caption (F-021).
+    /// </summary>
+    public static string ErrorOverlayClose => ResourceManager.GetString("ErrorOverlayClose", Culture)!;
 }

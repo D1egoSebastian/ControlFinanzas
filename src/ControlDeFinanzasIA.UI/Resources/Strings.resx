@@ -1345,4 +1345,28 @@ Showing approximate conversions only.
   <data name="ImportReasonDuplicateImported" xml:space="preserve">
     <value>This row looks like a duplicate but is imported because duplicates are not skipped.</value>
   </data>
+  <data name="ErrorOverlayTitle" xml:space="preserve">
+    <value>Something went wrong</value>
+  </data>
+  <data name="ErrorOverlayBody" xml:space="preserve">
+    <value>The app hit an unexpected problem. Your data is safe on this computer, and the technical details were saved to the local log.</value>
+  </data>
+  <data name="ErrorOverlayRestartHint" xml:space="preserve">
+    <value>If the problem keeps happening, close and reopen the app.</value>
+  </data>
+  <data name="ErrorOverlayIdLabel" xml:space="preserve">
+    <value>REF</value>
+  </data>
+  <data name="ErrorOverlayMore" xml:space="preserve">
+    <value>+{0} more</value>
+  </data>
+  <data name="ErrorOverlayCopy" xml:space="preserve">
+    <value>Copy details</value>
+  </data>
+  <data name="ErrorOverlayCopied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="ErrorOverlayClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
 </root>
