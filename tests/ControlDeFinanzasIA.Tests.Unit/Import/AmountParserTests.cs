@@ -101,6 +101,21 @@ public sealed class AmountParserTests
         Assert.False(AmountParser.Parse(cell, DecimalStyle.Point).WasAmbiguous);
     }
 
+    [Theory]
+    [InlineData("12.34567")]
+    [InlineData("0.00005")]
+    [InlineData("-1.000001")]
+    public void Parse_NumberCellWithMoreThanFourDecimals_IsTooManyDecimals_NotRounded(string text)
+    {
+        AmountParseResult result = AmountParser.Parse(new RawCell(text, RawCellKind.Number), DecimalStyle.Point);
+
+        Assert.Null(result.Value);
+        Assert.Equal(ImportReason.TooManyDecimals, result.Error);
+    }
+
+    [Fact]
+    public void Parse_NumberCellWithFourDecimals_IsAccepted() => Assert.Equal(12.3456m, AmountParser.Parse(new RawCell("12.3456", RawCellKind.Number), DecimalStyle.Point).Value);
+
     [Fact]
     public void Parse_NumberCellAboveMax_IsAmountTooLarge()
     {

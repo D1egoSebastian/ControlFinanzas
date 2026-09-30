@@ -102,6 +102,13 @@ public static class AmountParser
             return Fail(looksNumeric ? ImportReason.AmountTooLarge : ImportReason.InvalidAmount);
         }
 
+        // The spreadsheet reader only hands over more than four decimals when they are real (not double noise).
+        int point = text.IndexOf('.', StringComparison.Ordinal);
+        if (point >= 0 && text.Length - point - 1 > ImportLimits.MaxFractionDigits)
+        {
+            return Fail(ImportReason.TooManyDecimals);
+        }
+
         return Bound(value, wasAmbiguous: false);
     }
 

@@ -2138,6 +2138,16 @@ public class Strings
     public static string ImportReasonNoFallbackCategory => ResourceManager.GetString("ImportReasonNoFallbackCategory", Culture)!;
 
     /// <summary>
+    /// Gets the reason text for UndecodableText (F-020).
+    /// </summary>
+    public static string ImportReasonUndecodableText => ResourceManager.GetString("ImportReasonUndecodableText", Culture)!;
+
+    /// <summary>
+    /// Gets the acknowledgement checkbox label shown when the preview holds ambiguous amounts or dates (F-020).
+    /// </summary>
+    public static string ImportAcknowledgeLabel => ResourceManager.GetString("ImportAcknowledgeLabel", Culture)!;
+
+    /// <summary>
     /// Gets the reason text for FutureDate (F-020).
     /// </summary>
     public static string ImportReasonFutureDate => ResourceManager.GetString("ImportReasonFutureDate", Culture)!;

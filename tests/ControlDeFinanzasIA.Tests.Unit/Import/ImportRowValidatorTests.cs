@@ -83,6 +83,40 @@ public sealed class ImportRowValidatorTests
         Assert.True(result.IsRejected);
     }
 
+    [Theory]
+    // "@" stands for U+FFFD and is swapped in below.
+    [InlineData(2, "Caf@")]
+    [InlineData(3, "Comi@a")]
+    [InlineData(2, "Bad\u0081")]
+    [InlineData(3, "Cat\u009D")]
+    public void Parse_ReplacementCharacterInDescriptionOrCategory_RejectsTheRow(int column, string value)
+    {
+        ParsedRow result = Parse(Row(With(column, value.Replace('@', (char)0xFFFD))));
+
+        Assert.Contains(ImportReason.UndecodableText, result.Reasons);
+        Assert.True(result.IsRejected);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(6)]
+    public void Parse_ReplacementCharacterInOtherColumns_DoesNotUseTheUndecodableReason(int column)
+    {
+        ParsedRow result = Parse(Row(With(column, "x" + (char)0xFFFD)));
+
+        Assert.DoesNotContain(ImportReason.UndecodableText, result.Reasons);
+    }
+
+    [Fact]
+    public void Parse_TextWithoutReplacementCharacter_IsNotFlagged()
+    {
+        ParsedRow result = Parse(Row(With(2, "Café ñandú")));
+
+        Assert.DoesNotContain(ImportReason.UndecodableText, result.Reasons);
+        Assert.False(result.IsRejected);
+    }
+
     [Fact]
     public void Parse_DescriptionTooLong_201Chars_IsRejectedAndNeverTruncated_C15()
     {

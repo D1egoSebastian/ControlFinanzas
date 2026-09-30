@@ -5,7 +5,10 @@ using Avalonia.Headless;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using ControlDeFinanzasIA.Application.Abstractions;
+using ControlDeFinanzasIA.Application.UseCases.Import;
+using ControlDeFinanzasIA.Application.UseCases.Import.CommitImport;
 using ControlDeFinanzasIA.Application.UseCases.Import.Common;
+using ControlDeFinanzasIA.Application.UseCases.Import.PreviewImport;
 using ControlDeFinanzasIA.Domain.Enums;
 using ControlDeFinanzasIA.Domain.Transactions;
 using ControlDeFinanzasIA.Domain.ValueObjects;
@@ -234,6 +237,95 @@ public sealed class ImportViewHeadlessTests
 
         Assert.True(ok);
     }
+
+    [Fact]
+    public async Task ImportView_AcknowledgementCheckbox_AppearsOnlyWhenRequired_AndGatesConfirmTwoWay()
+    {
+        bool ok = await OnUiThread(async () =>
+        {
+            ImportViewModel import = NewImportViewModel(
+            [
+                ["2026-03-01", "Expense", "Uno", "Comida", "1,234", "DOP"],
+                ["2026-03-02", "Expense", "Dos", "Comida", "2,500", "DOP"],
+            ]);
+            var view = new ImportView();
+            using var _ = new DisposableWindow(Show(view, import));
+
+            // Nothing loaded: no checkbox.
+            Assert.DoesNotContain(view.GetVisualDescendants().OfType<CheckBox>(), c => c.IsEffectivelyVisible && IsAcknowledgement(c));
+
+            await import.ChooseFileCommand.ExecuteAsync(null);
+            Flush();
+
+            Assert.True(import.RequiresAcknowledgement);
+            CheckBox box = view.GetVisualDescendants().OfType<CheckBox>().Single(IsAcknowledgement);
+            Assert.True(box.IsEffectivelyVisible);
+            Assert.Equal(Strings.ImportAcknowledgeLabel, Assert.IsType<TextBlock>(box.Content).Text);
+            Assert.NotEqual(true, box.IsChecked);
+            Button confirm = ButtonWithContent(view, Strings.ImportConfirmButton);
+            Assert.False(confirm.IsEffectivelyEnabled);
+
+            // View to view-model.
+            box.IsChecked = true;
+            Flush();
+            Assert.True(import.IsAcknowledged);
+            Assert.True(confirm.IsEffectivelyEnabled);
+
+            // View-model to view: an option change resets the acknowledgement and unchecks the box.
+            import.SkipDuplicates = false;
+            await import.RefreshTask;
+            Flush();
+            Assert.False(import.IsAcknowledged);
+            Assert.NotEqual(true, box.IsChecked);
+            Assert.False(confirm.IsEffectivelyEnabled);
+
+            // Resolving the ambiguity removes the requirement and the checkbox.
+            import.DecimalStyle = DecimalStyle.Point;
+            await import.RefreshTask;
+            Flush();
+            Assert.False(import.RequiresAcknowledgement);
+            Assert.False(box.IsEffectivelyVisible);
+            Assert.True(confirm.IsEffectivelyEnabled);
+            return true;
+        });
+
+        Assert.True(ok);
+    }
+
+    private static bool IsAcknowledgement(CheckBox box) =>
+        AutomationProperties.GetName(box) == Strings.ImportAcknowledgeLabel;
+
+    private static ImportViewModel NewImportViewModel(string[][] rows)
+    {
+        var clock = new TestDoubles.FakeClock
+        {
+            Today = new DateOnly(2026, 9, 30),
+            UtcNow = new DateTime(2026, 9, 30, 15, 0, 0, DateTimeKind.Utc),
+        };
+        string[] headers = ["Date", "Type", "Description", "Category", "Amount", "Currency"];
+        var table = new RawTable(
+            headers,
+            rows.Select((cells, i) => new RawRow(i + 2, cells.Select(c => new RawCell(c, RawCellKind.Text)).ToList())).ToList(),
+            new TableSourceInfo(ImportFileKind.Csv, "UTF-8", false, ',', null, string.Empty));
+        var reader = new TestDoubles.FakeTabularReader(table);
+        var lookup = new TestDoubles.FakeImportLookup(TestDoubles.FakeImportLookup.Snapshot());
+        var pipeline = new ImportPipeline(reader, lookup, clock);
+        var preview = new PreviewImportUseCase(
+            pipeline,
+            new TestDoubles.RecordingLogger<PreviewImportUseCase>());
+        var commit = new CommitImportUseCase(
+            pipeline,
+            new TestDoubles.FakeImportWriter(),
+            clock,
+            new TestDoubles.RecordingLogger<CommitImportUseCase>());
+        var dialog = new TestDoubles.FakeFileOpenDialog { Result = OpenTarget_Recording() };
+        return new ImportViewModel(preview, commit, dialog, new TestDoubles.RecordingLogger<ImportViewModel>())
+        {
+            PreviewDebounce = TimeSpan.Zero,
+        };
+    }
+
+    private static OpenTarget OpenTarget_Recording() => OpenTargets_Recording();
 
     private static OpenTarget OpenTargets_Recording() =>
         TestDoubles.OpenTargets.Recording([1, 2, 3]).Target;

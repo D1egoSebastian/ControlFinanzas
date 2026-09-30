@@ -88,6 +88,9 @@ public sealed partial class ImportViewModel : ViewModelBase
     // The exact instance used for the last successful preview; it is the one handed to the commit.
     private ImportOptions? _previewOptions;
 
+    // The plan hash that was on screen when the user ticked the acknowledgement.
+    private string? _acknowledgedPlanHash;
+
     private CancellationTokenSource? _previewCts;
     private Task _refreshTask = Task.CompletedTask;
     private bool _suppressChanges;
@@ -168,8 +171,18 @@ public sealed partial class ImportViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsWorkbenchVisible))]
     [NotifyPropertyChangedFor(nameof(IsMappingVisible))]
     [NotifyPropertyChangedFor(nameof(IsDelimiterVisible))]
+    [NotifyPropertyChangedFor(nameof(RequiresAcknowledgement))]
     [NotifyCanExecuteChangedFor(nameof(ConfirmCommand))]
     private ImportPreview? _preview;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the user confirmed that the ambiguous amounts or dates are read
+    /// correctly. It is bound to the acknowledgement checkbox and is cleared whenever an option changes or the
+    /// plan hash changes.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmCommand))]
+    private bool _isAcknowledged;
 
     /// <summary>Gets the name of the picked file.</summary>
     [ObservableProperty]
@@ -317,6 +330,19 @@ public sealed partial class ImportViewModel : ViewModelBase
 
     /// <summary>Gets a value indicating whether the import would create categories.</summary>
     public bool HasCategoriesToCreate => CategoriesToCreate.Count > 0;
+
+    /// <summary>
+    /// Gets a value indicating whether Confirm needs an explicit acknowledgement: the rows that would be imported
+    /// include an amount readable two ways (a possible 1000x error), a file that mixes decimal styles while the
+    /// style is automatic, or dates whose day/month order is ambiguous or contradicted (W1/W2, C-1, C-2, C-6).
+    /// Choosing a decimal style or a date format that removes the ambiguity removes the requirement.
+    /// </summary>
+    public bool RequiresAcknowledgement =>
+        Preview is { ToImportCount: > 0 } current
+        && _previewOptions is not null
+        && ((current.Decimal.IsConflict && _previewOptions.DecimalStyle == DecimalStyle.Auto)
+            || current.AmbiguousImportedCount > 0
+            || current.Dates is DateEvidence.AmbiguousOnly or DateEvidence.Contradicts);
 
     /// <summary>Gets a value indicating whether a preview exists.</summary>
     public bool HasPreview => Preview is not null;
@@ -596,6 +622,12 @@ public sealed partial class ImportViewModel : ViewModelBase
             return;
         }
 
+        if (_optionProperties.Contains(e.PropertyName) || _columnProperties.Contains(e.PropertyName))
+        {
+            // Any change of how the file is read invalidates what the user acknowledged.
+            IsAcknowledged = false;
+        }
+
         if (_optionProperties.Contains(e.PropertyName))
         {
             if (e.PropertyName == nameof(SelectedDelimiter))
@@ -640,13 +672,16 @@ public sealed partial class ImportViewModel : ViewModelBase
         _ => _unknownValue,
     };
 
+    partial void OnIsAcknowledgedChanged(bool value) => _acknowledgedPlanHash = value ? Preview?.PlanHash : null;
+
     private bool CanChooseFile() => State == ImportPanelState.Idle;
 
     private bool CanConfirm() =>
         State == ImportPanelState.Previewed
         && !IsPreviewStale
         && Preview is { ToImportCount: > 0 }
-        && _source is not null;
+        && _source is not null
+        && (!RequiresAcknowledgement || IsAcknowledged);
 
     private bool CanCancel() => State is ImportPanelState.Loading or ImportPanelState.Mapping or ImportPanelState.Previewed;
 
@@ -771,6 +806,14 @@ public sealed partial class ImportViewModel : ViewModelBase
         WithoutRefresh(() => UpdateColumns(preview));
 
         Preview = preview;
+        OnPropertyChanged(nameof(RequiresAcknowledgement));
+
+        // An acknowledgement belongs to one exact plan: a different hash or no remaining ambiguity clears it.
+        if (IsAcknowledged && (!RequiresAcknowledgement || _acknowledgedPlanHash != preview.PlanHash))
+        {
+            IsAcknowledged = false;
+        }
+
         IsPreviewStale = false;
         SampleRows = preview.SampleRows.Select(row => new ImportRowItem(row)).ToArray();
         ProblemRows = preview.ProblemRows.Select(row => new ImportRowItem(row)).ToArray();
@@ -878,6 +921,8 @@ public sealed partial class ImportViewModel : ViewModelBase
         _previewOptions = null;
         OnPropertyChanged(nameof(HasSource));
         Preview = null;
+        IsAcknowledged = false;
+        OnPropertyChanged(nameof(RequiresAcknowledgement));
         FileName = string.Empty;
         SourceFacts = string.Empty;
         SummaryText = string.Empty;

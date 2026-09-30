@@ -267,6 +267,28 @@ public sealed class PreviewImportUseCaseFakedPortsTests
     }
 
     [Fact]
+    public async Task Execute_AmbiguousImportedCount_CountsOnlyRowsThatWouldBeImported()
+    {
+        // "1,234" is ambiguous under the automatic style. One is imported, one is rejected for another reason,
+        // one is a duplicate of an existing row, and one is unambiguous.
+        var lookup = new FakeImportLookup(FakeImportLookup.Snapshot(existing:
+        [
+            new ExistingTransactionKey(new DateOnly(2026, 3, 3), TransactionType.Expense, 1234m, Currency.DOP, "Dup", new Guid("11111111-1111-1111-1111-000000000001")),
+        ]));
+
+        ImportPreview preview = await PreviewAsync(
+            Table(
+                Row("2026-03-01", "Imported", "1,234"),
+                Row("not-a-date", "Rejected", "1,234"),
+                Row("2026-03-03", "Dup", "1,234"),
+                Row("2026-03-04", "Plain", "10")),
+            lookup);
+
+        Assert.Equal(1, preview.AmbiguousImportedCount);
+        Assert.Equal(3, preview.ReasonCounts.Single(r => r.Reason == ImportReason.AmbiguousAmount).Count);
+    }
+
+    [Fact]
     public async Task Execute_LookupCancelling_IsRethrown()
     {
         (PreviewImportUseCase useCase, _) = Create(

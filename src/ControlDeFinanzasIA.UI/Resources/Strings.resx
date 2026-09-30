@@ -1315,6 +1315,12 @@ Showing approximate conversions only.
   <data name="ImportReasonNoFallbackCategory" xml:space="preserve">
     <value>The default category (Otros) was not found.</value>
   </data>
+  <data name="ImportReasonUndecodableText" xml:space="preserve">
+    <value>The description or category contains characters that could not be read. Save the file as UTF-8 and import it again.</value>
+  </data>
+  <data name="ImportAcknowledgeLabel" xml:space="preserve">
+    <value>I checked the warnings above and confirm that the amounts and dates are read correctly.</value>
+  </data>
   <data name="ImportReasonFutureDate" xml:space="preserve">
     <value>The date is in the future.</value>
   </data>

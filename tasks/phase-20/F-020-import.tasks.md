@@ -773,6 +773,30 @@ with the REAL exporter.
   tick the Acceptance Criteria of the spec with evidence, and record the manual checks still NOT RUN BY HAND. Commit
   history uses conventional commits with no AI attribution trailers.
 
+> Apply notes (post-verify fixes, commit A; 8.1-8.6 above stay OPEN, nothing ticked): the independent verification
+> returned PASS WITH WARNINGS (0 critical); W1-W5 were fixed test-first against the real components. Red state: the
+> new tests failed to compile (no `RequiresAcknowledgement`/`IsAcknowledged`/`AmbiguousImportedCount`/`UndecodableText`);
+> the real-bytes CSV test was the only one that failed on behaviour and it corrected an assumption (below).
+> - W1/W2 acknowledgement gate: `ImportPreview.AmbiguousImportedCount` (new optional trailing field, counts rows that
+>   would be imported with `AmbiguousAmount`); `ImportViewModel.RequiresAcknowledgement` / `IsAcknowledged`; Confirm's
+>   `CanConfirm` requires the acknowledgement, so `ExecuteAsync` is a no-op too. Cleared on option/column change, on a
+>   plan-hash change (stale commit path) and when no ambiguity remains. A decimal conflict only requires it while the
+>   style is Automatic; ambiguous/contradicting dates require it until the format resolves them. Checkbox in
+>   `ImportView.axaml` (`ImportAcknowledgeLabel`, both cultures, Designer). 12 VM/use-case tests + 1 headless test.
+> - W3: the XLSX reader keeps noise tolerance but no longer rounds a real 5th decimal. Tolerance: a value is noise only
+>   if within 1e-13 relative of its 4-place rounding (double noise is ~1e-16; a real 5th decimal is >= 1e-5 absolute);
+>   otherwise the full text is emitted and `AmountParser` returns `TooManyDecimals` for Number cells with > 4 decimals.
+>   The old test `NumberIsRoundedToFourPlacesAwayFromZero` asserted the silent rounding and was replaced. Real XLSX
+>   tests (reader + preview) and the Phase-18 round trip (`12.3456`) stay green.
+> - W4: the assumption that the fallback yields U+FFFD was WRONG for .NET's Windows-1252 table: 0x81/0x8D/0x8F/0x90/0x9D
+>   decode to C1 controls U+0081.. (the real-bytes test imported 3 rows instead of 1). `ImportReason.UndecodableText`
+>   (rejection, both cultures) now rejects a description/category containing U+FFFD or a C1 control.
+> - W5: spec "Post-verify reconciliation" section appended (51st category REJECTED with `TooManyNewCategories`
+>   supersedes R-15/S-16; acknowledgement gate; XLSX > 4 decimals; U+FFFD/C1 handling); NetArchTest forbids
+>   `System.IO.Compression` in Domain and Application.
+> - Gates: build 0/0; unit 2497 -> 2527, integration 766 -> 772 (total 3299); `dotnet format style
+>   --verify-no-changes` exit 0; NetArchTest green; full suite 3x consecutive green, no intermittent failure.
+
 ## Threat-table traceability (design C-1..C-22 → named test tasks)
 
 | Row | Vector | Test task(s) |

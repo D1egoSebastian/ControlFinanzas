@@ -25,6 +25,7 @@ public sealed record ImportReasonCount(ImportReason Reason, int Count);
 /// <param name="ReasonCounts">Rows per reason.</param>
 /// <param name="CategoriesToCreate">Names of the categories the import would create.</param>
 /// <param name="PlanHash">Fingerprint of the plan the user is looking at.</param>
+/// <param name="AmbiguousImportedCount">Rows that will be imported whose amount could be read two ways (needs acknowledgement).</param>
 public sealed record ImportPreview(
     TableSourceInfo Source,
     IReadOnlyList<string> Headers,
@@ -42,4 +43,5 @@ public sealed record ImportPreview(
     IReadOnlyList<ImportRowResult> ProblemRows,
     IReadOnlyList<ImportReasonCount> ReasonCounts,
     IReadOnlyList<string> CategoriesToCreate,
-    string PlanHash);
+    string PlanHash,
+    int AmbiguousImportedCount = 0);

@@ -73,7 +73,10 @@ public sealed class ArchitectureTests
         "DocumentFormat.OpenXml",
 
         // F-019 (slice S5, D-20): SQLite access is Infrastructure-only.
-        "Microsoft.Data.Sqlite"
+        "Microsoft.Data.Sqlite",
+
+        // F-020 (R-1, R-25): reading ZIP containers (XLSX guard, backups) is Infrastructure-only.
+        "System.IO.Compression"
     ];
 
     private static readonly string[] _forbiddenPackagesForUi =

@@ -63,6 +63,9 @@ public enum ImportReason
     /// <summary>The fallback category is missing from the database.</summary>
     NoFallbackCategory,
 
+    /// <summary>The description or category holds characters the decoder could not read (U+FFFD or a C1 control).</summary>
+    UndecodableText,
+
     /// <summary>Warning: the date is in the future.</summary>
     FutureDate,
 

@@ -65,6 +65,7 @@ public sealed class PreviewImportUseCase
         int duplicates = 0;
         int rejected = 0;
         int warnings = 0;
+        int ambiguousImported = 0;
         var sample = new List<ImportRowResult>(ImportLimits.PreviewRows);
         var problems = new List<ImportRowResult>(ImportLimits.PreviewRows);
         var reasonCounts = new SortedDictionary<int, int>();
@@ -79,6 +80,11 @@ public sealed class PreviewImportUseCase
                     if (row.Reasons.Any(reason => !ImportReasons.IsRejection(reason)))
                     {
                         warnings++;
+                    }
+
+                    if (row.Reasons.Contains(ImportReason.AmbiguousAmount))
+                    {
+                        ambiguousImported++;
                     }
 
                     break;
@@ -131,7 +137,8 @@ public sealed class PreviewImportUseCase
             problems,
             reasonCounts.Select(pair => new ImportReasonCount((ImportReason)pair.Key, pair.Value)).ToList(),
             plan.NewCategories.Select(category => category.Name).ToList(),
-            plan.PlanHash);
+            plan.PlanHash,
+            ambiguousImported);
     }
 
     private static ImportRowResult ToResult(PlannedRow row) =>

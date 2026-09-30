@@ -113,6 +113,8 @@ public sealed class ImportResourcesTests
         ["ImportReasonCategoryNameTooLong"] = 0,
         ["ImportReasonTooManyNewCategories"] = 0,
         ["ImportReasonNoFallbackCategory"] = 0,
+        ["ImportReasonUndecodableText"] = 0,
+        ["ImportAcknowledgeLabel"] = 0,
         ["ImportReasonFutureDate"] = 0,
         ["ImportReasonAmbiguousAmount"] = 0,
         ["ImportReasonTypeDefaulted"] = 0,

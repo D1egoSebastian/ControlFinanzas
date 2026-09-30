@@ -633,6 +633,69 @@ public sealed class PreviewImportUseCaseTests
         return snapshot.Categories.Single(c => CategoryMatcher.FoldKey(c.Name) == CategoryMatcher.FoldKey(name)).Id;
     }
 
+    [Fact]
+    public async Task RealXlsx_AmountWithMoreThanFourRealDecimals_IsRejectedNotRounded_WhileIeeeNoiseIsAccepted()
+    {
+        using var wb = new ClosedXML.Excel.XLWorkbook();
+        ClosedXML.Excel.IXLWorksheet ws = wb.AddWorksheet("Data");
+        string[] headers = ["Date", "Type", "Description", "Category", "Amount", "Currency"];
+        for (int c = 0; c < headers.Length; c++)
+        {
+            ws.Cell(1, c + 1).Value = headers[c];
+        }
+
+        void Row(int r, string description, double amount)
+        {
+            ws.Cell(r, 1).Value = "2026-03-01";
+            ws.Cell(r, 2).Value = "Expense";
+            ws.Cell(r, 3).Value = description;
+            ws.Cell(r, 4).Value = "Otros";
+            ws.Cell(r, 5).Value = amount;
+            ws.Cell(r, 6).Value = "DOP";
+        }
+
+        Row(2, "Noise", 12.300000000000001d);
+        Row(3, "FiveDecimals", 12.34567d);
+        using var ms = new MemoryStream();
+        wb.SaveAs(ms);
+
+        using var db = new ImportTestDb();
+        ImportPreview preview = await PreviewAsync(db, ms.ToArray());
+
+        ImportRowResult noise = Assert.Single(preview.SampleRows, r => r.Description == "Noise");
+        Assert.Equal(ImportRowStatus.Valid, noise.Status);
+        Assert.Equal(12.3m, noise.Amount);
+        ImportRowResult bad = Assert.Single(preview.SampleRows, r => r.Description == "FiveDecimals");
+        Assert.Equal(ImportRowStatus.Rejected, bad.Status);
+        Assert.Contains(ImportReason.TooManyDecimals, bad.Reasons);
+        Assert.Equal(1, preview.ToImportCount);
+    }
+
+    [Fact]
+    public async Task Windows1252Csv_WithUndefinedByte_RejectsTheRowInsteadOfImportingTheReplacementCharacter()
+    {
+        // 0x81 is undefined in Windows-1252; 0xE9 is "e acute". The file is not valid UTF-8, so the fallback decodes it.
+        byte[] header = Encoding.ASCII.GetBytes(_header + "\n");
+        byte[] good = [.. Encoding.ASCII.GetBytes("2026-03-01,Expense,Caf"), 0xE9, .. Encoding.ASCII.GetBytes(",Comida,10,DOP\n")];
+        byte[] bad = [.. Encoding.ASCII.GetBytes("2026-03-02,Expense,Bad"), 0x81, .. Encoding.ASCII.GetBytes(",Comida,20,DOP\n")];
+        byte[] badCategory = [.. Encoding.ASCII.GetBytes("2026-03-03,Expense,Plain,Cat"), 0x81, .. Encoding.ASCII.GetBytes(",30,DOP\n")];
+        byte[] csv = [.. header, .. good, .. bad, .. badCategory];
+
+        using var db = new ImportTestDb();
+        ImportPreview preview = await PreviewAsync(db, csv);
+
+        Assert.True(preview.Source.EncodingFallback);
+        Assert.Equal("Windows-1252", preview.Source.EncodingName);
+        Assert.Equal(1, preview.ToImportCount);
+        Assert.Equal(2, preview.RejectedCount);
+        ImportRowResult ok = Assert.Single(preview.SampleRows, r => r.Status == ImportRowStatus.Valid);
+        Assert.Equal("Café", ok.Description);
+        Assert.All(
+            preview.SampleRows.Where(r => r.Status == ImportRowStatus.Rejected),
+            r => Assert.Contains(ImportReason.UndecodableText, r.Reasons));
+        Assert.DoesNotContain(preview.CategoriesToCreate, name => name.Contains((char)0xFFFD));
+    }
+
     private sealed class RowResultComparer : IEqualityComparer<ImportRowResult>
     {
         public bool Equals(ImportRowResult? x, ImportRowResult? y) =>

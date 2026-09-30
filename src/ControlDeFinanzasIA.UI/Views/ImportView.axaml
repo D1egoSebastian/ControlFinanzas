@@ -372,6 +372,16 @@
                                Foreground="{StaticResource PaperBrush}"
                                TextWrapping="Wrap" />
                 </Border>
+
+                <!-- Ambiguous amounts or dates must be acknowledged before Confirm is enabled -->
+                <Border Classes="import-callout" IsVisible="{Binding RequiresAcknowledgement}">
+                    <CheckBox IsChecked="{Binding IsAcknowledged}"
+                              AutomationProperties.Name="{x:Static resources:Strings.ImportAcknowledgeLabel}">
+                        <TextBlock Text="{x:Static resources:Strings.ImportAcknowledgeLabel}"
+                                   Foreground="{StaticResource AmberBrush}"
+                                   TextWrapping="Wrap" />
+                    </CheckBox>
+                </Border>
             </StackPanel>
 
             <!-- Actions: Cancel is reachable from the first moment of loading, before any preview exists -->

@@ -19,6 +19,13 @@ public sealed class ClosedXmlTableReader : ITabularReader
     private const string _dataSheetName = "Data";
     private const int _copyBufferBytes = 81_920;
 
+    // A double keeps about 15-16 significant digits, so its representation noise is ~1e-16 relative. A genuine
+    // fifth decimal differs from the four-place rounding by at least 1e-5 absolute. 1e-13 relative sits three
+    // orders above the noise (hundreds of ulps, enough for a few spreadsheet operations) and stays far below any
+    // real fifth decimal for amounts up to ~1e8; larger amounts cannot carry four reliable decimals in a double.
+    private const double _noiseTolerance = 1e-13;
+    private const string _fullPrecisionFormat = "0.############################";
+
     private readonly Action? _workbookOpening;
 
     /// <summary>Initializes a new instance of the <see cref="ClosedXmlTableReader"/> class.</summary>
@@ -52,6 +59,25 @@ public sealed class ClosedXmlTableReader : ITabularReader
         _ => "#ERROR!",
     };
 
+    /// <summary>
+    /// Converts a spreadsheet number. Binary doubles carry representation noise (<c>12.300000000000001</c>), which
+    /// is normalized to the four supported places. A value that really has more than four decimals is NOT rounded:
+    /// it keeps its full text so the amount parser rejects it with <c>TooManyDecimals</c>, exactly like CSV text.
+    /// </summary>
+    private static RawCell NumberCell(double number)
+    {
+        decimal exact = (decimal)number;
+        decimal rounded = decimal.Round(exact, ImportLimits.MaxFractionDigits, MidpointRounding.AwayFromZero);
+        double distance = Math.Abs(number - (double)rounded);
+
+        if (distance > Math.Abs(number) * _noiseTolerance)
+        {
+            return new RawCell(exact.ToString(_fullPrecisionFormat, CultureInfo.InvariantCulture), RawCellKind.Number);
+        }
+
+        return new RawCell(rounded.ToString("0.####", CultureInfo.InvariantCulture), RawCellKind.Number);
+    }
+
     private static RawCell Convert(IXLCell cell)
     {
         XLCellValue value = cell.HasFormula ? cell.CachedValue : cell.Value;
@@ -64,8 +90,7 @@ public sealed class ClosedXmlTableReader : ITabularReader
             case XLDataType.Number:
                 try
                 {
-                    decimal rounded = decimal.Round((decimal)value.GetNumber(), ImportLimits.MaxFractionDigits, MidpointRounding.AwayFromZero);
-                    return new RawCell(rounded.ToString("0.####", CultureInfo.InvariantCulture), RawCellKind.Number);
+                    return NumberCell(value.GetNumber());
                 }
                 catch (OverflowException)
                 {

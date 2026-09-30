@@ -833,6 +833,192 @@ public sealed class ImportViewModelTests : IDisposable
         Assert.Contains(Text("ImportEncodingFallbackBanner", CultureInfo.CurrentUICulture, "Categoría;Café"), f.ViewModel.Banners);
     }
 
+    // ---- (l2) acknowledgement gate (W1/W2, C-1, C-6) ----
+
+    private static RawTable AmbiguousAmountTable() =>
+        Table(Row("2026-03-01", "Uno", "1,234"), Row("2026-03-02", "Dos", "2,500"));
+
+    [Fact]
+    public async Task Acknowledgement_AmbiguousAmounts_GateConfirmUntilAcknowledged()
+    {
+        var f = new Fixture(AmbiguousAmountTable());
+        await Bounded(f.ChooseAsync());
+
+        Assert.True(f.ViewModel.RequiresAcknowledgement);
+        Assert.False(f.ViewModel.IsAcknowledged);
+        Assert.False(f.ViewModel.ConfirmCommand.CanExecute(null));
+
+        // Executing directly must be a no-op as well: ExecuteAsync ignores CanExecute.
+        await Bounded(f.ViewModel.ConfirmCommand.ExecuteAsync(null));
+        Assert.Empty(f.Writer.Batches);
+        Assert.Equal(ImportPanelState.Previewed, f.ViewModel.State);
+        Assert.Empty(f.Events);
+
+        f.ViewModel.IsAcknowledged = true;
+        Assert.True(f.ViewModel.ConfirmCommand.CanExecute(null));
+
+        await Bounded(f.ViewModel.ConfirmCommand.ExecuteAsync(null));
+        Assert.Single(f.Writer.Batches);
+        Assert.Equal(ImportPanelState.Done, f.ViewModel.State);
+    }
+
+    [Fact]
+    public async Task Acknowledgement_CleanFile_IsNotRequired()
+    {
+        var f = new Fixture();
+        await Bounded(f.ChooseAsync());
+
+        Assert.False(f.ViewModel.RequiresAcknowledgement);
+        Assert.False(f.ViewModel.IsAcknowledged);
+        Assert.True(f.ViewModel.ConfirmCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Acknowledgement_ExplicitDecimalStyle_ResolvesTheAmbiguityAndClearsTheRequirement()
+    {
+        var f = new Fixture(AmbiguousAmountTable());
+        await Bounded(f.ChooseAsync());
+        Assert.True(f.ViewModel.RequiresAcknowledgement);
+        f.ViewModel.IsAcknowledged = true;
+
+        f.ViewModel.DecimalStyle = DecimalStyle.Point;
+        await Bounded(f.ViewModel.RefreshTask);
+
+        Assert.False(f.ViewModel.RequiresAcknowledgement);
+        Assert.False(f.ViewModel.IsAcknowledged);
+        Assert.True(f.ViewModel.ConfirmCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Acknowledgement_ResetsWhenAnOptionChangesEvenIfTheAmbiguityRemains()
+    {
+        var f = new Fixture(AmbiguousAmountTable());
+        await Bounded(f.ChooseAsync());
+        f.ViewModel.IsAcknowledged = true;
+        Assert.True(f.ViewModel.ConfirmCommand.CanExecute(null));
+
+        f.ViewModel.SkipDuplicates = false;
+        await Bounded(f.ViewModel.RefreshTask);
+
+        Assert.True(f.ViewModel.RequiresAcknowledgement);
+        Assert.False(f.ViewModel.IsAcknowledged);
+        Assert.False(f.ViewModel.ConfirmCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Acknowledgement_ResetsWhenTheUserChangesOptionsWhileTheRefreshIsPending()
+    {
+        var f = new Fixture(AmbiguousAmountTable());
+        await Bounded(f.ChooseAsync());
+        f.ViewModel.IsAcknowledged = true;
+        f.ViewModel.PreviewDebounce = TimeSpan.FromMinutes(5);
+
+        f.ViewModel.DefaultCurrency = Currency.USD;
+
+        Assert.False(f.ViewModel.IsAcknowledged);
+        Assert.False(f.ViewModel.ConfirmCommand.CanExecute(null));
+        f.ViewModel.CancelCommand.Execute(null);
+        await Bounded(f.ViewModel.RefreshTask);
+    }
+
+    [Fact]
+    public async Task Acknowledgement_ResetsWhenTheCommitFindsAStalePlan()
+    {
+        int lookups = 0;
+        Guid comida = FakeImportLookup.DefaultCategories().First().Id;
+        var f = new Fixture(
+            AmbiguousAmountTable(),
+            lookup: () => Result.Success(
+                ++lookups == 1
+                    ? FakeImportLookup.Snapshot()
+                    : FakeImportLookup.Snapshot(existing:
+                    [
+                        new ExistingTransactionKey(new DateOnly(2026, 3, 1), TransactionType.Expense, 1234m, Currency.DOP, "Uno", comida),
+                    ])));
+        await Bounded(f.ChooseAsync());
+        string firstHash = f.ViewModel.Preview!.PlanHash;
+        f.ViewModel.IsAcknowledged = true;
+
+        await Bounded(f.ViewModel.ConfirmCommand.ExecuteAsync(null));
+
+        Assert.Empty(f.Writer.Batches);
+        Assert.NotEqual(firstHash, f.ViewModel.Preview!.PlanHash);
+        Assert.True(f.ViewModel.RequiresAcknowledgement);
+        Assert.False(f.ViewModel.IsAcknowledged);
+        Assert.False(f.ViewModel.ConfirmCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Acknowledgement_MixedDecimalStyles_Required_WhileAutomatic()
+    {
+        var f = new Fixture(Table(Row("2026-03-01", "Uno", "1,234.56"), Row("2026-03-02", "Dos", "1.234,56")));
+        await Bounded(f.ChooseAsync());
+
+        Assert.True(f.ViewModel.Preview!.Decimal.IsConflict);
+        Assert.True(f.ViewModel.Preview.ToImportCount > 0);
+        Assert.True(f.ViewModel.RequiresAcknowledgement);
+        Assert.False(f.ViewModel.ConfirmCommand.CanExecute(null));
+
+        f.ViewModel.DecimalStyle = DecimalStyle.Point;
+        await Bounded(f.ViewModel.RefreshTask);
+
+        Assert.False(f.ViewModel.RequiresAcknowledgement);
+    }
+
+    [Fact]
+    public async Task Acknowledgement_AmbiguousDates_Required()
+    {
+        var f = new Fixture(Table(Row("03/04/2026", "Uno", "10"), Row("05/06/2026", "Dos", "20")));
+        await Bounded(f.ChooseAsync());
+
+        Assert.Equal(DateEvidence.AmbiguousOnly, f.ViewModel.Preview!.Dates);
+        Assert.True(f.ViewModel.RequiresAcknowledgement);
+        Assert.False(f.ViewModel.ConfirmCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Acknowledgement_DatesContradictingTheFormat_RequiredUntilTheFormatResolvesThem()
+    {
+        UseCulture("en");
+        var f = new Fixture(Table(Row("25/03/2026", "Uno", "10"), Row("26/03/2026", "Dos", "20")));
+        await Bounded(f.ChooseAsync());
+
+        Assert.Equal(DateEvidence.Contradicts, f.ViewModel.Preview!.Dates);
+        // Every row contradicts the month-first format, so nothing would be imported: nothing to acknowledge.
+        Assert.Equal(0, f.ViewModel.Preview.ToImportCount);
+        Assert.False(f.ViewModel.RequiresAcknowledgement);
+
+        // A row that parses month-first next to rows that contradict it: there is something to import.
+        var g = new Fixture(Table(Row("25/03/2026", "Uno", "10"), Row("2026-03-02", "Dos", "20")));
+        await Bounded(g.ChooseAsync());
+        Assert.Equal(DateEvidence.Contradicts, g.ViewModel.Preview!.Dates);
+        Assert.True(g.ViewModel.Preview.ToImportCount > 0);
+        Assert.True(g.ViewModel.RequiresAcknowledgement);
+
+        g.ViewModel.DateFormat = ImportDateFormat.DayMonthYear;
+        await Bounded(g.ViewModel.RefreshTask);
+
+        Assert.Equal(DateEvidence.Consistent, g.ViewModel.Preview!.Dates);
+        Assert.False(g.ViewModel.RequiresAcknowledgement);
+        Assert.True(g.ViewModel.ConfirmCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Acknowledgement_IsClearedWhenThePanelIsClosed()
+    {
+        var f = new Fixture(AmbiguousAmountTable());
+        await Bounded(f.ChooseAsync());
+        f.ViewModel.IsAcknowledged = true;
+
+        f.ViewModel.CancelCommand.Execute(null);
+
+        Assert.False(f.ViewModel.IsAcknowledged);
+        Assert.False(f.ViewModel.RequiresAcknowledgement);
+    }
+
+    [Fact]
+    public void Acknowledgement_TextsAreLocalizedInBothCultures() => AssertLocalized("ImportAcknowledgeLabel");
+
     [Fact]
     public async Task Banners_CleanFile_ShowsNone()
     {

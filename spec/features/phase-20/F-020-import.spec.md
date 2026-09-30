@@ -228,3 +228,15 @@ All 20 points of `.atl/sdd/f-020p20-import/design.md` "Spec Reconciliation" are 
 20. Stale preview is detected by a plan hash, not only by counts.
 
 Carried into apply: S5 confirms the 50k single-SaveChanges ceiling on EF Core 8.0.11 + SQLite; S3 confirms ClosedXML 0.105.1 reports date-formatted numbers as DateTime for user workbooks.
+
+## Post-verify reconciliation (2026-09-30)
+
+The independent verification of Phase 20 returned PASS WITH WARNINGS (0 critical). The fixes below were made test-first against the real components; where they differ from the wording above, this section governs.
+
+1. **Category cap (supersedes R-15 and S-16).** The 51st and later distinct NEW category names are REJECTED row by row with `TooManyNewCategories`; they are NOT "treated as creation off". A rejected row never falls back to "Otros" and never creates a category; the preview lists the count under that reason.
+2. **Acknowledgement gate (W1/W2, C-1, C-2, C-6).** The ambiguity banners alone are no longer enough. When the rows that would be imported include an amount readable two ways (`AmbiguousAmount`), a file that mixes decimal styles while the decimal style is Automatic, or date evidence `AmbiguousOnly` / `Contradicts`, `ImportViewModel` exposes `RequiresAcknowledgement` and `IsAcknowledged` (a checkbox in `ImportView`), and Confirm is disabled and ignored until the box is ticked. The acknowledgement is cleared when any option or column mapping changes, when a new preview carries a different plan hash (for example after `PreviewStale`), and when no ambiguity remains. Choosing a decimal style or date format that removes the ambiguity removes the requirement. Nothing to import means nothing to acknowledge.
+3. **XLSX numbers with more than four decimals (W3, C-4).** The XLSX reader no longer rounds a numeric cell to four places when the value really has more. IEEE double noise is still tolerated and normalized (`12.300000000000001` becomes `12.3`): a value is treated as noise only when it lies within 1e-13 (relative) of its four-place rounding. Anything further away (`12.34567`) keeps its full text and is rejected by the amount parser with `TooManyDecimals`, the same as CSV text. This replaces the "Number: rounded to 4 places" rule in DD-10 and Reconciliation #14.
+4. **Lossy decoding (W4, C-8).** When the Windows-1252 fallback is used, bytes that cannot be mapped reach the text as U+FFFD (replacement decoder) or as a C1 control character U+0080..U+009F (how .NET's Windows-1252 table decodes 0x81, 0x8D, 0x8F, 0x90 and 0x9D). A row whose description or category contains either is REJECTED with the new `ImportReason.UndecodableText` (localized in both cultures), so corrupted text is never stored. The encoding banner and sample are unchanged.
+5. **Architecture guard.** Application and Domain must not reference `System.IO.Compression` (ZIP reading stays in Infrastructure); NetArchTest enforces it (R-1, R-25).
+
+Still NOT RUN BY HAND: the real native dialogs, the es-DO/en visual pass and the real-file manual checks (tasks 8.2, 8.3).

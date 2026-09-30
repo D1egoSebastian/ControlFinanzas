@@ -38,6 +38,7 @@ public sealed record ParsedRow(
 public static class ImportRowValidator
 {
     private const int _maxDescriptionChars = 200;
+    private const char _replacementChar = (char)0xFFFD;
     private static readonly DateOnly _minDate = new(1900, 1, 1);
 
     /// <summary>Returns whether every cell of the row is empty text, so the row can be skipped and not counted.</summary>
@@ -89,6 +90,14 @@ public static class ImportRowValidator
         string? description = ReadDescription(cells[map.Description!.Value], reasons);
         Currency? currency = ReadCurrency(cells, map, options, reasons);
 
+        // U+FFFD (or a C1 control) in free text means the decoder could not read some bytes (F-020 post-verify,
+        // W4): the original characters are gone, so importing the row would store corrupted text.
+        if (HasReplacementCharacter(cells[map.Description.Value])
+            || (map.Category is int categoryIndex && HasReplacementCharacter(cells[categoryIndex])))
+        {
+            reasons.Add(ImportReason.UndecodableText);
+        }
+
         return new ParsedRow(
             row.SourceRowNumber,
             date,
@@ -128,6 +137,11 @@ public static class ImportRowValidator
 
         return cells.Count > headerCount && cells.Skip(headerCount).All(IsEmptyText);
     }
+
+    // U+FFFD is what a replacement decoder emits; U+0080..U+009F (C1 controls) is what .NET's Windows-1252 table
+    // emits for the bytes Windows-1252 leaves undefined (0x81, 0x8D, 0x8F, 0x90, 0x9D). Neither is ever real text.
+    private static bool HasReplacementCharacter(RawCell cell) =>
+        cell.Kind == RawCellKind.Text && cell.Text.Any(c => c == _replacementChar || (char.IsControl(c) && c >= (char)0x0080));
 
     private static bool IsEmptyText(RawCell cell) =>
         cell.Kind == RawCellKind.Text && string.IsNullOrWhiteSpace(cell.Text);

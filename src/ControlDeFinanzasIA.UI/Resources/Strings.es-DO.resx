@@ -1315,6 +1315,12 @@ Mostrando conversiones aproximadas.
   <data name="ImportReasonNoFallbackCategory" xml:space="preserve">
     <value>No se encontró la categoría predeterminada (Otros).</value>
   </data>
+  <data name="ImportReasonUndecodableText" xml:space="preserve">
+    <value>La descripción o la categoría contiene caracteres que no se pudieron leer. Guarda el archivo como UTF-8 e impórtalo de nuevo.</value>
+  </data>
+  <data name="ImportAcknowledgeLabel" xml:space="preserve">
+    <value>Revisé las advertencias anteriores y confirmo que los montos y las fechas se leen correctamente.</value>
+  </data>
   <data name="ImportReasonFutureDate" xml:space="preserve">
     <value>La fecha está en el futuro.</value>
   </data>

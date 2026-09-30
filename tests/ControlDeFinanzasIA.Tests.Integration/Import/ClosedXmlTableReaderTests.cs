@@ -261,20 +261,49 @@ public sealed class ClosedXmlTableReaderTests
     }
 
     [Fact]
-    public async Task NumberIsRoundedToFourPlacesAwayFromZero()
+    public async Task NumberWithIeeeNoise_IsToleratedAndNormalized()
     {
         byte[] bytes = Workbook(wb =>
         {
             IXLWorksheet ws = wb.AddWorksheet("Sheet1");
             ws.Cell(1, 1).Value = "Amount";
-            ws.Cell(2, 1).Value = 1.23455d;
-            ws.Cell(3, 1).Value = -0.00005d;
+            ws.Cell(2, 1).Value = 12.300000000000001d;
+            ws.Cell(3, 1).Value = 0.1d + 0.2d;
+            ws.Cell(4, 1).Value = 1234567.8900000001d;
+            ws.Cell(5, 1).Value = 12.3456d;
         });
 
         RawTable table = await ReadTableAsync(bytes);
 
-        Assert.Equal("1.2346", table.Rows[0].Cells[0].Text);
-        Assert.Equal("-0.0001", table.Rows[1].Cells[0].Text);
+        Assert.Equal("12.3", table.Rows[0].Cells[0].Text);
+        Assert.Equal("0.3", table.Rows[1].Cells[0].Text);
+        Assert.Equal("1234567.89", table.Rows[2].Cells[0].Text);
+        Assert.Equal("12.3456", table.Rows[3].Cells[0].Text);
+        Assert.All(table.Rows, r => Assert.Equal(RawCellKind.Number, r.Cells[0].Kind));
+    }
+
+    [Theory]
+    [InlineData(12.34567d, "12.34567")]
+    [InlineData(1.23455d, "1.23455")]
+    [InlineData(-0.00005d, "-0.00005")]
+    [InlineData(1234567.00001d, "1234567.00001")]
+    public async Task NumberWithMoreThanFourRealDecimals_IsNotRounded_AndFlowsToTheTooManyDecimalsRejection(double value, string expectedText)
+    {
+        byte[] bytes = Workbook(wb =>
+        {
+            IXLWorksheet ws = wb.AddWorksheet("Sheet1");
+            ws.Cell(1, 1).Value = "Amount";
+            ws.Cell(2, 1).Value = value;
+        });
+
+        RawTable table = await ReadTableAsync(bytes);
+
+        RawCell cell = table.Rows[0].Cells[0];
+        Assert.Equal(RawCellKind.Number, cell.Kind);
+        Assert.Equal(expectedText, cell.Text);
+        AmountParseResult parsed = AmountParser.Parse(cell, DecimalStyle.Point);
+        Assert.Null(parsed.Value);
+        Assert.Equal(ImportReason.TooManyDecimals, parsed.Error);
     }
 
     [Fact]
