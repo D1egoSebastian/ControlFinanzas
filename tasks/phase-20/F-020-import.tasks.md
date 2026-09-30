@@ -267,7 +267,7 @@ ClosedXML 0.105.1 date detection for user workbooks.
 Depends on 3. Goal: the pure decision logic is complete and provably consistent with the domain invariants. Size note:
 if it exceeds ~450 lines, split at the seam "validator" vs "matcher + duplicates".
 
-- [ ] 4a.1 Write failing `tests/…Unit/Import/ImportRowValidatorTests.cs` against the REAL `ImportRowValidator.Parse`
+- [x] 4a.1 Write failing `tests/…Unit/Import/ImportRowValidatorTests.cs` against the REAL `ImportRowValidator.Parse`
   (with real `AmountParser`/`DateParser`): (a) one test per rejection reason code proving it fires and the row is
   `IsRejected` (`CellError`, `MissingDate`, `InvalidDate`, `DateBefore1900`, `MissingAmount`, `InvalidAmount`,
   `ZeroAmount`, `NegativeAmount`, `TooManyDecimals`, `AmountTooLarge`, `MissingDescription`, `DescriptionTooLong`,
@@ -283,11 +283,11 @@ if it exceeds ~450 lines, split at the seam "validator" vs "matcher + duplicates
   `UnsupportedCurrency` (`Currency_Numeric_Rejected`, C-12); (h) future date accepted with `FutureDate` warning via an
   `IClock`-derived `today` argument (S-14); (i) `AmountWasAmbiguous` propagated from the parser. (R-10, R-11, S-12,
   S-13, S-14, C-9, C-12, C-13, C-15)
-- [ ] 4a.2 Write failing `ImportRowValidatorDomainConsistencyTests`: a boundary table (200-char description, 1-char
+- [x] 4a.2 Write failing `ImportRowValidatorDomainConsistencyTests`: a boundary table (200-char description, 1-char
   description, `1900-01-01`, `0.0001`, `MaxAmount`, both currencies, both types) proves that every row the validator
   ACCEPTS builds with the REAL `Expense.Create` / `Income.Create` without throwing, and every row it REJECTS for
   amount/date/description would have thrown there. (R-10, DD-6, D-22)
-- [ ] 4a.3 Write failing `tests/…Unit/Import/CategoryMatcherTests.cs` against the REAL `CategoryMatcher.Match`: ordinal
+- [x] 4a.3 Write failing `tests/…Unit/Import/CategoryMatcherTests.cs` against the REAL `CategoryMatcher.Match`: ordinal
   beats ignore-case beats folded; `comida` matches `Comida`; `alimentacion` matches `Alimentación`; two catalog entries
   folding to the same key (`Educación`, `EDUCACION`) → `Ambiguous` for `educacion` (S-15, C-14); ordinal exact match
   still wins even when a folded twin exists; `FoldKey` is `CategoryNameNormalizer.Fold` (no re-implementation); a fold
@@ -300,27 +300,36 @@ if it exceeds ~450 lines, split at the seam "validator" vs "matcher + duplicates
   expense `NotFound` + creation off → fallback + `CategoryFallback`; income empty → null, no warning (S-17);
   income `NotFound` + creation off → null + `CategoryDropped`; payment method `Found` → Id, empty → null, `NotFound`/
   `Ambiguous` → null + `PaymentMethodNotFound`, never created (S-18). (R-14..R-16, S-15..S-18, C-14, C-15)
-- [ ] 4a.4 Write failing `tests/…Unit/Import/DuplicateDetectorTests.cs` against the REAL `DuplicateDetector`:
+- [x] 4a.4 Write failing `tests/…Unit/Import/DuplicateDetectorTests.cs` against the REAL `DuplicateDetector`:
   `Fingerprint` equality for `12.5` vs `12.50` vs `12.5000` (canonical `0.0000`); description differing only by case
   or whitespace runs is equal, differing by diacritics is NOT (conservative key); `categoryKey` variants (`Guid "N"`,
   `new:<fold>`, `""`); **occurrence counting** `ClassifyDuplicates`: file has 2 identical rows with 0 existing → both
   imported; 1 existing → first is a duplicate, second imported; 2 existing → both duplicates; a re-import (M = N) →
   all duplicates; rejected rows do not consume occurrences; `SkipDuplicates = false` makes them `Valid` +
   `DuplicateImported`; the two sides use the same 4-decimal `decimal`. (R-17, S-19, C-17, C-18)
-- [ ] 4a.5 Create `src/…Application/UseCases/Import/Parsing/ImportText.cs` (trim, whitespace collapse, wrapping
+- [x] 4a.5 Create `src/…Application/UseCases/Import/Parsing/ImportText.cs` (trim, whitespace collapse, wrapping
   quote/trailing punctuation handling shared by the matcher and the description key) with direct tests inside 4a.3 and
   4a.4. (DD-7, DD-8)
-- [ ] 4a.6 Create `Parsing/ImportRowValidator.cs` (`Parse`, `ParsedRow`, order of DD-6, literal currency match, never
+- [x] 4a.6 Create `Parsing/ImportRowValidator.cs` (`Parse`, `ParsedRow`, order of DD-6, literal currency match, never
   `Enum.TryParse`) and run 4a.1 and 4a.2 green. (R-10, R-11, DD-6)
-- [ ] 4a.7 Create `Parsing/CategoryMatcher.cs` (`Match`, `CatalogMatch`, `FoldKey`, the DD-7 resolver) and run 4a.3
+- [x] 4a.7 Create `Parsing/CategoryMatcher.cs` (`Match`, `CatalogMatch`, `FoldKey`, the DD-7 resolver) and run 4a.3
   green. (R-14..R-16, DD-7)
-- [ ] 4a.8 Create `Parsing/DuplicateDetector.cs` (`Fingerprint`, `ClassifyDuplicates`, plan-hash helper) and run 4a.4
+- [x] 4a.8 Create `Parsing/DuplicateDetector.cs` (`Fingerprint`, `ClassifyDuplicates`, plan-hash helper) and run 4a.4
   green. (R-17, DD-8)
-- [ ] 4a.9 Purity check as in 1.12 over `Parsing/`: no clock, culture, I/O, `Enum.TryParse` for currency/type.
+- [x] 4a.9 Purity check as in 1.12 over `Parsing/`: no clock, culture, I/O, `Enum.TryParse` for currency/type.
   (R-1)
-- [ ] 4a.10 Run all four gates plus the no-stubs grep over `src/ControlDeFinanzasIA.Application/UseCases/Import` and
+- [x] 4a.10 Run all four gates plus the no-stubs grep over `src/ControlDeFinanzasIA.Application/UseCases/Import` and
   `tests/ControlDeFinanzasIA.Tests.Unit/Import`. Confirm N > 0 for the four new test classes. Run the FULL suite 3
   consecutive times and record intermittent failures by test name. (R-25)
+  > Apply notes (S4a): tests were written before the types existed (compile-failure red, rule 6); the only assertion-level
+  > red observed was 4 failures on the first green attempt. Deviations: (1) `CategoryMatcher.Match` counts ignore-case and
+  > fold candidates TOGETHER after the ordinal-exact tier, because the literal tier order would pick `EDUCACION` for
+  > `educacion` while `Educación` also exists, contradicting S-15/C-14; (2) the 51st distinct new category is REJECTED with
+  > `TooManyNewCategories` (design DD-7 table, task 4a.3) rather than falling to the creation-off path (spec S-16 wording);
+  > (3) `Fingerprint` escapes the U+001F separator (`char.IsWhiteSpace` is false for it) so components cannot forge each
+  > other; (4) extra types `CategoryResolver`, `NewCategoryPlan`, `DuplicateVerdict`, `ImportRowValidator.IsBlank`;
+  > type synonyms use `ImportText.LooseKey` (diacritics/case fold, no punctuation stripping). Full suite 3x green:
+  > 2080 unit + 673 integration, no intermittent failures.
 
 ## 4b. Lookup, planner and preview (S4b)
 
