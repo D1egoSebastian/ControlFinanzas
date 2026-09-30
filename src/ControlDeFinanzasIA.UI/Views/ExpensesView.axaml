@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+             xmlns:views="using:ControlDeFinanzasIA.UI.Views"
              xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
              xmlns:dto="using:ControlDeFinanzasIA.Application.DTOs"
              xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
@@ -49,8 +50,8 @@
                 </StackPanel>
             </Border>
             <TextBlock Text="{Binding StatusMessage}" Foreground="#71C7A4" TextWrapping="Wrap" />
-            <!-- Report export (F-018): secondary buttons beside the list title; outcome shows via StatusMessage/FormError. -->
-            <Grid ColumnDefinitions="*,Auto,Auto">
+            <!-- Report export (F-018) and import (F-020): secondary buttons beside the list title; outcome shows via StatusMessage/FormError. -->
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                 <TextBlock Grid.Column="0" Text="Movimientos" Foreground="#E8E4D9" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" />
                 <Button Grid.Column="1"
                         Content="{x:Static resources:Strings.ExportPdfButton}"
@@ -61,7 +62,29 @@
                         Command="{Binding ExportExcelCommand}"
                         Classes="ledger-btn"
                         Margin="8,0,0,0" />
+                <Button Grid.Column="3"
+                        Content="{x:Static resources:Strings.ImportButton}"
+                        Command="{Binding OpenImportCommand}"
+                        IsVisible="{Binding HasImport}"
+                        Classes="ledger-btn"
+                        Margin="8,0,0,0" />
             </Grid>
+            <!-- Import panel (F-020, R-22): replaces the movement list in place while open; not a route. -->
+            <StackPanel Spacing="12" IsVisible="{Binding IsImportOpen}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="{x:Static resources:Strings.ImportTitle}"
+                               Classes="ledger-title"
+                               FontSize="20"
+                               VerticalAlignment="Center" />
+                    <Button Grid.Column="1"
+                            Content="{x:Static resources:Strings.ImportCloseButton}"
+                            Command="{Binding CloseImportCommand}"
+                            Classes="ledger-btn" />
+                </Grid>
+                <views:ImportView DataContext="{Binding Import}" />
+            </StackPanel>
+            <StackPanel Spacing="16" IsVisible="{Binding !IsImportOpen}">
             <ItemsControl ItemsSource="{Binding Expenses}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="dto:ExpenseDto">
@@ -77,6 +100,7 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
             <TextBlock Text="No hay gastos registrados." Foreground="#A9AFB8" IsVisible="{Binding !Expenses.Count}" />
+            </StackPanel>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

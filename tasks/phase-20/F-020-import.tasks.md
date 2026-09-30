@@ -573,19 +573,19 @@ in both locales. Size note: if it exceeds ~450 lines, split at the seam "strings
 
 Depends on 6a. Goal: the Expenses screen can host the import flow with no change to existing fixtures.
 
-- [ ] 6b.1 Write failing tests then implement the additive overload: `IFileOpenDialog.PickAsync(IReadOnlyList<
+- [x] 6b.1 Write failing tests then implement the additive overload: `IFileOpenDialog.PickAsync(IReadOnlyList<
   FileTypeFilter> filters, string? title, CancellationToken)`; the existing single-filter member delegates to it with
   `[filter]` and keeps its behavior byte-identical (Phase-19 restore tests stay green untouched). `FakeFileOpenDialog`
   gains the overload, `LastFilters`, and `LastFilter = filters[0]`; `FakeFileOpenDialogTests` prove delegation and
   recording. Update EVERY other implementer of `IFileOpenDialog` found by `rg -n "IFileOpenDialog"` (all fakes) in the
   same slice. (R-23, S-2, DD-14, D-20)
-- [ ] 6b.2 Modify `src/…UI/Services/AvaloniaFileOpenDialog.cs`: move the body to the list overload; with more than one
+- [x] 6b.2 Modify `src/…UI/Services/AvaloniaFileOpenDialog.cs`: move the body to the list overload; with more than one
   filter prepend one `FilePickerFileType(Strings.FileDialogAllSupportedTypes)` holding every pattern; the single-filter
   overload delegates. Add the picker strings (`FileDialogAllSupportedTypes`, `ImportFileTypeCsv`, `ImportFileTypeText`,
   `ImportFileTypeExcel`, `ImportDialogTitle`, `ImportButton`) if not already added in 6a.1, resx ×2 + Designer, under
   the completeness test. The native dialog is verified by hand in the Cierre (no headless harness); a unit test asserts
   the pattern list the implementation builds through an extracted pure builder. (R-23, R-24)
-- [ ] 6b.3 Write failing `tests/…Unit/UI/ExpensesViewModelImportTests.cs`: (a) the existing `ExpensesViewModel`
+- [x] 6b.3 Write failing `tests/…Unit/UI/ExpensesViewModelImportTests.cs`: (a) the existing `ExpensesViewModel`
   fixtures that omit `import` still compile unchanged and `OpenImportCommand.CanExecute` is false; (b) with an
   `ImportViewModel`: `OpenImport` sets `IsImportOpen = true` and drives `Import.ChooseFileCommand` once; not executable
   while `IsImportOpen` or `IsExporting`; (c) `CloseRequested` sets `IsImportOpen = false`; (d) `Completed` triggers ONE
@@ -593,24 +593,41 @@ Depends on 6a. Goal: the Expenses screen can host the import flow with no change
   subscribing happens once in the constructor (no double reload after reopening). Verify `ExpensesViewModel` keeps its
   existing 16 required + 3 optional parameters in order with `ImportViewModel? import = null` appended as the LAST
   one. (R-22, S-26, DD-14, D-14)
-- [ ] 6b.4 Modify `src/…UI/ViewModels/ExpensesViewModel.cs`: append the optional ctor parameter, `Import`,
+- [x] 6b.4 Modify `src/…UI/ViewModels/ExpensesViewModel.cs`: append the optional ctor parameter, `Import`,
   `[ObservableProperty] bool _isImportOpen`, `[RelayCommand(CanExecute = nameof(CanOpenImport))] OpenImportAsync`,
   the constructor subscriptions to `CloseRequested`/`Completed`. Do not touch existing members. Run 6b.3 green. (R-22)
-- [ ] 6b.5 Append the `Bootstrap.cs` block (`AddImport`, `ImportPipeline`, `PreviewImportUseCase`,
+- [x] 6b.5 Append the `Bootstrap.cs` block (`AddImport`, `ImportPipeline`, `PreviewImportUseCase`,
   `CommitImportUseCase`, `ImportViewModel` Transient) and add `ImportCompositionTests` against the REAL `Bootstrap`
   provider: resolves `ImportViewModel`, both use cases, and every `AddImport` port; `IFileOpenDialog` is the Phase-19
   registration; `ExpensesViewModel` resolves with a non-null `Import`; `ITabularReader` resolves to
   `SniffingTabularReader`. The test resolves objects but never opens a database on the real profile
   (`CONTROLDEFINANZASIA_DATA_DIR`/test path resolver). (R-25, DD-15)
-- [ ] 6b.6 **Smoke launch on a throwaway data directory** (see the safety rule at the top): set
+- [x] 6b.6 **Smoke launch on a throwaway data directory** (see the safety rule at the top): set
   `CONTROLDEFINANZASIA_DATA_DIR` to a scratchpad dir, `dotnet run --project src/ControlDeFinanzasIA.UI`, confirm the app
   starts and Expenses opens with no unhandled exception, then kill it. Record that the real
   `%APPDATA%\ControlDeFinanzasIA` listing is identical before/after. The Import button is not yet visible (view arrives
   in S7): say so. If tooling for screenshots is not available, record "NOT RUN BY HAND". (R-22, R-26)
-- [ ] 6b.7 Run all four gates plus the no-stubs grep over the slice's files. Confirm every fixture that constructs
+- [x] 6b.7 Run all four gates plus the no-stubs grep over the slice's files. Confirm every fixture that constructs
   `ExpensesViewModel` still compiles unchanged (full solution build) and N > 0 for `ExpensesViewModelImportTests`,
   `ImportCompositionTests`, `FakeFileOpenDialogTests`. Run the FULL suite 3 consecutive times and record intermittent
   failures by test name. (R-23, R-25)
+
+  > Apply notes (S6b): 6b.1 was already delivered in S6a (21ee899: default interface member + `FakeFileOpenDialog` + `FakeFileOpenDialogTests`);
+  > S6b added the Avalonia override. 6b.2: `AvaloniaFileOpenDialog.PickAsync(IReadOnlyList<FileTypeFilter>...)` + pure `BuildFileTypes`
+  > ("All supported files" first with every pattern/MIME once, then each entry; a single filter yields exactly one entry, Phase 19
+  > behavior) proven by `AvaloniaFileOpenDialogFileTypesTests`; the native dialog itself is NOT verified by hand. Picker/toolbar resx keys
+  > already existed (S6a). 6b.3/6b.4: `ExpensesViewModelImportTests` (16) over the real VM/use cases; `ExpensesViewModel` gained
+  > `ImportViewModel? import = null` (last, 20 params), `Import`, `HasImport`, `IsImportOpen`, `OpenImportCommand`, `CloseImportCommand`
+  > (host-level dismiss: needed because an Idle panel left by a failed load has no Cancel) and `INavigationAware`. 6b.5: `ImportViewModel` is
+  > TRANSIENT (it retains file bytes; a singleton would leak them across visits and keep events of dead Expenses VMs subscribed;
+  > unlike Backup there is no terminal state to preserve). `NavigationService` keeps every visited VM in its history stack, so
+  > `ExpensesViewModel.OnNavigatedFrom` cancels/closes the panel (and, if a commit was running, closes it as soon as it leaves Importing)
+  > so no bytes stay in an off-screen VM. `ImportCompositionTests` (6) use the real Bootstrap with ValidateScopes/ValidateOnBuild.
+  > Scope note: the user asked for the panel UI in this slice, so `ImportView.axaml(.cs)` (7.4 core) and `ImportViewXamlTests` (7.3 core) landed
+  > here; S7 keeps end-to-end tests, frontend-design pass record, both-locale smoke and docs. Additive: `ImportViewModel.HasCategoriesToCreate`,
+  > `ImportRowItem.IsDuplicate`, `FakeCategoryRepository.GetAllCallCount`. 6b.6 smoke: app launched ~22 s on a scratchpad data dir, no unhandled
+  > exception, real `%APPDATA%ControlDeFinanzasIA` listing identical before/after; navigating to Expenses and the native picker were NOT driven by hand.
+  > 6b.7: unit 2450 -> 2486, integration 755, full suite 3x green with no intermittent failures; format exit 0; build 0/0; stub grep clean.
 
 ## 7. Import view, end-to-end round trip and docs (S7)
 

@@ -988,12 +988,29 @@ public sealed class ImportViewModelTests : IDisposable
         Assert.Equal(Strings.ImportStatusRejected, problem.StatusText);
         Assert.Equal(Strings.ImportReasonInvalidAmount, problem.ReasonsText);
         Assert.Equal(["Mascotas"], f.ViewModel.CategoriesToCreate);
+        Assert.True(f.ViewModel.HasCategoriesToCreate);
+        Assert.False(first.IsDuplicate);
+        Assert.False(problem.IsDuplicate);
+        Assert.True(problem.IsRejected);
         Assert.Contains(f.ViewModel.ReasonSummary, s => s.Text == Strings.ImportReasonInvalidAmount && s.Count == 1);
 
         f.ViewModel.OnlyProblems = true;
         Assert.Equal(f.ViewModel.ProblemRows, f.ViewModel.VisibleRows);
         f.ViewModel.OnlyProblems = false;
         Assert.Equal(f.ViewModel.SampleRows, f.ViewModel.VisibleRows);
+    }
+
+    [Fact]
+    public void RowItem_OfADuplicateRow_IsFlaggedDuplicateAndAProblem_ButNotRejected()
+    {
+        var row = new ImportRowResult(4, ImportRowStatus.Duplicate, new DateOnly(2026, 3, 4), TransactionType.Expense, 10m, Currency.DOP, "Uno", "Comida", false, [ImportReason.DuplicateImported]);
+
+        var item = new ImportRowItem(row);
+
+        Assert.True(item.IsDuplicate);
+        Assert.True(item.IsProblem);
+        Assert.False(item.IsRejected);
+        Assert.Equal(Strings.ImportStatusDuplicate, item.StatusText);
     }
 
     [Fact]

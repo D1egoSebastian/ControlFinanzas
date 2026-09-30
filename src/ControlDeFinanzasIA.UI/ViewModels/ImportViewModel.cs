@@ -218,6 +218,7 @@ public sealed partial class ImportViewModel : ViewModelBase
 
     /// <summary>Gets the names of the categories the import would create.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasCategoriesToCreate))]
     private IReadOnlyList<string> _categoriesToCreate = Array.Empty<string>();
 
     /// <summary>Gets the header choices shared by the seven column pickers ("(none)" first).</summary>
@@ -310,6 +311,9 @@ public sealed partial class ImportViewModel : ViewModelBase
 
     /// <summary>Gets a value indicating whether a file is loading or an import is running (drives the progress bar).</summary>
     public bool IsBusy => State is ImportPanelState.Loading or ImportPanelState.Importing;
+
+    /// <summary>Gets a value indicating whether the import would create categories.</summary>
+    public bool HasCategoriesToCreate => CategoriesToCreate.Count > 0;
 
     /// <summary>Gets a value indicating whether a preview exists.</summary>
     public bool HasPreview => Preview is not null;

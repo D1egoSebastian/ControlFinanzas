@@ -25,6 +25,7 @@ using ControlDeFinanzasIA.Domain.Enums;
 using ControlDeFinanzasIA.Domain.ValueObjects;
 using ControlDeFinanzasIA.Domain.Views;
 using ControlDeFinanzasIA.UI.Formatting;
+using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.Resources;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
@@ -36,7 +37,7 @@ namespace ControlDeFinanzasIA.UI.ViewModels;
 /// list of expenses, filters, saved views, inline tag creation, field-level validation
 /// errors and pagination commands.
 /// </summary>
-public sealed partial class ExpensesViewModel : ViewModelBase
+public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware
 {
     private readonly RegisterExpenseUseCase _registerUseCase;
     private readonly GetTransactionsQuery _getTransactionsQuery;
@@ -57,6 +58,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase
     private readonly CategorizeExpenseUseCase? _categorizeExpenseUseCase;
     private readonly ExportExpenseListReportUseCase? _exportExpenseList;
     private readonly IFileSaveDialog? _fileSaveDialog;
+    private bool _isNavigatedAway;
 
     /// <summary>
     /// Monotonically increasing token used by <see cref="RefreshAsync"/> to discard the result of a
@@ -109,7 +111,8 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         IStringLocalizer<Strings> localizer,
         CategorizeExpenseUseCase? categorizeExpenseUseCase = null,
         ExportExpenseListReportUseCase? exportExpenseList = null,
-        IFileSaveDialog? fileSaveDialog = null)
+        IFileSaveDialog? fileSaveDialog = null,
+        ImportViewModel? import = null)
     {
         ArgumentNullException.ThrowIfNull(registerUseCase);
         ArgumentNullException.ThrowIfNull(getTransactionsQuery);
@@ -147,6 +150,15 @@ public sealed partial class ExpensesViewModel : ViewModelBase
         _categorizeExpenseUseCase = categorizeExpenseUseCase;
         _exportExpenseList = exportExpenseList;
         _fileSaveDialog = fileSaveDialog;
+        Import = import;
+
+        // Subscribed exactly once, here: the import view-model is owned by this instance (transient).
+        if (import is not null)
+        {
+            import.CloseRequested += OnImportCloseRequested;
+            import.Completed += OnImportCompleted;
+            import.PropertyChanged += OnImportPropertyChanged;
+        }
 
         _date = _clock.Today;
         _currentFilter = new ExpenseFilter { Page = 1, PageSize = 20 };
@@ -714,6 +726,113 @@ public sealed partial class ExpensesViewModel : ViewModelBase
     private Task ExportExcelAsync() => ExportAsync(ReportFormat.Xlsx);
 
     private bool CanExport() => !IsExporting && _exportExpenseList is not null && _fileSaveDialog is not null;
+
+    /// <summary>Gets the hosted import panel view-model; <c>null</c> when the screen was composed without it (F-020).</summary>
+    public ImportViewModel? Import { get; }
+
+    /// <summary>Gets a value indicating whether the import feature is available on this screen.</summary>
+    public bool HasImport => Import is not null;
+
+    /// <summary>Gets or sets a value indicating whether the import panel replaces the movement list (F-020, R-22).</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(OpenImportCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CloseImportCommand))]
+    private bool _isImportOpen;
+
+    partial void OnIsExportingChanged(bool value) => OpenImportCommand.NotifyCanExecuteChanged();
+
+    /// <summary>Opens the import panel and starts the file picker. Does nothing while the panel is open or busy.</summary>
+    [RelayCommand(CanExecute = nameof(CanOpenImport))]
+    private async Task OpenImportAsync()
+    {
+        // The real guard: ExecuteAsync does not consult CanExecute.
+        if (!CanOpenImport() || Import is null || Import.State != ImportPanelState.Idle)
+        {
+            return;
+        }
+
+        IsImportOpen = true;
+        await Import.ChooseFileCommand.ExecuteAsync(null);
+    }
+
+    private bool CanOpenImport() => Import is not null && !IsImportOpen && !IsExporting;
+
+    /// <summary>
+    /// Dismisses the import panel from the host: cancels a loaded file, closes a finished result and
+    /// closes an idle panel left open by a failed load. Does nothing while the import is being written.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanCloseImport))]
+    private void CloseImport()
+    {
+        if (Import is null || !IsImportOpen)
+        {
+            return;
+        }
+
+        switch (Import.State)
+        {
+            case ImportPanelState.Importing:
+                return;
+            case ImportPanelState.Done:
+                Import.CloseCommand.Execute(null);
+                break;
+            case ImportPanelState.Idle:
+                break;
+            default:
+                Import.CancelCommand.Execute(null);
+                break;
+        }
+
+        IsImportOpen = false;
+    }
+
+    private bool CanCloseImport() => Import is not null && IsImportOpen && Import.State != ImportPanelState.Importing;
+
+    /// <inheritdoc />
+    public void OnNavigatedTo() => _isNavigatedAway = false;
+
+    /// <summary>
+    /// Drops the picked file when the user leaves the screen: the navigation history keeps this instance
+    /// alive, so nothing may stay retained in an off-screen panel (F-020).
+    /// </summary>
+    public void OnNavigatedFrom()
+    {
+        _isNavigatedAway = true;
+        CloseImport();
+    }
+
+    private void OnImportCloseRequested(object? sender, EventArgs e) => IsImportOpen = false;
+
+    private void OnImportCompleted(object? sender, ImportCompletedEventArgs e) => _ = ReloadAfterImportAsync();
+
+    private void OnImportPropertyChanged(object? sender, global::System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(ImportViewModel.State))
+        {
+            return;
+        }
+
+        CloseImportCommand.NotifyCanExecuteChanged();
+
+        // A commit that was running when the user left may end in any state: never keep bytes off-screen.
+        if (_isNavigatedAway)
+        {
+            CloseImport();
+        }
+    }
+
+    private async Task ReloadAfterImportAsync()
+    {
+        try
+        {
+            await LoadCategoriesAsync();
+            await RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unable to reload the expenses after an import.");
+        }
+    }
 
     /// <summary>Maps a use-case failure code to the resx key of its localized message.</summary>
     internal static string ExportErrorKey(string? code) => code switch

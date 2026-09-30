@@ -42,5 +42,11 @@ public sealed class FakeCategoryRepository : ICategoryRepository
 
     /// <inheritdoc />
     public Task<IReadOnlyList<Category>> GetAllAsync(CancellationToken ct = default)
-        => Task.FromResult(Categories);
+    {
+        GetAllCallCount++;
+        return Task.FromResult(Categories);
+    }
+
+    /// <summary>Gets how many times <see cref="GetAllAsync"/> was called.</summary>
+    public int GetAllCallCount { get; private set; }
 }

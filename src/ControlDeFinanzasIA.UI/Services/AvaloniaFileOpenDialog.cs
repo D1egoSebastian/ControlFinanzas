@@ -32,14 +32,24 @@ public sealed class AvaloniaFileOpenDialog : IFileOpenDialog
     }
 
     /// <inheritdoc />
-    public async Task<OpenTarget?> PickAsync(FileTypeFilter filter, string? title = null, CancellationToken ct = default)
+    public Task<OpenTarget?> PickAsync(FileTypeFilter filter, string? title = null, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(filter);
+
+        return PickAsync([filter], title, ct);
+    }
+
+    /// <inheritdoc />
+    public async Task<OpenTarget?> PickAsync(IReadOnlyList<FileTypeFilter> filters, string? title = null, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(filters);
+
+        IReadOnlyList<FilePickerFileType> fileTypes = BuildFileTypes(filters, Strings.FileDialogAllSupportedTypes);
 
         IStorageProvider? storage = ResolveStorageProvider();
         if (storage is null)
         {
-            _logger.LogWarning("No window is available to show the open dialog; the restore is skipped.");
+            _logger.LogWarning("No window is available to show the open dialog; the operation is skipped.");
             return null;
         }
 
@@ -47,14 +57,7 @@ public sealed class AvaloniaFileOpenDialog : IFileOpenDialog
         {
             Title = title ?? Strings.BackupRestoreDialogTitle,
             AllowMultiple = false,
-            FileTypeFilter =
-            [
-                new FilePickerFileType(filter.DisplayName)
-                {
-                    Patterns = [$"*.{filter.Extension}"],
-                    MimeTypes = [filter.MimeType],
-                },
-            ],
+            FileTypeFilter = fileTypes,
         });
 
         // No file means the user cancelled: not an error.
@@ -65,6 +68,42 @@ public sealed class AvaloniaFileOpenDialog : IFileOpenDialog
 
         IStorageFile file = files[0];
         return new OpenTarget(file.Name, _ => file.OpenReadAsync(), owner: file);
+    }
+
+    /// <summary>
+    /// Builds the entries of the native picker's type list (F-020, R-23). One filter yields exactly that
+    /// entry (the Phase 19 behavior); several filters yield an "All supported files" entry first, holding
+    /// every extension pattern and MIME type once, followed by the individual entries in order.
+    /// </summary>
+    /// <param name="filters">The offered file types; must not be empty.</param>
+    /// <param name="allSupportedLabel">Localized name of the combined entry.</param>
+    /// <returns>The picker entries.</returns>
+    /// <exception cref="ArgumentException"><paramref name="filters"/> is empty.</exception>
+    internal static IReadOnlyList<FilePickerFileType> BuildFileTypes(IReadOnlyList<FileTypeFilter> filters, string allSupportedLabel)
+    {
+        ArgumentNullException.ThrowIfNull(filters);
+        if (filters.Count == 0)
+        {
+            throw new ArgumentException("At least one file type filter is required.", nameof(filters));
+        }
+
+        var types = new List<FilePickerFileType>(filters.Count + 1);
+        if (filters.Count > 1)
+        {
+            types.Add(new FilePickerFileType(allSupportedLabel)
+            {
+                Patterns = filters.Select(f => $"*.{f.Extension.ToLowerInvariant()}").Distinct(StringComparer.Ordinal).ToArray(),
+                MimeTypes = filters.Select(f => f.MimeType).Distinct(StringComparer.Ordinal).ToArray(),
+            });
+        }
+
+        types.AddRange(filters.Select(f => new FilePickerFileType(f.DisplayName)
+        {
+            Patterns = [$"*.{f.Extension}"],
+            MimeTypes = [f.MimeType],
+        }));
+
+        return types;
     }
 
     private static IStorageProvider? ResolveStorageProvider()

@@ -39,6 +39,9 @@ using ControlDeFinanzasIA.Application.UseCases.Goals.CreateGoal;
 using ControlDeFinanzasIA.Application.UseCases.Goals.DeleteGoal;
 using ControlDeFinanzasIA.Application.UseCases.Goals.GenerateSavingsPlan;
 using ControlDeFinanzasIA.Application.UseCases.Goals.GetGoals;
+using ControlDeFinanzasIA.Application.UseCases.Import;
+using ControlDeFinanzasIA.Application.UseCases.Import.CommitImport;
+using ControlDeFinanzasIA.Application.UseCases.Import.PreviewImport;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.GetIncomes;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.RegisterIncome;
 using ControlDeFinanzasIA.Application.UseCases.Incomes.UpdateIncome;
@@ -68,6 +71,7 @@ using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateTheme;
 using ControlDeFinanzasIA.Application.UseCases.Transactions.DeleteTransaction;
 using ControlDeFinanzasIA.Infrastructure.Backup;
 using ControlDeFinanzasIA.Infrastructure.ExchangeRates;
+using ControlDeFinanzasIA.Infrastructure.Import;
 using ControlDeFinanzasIA.Infrastructure.Llm;
 using ControlDeFinanzasIA.Infrastructure.Persistence;
 using ControlDeFinanzasIA.Infrastructure.Reports;
@@ -282,6 +286,16 @@ public static class Bootstrap
         services.AddSingleton<IAppRestartService, AppRestartService>();
         // Singleton: el estado terminal "reinicio requerido" debe sobrevivir a la navegacion.
         services.AddSingleton<BackupSettingsViewModel>();
+
+        // Fase 20: importacion CSV/Excel (F-020). Lectores, lookup y escritor atomico son singletons
+        // que solo guardan IServiceScopeFactory; pipeline y casos de uso son transitorios.
+        services.AddImport();
+        services.AddTransient<ImportPipeline>();
+        services.AddTransient<PreviewImportUseCase>();
+        services.AddTransient<CommitImportUseCase>();
+        // Transient (a diferencia de Backup): retiene los bytes del archivo elegido, asi que su estado
+        // debe morir con la pantalla de Gastos que lo aloja (ExpensesViewModel lo descarta al salir).
+        services.AddTransient<ImportViewModel>();
 
         ServiceProvider tempProvider = services.BuildServiceProvider();
         try

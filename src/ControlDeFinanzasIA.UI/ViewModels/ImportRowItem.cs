@@ -43,6 +43,7 @@ public sealed class ImportRowItem
         HasReasons = row.Reasons.Count > 0;
         IsProblem = row.Status != ImportRowStatus.Valid || HasReasons;
         IsRejected = row.Status == ImportRowStatus.Rejected;
+        IsDuplicate = row.Status == ImportRowStatus.Duplicate;
     }
 
     /// <summary>Gets the row number in the source file.</summary>
@@ -80,6 +81,9 @@ public sealed class ImportRowItem
 
     /// <summary>Gets a value indicating whether the row is a duplicate, is rejected or carries a warning.</summary>
     public bool IsProblem { get; }
+
+    /// <summary>Gets a value indicating whether the row already exists and is skipped.</summary>
+    public bool IsDuplicate { get; }
 
     /// <summary>Gets a value indicating whether the row cannot be imported.</summary>
     public bool IsRejected { get; }

@@ -1,0 +1,387 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+             xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
+             xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
+             x:Class="ControlDeFinanzasIA.UI.Views.ImportView"
+             x:DataType="vm:ImportViewModel"
+             x:CompileBindings="True">
+    <!--
+        Import panel (F-020, R-22, DD-14). Hosted in place by ExpensesView; every text comes from resx,
+        every color from the "Libro Mayor" tokens, and all behavior lives in ImportViewModel.
+        Reading order follows the flow: progress and status, banners, options, column mapping,
+        summary, categories to create, preview rows, confirm, result.
+    -->
+    <UserControl.Styles>
+        <Style Selector="TextBlock.import-badge">
+            <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource SageBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.import-badge.duplicate">
+            <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
+        </Style>
+        <Style Selector="TextBlock.import-badge.rejected">
+            <Setter Property="Foreground" Value="{StaticResource TerracottaBrush}" />
+        </Style>
+        <Style Selector="TextBlock.import-reason">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.import-reason.rejected">
+            <Setter Property="Foreground" Value="{StaticResource TerracottaBrush}" />
+        </Style>
+        <Style Selector="TextBlock.import-label">
+            <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource PaperDimBrush}" />
+        </Style>
+        <Style Selector="Border.import-callout">
+            <Setter Property="Background" Value="#221F232B" />
+            <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+            <Setter Property="BorderThickness" Value="3,1,1,1" />
+            <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+            <Setter Property="Padding" Value="16,12" />
+        </Style>
+        <Style Selector="Border.import-chip">
+            <Setter Property="Background" Value="{StaticResource InkBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+            <Setter Property="Padding" Value="8,2" />
+        </Style>
+    </UserControl.Styles>
+
+    <Border Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource HairlineBrush}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource RadiusMedium}"
+            Padding="20">
+        <StackPanel Spacing="16">
+
+            <!-- File header: name and how it was read -->
+            <StackPanel Spacing="2" IsVisible="{Binding FileName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding FileName}"
+                           Foreground="{StaticResource PaperBrush}"
+                           FontFamily="{StaticResource FontDisplay}"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding SourceFacts}" Classes="ledger-status" />
+            </StackPanel>
+
+            <!-- Progress with the localized caption of the running step -->
+            <StackPanel Spacing="6" IsVisible="{Binding IsBusy}">
+                <ProgressBar IsIndeterminate="True"
+                             Height="3"
+                             Foreground="{StaticResource AmberBrush}"
+                             Background="{StaticResource HairlineBrush}" />
+                <TextBlock Text="{Binding WorkingMessage}" Classes="ledger-status" />
+            </StackPanel>
+
+            <!-- Outcome of the last operation: terracotta on failure -->
+            <TextBlock Text="{Binding StatusMessage}"
+                       IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                       Classes="ledger-status"
+                       Classes.export-error="{Binding IsError}" />
+
+            <!-- Encoding, decimal and date banners -->
+            <ItemsControl ItemsSource="{Binding Banners}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <Border Classes="import-callout" Margin="0,0,0,8">
+                            <TextBlock Text="{Binding}"
+                                       Foreground="{StaticResource AmberBrush}"
+                                       TextWrapping="Wrap" />
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Workbench: options, mapping, summary and preview rows -->
+            <StackPanel Spacing="16" IsVisible="{Binding IsWorkbenchVisible}">
+
+                <WrapPanel>
+                    <StackPanel Spacing="4" Width="200" Margin="0,0,16,12" IsVisible="{Binding IsDelimiterVisible}">
+                        <TextBlock Text="{x:Static resources:Strings.ImportDelimiterLabel}" Classes="import-label" />
+                        <ComboBox ItemsSource="{Binding DelimiterChoices}"
+                                  SelectedValueBinding="{ReflectionBinding Value}"
+                                  DisplayMemberBinding="{ReflectionBinding Label}"
+                                  SelectedValue="{Binding SelectedDelimiter}"
+                                  PlaceholderText="{x:Static resources:Strings.ImportDelimiterAuto}"
+                                  Classes="ledger-input"
+                                  HorizontalAlignment="Stretch">
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                        <TextBlock Text="{x:Static resources:Strings.ImportDecimalStyleLabel}" Classes="import-label" />
+                        <ComboBox ItemsSource="{Binding DecimalStyleChoices}"
+                                  SelectedValueBinding="{ReflectionBinding Value}"
+                                  DisplayMemberBinding="{ReflectionBinding Label}"
+                                  SelectedValue="{Binding DecimalStyle}"
+                                  Classes="ledger-input"
+                                  HorizontalAlignment="Stretch">
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                        <TextBlock Text="{x:Static resources:Strings.ImportDateFormatLabel}" Classes="import-label" />
+                        <ComboBox ItemsSource="{Binding DateFormatChoices}"
+                                  SelectedValueBinding="{ReflectionBinding Value}"
+                                  DisplayMemberBinding="{ReflectionBinding Label}"
+                                  SelectedValue="{Binding DateFormat}"
+                                  Classes="ledger-input"
+                                  HorizontalAlignment="Stretch">
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                        <TextBlock Text="{x:Static resources:Strings.ImportDefaultTypeLabel}" Classes="import-label" />
+                        <ComboBox ItemsSource="{Binding TypeChoices}"
+                                  SelectedValueBinding="{ReflectionBinding Value}"
+                                  DisplayMemberBinding="{ReflectionBinding Label}"
+                                  SelectedValue="{Binding DefaultType}"
+                                  Classes="ledger-input"
+                                  HorizontalAlignment="Stretch">
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                        <TextBlock Text="{x:Static resources:Strings.ImportDefaultCurrencyLabel}" Classes="import-label" />
+                        <ComboBox ItemsSource="{Binding CurrencyChoices}"
+                                  SelectedValueBinding="{ReflectionBinding Value}"
+                                  DisplayMemberBinding="{ReflectionBinding Label}"
+                                  SelectedValue="{Binding DefaultCurrency}"
+                                  Classes="ledger-input"
+                                  HorizontalAlignment="Stretch">
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                        <TextBlock Text="{x:Static resources:Strings.ImportSignModeLabel}" Classes="import-label" />
+                        <ComboBox ItemsSource="{Binding SignModeChoices}"
+                                  SelectedValueBinding="{ReflectionBinding Value}"
+                                  DisplayMemberBinding="{ReflectionBinding Label}"
+                                  SelectedValue="{Binding SignMode}"
+                                  Classes="ledger-input"
+                                  HorizontalAlignment="Stretch">
+                        </ComboBox>
+                    </StackPanel>
+                </WrapPanel>
+
+                <TextBlock Text="{Binding DecimalDetectionNote}"
+                           IsVisible="{Binding DecimalDetectionNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                           Classes="ledger-status" />
+
+                <StackPanel Orientation="Horizontal" Spacing="24">
+                    <CheckBox IsChecked="{Binding SkipDuplicates}"
+                              Content="{x:Static resources:Strings.ImportSkipDuplicates}" />
+                    <CheckBox IsChecked="{Binding CreateMissingCategories}"
+                              Content="{x:Static resources:Strings.ImportCreateCategories}" />
+                </StackPanel>
+
+                <!-- Column mapping: expanded while the automatic mapping is incomplete, collapsible afterwards -->
+                <Button Content="{x:Static resources:Strings.ImportMappingToggle}"
+                        Command="{Binding ToggleMappingCommand}"
+                        IsVisible="{Binding IsConfirmVisible}"
+                        HorizontalAlignment="Left"
+                        Classes="ledger-btn" />
+
+                <StackPanel Spacing="10" IsVisible="{Binding IsMappingVisible}">
+                    <TextBlock Text="{x:Static resources:Strings.ImportMappingTitle}"
+                               Foreground="{StaticResource PaperBrush}"
+                               FontFamily="{StaticResource FontDisplay}"
+                               FontSize="16"
+                               FontWeight="SemiBold" />
+                    <WrapPanel>
+                        <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.ImportFieldDate}" Classes="import-label" />
+                            <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedDateColumn}"
+                                      Classes="ledger-input" HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ColumnChoice">
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.ImportFieldType}" Classes="import-label" />
+                            <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedTypeColumn}"
+                                      Classes="ledger-input" HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ColumnChoice">
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.ImportFieldDescription}" Classes="import-label" />
+                            <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedDescriptionColumn}"
+                                      Classes="ledger-input" HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ColumnChoice">
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.ImportFieldCategory}" Classes="import-label" />
+                            <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedCategoryColumn}"
+                                      Classes="ledger-input" HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ColumnChoice">
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.ImportFieldAmount}" Classes="import-label" />
+                            <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedAmountColumn}"
+                                      Classes="ledger-input" HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ColumnChoice">
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.ImportFieldCurrency}" Classes="import-label" />
+                            <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedCurrencyColumn}"
+                                      Classes="ledger-input" HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ColumnChoice">
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.ImportFieldPaymentMethod}" Classes="import-label" />
+                            <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedPaymentMethodColumn}"
+                                      Classes="ledger-input" HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ColumnChoice">
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                    </WrapPanel>
+                </StackPanel>
+
+                <!-- Preview: dimmed while it no longer matches the options -->
+                <StackPanel Spacing="12" IsVisible="{Binding HasPreview}"
+                            Opacity="{Binding IsPreviewStale, Converter={x:Static converters:BoolToOpacityConverter.Instance}}">
+                    <TextBlock Text="{Binding SummaryText}"
+                               Foreground="{StaticResource PaperBrush}"
+                               FontWeight="SemiBold"
+                               TextWrapping="Wrap" />
+
+                    <ItemsControl ItemsSource="{Binding ReasonSummary}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ImportReasonSummaryItem">
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,2">
+                                    <TextBlock Text="{Binding Count}" Classes="import-reason" Classes.rejected="{Binding IsRejection}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Text}" Classes="import-reason" Classes.rejected="{Binding IsRejection}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <StackPanel Spacing="6" IsVisible="{Binding HasCategoriesToCreate}">
+                        <TextBlock Text="{x:Static resources:Strings.ImportCategoriesToCreate}" Classes="import-label" />
+                        <ItemsControl ItemsSource="{Binding CategoriesToCreate}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Border Classes="import-chip" Margin="0,0,6,6">
+                                        <TextBlock Text="{Binding}" Foreground="{StaticResource PaperBrush}" FontSize="12" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <CheckBox IsChecked="{Binding OnlyProblems}"
+                              Content="{x:Static resources:Strings.ImportOnlyProblems}" />
+
+                    <ItemsControl ItemsSource="{Binding VisibleRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ImportRowItem">
+                                <Border BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,0,0,1" Padding="0,8">
+                                    <Grid ColumnDefinitions="88,96,120,*,Auto" RowDefinitions="Auto,Auto">
+                                        <TextBlock Grid.Column="0" Text="{Binding StatusText}"
+                                                   Classes="import-badge"
+                                                   Classes.duplicate="{Binding IsDuplicate}"
+                                                   Classes.rejected="{Binding IsRejected}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding DateText}"
+                                                   Foreground="{StaticResource PaperDimBrush}" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="2" Text="{Binding AmountText}"
+                                                   Classes="ledger-amount" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="3" Text="{Binding Description}"
+                                                   Foreground="{StaticResource PaperBrush}" TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center" />
+                                        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding CategoryText}" Foreground="{StaticResource PaperDimBrush}" />
+                                            <Border Classes="import-chip" IsVisible="{Binding IsNewCategory}" Padding="6,0">
+                                                <TextBlock Text="{x:Static resources:Strings.ImportNewCategoryTag}"
+                                                           Foreground="{StaticResource AmberBrush}" FontSize="11" />
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4"
+                                                   Text="{Binding ReasonsText}"
+                                                   IsVisible="{Binding HasReasons}"
+                                                   Classes="import-reason"
+                                                   Classes.rejected="{Binding IsRejected}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- Confirmation: the backup recommendation is copy only, never a gate -->
+                <Border Classes="import-callout" IsVisible="{Binding IsConfirmVisible}">
+                    <TextBlock Text="{Binding BackupRecommendation}"
+                               Foreground="{StaticResource PaperBrush}"
+                               TextWrapping="Wrap" />
+                </Border>
+
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <Button Content="{x:Static resources:Strings.ImportCancelButton}"
+                            Command="{Binding CancelCommand}"
+                            Classes="ledger-btn" />
+                    <Button Content="{x:Static resources:Strings.ImportConfirmButton}"
+                            Command="{Binding ConfirmCommand}"
+                            Classes="ledger-btn-primary" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Result of the finished import -->
+            <Border Classes="import-callout" IsVisible="{Binding IsDonePanelVisible}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{Binding DoneMessage}"
+                               Foreground="{StaticResource SageBrush}"
+                               TextWrapping="Wrap" />
+                    <Button Content="{x:Static resources:Strings.ImportCloseButton}"
+                            Command="{Binding CloseCommand}"
+                            HorizontalAlignment="Left"
+                            Classes="ledger-btn-primary" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Border>
+</UserControl>
