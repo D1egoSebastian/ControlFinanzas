@@ -27,7 +27,9 @@ namespace ControlDeFinanzasIA.UI.Services;
 /// <para>
 /// <see cref="SuspendAsync"/> (F-019, DD-7) takes that same gate and raises a flag: while any
 /// suspension is held every database-touching member is a no-op (no scope is created, nothing
-/// is raised), so a restore can swap the database file without a detection run opening it.
+/// is raised), so a restore can swap the database file without a detection run opening it. Callers
+/// already queued on the gate when a suspension is taken return as no-ops, so none can wait on a
+/// handle that a successful restore intentionally never disposes.
 /// </para>
 /// </remarks>
 public sealed class ScopedNotificationCenter : INotificationCenter
@@ -36,6 +38,8 @@ public sealed class ScopedNotificationCenter : INotificationCenter
     private readonly ILogger<ScopedNotificationCenter> _logger;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly SynchronizationContext? _context;
+    private readonly object _sync = new();
+    private CancellationTokenSource _abandonQueued = new();
     private int _suspensions;
 
     /// <summary>
@@ -63,12 +67,11 @@ public sealed class ScopedNotificationCenter : INotificationCenter
     /// <inheritdoc />
     public async Task RefreshAsync(CancellationToken ct = default)
     {
-        if (IsSuspended)
+        if (IsSuspended || !await EnterGateAsync(ct))
         {
             return;
         }
 
-        await _gate.WaitAsync(ct);
         await RunGatedAsync("refresh", DetectAsync, ct);
     }
 
@@ -77,6 +80,12 @@ public sealed class ScopedNotificationCenter : INotificationCenter
     {
         if (IsSuspended || !await _gate.WaitAsync(0, ct))
         {
+            return false;
+        }
+
+        if (IsSuspended)
+        {
+            _gate.Release();
             return false;
         }
 
@@ -126,12 +135,11 @@ public sealed class ScopedNotificationCenter : INotificationCenter
     {
         ArgumentNullException.ThrowIfNull(ids);
 
-        if (ids.Count == 0 || IsSuspended)
+        if (ids.Count == 0 || IsSuspended || !await EnterGateAsync(ct))
         {
             return;
         }
 
-        await _gate.WaitAsync(ct);
         await RunGatedAsync(
             "mark-read",
             async (provider, token) =>
@@ -145,12 +153,11 @@ public sealed class ScopedNotificationCenter : INotificationCenter
     /// <inheritdoc />
     public async Task DismissAsync(Guid id, CancellationToken ct = default)
     {
-        if (IsSuspended)
+        if (IsSuspended || !await EnterGateAsync(ct))
         {
             return;
         }
 
-        await _gate.WaitAsync(ct);
         await RunGatedAsync(
             "dismiss",
             async (provider, token) =>
@@ -164,22 +171,84 @@ public sealed class ScopedNotificationCenter : INotificationCenter
     /// <inheritdoc />
     public async Task<IDisposable> SuspendAsync(CancellationToken ct = default)
     {
-        // Raise the flag first so no NEW operation starts while we wait for the in-flight one.
-        Interlocked.Increment(ref _suspensions);
+        // Raise the flag first so no NEW operation starts while we wait for the in-flight one, and wake every
+        // caller already queued on the gate: a successful restore never disposes this handle, so they would
+        // otherwise wait forever.
+        CancellationTokenSource abandon;
+        lock (_sync)
+        {
+            _suspensions++;
+            abandon = _abandonQueued;
+        }
+
+        abandon.Cancel();
         try
         {
             await _gate.WaitAsync(ct);
         }
         catch
         {
-            Interlocked.Decrement(ref _suspensions);
+            LowerSuspension();
             throw;
         }
 
         return new Suspension(this);
     }
 
-    private bool IsSuspended => Volatile.Read(ref _suspensions) > 0;
+    private bool IsSuspended
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _suspensions > 0;
+            }
+        }
+    }
+
+    // Waits for the gate unless a suspension is taken first. Returns true with the gate held; false (gate not
+    // held, nothing to do) when a suspension was taken before or while waiting.
+    private async Task<bool> EnterGateAsync(CancellationToken ct)
+    {
+        CancellationTokenSource abandon;
+        lock (_sync)
+        {
+            abandon = _abandonQueued;
+        }
+
+        try
+        {
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, abandon.Token);
+            await _gate.WaitAsync(linked.Token);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            return false;
+        }
+
+        // The gate may have been handed over right when a suspension was raised.
+        if (IsSuspended)
+        {
+            _gate.Release();
+            return false;
+        }
+
+        return true;
+    }
+
+    private void LowerSuspension()
+    {
+        lock (_sync)
+        {
+            _suspensions--;
+            if (_suspensions == 0)
+            {
+                // The old source stays cancelled (it is not disposed: a waiter may still hold its token);
+                // later callers get a fresh one.
+                _abandonQueued = new CancellationTokenSource();
+            }
+        }
+    }
 
     private static bool IsCallerCancellation(Exception ex, CancellationToken ct)
         => ex is OperationCanceledException && ct.IsCancellationRequested;
@@ -265,7 +334,7 @@ public sealed class ScopedNotificationCenter : INotificationCenter
                 return;
             }
 
-            Interlocked.Decrement(ref center._suspensions);
+            center.LowerSuspension();
             center._gate.Release();
         }
     }

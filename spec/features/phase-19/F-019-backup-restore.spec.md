@@ -389,3 +389,13 @@ All 12 points of `.atl/sdd/f-019p19-backup/design.md` "Spec Reconciliation" are 
 12. The roundtrip criterion compares every table's rows; `Settings` excludes only `ai.apiKey`.
 
 Carried into apply: S2 must confirm `BackupDatabase` and `Pooling=false` behavior on the pinned Microsoft.Data.Sqlite 8.0.11. A shell-wide "restart required" banner is a non-blocking follow-up (T14). S4 may need splitting (~660 lines estimated).
+
+## Post-verify reconciliation (2026-09-29)
+
+Appended after the Phase 19 verify (PASS WITH WARNINGS). Earlier sections are history and are not rewritten.
+
+- Wording note for R-13 / S-21: "three attempts" is superseded by the shipped behavior. The swap runs the initial attempt plus 3 retries at 200 / 600 / 1800 ms, i.e. 4 attempts in total, and only then returns `IoError`.
+- Fix 1 (failed rollback keeps the original): when a rollback cannot put the original back (threat T11), `RollBackAsync` writes a durable marker `<DataDir>\backups\.rollback-failed` naming the live path, the retained `.bak`, the rejected file and the safety ZIP. While the marker exists `CompletePendingRestore` never deletes `data.db.pre-restore.bak` and logs a Warning naming the `.bak` and the marker on every start. Code never deletes the marker: after recovering by hand (copy the `.bak`, or restore the safety ZIP, over the live database) the user deletes it. A failure to write the marker is logged Critical and never changes the restore result.
+- Fix 2 (no hung notification calls): `ScopedNotificationCenter` callers queued on the gate when `SuspendAsync` raises the flag are released as no-ops, and the flag is re-checked right after the gate is acquired. An in-flight run is still awaited by `SuspendAsync`; new calls while suspended stay no-ops; a cancelled suspend leaves the center usable.
+- Fix 3 (orphan temp sweep): `CompletePendingRestore` also deletes `backups\pre-restore-*.zip.tmp` (a crash mid safety-backup leaves one holding the API key in clear), only while the service gate is free. Finished `pre-restore-*.zip`, `.bak`, rollback files and any other file are never touched.
+- Fix 4 (retention order): safety ZIP retention ranks by file system write time (`LastWriteTimeUtc`) first, with the name stamp and `-N` suffix as the deterministic tie-breaker, so a DST fall-back hour cannot prune a newer ZIP. Only `pre-restore-yyyyMMdd-HHmmss[-N].zip` names remain eligible.

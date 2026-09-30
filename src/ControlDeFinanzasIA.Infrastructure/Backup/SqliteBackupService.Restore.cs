@@ -95,6 +95,7 @@ public sealed partial class SqliteBackupService
 
             RemoveRetainedOriginal();
             SweepWorkDirectory();
+            SweepSafetyTempFiles();
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
@@ -115,6 +116,18 @@ public sealed partial class SqliteBackupService
         {
             string live = _paths.DatabaseFilePath;
             string bak = live + ".pre-restore.bak";
+            string marker = RollbackFailedMarkerPath;
+            if (_fs.FileExists(marker))
+            {
+                // A rollback failed earlier: the live file may be the rejected restore, so the .bak may be the
+                // only copy of the original outside the safety ZIP. Nothing here proves it is superseded.
+                _logger.LogWarning(
+                    "A failed rollback is on record at {Marker}; the retained original {Bak} was kept. Recover by hand (see the paths in the marker), then delete the marker",
+                    marker,
+                    bak);
+                return;
+            }
+
             if (!_fs.FileExists(bak))
             {
                 return;
@@ -144,6 +157,33 @@ public sealed partial class SqliteBackupService
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             _logger.LogWarning(ex, "The backup scratch directory could not be swept");
+        }
+    }
+
+    /// <summary>
+    /// Deletes the orphan <c>pre-restore-*.zip.tmp</c> files a crash mid safety-backup leaves behind (they hold
+    /// the API key in clear). Only that exact shape is removed; finished ZIPs and every other file are kept.
+    /// </summary>
+    private void SweepSafetyTempFiles()
+    {
+        try
+        {
+            foreach (string file in _fs.EnumerateFiles(BackupsDirectory, "pre-restore-*.zip.tmp").ToArray())
+            {
+                string name = Path.GetFileName(file);
+                if (name.StartsWith("pre-restore-", StringComparison.Ordinal) && name.EndsWith(".zip.tmp", StringComparison.Ordinal))
+                {
+                    DeleteQuietly(file);
+                }
+            }
+        }
+        catch (DirectoryNotFoundException)
+        {
+            // No backups folder yet: nothing to sweep.
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogWarning(ex, "Orphan safety backup temp files could not be swept");
         }
     }
 
@@ -186,6 +226,13 @@ public sealed partial class SqliteBackupService
     private static partial Regex SafetyZipNamePattern();
 
     private string BackupsDirectory => Path.Combine(_paths.DataDirectory, "backups");
+
+    /// <summary>
+    /// Durable record of a failed rollback (threat T11). While it exists <see cref="CompletePendingRestore"/>
+    /// never deletes <c>data.db.pre-restore.bak</c>. Code never removes it: after recovering by hand (put the
+    /// <c>.bak</c> or the safety ZIP back as the live database) the user or support deletes this file.
+    /// </summary>
+    private string RollbackFailedMarkerPath => Path.Combine(BackupsDirectory, ".rollback-failed");
 
     private async Task<Result> RestoreCoreAsync(string workDirectory, Func<CancellationToken, Task<Stream>> openRead, RestoreProgress progress, CancellationToken ct)
     {
@@ -607,7 +654,37 @@ public sealed partial class SqliteBackupService
             bak,
             rejected,
             safetyBackupPath);
+        WriteRollbackFailedMarker(live, bak, rejected, safetyBackupPath);
         return Result.Failure(BackupErrorCodes.IoError, "The restore failed and the previous data could not be put back automatically. The safety backup in the backups folder holds a full copy.");
+    }
+
+    /// <summary>Best effort and never throws: the restore result must reach the caller even if the marker cannot be written.</summary>
+    private void WriteRollbackFailedMarker(string live, string bak, string rejected, string safetyBackupPath)
+    {
+        string marker = RollbackFailedMarkerPath;
+        try
+        {
+            _fs.CreateDirectory(BackupsDirectory);
+            string text = string.Join(
+                Environment.NewLine,
+                "A restore rollback failed. Do not delete the retained original until the data is recovered.",
+                "live database: " + live,
+                "retained original (.bak): " + bak,
+                "rejected restored file: " + rejected,
+                "safety backup: " + safetyBackupPath,
+                "recorded (UTC): " + DateTime.SpecifyKind(_clock.UtcNow, DateTimeKind.Utc).ToString("O", CultureInfo.InvariantCulture),
+                "Recovery: close the app, copy the retained original over the live database (or restore the safety backup),",
+                "then delete this file. The app never deletes it.",
+                string.Empty);
+            using Stream stream = _fs.Create(marker);
+            byte[] bytes = new System.Text.UTF8Encoding(false).GetBytes(text);
+            stream.Write(bytes, 0, bytes.Length);
+            stream.Flush();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogCritical(ex, "The rollback-failed marker {Marker} could not be written; the retained original {Bak} may be deleted on the next start unless it is kept by hand", marker, bak);
+        }
     }
 
     /// <summary>One rollback attempt; true only when the live path holds bytes identical to the original.</summary>
@@ -655,7 +732,7 @@ public sealed partial class SqliteBackupService
     {
         try
         {
-            var candidates = new List<(string Path, string Stamp, int Sequence)>();
+            var candidates = new List<(string Path, DateTime WrittenUtc, string Stamp, int Sequence)>();
             foreach (string file in _fs.EnumerateFiles(BackupsDirectory, "pre-restore-*.zip"))
             {
                 Match match = SafetyZipNamePattern().Match(Path.GetFileName(file));
@@ -670,14 +747,17 @@ public sealed partial class SqliteBackupService
                     continue;
                 }
 
-                candidates.Add((file, match.Groups["stamp"].Value, sequence));
+                candidates.Add((file, _fs.GetLastWriteTimeUtc(file), match.Groups["stamp"].Value, sequence));
             }
 
-            IEnumerable<(string Path, string Stamp, int Sequence)> stale = candidates
-                .OrderByDescending(c => c.Stamp, StringComparer.Ordinal)
+            // The names carry local time, which repeats during a DST fall-back hour, so the write time ranks
+            // first; the name is only the deterministic tie-breaker.
+            IEnumerable<(string Path, DateTime WrittenUtc, string Stamp, int Sequence)> stale = candidates
+                .OrderByDescending(c => c.WrittenUtc)
+                .ThenByDescending(c => c.Stamp, StringComparer.Ordinal)
                 .ThenByDescending(c => c.Sequence)
                 .Skip(Math.Max(1, _options.SafetyBackupsToKeep));
-            foreach ((string path, _, _) in stale)
+            foreach ((string path, _, _, _) in stale)
             {
                 DeleteQuietly(path);
             }

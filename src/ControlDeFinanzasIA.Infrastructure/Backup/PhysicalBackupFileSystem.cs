@@ -10,6 +10,9 @@ public sealed class PhysicalBackupFileSystem : IBackupFileSystem
     public long GetLength(string path) => new FileInfo(path).Length;
 
     /// <inheritdoc />
+    public DateTime GetLastWriteTimeUtc(string path) => File.GetLastWriteTimeUtc(path);
+
+    /// <inheritdoc />
     public long GetAvailableFreeSpace(string directory)
     {
         string root = Path.GetPathRoot(Path.GetFullPath(directory))

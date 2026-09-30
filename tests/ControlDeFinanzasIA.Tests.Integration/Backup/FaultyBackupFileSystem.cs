@@ -51,6 +51,8 @@ public sealed class FaultyBackupFileSystem : IBackupFileSystem
 
     public long GetLength(string path) => Run(nameof(GetLength), [path], () => _inner.GetLength(path));
 
+    public DateTime GetLastWriteTimeUtc(string path) => Run(nameof(GetLastWriteTimeUtc), [path], () => _inner.GetLastWriteTimeUtc(path));
+
     public long GetAvailableFreeSpace(string directory) =>
         Run(nameof(GetAvailableFreeSpace), [directory], () => FreeSpace ?? _inner.GetAvailableFreeSpace(directory));
 

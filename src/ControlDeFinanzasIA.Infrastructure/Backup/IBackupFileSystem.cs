@@ -12,6 +12,9 @@ public interface IBackupFileSystem
     /// <summary>Length in bytes of the file at <paramref name="path"/>.</summary>
     long GetLength(string path);
 
+    /// <summary>Last write time, in UTC, of the file at <paramref name="path"/>.</summary>
+    DateTime GetLastWriteTimeUtc(string path);
+
     /// <summary>Free bytes on the volume that holds <paramref name="directory"/>.</summary>
     long GetAvailableFreeSpace(string directory);
 

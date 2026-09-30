@@ -162,6 +162,65 @@ public sealed class ScopedNotificationCenterSuspendTests : IDisposable
         Assert.NotNull(await center.GetAsync());
     }
 
+    [Theory]
+    [InlineData("refresh")]
+    [InlineData("mark-read")]
+    [InlineData("dismiss")]
+    public async Task ACallBlockedOnTheGate_WhenASuspensionIsTaken_ReturnsPromptlyAndDoesNothing(string operation)
+    {
+        await using ServiceProvider provider = await BuildMigratedProviderAsync();
+        Guid id = await SeedAsync(provider);
+        var factory = new GatedScopeFactory(provider.GetRequiredService<IServiceScopeFactory>()) { BlockFirstCreate = true };
+        ScopedNotificationCenter center = await CreateCenterAsync(factory);
+        Task running = center.RefreshAsync();
+        Assert.True(await Task.Run(() => factory.Entered.Wait(_wait)));
+
+        // Passed the suspended check (nothing suspended yet) and is now queued behind the in-flight run.
+        Task blocked = operation switch
+        {
+            "refresh" => center.RefreshAsync(),
+            "mark-read" => center.MarkReadAsync([id]),
+            _ => center.DismissAsync(id),
+        };
+        await Task.Delay(100);
+        Assert.False(blocked.IsCompleted);
+
+        // The restore takes the suspension and, once it holds the gate, never disposes it on success.
+        Task<IDisposable> suspending = center.SuspendAsync();
+
+        await blocked.WaitAsync(TimeSpan.FromSeconds(3));
+        Assert.Equal(1, factory.Created);
+
+        factory.Release.Set();
+        await running;
+        using IDisposable handle = await suspending.WaitAsync(_wait);
+
+        // The abandoned call never opened a scope, so it never touched the database.
+        Assert.Equal(1, factory.Created);
+    }
+
+    [Fact]
+    public async Task ACallQueuedBehindACancelledSuspension_KeepsWorkingAfterwards()
+    {
+        await using ServiceProvider provider = await BuildMigratedProviderAsync();
+        var factory = new GatedScopeFactory(provider.GetRequiredService<IServiceScopeFactory>()) { BlockFirstCreate = true };
+        ScopedNotificationCenter center = await CreateCenterAsync(factory);
+        Task running = center.RefreshAsync();
+        Assert.True(await Task.Run(() => factory.Entered.Wait(_wait)));
+        using var cts = new CancellationTokenSource();
+        Task<IDisposable> suspending = center.SuspendAsync(cts.Token);
+        await cts.CancelAsync();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => suspending);
+        factory.Release.Set();
+        await running;
+
+        // The abandon signal of the cancelled suspension must not poison later callers.
+        Task later = center.RefreshAsync();
+        await later.WaitAsync(_wait);
+
+        Assert.Equal(2, factory.Created);
+    }
+
     private static Task<ScopedNotificationCenter> CreateCenterAsync(IServiceScopeFactory factory) =>
         Task.Run(() => new ScopedNotificationCenter(factory, NullLogger<ScopedNotificationCenter>.Instance));
 

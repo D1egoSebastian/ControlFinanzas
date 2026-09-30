@@ -152,6 +152,116 @@ public sealed class CompletePendingRestoreTests : IDisposable
     }
 
     [Fact]
+    public async Task WhenARollbackFailedEarlier_KeepsTheBakEvenIfTheLiveDatabaseIsHealthy_AndWarnsOnEveryStart()
+    {
+        byte[] zip = await _h.CreateZipAsync();
+        _h.MutateLive();
+        string original = _h.Db.LiveSha256();
+        var failing = new FaultyBackupFileSystem();
+        failing.On("Replace", a => !a[2].Contains(".rollback-", StringComparison.Ordinal))
+            .After(_ => File.WriteAllBytes(_h.LivePath, new byte[8192]));
+        failing.On("Replace", a => a[2].Contains(".rollback-", StringComparison.Ordinal)).Throws(new IOException("still locked"));
+        Assert.False((await _h.RestoreAsync(zip, failing)).IsSuccess);
+
+        // The rejected-but-healthy restored file ends up at the live path (here: a healthy migrated copy).
+        SqliteConnection.ClearAllPools();
+        File.Copy(_h.BakPath, _h.LivePath, overwrite: true);
+        string marker = Path.Combine(_h.BackupsDirectory, ".rollback-failed");
+        Assert.True(File.Exists(marker));
+        int logged = _h.Logger.Entries.Count;
+        SqliteBackupService service = _h.NewService();
+
+        service.CompletePendingRestore();
+        service.CompletePendingRestore();
+
+        Assert.True(File.Exists(_h.BakPath), "The original must not be deleted while a failed rollback is on record.");
+        Assert.Equal(original, BackupTestDb.Sha256Of(_h.BakPath));
+        Assert.True(File.Exists(marker), "The marker is never removed by code.");
+        Assert.Equal(
+            2,
+            _h.Logger.Entries.Skip(logged).Count(e => e.Level == LogLevel.Warning
+                && e.Message.Contains(_h.BakPath, StringComparison.Ordinal)
+                && e.Message.Contains(marker, StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task WhenNoRollbackFailedAndTheLiveDatabaseIsHealthy_DeletesTheBak()
+    {
+        byte[] zip = await _h.CreateZipAsync();
+        Assert.True((await _h.RestoreAsync(zip)).IsSuccess);
+        Assert.False(File.Exists(Path.Combine(_h.BackupsDirectory, ".rollback-failed")));
+
+        _h.NewService().CompletePendingRestore();
+
+        Assert.False(File.Exists(_h.BakPath));
+    }
+
+    [Fact]
+    public async Task Sweep_RemovesOrphanSafetyTempFiles_ButNeverFinishedZipsOrOtherFiles()
+    {
+        Directory.CreateDirectory(_h.BackupsDirectory);
+        string[] orphans = ["pre-restore-20200101-000001.zip.tmp", "pre-restore-20200101-000002.zip.tmp"];
+        string[] keep =
+        [
+            "pre-restore-20200101-000003.zip",
+            "pre-restore-20200101-000004-2.zip",
+            "notes.txt",
+            "notes.zip.tmp",
+            "my-pre-restore-20200101-000005.zip.tmp",
+            "pre-restore-20200101-000006.zip.tmpx",
+            "pre-restore-20200101-000007.tmp",
+            "pre-restore-20200101-000008.zip.tmp.bak",
+            ".rollback-failed",
+        ];
+        foreach (string name in orphans.Concat(keep))
+        {
+            await File.WriteAllTextAsync(Path.Combine(_h.BackupsDirectory, name), "content of " + name);
+        }
+
+        string bak = _h.BakPath;
+        await File.WriteAllTextAsync(bak, "retained original");
+
+        _h.NewService().CompletePendingRestore();
+
+        foreach (string name in orphans)
+        {
+            Assert.False(File.Exists(Path.Combine(_h.BackupsDirectory, name)), name + " must be swept.");
+        }
+
+        foreach (string name in keep)
+        {
+            Assert.Equal("content of " + name, await File.ReadAllTextAsync(Path.Combine(_h.BackupsDirectory, name)));
+        }
+
+        Assert.True(File.Exists(bak));
+    }
+
+    [Fact]
+    public async Task Sweep_LeavesSafetyTempFilesAloneWhileARestoreIsInFlight()
+    {
+        byte[] zip = await _h.CreateZipAsync();
+        using var atSwap = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        var fs = new FaultyBackupFileSystem();
+        fs.On("Replace", occurrence: 1).Before(_ =>
+        {
+            atSwap.Set();
+            Assert.True(release.Wait(TimeSpan.FromSeconds(30)));
+        });
+        SqliteBackupService service = _h.NewService(fs);
+        var restoring = Task.Run(() => service.RestoreAsync(_ => Task.FromResult<Stream>(new MemoryStream(zip))));
+        Assert.True(atSwap.Wait(TimeSpan.FromSeconds(30)));
+        string inFlight = Path.Combine(_h.BackupsDirectory, "pre-restore-20200101-000009.zip.tmp");
+        await File.WriteAllTextAsync(inFlight, "being written");
+
+        service.CompletePendingRestore();
+
+        Assert.True(File.Exists(inFlight));
+        release.Set();
+        Assert.True((await restoring).IsSuccess);
+    }
+
+    [Fact]
     public async Task WhenTheLiveDatabaseIsNotADatabase_KeepsTheBak()
     {
         byte[] zip = await _h.CreateZipAsync();

@@ -490,6 +490,66 @@ public sealed class SqliteBackupServiceSwapFailureTests : IDisposable
     }
 
     [Fact]
+    public async Task Rollback_Fails_WritesADurableMarkerNamingTheBakTheRejectedFileAndTheSafetyZip()
+    {
+        byte[] zip = await _h.CreateZipAsync();
+        _h.MutateLive();
+        var fs = new FaultyBackupFileSystem();
+        fs.On("Replace", a => !a[2].Contains(".rollback-", StringComparison.Ordinal))
+            .After(_ => File.WriteAllBytes(_h.LivePath, new byte[8192]));
+        fs.On("Replace", a => a[2].Contains(".rollback-", StringComparison.Ordinal)).Throws(new IOException("still locked"));
+
+        Result result = await _h.RestoreAsync(zip, fs);
+
+        Assert.False(result.IsSuccess);
+        string marker = Path.Combine(_h.BackupsDirectory, ".rollback-failed");
+        Assert.True(File.Exists(marker), "A failed rollback must leave a durable marker.");
+        string content = await File.ReadAllTextAsync(marker);
+        string safety = Assert.Single(_h.SafetyZips());
+        Assert.Contains(_h.BakPath, content, StringComparison.Ordinal);
+        Assert.Contains(_h.LivePath, content, StringComparison.Ordinal);
+        Assert.Contains(Path.GetFileName(safety), content, StringComparison.Ordinal);
+        Assert.Contains(".rollback-", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Rollback_Succeeds_WritesNoMarker()
+    {
+        byte[] zip = await _h.CreateZipAsync();
+        _h.MutateLive();
+        string original = _h.Db.LiveSha256();
+        var fs = new FaultyBackupFileSystem();
+        fs.On("Replace", a => !a[2].Contains(".rollback-", StringComparison.Ordinal))
+            .After(_ => File.WriteAllBytes(_h.LivePath, new byte[8192]));
+
+        Result result = await _h.RestoreAsync(zip, fs);
+
+        _h.AssertFailedClosed(result, original, expectSafetyZip: true);
+        Assert.False(File.Exists(Path.Combine(_h.BackupsDirectory, ".rollback-failed")));
+    }
+
+    [Fact]
+    public async Task Rollback_Fails_AndTheMarkerCannotBeWritten_StillReturnsTheFailureAndLogsCritical()
+    {
+        byte[] zip = await _h.CreateZipAsync();
+        _h.MutateLive();
+        string original = _h.Db.LiveSha256();
+        var fs = new FaultyBackupFileSystem();
+        fs.On("Replace", a => !a[2].Contains(".rollback-", StringComparison.Ordinal))
+            .After(_ => File.WriteAllBytes(_h.LivePath, new byte[8192]));
+        fs.On("Replace", a => a[2].Contains(".rollback-", StringComparison.Ordinal)).Throws(new IOException("still locked"));
+        fs.On("Create", a => a[0].EndsWith(".rollback-failed", StringComparison.Ordinal)).Throws(new UnauthorizedAccessException("denied"));
+
+        Result result = await _h.RestoreAsync(zip, fs);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(BackupErrorCodes.IoError, result.Error!.Code);
+        Assert.Equal(original, BackupTestDb.Sha256Of(_h.BakPath));
+        Assert.False(File.Exists(Path.Combine(_h.BackupsDirectory, ".rollback-failed")));
+        Assert.Contains(_h.Logger.Entries, e => e.Level == LogLevel.Critical && e.Message.Contains("marker", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public async Task Rollback_PartialWin32FailureOfTheRollbackItself_IsRepairedAndTheOriginalIsBack()
     {
         byte[] zip = await _h.CreateZipAsync();

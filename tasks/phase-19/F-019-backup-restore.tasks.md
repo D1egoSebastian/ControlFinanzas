@@ -720,3 +720,13 @@ Depends on 6b. Goal: the roadmap completion criterion is proven through real DI,
 - [ ] 8.9 Archive the spec (`F-019-backup-restore.spec.md` → `.done.md` with `git mv`, acceptance criteria checked
   with evidence) and write `archive-report.md` in `.atl/sdd/f-019p19-backup/`. Only after 8.1 and 8.8 pass.
   (Acceptance Criteria)
+
+## Apply notes: post-verify fixes (2026-09-29)
+
+Four fixes after verify (PASS WITH WARNINGS), each test-first against the real service / center on temp files. The open Cierre and manual-check items above are intentionally NOT ticked.
+
+- [x] PV.1 Failed rollback keeps the original: `.rollback-failed` marker in `<DataDir>\backups`, `CompletePendingRestore` keeps the `.bak` and warns each start while it exists; marker write failure is logged Critical and never throws.
+- [x] PV.2 `ScopedNotificationCenter`: queued gate waiters are released as no-ops when a suspension is taken; flag re-checked after acquiring the gate.
+- [x] PV.3 `CompletePendingRestore` sweeps orphan `pre-restore-*.zip.tmp` (exact shape only).
+- [x] PV.4 Safety ZIP retention ordered by write time first (new `IBackupFileSystem.GetLastWriteTimeUtc`), name as tie-breaker.
+- [x] PV.5 Spec: appended "Post-verify reconciliation" (R-13 / S-21 is 4 attempts: initial + 3 retries at 200/600/1800 ms).
