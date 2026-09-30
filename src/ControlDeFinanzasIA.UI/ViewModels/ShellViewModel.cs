@@ -1,6 +1,8 @@
 using System.ComponentModel;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ControlDeFinanzasIA.UI.Input;
 using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.Resources;
 using Microsoft.Extensions.Localization;
@@ -11,7 +13,7 @@ namespace ControlDeFinanzasIA.UI.ViewModels;
 /// View-model for the application shell. Manages the navigation sidebar,
 /// the current content view-model, and the back navigation command.
 /// </summary>
-public sealed partial class ShellViewModel : ViewModelBase
+public sealed partial class ShellViewModel : ViewModelBase, IShortcutCommandSource
 {
     private readonly INavigationService _navService;
     private readonly IStringLocalizer<Strings> _localizer;
@@ -141,6 +143,146 @@ public sealed partial class ShellViewModel : ViewModelBase
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanGoBack))]
     private void GoBack() => _navService.GoBack();
+
+    // F-021 (DD-6): window shortcut commands. The gate lives in each command body, never in CanExecute, so the
+    // key binding stays executable and a gated press is a silent no-op instead of a disabled-command surprise.
+
+    /// <summary>
+    /// A modal layer (the error overlay) is open, or the current screen is in the middle of an import commit or a
+    /// restore: navigation and new-entry shortcuts must not act.
+    /// </summary>
+    private bool IsShortcutGated => IsModalOpen || IsCurrentBusy;
+
+    private bool IsCurrentBusy => _navService.CurrentViewModel is IBusyAware { IsBusy: true };
+
+    [RelayCommand]
+    private void NewExpense()
+    {
+        if (IsShortcutGated)
+        {
+            return;
+        }
+
+        if (_navService.CurrentViewModel is ExpensesViewModel expenses)
+        {
+            expenses.BeginNewEntry();
+            return;
+        }
+
+        _navService.NavigateTo<ExpensesViewModel>(RouteNames.Expenses, vm => vm.BeginNewEntry());
+    }
+
+    [RelayCommand]
+    private void NewIncome()
+    {
+        if (IsShortcutGated)
+        {
+            return;
+        }
+
+        if (_navService.CurrentViewModel is IncomeViewModel income)
+        {
+            income.BeginNewEntry();
+            return;
+        }
+
+        _navService.NavigateTo<IncomeViewModel>(RouteNames.Incomes, vm => vm.BeginNewEntry());
+    }
+
+    /// <summary>
+    /// Opens the section at a digit position: <c>1</c>..<c>9</c> are the first nine, <c>0</c> the tenth. Any other
+    /// digit, and the section already on screen, do nothing (no reload, no history entry).
+    /// </summary>
+    /// <param name="digit">The digit of the pressed <c>Ctrl+digit</c>.</param>
+    [RelayCommand]
+    private void GoToSection(int digit)
+    {
+        if (IsShortcutGated || digit is < 0 or > 9)
+        {
+            return;
+        }
+
+        int position = digit == 0 ? 9 : digit - 1;
+        if (position >= NavigationSections.All.Count)
+        {
+            return;
+        }
+
+        OpenSection(NavigationSections.All[position]);
+    }
+
+    [RelayCommand]
+    private void OpenSettings()
+    {
+        if (IsShortcutGated)
+        {
+            return;
+        }
+
+        OpenSection(NavigationSections.All.Single(s => s.Route == RouteNames.Settings));
+    }
+
+    [RelayCommand]
+    private void ToggleNotifications()
+    {
+        if (IsModalOpen)
+        {
+            return;
+        }
+
+        Notifications.IsOpen = !Notifications.IsOpen;
+    }
+
+    /// <summary>
+    /// Closes the topmost layer: the error overlay always (it beats a busy operation, Reconciliation #6), otherwise
+    /// the notifications popup, except while an operation that must not be interrupted is running.
+    /// </summary>
+    [RelayCommand]
+    private void Escape()
+    {
+        if (ErrorOverlay is { IsOpen: true } overlay)
+        {
+            overlay.Close();
+            return;
+        }
+
+        if (IsCurrentBusy)
+        {
+            return;
+        }
+
+        if (Notifications.IsOpen)
+        {
+            Notifications.IsOpen = false;
+        }
+    }
+
+    private void OpenSection(NavigationSection section)
+    {
+        if (_navService.CurrentViewModel?.GetType() == section.ViewModelType)
+        {
+            return;
+        }
+
+        _navService.NavigateTo(section.Route);
+        ContentFocusRequest = new FocusRequestToken();
+    }
+
+    /// <summary>Gets the focus request raised after a shortcut navigates to another section.</summary>
+    [ObservableProperty]
+    private FocusRequestToken? _contentFocusRequest;
+
+    /// <inheritdoc />
+    public ICommand Resolve(ShortcutAction action) => action switch
+    {
+        ShortcutAction.NewExpense => NewExpenseCommand,
+        ShortcutAction.NewIncome => NewIncomeCommand,
+        ShortcutAction.GoToSection => GoToSectionCommand,
+        ShortcutAction.OpenSettings => OpenSettingsCommand,
+        ShortcutAction.ToggleNotifications => ToggleNotificationsCommand,
+        ShortcutAction.Escape => EscapeCommand,
+        _ => throw new ArgumentOutOfRangeException(nameof(action)),
+    };
 
     private void OnNavigationCurrentChanged(object? sender, EventArgs e)
     {

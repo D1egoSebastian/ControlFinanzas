@@ -13,6 +13,7 @@ using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateLocale;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateTheme;
 using ControlDeFinanzasIA.Domain.Notifications;
 using ControlDeFinanzasIA.UI.Diagnostics;
+using ControlDeFinanzasIA.UI.Input;
 using ControlDeFinanzasIA.UI.Resources;
 using ControlDeFinanzasIA.UI.Services;
 using Microsoft.Extensions.Logging;
@@ -33,7 +34,7 @@ namespace ControlDeFinanzasIA.UI.ViewModels;
 /// This keeps the view-model constructible and testable outside an
 /// Avalonia headless harness.
 /// </remarks>
-public sealed partial class SettingsViewModel : ViewModelBase
+public sealed partial class SettingsViewModel : ViewModelBase, IBusyAware
 {
     private readonly GetAppSettingsQuery _getAppSettingsQuery;
     private readonly UpdateThemeUseCase _updateThemeUseCase;
@@ -208,6 +209,12 @@ public sealed partial class SettingsViewModel : ViewModelBase
     /// (the section is then hidden).
     /// </summary>
     public BackupSettingsViewModel? Backup { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether a restore is in progress. Reads the Backup section's existing state (no state
+    /// of its own) so window shortcuts never interrupt the database swap (F-021, R-13).
+    /// </summary>
+    public bool IsBusy => Backup?.State == BackupPanelState.Restoring;
 
     // --- Acerca de (no persistence) ---
 

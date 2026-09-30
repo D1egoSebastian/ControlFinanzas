@@ -5,8 +5,11 @@
         xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
         xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
         xmlns:views="using:ControlDeFinanzasIA.UI.Views"
+        xmlns:input="using:ControlDeFinanzasIA.UI.Input"
+        xmlns:behaviors="using:ControlDeFinanzasIA.UI.Behaviors"
         x:Class="ControlDeFinanzasIA.UI.Views.MainWindow"
         x:Name="ShellRoot"
+        input:KeyboardShortcuts.Enabled="True"
         x:DataType="vm:ShellViewModel"
         Title="{x:Static resources:Strings.WindowTitle}"
         Icon="/Assets/Icon/app-icon.ico"
@@ -114,6 +117,9 @@
                             BorderThickness="1"
                             CornerRadius="{StaticResource RadiusMedium}"
                             BoxShadow="0 10 28 0 #99000000"
+                            input:KeyboardShortcuts.Source="{Binding #ShellRoot.DataContext}"
+                            input:KeyboardShortcuts.EscapeOnly="True"
+                            input:KeyboardShortcuts.Enabled="True"
                             DataContext="{Binding Notifications}">
                         <StackPanel>
                             <!-- Popup header: title + refresh, closed by an amber rule. -->
@@ -208,6 +214,7 @@
             </ListBox>
 
             <ContentControl Content="{Binding Current, Converter={x:Static converters:CurrentViewConverter.Instance}}"
+                            behaviors:FocusOnRequest.FirstFocusableToken="{Binding ContentFocusRequest}"
                             HorizontalContentAlignment="Stretch"
                             VerticalContentAlignment="Stretch"
                             MinHeight="400" />

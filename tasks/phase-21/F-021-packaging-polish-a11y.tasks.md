@@ -458,22 +458,22 @@ Depends on 6. Goal: one catalog generating the real `KeyBindings`, shell command
 keyboard-only expense flow proven on the real window. Size note: if above ~450 lines split at "catalog + behavior" vs
 "shell commands + gating + keyboard E2E".
 
-- [ ] 7a.1 Write failing `tests/…Unit/Input/KeyboardShortcutCatalogTests.cs` against the REAL `KeyboardShortcutCatalog`:
+- [x] 7a.1 Write failing `tests/…Unit/Input/KeyboardShortcutCatalogTests.cs` against the REAL `KeyboardShortcutCatalog`:
   `All` has exactly 15 Ctrl entries (NewExpense, NewIncome, GoToSection 1..9 and 0, OpenSettings `Ctrl+OemComma`,
   ToggleNotifications `Ctrl+Shift+B`, Escape); gestures are unique; `ForPlatform(false)` has no Meta entry and
   `ForPlatform(true)` adds exactly one Meta duplicate per entry; `Format` yields `Ctrl+Shift+N` on Windows/Linux and a
   symbol form on macOS with the "Shift" label from resx; every `DescriptionKey` resolves to a non-empty string in both
   cultures. (R-12, S-24, T10, DD-6)
-- [ ] 7a.2 Create `src/…UI/Input/{ShortcutAction, KeyboardShortcut, KeyboardShortcutCatalog, KeyboardShortcuts,
+- [x] 7a.2 Create `src/…UI/Input/{ShortcutAction, KeyboardShortcut, KeyboardShortcutCatalog, KeyboardShortcuts,
   IShortcutCommandSource, IBusyAware}.cs` and add the `Shortcut*` resx keys (both cultures + Designer). The
   `KeyboardShortcuts` attached behavior (enabled on the window from XAML: `KeyboardShortcuts.Enabled="True"`) GENERATES
   one `KeyBinding` per `ForPlatform(OperatingSystem.IsMacOS())` entry and resolves each command from
   `IShortcutCommandSource` (implemented by `ShellViewModel`). No code-behind logic. Run 7a.1 green. (R-12, DD-6)
-- [ ] 7a.3 Write failing `tests/…Unit/UI/ShortcutCatalogParityTests.cs` (REAL `MainWindow` headless, real
+- [x] 7a.3 Write failing `tests/…Unit/UI/ShortcutCatalogParityTests.cs` (REAL `MainWindow` headless, real
   `ShellViewModel`): `MainWindow.KeyBindings` gestures and bound commands equal the catalog for the current platform,
   in BOTH directions (no binding without an entry, no entry without a binding); the popup's local `Esc` binding maps to
   the same `EscapeCommand`. (R-12, R-16, S-24, D-26)
-- [ ] 7a.4 Write failing `tests/…Unit/ViewModels/ShellShortcutTests.cs` (real `ShellViewModel`, real `NavigationService`,
+- [x] 7a.4 Write failing `tests/…Unit/ViewModels/ShellShortcutTests.cs` (real `ShellViewModel`, real `NavigationService`,
   real VMs via test DI with fake repositories): `NewExpenseCommand` from another section navigates to Expenses and calls
   `BeginNewEntry` through the route `configure` callback; from Expenses it calls `BeginNewEntry` on the SAME instance
   (no second VM); an edit in progress is cancelled; `NewIncomeCommand` likewise; `GoToSectionCommand(1)` and `(0)` open
@@ -481,29 +481,32 @@ keyboard-only expense flow proven on the real window. Size note: if above ~450 l
   `GoToSection` to the current section does not reload or push history; `OpenSettingsCommand` opens Settings;
   `ToggleNotificationsCommand` flips the bell popup; `EscapeCommand` closes the overlay first, else the popup. (R-12,
   S-25..S-28)
-- [ ] 7a.5 Write failing `tests/…Unit/ViewModels/ShortcutGatingTests.cs` (real VMs): with the error overlay open,
+- [x] 7a.5 Write failing `tests/…Unit/ViewModels/ShortcutGatingTests.cs` (real VMs): with the error overlay open,
   `NewExpense`, `NewIncome`, `GoToSection`, `OpenSettings` do nothing and `Escape` closes the overlay; with
   `ExpensesViewModel.IsBusy` true (import in `Importing`) and, separately, `SettingsViewModel.IsBusy` true (restore in
   progress) the same four are no-ops and the running operation is uninterrupted (state unchanged, no cancel called); the
   overlay-over-restore case: `Escape` still closes the overlay (Reconciliation #6); with no overlay and a restore busy,
   `Escape` does not close the popup; bell toggle stays allowed. The gate lives in the command bodies, not `CanExecute`
   (Phase 18/19 lesson). (R-13, S-29, S-30, T9)
-- [ ] 7a.6 Implement: `ShellViewModel` commands (`NewExpenseCommand`, `NewIncomeCommand`, `GoToSectionCommand(int)`,
+- [x] 7a.6 Implement: `ShellViewModel` commands (`NewExpenseCommand`, `NewIncomeCommand`, `GoToSectionCommand(int)`,
   `OpenSettingsCommand`, `ToggleNotificationsCommand`, `EscapeCommand`, `IShortcutCommandSource.Resolve`),
   `ExpensesViewModel.IsBusy => Import?.IsBusy == true` and `SettingsViewModel.IsBusy => Backup.IsRestoring` as
   `IBusyAware` (read existing flags; do NOT add new state; verify the real flag names with `rg` first and adapt),
   ordered section source `src/…UI/Navigation/NavigationSections.cs` stub-free (types + routes + label keys; the sidebar
   view comes in 7b), `MainWindow.axaml` (`KeyboardShortcuts.Enabled`, popup `Esc` binding). Run 7a.3-7a.5 green.
   (R-12, R-13, DD-6, DD-7)
-- [ ] 7a.7 Write `tests/…Integration/Keyboard/KeyboardOnlyExpenseFlowTests.cs` (REAL `MainWindow`, REAL `ShellViewModel`,
+- [x] 7a.7 Write `tests/…Integration/Keyboard/KeyboardOnlyExpenseFlowTests.cs` (REAL `MainWindow`, REAL `ShellViewModel`,
   REAL `ExpensesViewModel` and use cases, temp-file SQLite, headless key events only; es-DO and en): start on another
   section, send `Ctrl+N`, assert Description has focus, send text via `KeyTextInput` and `Tab` through Amount, Date,
   Category (Tab order follows visual order; add `TabIndex` only where the tree order differs), send `Enter`; assert a new
   expense row is persisted in the DB and visible in the list, and focus is back on Description. No mouse and no direct
   command call in this test. (R-14, S-25, S-31)
-- [ ] 7a.8 **Run gate block G** (grep files: `UI/Input/*`, `NavigationSections.cs`, `ShellViewModel.cs`,
+- [x] 7a.8 **Run gate block G** (grep files: `UI/Input/*`, `NavigationSections.cs`, `ShellViewModel.cs`,
   `ExpensesViewModel.cs`, `SettingsViewModel.cs`, `MainWindow.axaml`, new tests). Note that the Meta-key behavior on a real
   Mac is authored, unverified (recorded in Cierre).
+
+_Apply notes S7a (Strict TDD). Split at the design seam into two commits: part 1 "catalog + behavior" and part 2 "shell commands + gating + keyboard E2E" (the slice is about 2,000 lines incl. tests and resx, far above the ~450 budget; part 1 was gated on its own: build 0/0, full suite 2709 unit + 815 integration, format 0, Architecture 20/20). Reds observed: catalog/parity/shell/gating tests ran against inert skeletons (empty catalog, no-op commands): 32 failed / 12 passed of 44; the passes were vacuous ones, so the tests were hardened (counts asserted, positive controls in every gating test) before the green step. The keyboard E2E ran red on exactly one assertion (focus back on Description after register: 2/2 cultures) and went green after `RegisterExpenseAsync` raises `DescriptionFocusRequest` on success (new production behavior, R-14). The behavior tests (`KeyboardShortcutsBehaviorTests`) were written after the behavior; a mutation (skip `KeyBindings.Add`) turned all 6 red, then it was restored. Gate G (part 2 tree): build 0/0 (`--no-incremental`); full suite x3 = 2746 unit + 815 integration each run (baseline 2693 + 815; +53 unit: catalog 10, behavior 6, parity 4, shell commands 23, gating 8, keyboard E2E 2), 0 skipped, no intermittents; format exit 0 (var/pattern fixes applied by `dotnet format style`); Architecture filter 20/20; no-stub grep empty; footprint clean (no Packages.props, Migrations, snapshot, SettingKeys/AppSettings, csproj); the real `%APPDATA%\ControlDeFinanzasIA` listing unchanged; build servers shut down, no stray dotnet/testhost.
+Deviations: (1) `Escape` has no Meta twin on macOS (Meta+Esc is not a documented gesture), so `ForPlatform(true)` = 15 + 14 = 29, not 30. (2) `SettingsViewModel.IsBusy` reads `Backup.State == Restoring` (there is no `IsRestoring`; `BackupSettingsViewModel.IsBusy` also covers export/inspect, which shortcuts may interrupt safely). (3) `Escape` with no overlay is also suppressed during an import commit (IBusyAware is one flag), stricter than Reconciliation #6, harmless. (4) While the overlay is open `Ctrl+Shift+B` is suppressed too (the overlay closes the popup on open; "only Escape acts"). (5) The keyboard E2E lives in `tests/…Unit/Keyboard/`, not Integration: the single shared headless session is in the Unit project and the Integration project has no Avalonia.Headless reference (a csproj change is out of scope). It still uses the REAL composition root (`Bootstrap`), the real `NavigationService`/`ShellViewModel`/`ExpensesViewModel`/use cases and a migrated temp-file SQLite database (path resolver and `AppDbContext` registration swapped to the temp dir). (6) `IsDefault` belongs to S7b, so the E2E reaches the register button with `Tab` and presses `Enter` on it; Enter-inside-an-input submit is S7b (7b.4). Tab order needed no `TabIndex`. (7) The popup-local `Esc` uses the same behavior (`EscapeOnly`, explicit `Source`) instead of a hand-written `KeyBinding`. (8) `ShellViewModel.MenuItems` still lists its ten labels by hand: an existing source guard (`ShellSidebarLabelTests`) forbids `_localizer[variable]`; S7b moves the sidebar onto `NavigationSections`. (9) Added `ShortcutTexts` (x:Static) so the Expenses/Income empty-state chips come from `Format`; `ShortcutKeyShift` is "Shift" in both cultures (the chip tests assert `Ctrl+Shift+N`). Unverified: Meta bindings on a real Mac; the `Format` symbol form has only a pure test; the popup-local `Esc` is asserted structurally (a real key event inside the popup `TopLevel` is not simulated headlessly); a human visual/keyboard pass was not run. Commits: see git log (slice S7a/12, parts 1 and 2)._
 
 ## 7b. Sidebar rework, focus styles, IsDefault and Settings shortcut list (S7b)
 

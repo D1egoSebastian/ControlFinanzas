@@ -38,7 +38,7 @@ namespace ControlDeFinanzasIA.UI.ViewModels;
 /// list of expenses, filters, saved views, inline tag creation, field-level validation
 /// errors and pagination commands.
 /// </summary>
-public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware
+public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware, IBusyAware
 {
     private readonly RegisterExpenseUseCase _registerUseCase;
     private readonly GetTransactionsQuery _getTransactionsQuery;
@@ -572,6 +572,9 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware
             ValidationErrors.Clear();
             FormError = null;
             StatusMessage = _localizer["RegistrationSuccessMessage"];
+
+            // F-021 (R-14): keyboard users keep typing the next entry without reaching for the mouse.
+            DescriptionFocusRequest = new FocusRequestToken();
             await RefreshAsync();
         }
         else if (result.Error?.Code == "Validation")
@@ -789,6 +792,12 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware
 
     /// <summary>Gets the hosted import panel view-model; <c>null</c> when the screen was composed without it (F-020).</summary>
     public ImportViewModel? Import { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether an import is loading or committing. Reads the hosted panel's existing flag
+    /// (no state of its own) so window shortcuts never interrupt a commit (F-021, R-13).
+    /// </summary>
+    public bool IsBusy => Import?.IsBusy == true;
 
     /// <summary>Gets a value indicating whether the import feature is available on this screen.</summary>
     public bool HasImport => Import is not null;
