@@ -138,6 +138,11 @@ public static class Bootstrap
         // may reference Infrastructure (R-4); Program's ClearProviders() runs before this registration.
         services.AddRollingFileLogging();
 
+        // Fase 21: reporter de errores inesperados y estado del overlay (F-021, slice S3).
+        services.AddSingleton(_ => new ErrorOverlayViewModel(AppVersionInfo.Current));
+        services.AddSingleton<IErrorPresenter>(sp => sp.GetRequiredService<ErrorOverlayViewModel>());
+        services.AddSingleton<IUnexpectedErrorReporter, UnexpectedErrorReporter>();
+
         services.AddLocalization();
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<ShellViewModel>();

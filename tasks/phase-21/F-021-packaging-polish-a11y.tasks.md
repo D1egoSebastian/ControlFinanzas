@@ -256,7 +256,7 @@ global hooks never throw; a pre-UI failure leaves a file and a non-zero exit. Th
 (`ErrorOverlayViewModel` with `IErrorPresenter`); its view is S4. Size note: if above ~450 lines split at "reporter +
 startup guard" vs "hooks + restore test".
 
-- [ ] 3.1 Write failing `tests/…Integration/Diagnostics/UnexpectedErrorReporterTests.cs` with the REAL
+- [x] 3.1 Write failing `tests/…Integration/Diagnostics/UnexpectedErrorReporterTests.cs` with the REAL
   `UnexpectedErrorReporter` over the REAL `RollingFileLoggerProvider` (temp dir, fake `IClock`) and the real
   `ErrorOverlayViewModel` as presenter: reporting an `InvalidOperationException` with an inner exception returns a Guid;
   `CorrelationId.Short(guid)` is 8 lowercase hex chars equal to the first 8 of `guid.ToString("N")`; the log file holds an
@@ -264,17 +264,17 @@ startup guard" vs "hooks + restore test".
   received `(guid, clock.UtcNow)`; a presenter that throws still leaves the log entry and `Report` does not throw; a
   logger that is disabled (provider `IsDisabled`) still does not throw and writes a best-effort stderr line; no network
   type is used (see 3.8). (R-7, S-13, S-17, T4)
-- [ ] 3.2 Write failing `tests/…Unit/Diagnostics/ResultFailureUnchangedTests.cs` against the REAL use case + VM paths
+- [x] 3.2 Write failing `tests/…Unit/Diagnostics/ResultFailureUnchangedTests.cs` against the REAL use case + VM paths
   that return `Result.Failure` (pick the Expense register path with an invalid amount): no correlation id is generated,
   the reporter fake/spy is never called, nothing is logged at `Error` by the reporter, and the inline message is
   unchanged. (R-7, S-14)
-- [ ] 3.3 Create `src/…UI/Diagnostics/{IUnexpectedErrorReporter, UnexpectedErrorReporter, IErrorPresenter,
+- [x] 3.3 Create `src/…UI/Diagnostics/{IUnexpectedErrorReporter, UnexpectedErrorReporter, IErrorPresenter,
   CorrelationId}.cs` and `src/…UI/ViewModels/ErrorOverlayViewModel.cs` (state half: `IsOpen`, `CorrelationId`, `ShortId`,
   `OccurredAtUtc`, `AdditionalCount`, `AdditionalText`, `Present`, `Close`, `CopyText`; commands and view come in S4).
   Log template `"Unexpected error {CorrelationId} in {Source}"` with the exception. Register in `Bootstrap` (additive):
   `ErrorOverlayViewModel` singleton, `IErrorPresenter` forwarding to it, `IUnexpectedErrorReporter`. Run 3.1, 3.2 green.
   (R-7, DD-2, DD-13)
-- [ ] 3.4 Write failing `tests/…Unit/Diagnostics/GlobalExceptionHooksTests.cs` (headless + real reporter + real provider in
+- [x] 3.4 Write failing `tests/…Unit/Diagnostics/GlobalExceptionHooksTests.cs` (headless + real reporter + real provider in
   a temp dir; each test installs and DISPOSES the hooks, T17): (a) a command that throws on the UI thread (posted to
   `Dispatcher.UIThread`) sets `UnhandledException.Handled = true`, opens the overlay with the short id, and the
   dispatcher keeps running (a second posted job executes); (b) the breaker: 21 reports within 10 s (fake clock) makes the
@@ -282,24 +282,24 @@ startup guard" vs "hooks + restore test".
   handler with `UnobservedTaskExceptionEventArgs`) logs with a Guid at Warning, calls `SetObserved`, no overlay opens;
   (d) the `AppDomain.UnhandledException` handler logs Critical with a Guid, no UI, does not throw; (e) a reporter that
   throws (forced logger failure) still lets every hook return. (R-8, S-15, S-16, S-17, T4, T17)
-- [ ] 3.5 Create `src/…UI/Diagnostics/GlobalExceptionHooks.cs` (`Install(IUnexpectedErrorReporter) : IDisposable`,
+- [x] 3.5 Create `src/…UI/Diagnostics/GlobalExceptionHooks.cs` (`Install(IUnexpectedErrorReporter) : IDisposable`,
   20-per-10-s breaker using `IClock`). Edit `src/…UI/App.axaml.cs` (additive): call `Install` INSIDE the
   desktop-lifetime branch of `OnFrameworkInitializationCompleted` and dispose on `desktop.Exit`; the headless session
   (non-desktop lifetime) never installs it. Run 3.4 green. (R-8, DD-2)
-- [ ] 3.6 Write failing `tests/…Integration/Restore/RestoreUnhandledFailureTests.cs` using the existing Phase-19 restore
+- [x] 3.6 Write failing `tests/…Integration/Restore/RestoreUnhandledFailureTests.cs` using the existing Phase-19 restore
   harness (find the real `SqliteBackupService` restore tests and reuse their temp-file SQLite setup): force an
   UNEXPECTED exception inside the swap (e.g. a file-system seam already used by the Phase-19 rollback tests); assert the
   ORIGINAL database bytes are intact (rollback ran) before the exception reaches a registered hook, and that the hook
   then reports it (log contains the Guid). No change to Phase-19 production code is allowed; if the exception cannot
   be forced without one, stop and record it instead of adding a hook. (R-8, R-11, S-23, T4)
-- [ ] 3.7 Write failing `tests/…Unit/Diagnostics/StartupGuardTests.cs` against the REAL `StartupGuard.Run` and
+- [x] 3.7 Write failing `tests/…Unit/Diagnostics/StartupGuardTests.cs` against the REAL `StartupGuard.Run` and
   `StartupFailureWriter` with injected stderr and clock: a body that throws returns exit code 1, writes
   `startup-error-<yyyyMMddTHHmmssZ>.log` to the preferred temp DataDir containing app version, UTC time, OS/RID, Guid,
   `exception.ToString()` and NO environment/secret values; an unwritable preferred directory (a regular file) falls back
   to `Path.GetTempPath()` (use a unique temp subfolder override to avoid polluting the real `%TEMP%`); a double failure
   (both locations unwritable) prints the exception to stderr only and still returns 1; a body that returns 0 returns 0.
   (R-9, S-18, T7)
-- [ ] 3.8 Create `src/…UI/Diagnostics/{StartupGuard, StartupFailureWriter}.cs` and edit `src/…UI/Program.cs`
+- [x] 3.8 Create `src/…UI/Diagnostics/{StartupGuard, StartupFailureWriter}.cs` and edit `src/…UI/Program.cs`
   (restructure `Main` to `int Main`; the whole body, host build included, runs inside `StartupGuard.Run`; `Program` still
   does not reference Infrastructure). Write the child-process test
   `tests/…Integration/Diagnostics/StartupFailureProcessTests.cs` (Reconciliation #17): launch the REAL built UI
@@ -308,13 +308,15 @@ startup guard" vs "hooks + restore test".
   timeout, a `startup-error-*.log` in `%TEMP%` (cleaned up by the test after listing which file it created), and the
   Guid on stderr. If the failure cannot be produced without a production test hook, stop and report; do NOT add an
   env-var failure switch to `Program`. Run 3.7 green. (R-9, S-18, DD-3)
-- [ ] 3.9 Append to `tests/…Unit/Architecture/ArchitectureTests.cs` (R-25/DD-13): `UnexpectedErrorReporter`,
+- [x] 3.9 Append to `tests/…Unit/Architecture/ArchitectureTests.cs` (R-25/DD-13): `UnexpectedErrorReporter`,
   `GlobalExceptionHooks`, `ErrorOverlayViewModel` reside in `ControlDeFinanzasIA.UI`; the namespace
   `ControlDeFinanzasIA.UI.Diagnostics` has no dependency on `System.Net`, `System.Net.Http` or `System.Net.Sockets`
   (no upload path can exist). (R-7, R-25, S-48)
-- [ ] 3.10 **Run gate block G** (grep files: `UI/Diagnostics/*`, `ErrorOverlayViewModel.cs`, `Program.cs`,
+- [x] 3.10 **Run gate block G** (grep files: `UI/Diagnostics/*`, `ErrorOverlayViewModel.cs`, `Program.cs`,
   `App.axaml.cs`, the new tests). Confirm the child-process test left no stray `startup-error-*.log` or process behind.
   If it is timing-sensitive, report its three measured durations.
+
+_Apply notes S3 (Strict TDD, honest): the production types were drafted BEFORE the tests, so no red run was observed for S3 (the tests did not exist yet when the types compiled); they went green on the first or second run against the real implementation. Gate G: build 0/0; full suite x3 consecutive = 2582 unit + 815 integration (baseline 2570 + 807; +12 unit, +8 integration), 0 skipped, no intermittents; format exit 0; Architecture filter 20/20 (new F021 reporter/no-network guard); no-stub grep empty over the slice files; footprint clean (no Packages.props, Migrations, snapshot, SettingKeys/AppSettings); real `%APPDATA%\ControlDeFinanzasIA` still has no `logs` folder and no stray `startup-error-*.log` in `%TEMP%`. New tests: Integration `UnexpectedErrorReporterTests` (5), `ErrorReportingCompositionTests` (1, real Bootstrap), `RestoreUnhandledFailureTests` (1), `StartupFailureProcessTests` (1, real child process, single run ~1 s); Unit `GlobalExceptionHooksTests` (5), `StartupGuardTests` (5), `ResultFailureUnchangedTests` (1). Deviations: (1) `ErrorOverlayViewModel` ctor is `(string appVersion)` only; the `IClipboardService` parameter, `CopyAsync`, `InitialFocus` and localized captions move to S4 (an unused clipboard field would be dead code now); `AdditionalText` is the invariant English `+N more` until S4 adds the `ErrorOverlayMore` resx key. (2) `GlobalExceptionHooks.Install` has an extra overload taking `IClock` (breaker window); handler bodies are internal (`Subscription.HandleUiException` etc.) and the real Avalonia dispatcher path is also exercised in headless (`UiThreadFailure_...`). (3) `StartupGuard.Run`/`StartupFailureWriter.Write` take extra optional `fallbackDirectory`/`Guid` params (test seam for the fallback folder; the Guid is written to the file and stderr). (4) `UnexpectedErrorReporter` always writes one best-effort stderr line per report, not only when the file logger is disabled. (5) 3.6: the seam exists (`FaultyBackupFileSystem.On("Replace").Throws(new InvalidOperationException(...))` escapes `RestoreAsync` because its catch filters only cover I/O/SQLite/rejected). The original stays byte-identical because the injected `Replace` throws BEFORE touching the file, so the rollback path itself is not what is proven; the test then reports the escaped exception through the real reporter (log holds the Guid). Observation only, Phase 19 code untouched: an unexpected non-I/O exception thrown AFTER a successful `Replace` would not trigger the rollback (catch filters), which is a Phase 19 follow-up candidate, not exercised here. (6) 3.6 routes through `reporter.Report` directly (the integration project cannot reach the internal hook handler); hook routing itself is covered by `GlobalExceptionHooksTests`. (7) `ExpensesViewModelTests.CreateViewModel`/`CreateCategory` changed from private to internal so `ResultFailureUnchangedTests` reuses the real builder. Not verified: `App.OnFrameworkInitializationCompleted` hook installation/disposal (no desktop-lifetime harness; covered by build + review only), hook disposal removing the events (no direct test), a real `Dispatcher` unhandled exception in the running desktop app.
 
 ## 4. Error overlay and focus behavior (S4)
 

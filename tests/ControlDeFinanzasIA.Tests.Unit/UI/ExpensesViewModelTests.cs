@@ -528,7 +528,7 @@ public sealed class ExpensesViewModelTests
         Assert.Equal("Nueva vista", viewModel.NewViewName);
     }
 
-    private static ExpensesViewModel CreateViewModel(
+    internal static ExpensesViewModel CreateViewModel(
         FakeClock? clock = null,
         IExpenseRepository? expenseRepo = null,
         FakeIncomeRepository? incomeRepo = null,
@@ -875,7 +875,7 @@ public sealed class ExpensesViewModelTests
         }
     }
 
-    private static Category CreateCategory(Guid id, string name)
+    internal static Category CreateCategory(Guid id, string name)
         => new() { Id = id, Name = name };
 
     private static List<Expense> CreateExpenses(int count)

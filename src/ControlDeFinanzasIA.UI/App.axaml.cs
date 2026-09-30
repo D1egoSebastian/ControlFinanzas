@@ -6,6 +6,7 @@ using Avalonia.Markup.Xaml;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Settings;
 using ControlDeFinanzasIA.UI.Composition;
+using ControlDeFinanzasIA.UI.Diagnostics;
 using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.Services;
 using ControlDeFinanzasIA.UI.ViewModels;
@@ -66,6 +67,12 @@ public partial class App : Avalonia.Application
         ILogger<App> logger = Services.GetRequiredService<ILogger<App>>();
         IClock clock = Services.GetRequiredService<IClock>();
         IPathResolver pathResolver = Services.GetRequiredService<IPathResolver>();
+
+        // F-021 (DD-2): global exception hooks live only for the desktop lifetime and are removed on exit.
+        IDisposable exceptionHooks = GlobalExceptionHooks.Install(
+            Services.GetRequiredService<IUnexpectedErrorReporter>(),
+            clock);
+        desktop.Exit += (_, _) => exceptionHooks.Dispose();
 
         DateTime startTime = clock.UtcNow;
         logger.LogInformation(

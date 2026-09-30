@@ -1,6 +1,8 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using ControlDeFinanzasIA.UI.Composition;
+using ControlDeFinanzasIA.UI.Diagnostics;
+using ControlDeFinanzasIA.UI.System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -21,8 +23,25 @@ internal static class Program
     /// Application entry point.
     /// </summary>
     /// <param name="args">Command-line arguments.</param>
+    /// <returns>The process exit code; 1 when start-up failed before the UI existed.</returns>
     [STAThread]
-    public static void Main(string[] args)
+    public static int Main(string[] args) =>
+        StartupGuard.Run(
+            () => RunApplication(args),
+            () => Environment.GetEnvironmentVariable(SystemPathResolver.DataDirectoryEnvironmentVariable),
+            Console.Error,
+            () => DateTime.UtcNow);
+
+    /// <summary>
+    /// Avalonia configuration used by the visual designer and build tooling.
+    /// Do not remove.
+    /// </summary>
+    public static AppBuilder BuildAvaloniaApp()
+        => AppBuilder.Configure<App>()
+            .UsePlatformDetect()
+            .LogToTrace();
+
+    private static int RunApplication(string[] args)
     {
         HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
@@ -50,15 +69,6 @@ internal static class Program
                 }
             });
 
-        appBuilder.StartWithClassicDesktopLifetime(args);
+        return appBuilder.StartWithClassicDesktopLifetime(args);
     }
-
-    /// <summary>
-    /// Avalonia configuration used by the visual designer and build tooling.
-    /// Do not remove.
-    /// </summary>
-    public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>()
-            .UsePlatformDetect()
-            .LogToTrace();
 }

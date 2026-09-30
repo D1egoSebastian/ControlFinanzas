@@ -475,6 +475,37 @@ public sealed class ArchitectureTests
         Assert.True(application.IsSuccessful, FormatFailingTypes(application));
     }
 
+    /// <summary>
+    /// F-021 (S3, R-7, R-25, DD-13): the reporter, the hooks and the overlay state live in the UI assembly, and the
+    /// Diagnostics namespace has no dependency on any network namespace, so no error upload path can exist.
+    /// </summary>
+    [Fact]
+    public void F021_Error_Reporting_Types_Live_In_UI_And_Diagnostics_Has_No_Network_Dependency()
+    {
+        string[] uiTypes = ["UnexpectedErrorReporter", "GlobalExceptionHooks", "ErrorOverlayViewModel"];
+        foreach (string name in uiTypes)
+        {
+            Assert.Single(Types.InAssembly(_uiAssembly).That().HaveName(name).GetTypes());
+            Assert.Empty(Types.InAssembly(_applicationAssembly).That().HaveName(name).GetTypes());
+            Assert.Empty(Types.InAssembly(_infrastructureAssembly).That().HaveName(name).GetTypes());
+        }
+
+        foreach (string network in new[] { "System.Net", "System.Net.Http", "System.Net.Sockets" })
+        {
+            TestResult result = Types
+                .InAssembly(_uiAssembly)
+                .That()
+                .ResideInNamespace("ControlDeFinanzasIA.UI.Diagnostics")
+                .ShouldNot()
+                .HaveDependencyOn(network)
+                .GetResult();
+            Assert.True(result.IsSuccessful, $"{network}: {FormatFailingTypes(result)}");
+        }
+
+        Assert.NotEmpty(
+            Types.InAssembly(_uiAssembly).That().ResideInNamespace("ControlDeFinanzasIA.UI.Diagnostics").GetTypes());
+    }
+
     private static string GetProjectFilePath(Assembly assembly)
     {
         string assemblyName = assembly.GetName().Name!;
