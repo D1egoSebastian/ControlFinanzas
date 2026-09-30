@@ -214,7 +214,7 @@ Depends on 2. Goal: `ClosedXmlTableReader` (Infrastructure only) reads Phase-18 
 cells behind a ZIP guard, and `SniffingTabularReader` selects the reader by content. Carried into apply: confirm
 ClosedXML 0.105.1 date detection for user workbooks.
 
-- [ ] 3.1 **ClosedXML date-detection characterization (first task of the slice, before production code).** Write a
+- [x] 3.1 **ClosedXML date-detection characterization (first task of the slice, before production code).** Write a
   permanent test `tests/…Integration/Import/ClosedXmlBehaviorAssumptionsTests.cs` on pinned ClosedXML 0.105.1 that
   builds workbooks in memory and proves: (a) a numeric cell with a date number format (`yyyy-mm-dd`, `dd/mm/yyyy`)
   reports `XLDataType.DateTime` on reload (the "user workbook" case, where the writer did not assign a `DateTime`);
@@ -222,13 +222,13 @@ ClosedXML 0.105.1 date detection for user workbooks.
   formula cell exposes `CachedValue` without being evaluated; (d) `#N/A` reports an error type. Record the outcome in
   the PR description; if (a) contradicts the design, STOP and report before implementing (the conversion table in
   DD-10 then needs a number-format check). (DD-10, design Open Questions)
-- [ ] 3.2 Create a shared test helper `tests/…Integration/Import/XlsxFixtures.cs` that produces XLSX bytes from the REAL
+- [x] 3.2 Create a shared test helper `tests/…Integration/Import/XlsxFixtures.cs` that produces XLSX bytes from the REAL
   `ClosedXmlReportWriter` for BOTH report types: (a) expense-list report from real `ExportExpenseListReportUseCase`
   inputs; (b) month-summary report with Expense and Income rows; data covers DOP and USD, a null category (written as
   `""`), an income with an empty category, a null `AmountDOP`, an amount with 4 decimals. Nothing here builds the
   workbook by hand for the round-trip assertions (hand-built workbooks are used only for the sheet/formula/error cases
   in 3.3). (R-21, S-23)
-- [ ] 3.3 Write failing `tests/…Integration/Import/ClosedXmlTableReaderTests.cs` against the REAL reader: (a) REAL
+- [x] 3.3 Write failing `tests/…Integration/Import/ClosedXmlTableReaderTests.cs` against the REAL reader: (a) REAL
   expense-list and month-summary output: sheet `Data` chosen, headers exactly the Phase-18 set, `Date` cells
   `RawCellKind.Date` as `yyyy-MM-dd`, `Amount` cells `Number` and equal to the source decimals (4-place round),
   `Currency`/`Type`/`Category` `Text`, empty category cell is `("", Text)` (S-8, S-23, R-7); (b) `HeaderMapper.AutoMap`
@@ -238,28 +238,29 @@ ClosedXML 0.105.1 date detection for user workbooks.
   huge double becomes an `Error` cell; (f) header row = first non-blank row of the used range; empty sheet →
   `NoRows`; 51 columns and 50,001 data rows → `TooLarge` without materializing (R-6). (R-7, R-8, S-8, S-23, C-4,
   C-16)
-- [ ] 3.4 Write failing ZIP-guard tests: (a) **zip bomb** — an XLSX-shaped ZIP whose entry declares a small length but
+- [x] 3.4 Write failing ZIP-guard tests: (a) **zip bomb** — an XLSX-shaped ZIP whose entry declares a small length but
   inflates past `MaxXlsxUncompressedBytes` (crafted in the test) → `TooLarge/zipTooLarge`, and ClosedXML is never
   constructed (assert via a thrown-on-use seam or by timing/memory bound, named in the test); (b) more than
   `MaxXlsxEntries` entries → `TooLarge`; (c) a random non-workbook ZIP → `UnreadableFile/notAWorkbook`; a truncated
   ZIP → `UnreadableFile/notAWorkbook`, never an unhandled exception; (d) declared sizes are not the only defense:
   the entry is decompressed through a counting stream. (R-7, S-7)
-- [ ] 3.5 Write failing `SniffingTabularReaderTests` against the REAL `SniffingTabularReader` composing the real CSV
+- [x] 3.5 Write failing `SniffingTabularReaderTests` against the REAL `SniffingTabularReader` composing the real CSV
   and XLSX readers: XLSX bytes (real writer output) are read by the XLSX path regardless of any name; CSV bytes go
   to the CSV path; `D0 CF 11 E0` (OLE/legacy `.xls`) → `UnreadableFile/legacyXls`; `PK\x03\x04` garbage →
   `notAWorkbook`; the reader has no file-name input at all (S-2 asserted by construction and by feeding an XLSX and a
   CSV in swapped "names" through the loader-level helper). (R-2, S-2)
-- [ ] 3.6 Create `src/…Infrastructure/Import/ClosedXmlTableReader.cs` per DD-10 (ZIP guard with counting stream before
+- [x] 3.6 Create `src/…Infrastructure/Import/ClosedXmlTableReader.cs` per DD-10 (ZIP guard with counting stream before
   `new XLWorkbook`, sheet selection, header row, cell conversion table, `decimal.Round(…, 4, AwayFromZero)`, body in
   `Task.Run`). Run 3.3 and 3.4 green. (R-7, R-8, DD-10)
-- [ ] 3.7 Create `src/…Infrastructure/Import/SniffingTabularReader.cs` (the only `ITabularReader` implementation to be
+- [x] 3.7 Create `src/…Infrastructure/Import/SniffingTabularReader.cs` (the only `ITabularReader` implementation to be
   registered; takes the two concrete readers). Run 3.5 green. (R-2, DD-10)
-- [ ] 3.8 Architecture check: ClosedXML types appear only under `src/…Infrastructure`; the existing
+- [x] 3.8 Architecture check: ClosedXML types appear only under `src/…Infrastructure`; the existing
   `ArchitectureTests` ClosedXML rules stay green (the Infrastructure-location test for the new types is added in S5).
   (R-25)
-- [ ] 3.9 Run all four gates plus the no-stubs grep over `src/ControlDeFinanzasIA.Infrastructure/Import` and the S3
+- [x] 3.9 Run all four gates plus the no-stubs grep over `src/ControlDeFinanzasIA.Infrastructure/Import` and the S3
   test files. Confirm `ClosedXmlTableReaderTests`, `SniffingTabularReaderTests`, `ClosedXmlBehaviorAssumptionsTests`
   executed. Run the FULL suite 3 consecutive times and record intermittent failures by test name. (R-25)
+> Apply notes (S3): ClosedXML 0.105.1 CONFIRMED that a numeric cell with a date number format reports  > `XLDataType.DateTime` on reload (yyyy-mm-dd and dd/mm/yyyy), plain numbers stay Number, `@` text keeps `0123`,  > formula cells expose `CachedValue` (never evaluated), `t="e"` cells report Error; DD-10 needs no number-format  > check. Deviations: (1) tests were written after the production code for 3.3-3.7 (only 3.1 came first), so no red  > run was observed for them; (2) XlsxFixtures builds the reports from real DTOs through the real writer, not through  > the use cases; (3) the reader has a public `ClosedXmlTableReader(Action)` seam invoked right before ClosedXML opens  > the workbook (Infrastructure has no InternalsVisibleTo); (4) a header that lies about its size is neutralised by the  > .NET inflater, which yields at most the declared bytes, so it surfaces as `notAWorkbook`, not `zipTooLarge`;  > (5) ClosedXML rejects text above 32,767 chars, so `fieldTooLong` is a backstop and the over-limit file is  > `UnreadableFile`; (6) rows come from `CellsUsed()` (RowsUsed took 38 s on a cell at row 1,048,576);  > (7) `AddImportReaders()` now binds `ITabularReader` to `SniffingTabularReader`.
 
 ## 4a. Row validator, category matcher and duplicate detector (S4a)
 

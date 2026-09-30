@@ -1,14 +1,15 @@
+using ControlDeFinanzasIA.Application.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ControlDeFinanzasIA.Infrastructure.Import;
 
-/// <summary>DI registration of the import readers (F-020, DD-9).</summary>
+/// <summary>DI registration of the import readers (F-020, DD-9, DD-10).</summary>
 public static class ImportServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers <see cref="CsvTableReader"/> as a singleton. The <c>ITabularReader</c> port itself is bound later
-    /// by the content-sniffing reader (slice S3). Safe to call more than once.
+    /// Registers the CSV and XLSX readers as singletons and binds <see cref="ITabularReader"/> to the
+    /// content-sniffing reader that composes them. Safe to call more than once.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <returns>The same collection, for chaining.</returns>
@@ -18,6 +19,8 @@ public static class ImportServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.TryAddSingleton<CsvTableReader>();
+        services.TryAddSingleton<ClosedXmlTableReader>();
+        services.TryAddSingleton<ITabularReader, SniffingTabularReader>();
 
         return services;
     }
