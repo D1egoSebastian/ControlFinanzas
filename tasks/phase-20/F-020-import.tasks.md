@@ -160,12 +160,12 @@ Depends on 1. Goal: `CsvTableReader` turns real bytes into a typed `RawTable` wi
 encoding fallback, delimiter sniff and limits enforced before allocation. Size note: if it exceeds ~450 lines, split
 at the seam "encoding + sniff" vs "state machine + limits".
 
-- [ ] 2.1 Create the checked-in binary fixtures under `tests/…Integration/Import/Fixtures/` (set as
+- [x] 2.1 Create the checked-in binary fixtures under `tests/…Integration/Import/Fixtures/` (set as
   `CopyToOutputDirectory` items, test-asset-only csproj edit): `bank-es-semicolon-comma-1252.csv` (Windows-1252 bytes,
   `;` delimiter, `1.234,56`, `Categoría`), `excel-unicode-tab-utf16.txt` (UTF-16 LE BOM, TAB), `generic-en-comma-utf8bom.csv`,
   `quotes-multiline.csv`. Add a test `FixturesAreByteExactTests` asserting the 1252 file contains byte `0xED` (not
   `0xC3 0xAD`) so a future editor re-save cannot silently convert it. (R-4, S-4, C-8)
-- [ ] 2.2 Write failing `tests/…Integration/Import/CsvTableReaderTests.cs` against the REAL `CsvTableReader` (public,
+- [x] 2.2 Write failing `tests/…Integration/Import/CsvTableReaderTests.cs` against the REAL `CsvTableReader` (public,
   sealed, stateless; no fakes): (a) `,` `;` TAB sniff picks the right delimiter on the fixtures and on synthetic
   inputs, with quoted regions ignored, and an explicit `TabularReadOptions(';')` overrides the sniff and re-parses the
   same bytes differently (S-5); (b) quoting: `""` escape, delimiter inside quotes, embedded CRLF, LF and lone CR inside
@@ -181,27 +181,32 @@ at the seam "encoding + sniff" vs "state machine + limits".
   field count differs from the header are NOT dropped by the reader (validator decides, S4a); (i) `ReadAsync` returns
   a faulted/cancelled task never for bad input (file-level failures are `Result.Failure`). (R-3..R-6, S-3..S-6, C-8,
   C-9, C-10)
-- [ ] 2.3 Write failing limit tests in the same file, small synthetic inputs, each asserting failure BEFORE full
+- [x] 2.3 Write failing limit tests in the same file, small synthetic inputs, each asserting failure BEFORE full
   materialization: 51 columns → `TooLarge/tooManyColumns` and 50 passes; a field of 32,769 chars →
   `TooLarge/fieldTooLong` and 32,768 passes; 50,001 data rows → `TooLarge/tooManyRows` and 50,000 passes; 10 MB + 1
   byte → `TooLarge/fileTooLarge` and the test proves it was not decoded (input is invalid UTF-8/1252 garbage that would
   otherwise fall through to a different result, plus a measured elapsed bound); for the row and field limits, a
   counting hook (or a byte fixture whose tail is malformed CSV) proves the reader stopped at the offending record
   rather than reading to the end. (R-6, S-6)
-- [ ] 2.4 Create `src/…Infrastructure/Import/CsvTableReader.cs` per DD-9 (size check first; BOM/encoding decision;
+- [x] 2.4 Create `src/…Infrastructure/Import/CsvTableReader.cs` per DD-9 (size check first; BOM/encoding decision;
   `UTF8Encoding(false, true)`; 1252 via `CodePagesEncodingProvider.Instance.GetEncoding(1252, …)` directly, no
   `Encoding.RegisterProvider`; sniff over the first 20 records scoring `\t`, `;`, `,` in that tie order; the four-state
   machine; limits inside the pass; body in `Task.Run(..., ct)`). Run 2.2 and 2.3 green. (R-3..R-6, DD-9,
   Reconciliation #7, #8, #9)
-- [ ] 2.5 Add a determinism/culture test: the same bytes parsed under es-DO and en current cultures give identical
+- [x] 2.5 Add a determinism/culture test: the same bytes parsed under es-DO and en current cultures give identical
   `RawTable`s. (R-1, R-4)
-- [ ] 2.6 Verify no new package and no `Encoding.RegisterProvider`: `git diff --name-only` shows no
+- [x] 2.6 Verify no new package and no `Encoding.RegisterProvider`: `git diff --name-only` shows no
   `Directory.Packages.props`/`.csproj` change other than the fixtures item; `rg -n "RegisterProvider"
   src/ControlDeFinanzasIA.Infrastructure/Import` returns nothing. (R-25, Reconciliation #9)
-- [ ] 2.7 Run all four gates plus the no-stubs grep over `src/ControlDeFinanzasIA.Infrastructure/Import` and
+- [x] 2.7 Run all four gates plus the no-stubs grep over `src/ControlDeFinanzasIA.Infrastructure/Import` and
   `tests/ControlDeFinanzasIA.Tests.Integration/Import`. Confirm `CsvTableReaderTests` executed (N > 0,
   `--filter FullyQualifiedName~Import`). Run the FULL suite 3 consecutive times and record intermittent failures by
   test name. (R-25)
+  > Apply notes (S2): tests were written before the types existed, so the red state was a compile failure, not an
+  > assertion failure (rule 6). Reader split into CsvTableReader (encoding, sniff) and CsvRecordParser (state
+  > machine, limits). Added `.gitattributes` (`-text` for Import/Fixtures) so autocrlf cannot alter the fixture bytes;
+  > DI extension `AddImportReaders()` registers only `CsvTableReader` (the port is bound in S3). Full suite 3x green:
+  > 1894 unit + 624 integration, no intermittent failures.
 
 ## 3. XLSX reader and content sniffing (S3)
 

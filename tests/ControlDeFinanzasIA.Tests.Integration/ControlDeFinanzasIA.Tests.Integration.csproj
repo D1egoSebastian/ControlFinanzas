@@ -25,4 +25,9 @@
     <ProjectReference Include="..\..\src\ControlDeFinanzasIA.UI\ControlDeFinanzasIA.UI.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- F-020 (S2): binary CSV/TXT fixtures, test assets only. -->
+    <None Include="Import/Fixtures/*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
