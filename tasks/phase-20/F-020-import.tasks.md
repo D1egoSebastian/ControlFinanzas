@@ -1,6 +1,6 @@
 # Tasks — F-020 CSV / Excel Import of Transactions
 
-> Governing inputs: `spec/features/phase-20/F-020-import.spec.md` (its final "Reconciliation with design"
+> Governing inputs: `spec/features/phase-20/F-020-import.done.md` (its final "Reconciliation with design"
 > section governs where wording differs), `.atl/sdd/f-020p20-import/design.md` (per-slice sections, DD-1..DD-15 and the
 > 22-row Silent-Data-Corruption Threat Table are binding) and `.atl/sdd/f-020p20-import/proposal.md` (slice names
 > S1, S2, S3, S4a, S4b, S5, S6a, S6b, S7 confirmed). Requirement ids (R-n) and scenario ids (S-n) below refer to the
@@ -748,30 +748,51 @@ with the REAL exporter.
 
 ## 8. Cierre
 
-- [ ] 8.1 Run the full gate suite across the whole phase: `dotnet build -c Release` (0 warnings/errors), `dotnet test -c
+- [x] 8.1 Run the full gate suite across the whole phase: `dotnet build -c Release` (0 warnings/errors), `dotnet test -c
   Release --no-build` (unit + integration; record counts, confirm Import tests executed and none skipped),
   `dotnet format style --verify-no-changes` exit 0, NetArchTest R-1..R-5 plus the D-26 location guard, resx
   completeness. Record final counts, the 3-run stability result and every intermittent test name (or "none").
   (R-25, R-26)
-- [ ] 8.2 Manual check on Windows with the REAL native open dialog and REAL files, on a COPY of the data only: copy
+  > Evidence (Cierre re-run on HEAD `b735ced`, 2026-09-30): build 0 warnings / 0 errors; 2551 unit + 772 integration =
+  > 3323 passed, 0 failed, 0 skipped; `dotnet format style --verify-no-changes` exit 0; `--filter Architecture` 18/18
+  > (R-1..R-5 plus the Phase 20 location guard and the `System.IO.Compression` guard); resx completeness runs inside
+  > the suite; the no-stubs grep over the Import sources returned nothing. The 3 consecutive full-suite runs with no
+  > intermittent failure are the results recorded in the apply notes below; the Cierre re-ran the suite once.
+- [ ] 8.2 **NOT RUN BY HAND.** Manual check on Windows with the REAL native open dialog and REAL files, on a COPY of the data only: copy
   `%APPDATA%\ControlDeFinanzasIA` to a throwaway folder and run the app pointed at it with
   `CONTROLDEFINANZASIA_DATA_DIR`; (a) the picker shows "All supported files" first, then CSV/TXT and XLSX filters; (b)
   cancel writes nothing and shows no message; (c) import a real CSV (bank export style) and a real XLSX (a Phase-18
   export from the copy) end to end; (d) re-import inserts 0; (e) a Windows-1252 CSV shows the encoding banner and
   sample. Record screenshots. If not performed, mark it "NOT RUN BY HAND" and leave it unticked. (R-2, R-23, S-2,
   S-24)
-- [ ] 8.3 Visual check of the Import panel in BOTH locales (es-DO and en) on the throwaway copy: labels, banners,
+  > Left open on purpose: no session drove the real native open dialog, opened a real Phase-18 XLSX through it, or
+  > re-imported through the UI. Automated coverage only: `ImportEndToEndTests` (real `ClosedXmlReportWriter` output
+  > into a fresh database, re-import inserts 0), `ImportViewModelTests` with a fake dialog, and a UI Automation smoke
+  > on a throwaway data directory that did not include the picker.
+- [ ] 8.3 **NOT RUN BY HAND.** Visual check of the Import panel in BOTH locales (es-DO and en) on the throwaway copy: labels, banners,
   dates rendered with month names, long descriptions, mapping step layout, error states. If not performed, mark it
   "NOT RUN BY HAND" and leave it unticked. (R-24, S-27)
-- [ ] 8.4 Update `AGENTS.md` project status (append-only within the Status block): Phase 20 shipped, test counts from
+  > Left open on purpose: the es-DO/en visual pass and the Settings screen smoke were not done by hand. Automated
+  > coverage only: `ImportResourcesTests` (every key non-empty in both cultures) and `ImportViewHeadlessTests`.
+- [x] 8.4 Update `AGENTS.md` project status (append-only within the Status block): Phase 20 shipped, test counts from
   8.1, verify verdict, the 50k decision outcome, and the pointers to `spec/features/phase-20/`, `tasks/phase-20/`,
   `.atl/sdd/f-020p20-import/`; update `docs/AI_HANDOFF.md` with the import behavior and the manual-check status.
   (R-25)
-- [ ] 8.5 Run `sdd-verify`; resolve or explicitly record every critical/warning finding with a test-first fix against
+  > Done in the closing commit: `AGENTS.md` status, `docs/AI_HANDOFF.md`, `docs/architecture.md` §11g,
+  > `docs/roadmap.md` §Fase 20, `spec/phases/phase-20/features.md`.
+- [x] 8.5 Run `sdd-verify`; resolve or explicitly record every critical/warning finding with a test-first fix against
   the real component (Phase 19 precedent). Do not tick this item while warnings are open without a note.
-- [ ] 8.6 Archive: rename `spec/features/phase-20/F-020-import.spec.md` to `F-020-import.done.md` ONLY after archive,
+  > Verdict PASS WITH WARNINGS, 0 critical. W1-W5 all fixed test-first in `43f7c38` (W1/W2 acknowledgement gate, W3
+  > XLSX more than four decimals, W4 lossy Windows-1252 decoding, W5 spec reconciliation and the
+  > `System.IO.Compression` architecture guard). Suggestions dispositioned in
+  > `.atl/sdd/f-020p20-import/verify-report.md`: non-`Data` XLSX falls back to the first sheet (accepted); six
+  > `ExpensesAi*` resx keys lack Designer accessors (pre-existing follow-up); `MainWindow.axaml:160`
+  > `$parent[ItemsControl].DataContext.DismissCommand` not exercised headless (follow-up).
+- [x] 8.6 Archive: rename `spec/features/phase-20/F-020-import.spec.md` to `F-020-import.done.md` ONLY after archive,
   tick the Acceptance Criteria of the spec with evidence, and record the manual checks still NOT RUN BY HAND. Commit
   history uses conventional commits with no AI attribution trailers.
+  > Done: spec renamed with `git mv`, acceptance criteria ticked with evidence (manual-check criterion left
+  > unticked), "Post-apply reconciliation" appended; archive report in `.atl/sdd/f-020p20-import/archive-report.md`.
 
 > Apply notes (post-verify fixes, commit A; 8.1-8.6 above stay OPEN, nothing ticked): the independent verification
 > returned PASS WITH WARNINGS (0 critical); W1-W5 were fixed test-first against the real components. Red state: the

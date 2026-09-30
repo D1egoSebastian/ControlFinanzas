@@ -1,8 +1,8 @@
 # Phase 20 — CSV / Excel Import
 
 > **Phase:** 20 — CSV / Excel import
-> **Status:** Implemented (slices S1-S7 applied 2026-09-29/30); verify, manual checks and archive pending in the Cierre.
-> **Spec ID:** F-020 — `spec/features/phase-20/F-020-import.spec.md`
+> **Status:** Completed (archived 2026-09-30). Slices S1-S7 applied 2026-09-29/30, verification PASS WITH WARNINGS (0 critical, W1-W5 fixed); manual checks NOT run by hand.
+> **Spec ID:** F-020 — `spec/features/phase-20/F-020-import.done.md`
 > **Dependencies:** Phases 0-19 archived (Phase-18 `ClosedXmlReportWriter`, Phase-19 `IFileOpenDialog`, Phase-17 notifications).
 > **Blocks:** nothing.
 > **Roadmap:** `docs/roadmap.md` §Fase 20
@@ -29,7 +29,9 @@ Chained slices, applied in order (S6a and S6b were re-cut during apply: the pick
 | S6a | Part 1: multi-filter `IFileOpenDialog` overload + `FakeFileOpenDialog` (`21ee899`). Part 2: `ImportViewModel` (state machine, busy guards, silent cancel, error-key mapping), every `Import*` string in resx es-DO/en + manual Designer accessors, VM and resource tests (`fc274fd`). Follow-up: `e16c469` makes the VM tests deterministic | Done, `21ee899` + `fc274fd` + `e16c469` |
 | S6b | Avalonia picker override + pure filter builder, `ExpensesViewModel` optional `import` parameter, toolbar command and reload, Bootstrap DI (`ImportViewModel` Transient), `ImportView.axaml` and its XAML scan tests (pulled forward from S7) | Done, `9905715` |
 | S7 | `frontend-design` review of `ImportView` (action bar reachable while loading, in-place "choose another file" after a failed load, automation names, headless Avalonia tests), `ImportEndToEndTests` (real export to import round trip, 11 tests), `ImportViewModel` end to end, smoke driven through UI Automation with `CONTROLDEFINANZASIA_DATA_DIR`, docs reconciliation, and a fix for a pre-existing crash in the `ExpensesView` row template (`#Root.((vm:ExpensesViewModel)DataContext)`) | Done, see `git log` (slice S7/9) |
-| Cierre | `sdd-verify`, manual checks with the native dialog, `AGENTS.md` and `docs/AI_HANDOFF.md`, archive (rename the spec to `.done.md`) | Pending |
+| Post-verify | W1-W5 fixed test-first: acknowledgement gate for ambiguous amounts/dates, XLSX more than four decimals rejected, `UndecodableText`, 51st new category rejected, `System.IO.Compression` NetArchTest guard, spec reconciliation | Done, `43f7c38` |
+| UI fixes | Pre-existing Avalonia binding defects found during verification: DatePicker `DateOnlyConverter` bindings (Expenses, Income, Debts, RecurringRules) and row-template `#Root.DataContext.Cmd` in 7 views, shared `HeadlessUi` harness | Done, `b735ced` |
+| Cierre | `sdd-verify` (PASS WITH WARNINGS, 0 critical), docs, archive (spec renamed to `.done.md`); manual checks (tasks 8.2, 8.3) NOT run by hand | Done, closing commit `docs(phase-20): verify and close SDD cycle for import` |
 
 ## 3. Phase completion criteria
 
@@ -54,13 +56,19 @@ Chained slices, applied in order (S6a and S6b were re-cut during apply: the pick
 ## 5. References
 
 - `docs/roadmap.md` §Fase 20; `docs/architecture.md` §11g (names reconciled in S7)
-- `spec/features/phase-20/F-020-import.spec.md`
+- `spec/features/phase-20/F-020-import.done.md`
 - `.atl/sdd/f-020p20-import/{exploration,proposal}.md`
 - `spec/phases/phase-19/features.md` — format precedent
 
 ## 6. Follow-ups (not in this phase)
 
-- Persisted/named mapping profiles.
+- Persisted/named mapping profiles (deferred on purpose: documented deviation from the roadmap deliverable).
 - Bank-specific formats (OFX/QIF/MT940), PDF import, AI categorization on import.
 - Undo of an import (today: restore a Phase-19 backup).
 - General category-management UI (import is the first path creating user categories).
+- Manual checks not run by hand: real native open dialog with a Phase-18 XLSX, re-import via the UI, es-DO/en visual pass, Settings screen smoke (tasks 8.2, 8.3).
+- `ExpensesAi*` resx keys (six) lack Designer accessors (pre-existing); `MainWindow.axaml:160` `$parent[ItemsControl].DataContext.DismissCommand` not exercised headless; a workbook without a `Data` sheet falls back to the first sheet (accepted).
+
+## 7. Verification outcome
+
+Exhaustive verification: PASS WITH WARNINGS, 0 critical. W1-W5 fixed in `43f7c38`. Final gates (HEAD `b735ced`, re-run at the Cierre): build 0 warnings / 0 errors, 3323 tests green (2551 unit + 772 integration, up from 2289 at the Phase 19 close), `dotnet format style --verify-no-changes` exit 0, NetArchTest 18 of 18. See `.atl/sdd/f-020p20-import/verify-report.md` and `archive-report.md`.

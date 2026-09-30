@@ -11,9 +11,49 @@ the project state changes, update this file.
   **Entity Framework Core** (Code First, versioned migrations),
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
-- **Status (today):** Phases 0–19 fully archived. Phase 20 (CSV/Excel
-  import) is next per the roadmap — check `.atl/sdd/f-020*` and
-  `git log --oneline` for in-flight work before planning. Phase 19
+- **Status (today):** Phases 0–20 fully archived. Phase 21 (packaging,
+  polish, accessibility) is next per the roadmap and is its last phase —
+  check `.atl/sdd/f-021*` and `git log --oneline` for in-flight work before
+  planning. Phase 20 (CSV/Excel import) shipped an "Importar" button in
+  the Expenses toolbar that swaps the list for `ImportView` in place (no
+  route). It reads a generic CSV/TXT (strict UTF-8, Windows-1252 fallback,
+  UTF-16 with BOM; `,` `;` tab sniffed) or a Phase-18 XLSX, chosen by
+  content and never by extension; headers auto-map in English and Spanish
+  (the mapping step shows only when Date, Description or Amount is
+  missing); a dry-run preview shows the first 50 rows and the first 50
+  problem rows; confirming re-parses the retained bytes and writes through
+  `EfImportWriter` in a fresh DI scope with ONE `SaveChangesAsync` (all or
+  nothing; 50,000 rows in about 6.5 s). Duplicates are skipped by an
+  occurrence-counting fingerprint, so re-importing a file inserts 0;
+  missing categories can be created (cap 50, the 51st is rejected), and
+  expenses without a category fall back to the seeded "Otros" by Id. The
+  rule is no silent corruption: no guessed day/month or decimal separator,
+  more than 4 decimals rejected (CSV and XLSX), undecodable text rejected
+  (`UndecodableText`), and ambiguous amounts or dates need an
+  acknowledgement checkbox before Confirm works. ClosedXML and ZIP reading
+  stay in Infrastructure (NetArchTest also forbids `System.IO.Compression`
+  in Domain and Application). No migration, no new package, no new
+  setting. 3323/3323 tests green (2551 unit + 772 integration), build 0/0,
+  format exit 0, NetArchTest 18/18. Commits: `aa36efa` to `2f3108a`
+  (slices S1-S7), `43f7c38` (post-verify fixes), `b735ced` (pre-existing UI
+  binding fixes: DatePicker `DateOnlyConverter` in Expenses/Income/Debts/
+  RecurringRules and the row-template `#Root.DataContext.Cmd` crash in 7
+  views). Verify history: exhaustive verification PASSED WITH WARNINGS, 0
+  critical; W1-W5 (acknowledgement gate, XLSX more than 4 decimals, lossy
+  Windows-1252 text, spec drift, missing architecture guard) fixed
+  test-first. Documented deviation: persisted/named mapping profiles
+  (`CsvImportProfile`) were deferred; auto-mapping plus the manual mapping
+  step cover the case. Not done by hand: the real native open dialog with
+  a Phase-18 XLSX, re-import via the UI, the es-DO/en visual pass and the
+  Settings screen smoke (tasks 8.2, 8.3). Accepted follow-ups: a workbook
+  without a `Data` sheet falls back to the first sheet; six `ExpensesAi*`
+  resx keys lack Designer accessors (pre-existing);
+  `MainWindow.axaml:160` `$parent[ItemsControl].DataContext.DismissCommand`
+  not exercised headless; named profiles, OFX/QIF/MT940, PDF import, AI
+  categorization on import and undo of an import (restore a Phase-19
+  backup) are out of scope. See
+  `spec/features/phase-20/F-020-import.done.md`, `tasks/phase-20/`, and
+  `.atl/sdd/f-020p20-import/`. Phase 19
   (backup and restore) shipped a Settings "Backup" block (before "Acerca
   de") with "export everything" and "restore from a file". A backup is a
   ZIP with exactly `manifest.json` + `data.db` (SHA-256, schema version),

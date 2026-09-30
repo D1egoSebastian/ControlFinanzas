@@ -793,7 +793,7 @@ error de migración al arrancar, y las comprobaciones manuales con los diálogos
 
 ## 11g. Importación CSV / Excel (Fase 20)
 
-**Fase 20, implementado (2026-09-30; verificación y archivo pendientes en el Cierre).** Como las Fases 17 a 19, no usa
+**Fase 20, completada y archivada (2026-09-30).** Como las Fases 17 a 19, no usa
 `ILLMClient`: es una canalización determinista sin migración, sin paquete nuevo y sin claves de configuración nuevas
 (ClosedXML ya estaba fijado por la Fase 18; `CodePagesEncodingProvider` y `System.IO.Compression` son BCL). La prioridad
 de diseño es **no corromper datos en silencio**: no se adivinan el separador decimal ni el orden día/mes, y una
@@ -812,9 +812,9 @@ importación escribe todo o nada.
 
 `NetArchTest` exige que `CsvTableReader`, `ClosedXmlTableReader`, `SniffingTabularReader`, `EfImportLookup` y
 `EfImportWriter` residan en `ControlDeFinanzasIA.Infrastructure.Import`, que nadie dependa de ese namespace salvo la
-composición, y que Domain, Application y UI no referencien ClosedXML, EF Core ni SQLite. `System.IO.Compression` no
-figura en esa lista: que Application no lo use se comprobó con una búsqueda de pureza en la Fase 20 (tarea 1.12), no con
-una regla permanente.
+composición, y que Domain, Application y UI no referencien ClosedXML, EF Core ni SQLite. Otra regla permanente (añadida en
+la verificación de la Fase 20) prohíbe que Domain y Application referencien `System.IO.Compression`: la lectura de ZIP
+vive solo en Infrastructure.
 
 ### Canalización
 
@@ -831,7 +831,7 @@ una regla permanente.
      RFC 4180 (comillas dobladas, saltos de línea dentro de comillas); comilla sin cerrar → `UnreadableFile/malformedCsv`
      con la línea física.
    - XLSX: hoja `Data` (sin distinguir mayúsculas) o, si no existe, la primera; las celdas son tipadas (`Number`
-     redondeado a 4 decimales, `Date`, `Text`; una fórmula usa su valor en caché y nunca se evalúa; un error de Excel
+     sin redondeo silencioso: solo el ruido de coma flotante, a 1e-13 relativo de su redondeo a 4 decimales, se normaliza, y más de 4 decimales reales se rechaza como `TooManyDecimals`; `Date`, `Text`; una fórmula usa su valor en caché y nunca se evalúa; un error de Excel
      es una celda `Error`).
 2. **Interpretar.** `HeaderMapper` mapea por igualdad exacta de encabezados normalizados (sinónimos en inglés y
    español; `AmountDOP` se ignora a propósito). El paso de mapeo solo aparece si faltan Date, Description o Amount.
@@ -873,6 +873,12 @@ una regla permanente.
 - **Duplicados.** Huella = fecha, tipo, importe (`0.0000`), moneda, descripción normalizada y categoría resuelta. Se
   cuentan **ocurrencias**: dos filas idénticas en el archivo con una ya guardada → la primera es duplicado y la
   segunda se importa. Reimportar el mismo archivo inserta 0. `SkipDuplicates = false` las importa con aviso.
+- **Compuerta de reconocimiento (UI).** Si las filas que se importarían incluyen un importe ambiguo (`AmbiguousAmount`), una
+  mezcla de estilos decimales con estilo `Auto`, o fechas `AmbiguousOnly`/`Contradicts`, `ImportViewModel` expone
+  `RequiresAcknowledgement`/`IsAcknowledged` y Confirmar queda desactivado (y se ignora) hasta marcar la casilla. Se
+  borra al cambiar opciones o mapeo, al cambiar el hash del plan y cuando ya no hay ambigüedad.
+- **Texto no decodificable.** Con el respaldo Windows-1252, una descripción o categoría con U+FFFD o un carácter de
+  control C1 (U+0080..U+009F) se rechaza con `UndecodableText`; nunca se guarda texto corrupto.
 
 ### Confirmación atómica en un ámbito nuevo
 
@@ -907,6 +913,8 @@ mensajes localizados (`es-DO`/`en`), nunca con texto de excepción ni rutas.
 - **Desviación documentada de la hoja de ruta:** los **perfiles de mapeo guardados** (`CsvImportProfile`) quedan
   diferidos. El auto-mapeo por sinónimos y el paso de mapeo manual cubren el caso sin persistir nada (sin migración ni
   clave de configuración nueva).
+- **Comprobaciones manuales NO ejecutadas a mano** (tareas 8.2, 8.3): el diálogo nativo real con un XLSX de la Fase 18, la
+  reimportación por la UI, la revisión visual en es-DO y en, y la pantalla de Configuración.
 - Fuera de esta fase: perfiles con nombre, formatos bancarios (OFX/QIF/MT940), importación de PDF, categorización con
   IA al importar, deshacer una importación (hoy: restaurar un backup de la Fase 19) y una UI general de gestión de
   categorías.

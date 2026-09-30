@@ -1389,11 +1389,12 @@ la UX de "importar archivo".
 
 ---
 
-### Fase 20 — Importación CSV / Excel 🟡 IMPLEMENTADA (2026-09-30), verificación y archivo pendientes
+### Fase 20 — Importación CSV / Excel ✅ COMPLETADA (2026-09-30)
 
-**Estado (2026-09-30):** slices S1–S7 implementadas (commits `aa36efa` a la S7; ver
-`spec/phases/phase-20/features.md`); `sdd-verify`, las comprobaciones manuales y el archivo (renombrar la spec a
-`.done.md`) corresponden al Cierre. Arquitectura en `docs/architecture.md` §11g.
+**Estado (2026-09-30):** completada y archivada. Slices S1–S7 (`aa36efa` a `2f3108a`), correcciones posteriores a la
+verificación `43f7c38` y correcciones de bindings de UI preexistentes `b735ced`. Verificación exhaustiva: PASA CON
+ADVERTENCIAS, 0 críticas (W1–W5 corregidas). Spec archivada en `spec/features/phase-20/F-020-import.done.md`;
+arquitectura en `docs/architecture.md` §11g.
 
 - ✅ Sin migración, sin paquete nuevo, sin clave de configuración nueva. ClosedXML (Fase 18) sigue solo en
   Infrastructure.
@@ -1410,18 +1411,23 @@ la UX de "importar archivo".
 - ✅ Decodificación y delimitadores: fixtures binarios reales (UTF-8, Windows-1252, UTF-16, `,` `;` tab): 
   `CsvTableReaderTests`, `FixturesAreByteExactTests`. Límites y ZIP bomb rechazados antes de parsear:
   `CsvTableReaderTests`, `ClosedXmlZipGuardTests`.
-- ✅ Gates: build limpio (0 advertencias, 0 errores), 3263 pruebas verdes (2497 unit + 766 integration, desde
-  2289 al cierre de la Fase 19), `dotnet format style` limpio, NetArchTest verde, 3 ejecuciones consecutivas de la
-  suite completa sin intermitentes.
+- ✅ Gates (re-ejecutados en el Cierre, HEAD `b735ced`): build limpio (0 advertencias, 0 errores), 3323 pruebas verdes
+  (2551 unit + 772 integration, desde 2289 al cierre de la Fase 19), `dotnet format style` limpio, NetArchTest verde
+  (18 de 18, incluida la regla que prohíbe `System.IO.Compression` en Domain y Application), 3 ejecuciones
+  consecutivas de la suite completa sin intermitentes en los commits de corrección.
+- ✅ Compuerta de reconocimiento: si las filas a importar incluyen un importe ambiguo, una mezcla de estilos decimales
+  o fechas ambiguas/contradictorias, Confirmar queda desactivado hasta marcar la casilla de reconocimiento; la fila 51
+  de categorías nuevas se rechaza (`TooManyNewCategories`); texto no decodificable (U+FFFD/C1) se rechaza
+  (`UndecodableText`); XLSX con más de 4 decimales reales se rechaza (`TooManyDecimals`).
 - ⚠️ **Desviación documentada del entregable original:** los **perfiles de mapeo guardados** (`CsvImportProfile`,
   «guardar el mapeo con nombre») quedan **diferidos**. El auto-mapeo por sinónimos (inglés y español) más el paso de
   mapeo manual cubren el caso sin persistir nada. Los nombres del entregable (`CsvImporter`, `CsvImportProfile`)
   fueron sustituidos por `ITabularReader`/`CsvTableReader`/`ClosedXmlTableReader`/`SniffingTabularReader`,
   `IImportLookup`/`EfImportLookup`, `IImportWriter`/`EfImportWriter`, `PreviewImportUseCase`, `CommitImportUseCase` y
   `ImportViewModel`.
-- ⚠️ Pendiente no bloqueante (Cierre): el diálogo nativo real de abrir archivo, importar un CSV bancario y un XLSX
-  reales sobre una copia de los datos, y la revisión visual del panel en es-DO y en NO se ejecutaron a mano.
-- 📌 Seguimientos documentados, no implementados: perfiles de mapeo con nombre, formatos OFX/QIF/MT940, importación
+- ⚠️ **NO ejecutado a mano** (tareas 8.2, 8.3): el diálogo nativo real de abrir archivo con un XLSX de la Fase 18, la
+  reimportación por la UI, la revisión visual en es-DO y en, y la prueba de la pantalla de Configuración.
+- 📌 Seguimientos documentados, no implementados: perfiles de mapeo con nombre (diferidos a propósito), formatos OFX/QIF/MT940, importación
   de PDF, categorización con IA al importar, deshacer una importación (hoy: restaurar un backup de la Fase 19) y una
   UI general de gestión de categorías.
 

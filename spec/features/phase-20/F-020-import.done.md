@@ -1,7 +1,7 @@
 # F-020 — CSV / Excel Import of Transactions
 
 > **Phase:** 20 — CSV / Excel import
-> **Status:** Active (spec written 2026-09-29). Rename to `.done.md` only after archive.
+> **Status:** Completed (archived 2026-09-30).
 > **SDD:** `.atl/sdd/f-020p20-import/`
 > **Input:** `.atl/sdd/f-020p20-import/proposal.md` (D1-D27 and slices S1..S7 binding), `.atl/sdd/f-020p20-import/exploration.md`
 > **Depends on:** Phases 0-19 archived (Phase-18 `ClosedXmlReportWriter`, Phase-19 `IFileOpenDialog`, Phase-17 `INotificationCenter`).
@@ -177,26 +177,26 @@ Tests MUST NOT read or write the real AppData directory; they MUST use temp dire
 
 ## Acceptance Criteria
 
-- [ ] **(roadmap)** A generic CSV with configured columns produces valid expenses, without duplicates, in one transaction (S-1, S-19).
-- [ ] Supported formats and content-based reader selection (R-2, S-2).
-- [ ] CSV parsing: quotes, embedded newlines, BOM, CRLF/LF/CR; UTF-8 strict then Windows-1252; delimiter sniff + override (R-3..R-5, S-3..S-5).
-- [ ] Limits enforced before allocation; ZIP-bomb guard (R-6, R-7, S-6, S-7).
-- [ ] Sheet selection and header auto-mapping en+es; mapping step only when incomplete (R-8, R-9, S-8, S-9).
-- [ ] Row validation, type/sign, amount and date parsing tables green (R-10..R-13, S-10..S-14).
-- [ ] Category resolution, ambiguity rejection, creation cap 50 with checkbox, fallback by Id, nullable income category, payment method match-only (R-14..R-16, S-15..S-18).
-- [ ] Duplicate fingerprint with occurrence counting; skip on by default; re-import inserts 0 (R-17, S-19).
-- [ ] Two-step preview/commit with commit re-parsing retained bytes (R-18, S-20).
-- [ ] Commit through a fresh DI scope with ONE `SaveChangesAsync`; forced failure leaves 0 rows and 0 categories and the shared context unpoisoned (R-19, S-21).
-- [ ] Success-shaped row outcomes vs `Result.Failure` file-level codes (R-20, S-22, S-28).
-- [ ] Round trip from the REAL `ClosedXmlReportWriter` (both reports) is field-identical; second import inserts 0 (R-21, S-23).
-- [ ] In-place Import panel in Expenses next to Export; state machine; busy guards; cancelled dialog silent; post-commit reload and refresh; no logic in code-behind (R-22, S-24..S-26).
-- [ ] Multi-filter `IFileOpenDialog` overload with fakes updated (R-23).
-- [ ] Localized messages for every reason code, resx es-DO + neutral English + manual Designer accessors, completeness test green (R-24, S-27).
-- [ ] No new NuGet package; ClosedXML Infrastructure-only; arch guard for the new Infrastructure types; NetArchTest R-1..R-5 green (R-25).
-- [ ] Tests never touch the real AppData (R-26); 50,000-row timing test passes (S-29).
-- [ ] `CodePagesEncodingProvider` registered; future-dated rows warn only (R-4, R-10, S-14).
-- [ ] Gates: `dotnet build -c Release` clean, `dotnet test` green, `dotnet format style --verify-no-changes` exit 0, spec renamed to `.done.md` after archive.
-- [ ] Manual check of the real dialog and both locales performed or explicitly recorded as NOT run by hand.
+- [x] **(roadmap)** A generic CSV with configured columns produces valid expenses, without duplicates, in one transaction (S-1, S-19). **Evidence:** `ImportEndToEndTests.GenericSpanishBankCsv_WithOptionsSet_ProducesTheExpectedRows`, `CommitImportUseCaseTests` (re-import inserts 0), `EfImportWriterTests`.
+- [x] Supported formats and content-based reader selection (R-2, S-2). **Evidence:** `SniffingTabularReaderTests`.
+- [x] CSV parsing: quotes, embedded newlines, BOM, CRLF/LF/CR; UTF-8 strict then Windows-1252; delimiter sniff + override (R-3..R-5, S-3..S-5). **Evidence:** `CsvTableReaderTests`, `FixturesAreByteExactTests` (real UTF-8, Windows-1252, UTF-16, `,` `;` tab bytes).
+- [x] Limits enforced before allocation; ZIP-bomb guard (R-6, R-7, S-6, S-7). **Evidence:** `CsvTableReaderTests` (limits), `ClosedXmlZipGuardTests` (zip bomb).
+- [x] Sheet selection and header auto-mapping en+es; mapping step only when incomplete (R-8, R-9, S-8, S-9). **Evidence:** `ClosedXmlTableReaderTests`, `HeaderMapperTests`, `ImportViewModelTests`.
+- [x] Row validation, type/sign, amount and date parsing tables green (R-10..R-13, S-10..S-14). **Evidence:** `AmountParserTests`, `DateParserTests`, `ImportRowValidatorTests`, `ImportRowValidatorDomainConsistencyTests`.
+- [x] Category resolution, ambiguity rejection, creation cap 50 with checkbox, fallback by Id, nullable income category, payment method match-only (R-14..R-16, S-15..S-18). **Evidence:** `CategoryMatcherTests`, `PreviewImportUseCaseTests`, `ImportMaterializerTests`; the 51st new category is REJECTED, see Post-verify reconciliation #1.
+- [x] Duplicate fingerprint with occurrence counting; skip on by default; re-import inserts 0 (R-17, S-19). **Evidence:** `DuplicateDetectorTests`, `CommitImportUseCaseTests`, `ImportEndToEndTests` (re-import inserts 0).
+- [x] Two-step preview/commit with commit re-parsing retained bytes (R-18, S-20). **Evidence:** `CommitImportUseCaseTests`, `CommitImportUseCaseFakedPortsTests`, `ImportPipelineTests` (plan hash, `PreviewStale`).
+- [x] Commit through a fresh DI scope with ONE `SaveChangesAsync`; forced failure leaves 0 rows and 0 categories and the shared context unpoisoned (R-19, S-21). **Evidence:** `EfImportWriterTests` (trigger-forced failure: 0 expenses, 0 incomes, 0 categories; shared `AppDbContext` not poisoned), `SaveCountingInterceptor` (one save), `ImportPerformanceTests` (50,000 rows, about 6.5 s, ceiling 30 s).
+- [x] Success-shaped row outcomes vs `Result.Failure` file-level codes (R-20, S-22, S-28). **Evidence:** `PreviewImportUseCaseTests`, `CommitImportUseCaseTests`, `ImportViewModelTests`.
+- [x] Round trip from the REAL `ClosedXmlReportWriter` (both reports) is field-identical; second import inserts 0 (R-21, S-23). **Evidence:** `ImportRoundTripTests`, `ImportEndToEndTests` (real `ClosedXmlReportWriter`, both reports).
+- [x] In-place Import panel in Expenses next to Export; state machine; busy guards; cancelled dialog silent; post-commit reload and refresh; no logic in code-behind (R-22, S-24..S-26). **Evidence:** `ImportViewModelTests`, `ExpensesViewModelImportTests`, `ImportViewXamlTests`, `ImportViewHeadlessTests`.
+- [x] Multi-filter `IFileOpenDialog` overload with fakes updated (R-23). **Evidence:** `IFileOpenDialog.PickAsync(filters, ...)` overload and `FakeFileOpenDialog` (commits `21ee899`, `9905715`).
+- [x] Localized messages for every reason code, resx es-DO + neutral English + manual Designer accessors, completeness test green (R-24, S-27). **Evidence:** `ImportResourcesTests`, `ImportReasonTests`.
+- [x] No new NuGet package; ClosedXML Infrastructure-only; arch guard for the new Infrastructure types; NetArchTest R-1..R-5 green (R-25). **Evidence:** `ArchitectureTests` 18 of 18 green (Import location guard, ClosedXML Infrastructure-only, `System.IO.Compression` forbidden in Domain and Application); `Directory.Packages.props` unchanged.
+- [x] Tests never touch the real AppData (R-26); 50,000-row timing test passes (S-29). **Evidence:** `ImportTestDb` temp SQLite, `CONTROLDEFINANZASIA_DATA_DIR` for smokes, `ImportPerformanceTests`.
+- [x] `CodePagesEncodingProvider` registered; future-dated rows warn only (R-4, R-10, S-14). **Evidence:** `CsvTableReaderTests` (Windows-1252 decoding), `ImportRowValidatorTests` (`FutureDate` warning).
+- [x] Gates: `dotnet build -c Release` clean, `dotnet test` green, `dotnet format style --verify-no-changes` exit 0, spec renamed to `.done.md` after archive. **Evidence:** Cierre on HEAD `b735ced`: build 0 warnings and 0 errors, 3323 tests green (2551 unit + 772 integration), format exit 0, spec renamed with `git mv`.
+- [ ] Manual check of the real dialog and both locales performed or explicitly recorded as NOT run by hand. **NOT RUN BY HAND:** no session drove the real native open dialog, a real Phase-18 XLSX through it, a re-import via the UI, the es-DO/en visual pass or the Settings screen smoke (tasks 8.2, 8.3). Left unchecked on purpose.
 
 ## Out of scope
 
@@ -240,3 +240,17 @@ The independent verification of Phase 20 returned PASS WITH WARNINGS (0 critical
 5. **Architecture guard.** Application and Domain must not reference `System.IO.Compression` (ZIP reading stays in Infrastructure); NetArchTest enforces it (R-1, R-25).
 
 Still NOT RUN BY HAND: the real native dialogs, the es-DO/en visual pass and the real-file manual checks (tasks 8.2, 8.3).
+
+## Post-apply reconciliation (2026-09-30)
+
+Items not already recorded in the sections above. Closing facts of Phase 20:
+
+- Category cap: the 51st and later new category names are REJECTED with `TooManyNewCategories` (Post-verify reconciliation #1); the "treated as creation off" wording in R-15 and S-16 is superseded.
+- Acknowledgement gate: Confirm stays disabled until the user ticks the acknowledgement whenever the rows to import include an ambiguous amount, a mixed decimal style under Automatic, or date evidence `AmbiguousOnly` / `Contradicts` (Post-verify reconciliation #2).
+- New reason `ImportReason.UndecodableText` rejects a description or category containing U+FFFD or a C1 control character produced by the Windows-1252 fallback (Post-verify reconciliation #4). The assumption that .NET's Windows-1252 table yields U+FFFD was wrong for bytes 0x81, 0x8D, 0x8F, 0x90 and 0x9D, which decode to C1 controls; a real-bytes test caught it.
+- XLSX numeric cells with more than four real decimals are no longer rounded; they are rejected as `TooManyDecimals` (Post-verify reconciliation #3).
+- Persisted or named mapping profiles (`CsvImportProfile`) stay deferred: a documented deviation from the roadmap deliverable. Auto-mapping by synonyms plus the manual mapping step cover the case with no persistence.
+- Pre-existing UI defects found during verification and fixed in `b735ced`, outside the import feature: (a) the row-template cast pattern `#Root.((vm:XViewModel)DataContext)` threw `ArgumentException` when a row was realized in Budgets, Chat, Dashboard, Debts, Goals, Income and RecurringRules views (fixed with `#Root.DataContext.<Command>`); (b) `DatePicker.SelectedDate` bound to `DateOnly?` / `DateTime?` never connected in Expenses, Income, Debts and RecurringRules (fixed by reusing `DateOnlyConverter`, whose `ConvertBack` is now target-aware). Headless regression tests share one `HeadlessUi` session and xUnit collection.
+- Accepted or follow-up, not fixed: a workbook without a `Data` sheet falls back to the first sheet (accepted); six `ExpensesAi*` resx keys lack Designer accessors (pre-existing); `MainWindow.axaml:160` `$parent[ItemsControl].DataContext.DismissCommand` in the notification popup was not exercised headless.
+- Process note: the 50,000-row decision was measured, not assumed: one `SaveChangesAsync` kept (preview about 0.5 s, commit about 6.3 to 6.8 s in Release, ceiling 30 s).
+- Manual checks (tasks 8.2, 8.3) were NOT run by hand and stay unchecked: real native open dialog with a Phase-18 XLSX, re-import via the UI, es-DO/en visual pass, Settings screen smoke.

@@ -9,8 +9,9 @@
 ## 1. TL;DR
 
 - **What it is:** `ControlDeFinanzasIA` — a cross-platform (.NET 8 + Avalonia MVVM) desktop app for personal-finance control with AI assist. 100% local data. DOP + USD.
-- **Current phase:** **Phase 19 archived** (backup and restore). Phases 0–19 fully archived. Next per the roadmap: Phase 20 (CSV/Excel import) — check `.atl/sdd/f-020*` and `git log --oneline` for any in-flight work before starting.
-- **Test count:** 2289/2289 passing (1725 unit + 564 integration) as of 2026-09-29, Phase 19 close (up from 1908 at Phase 18 close). Build 0 warnings/0 errors, `dotnet format style --verify-no-changes` exit 0, NetArchTest green (R-1..R-5 plus the Phase 19 `Microsoft.Data.Sqlite` guard for Application and UI), `ModelSnapshotConsistencyTests` green (no schema change in Phase 19).
+- **Current phase:** **Phase 20 archived** (CSV/Excel import). Phases 0–20 fully archived. Next per the roadmap: Phase 21 (packaging, polish, accessibility — the last roadmap phase) — check `.atl/sdd/f-021*` and `git log --oneline` for any in-flight work before starting.
+- **Test count:** 3323/3323 passing (2551 unit + 772 integration) as of 2026-09-30, Phase 20 close (up from 2289 at Phase 19 close). Build 0 warnings/0 errors, `dotnet format style --verify-no-changes` exit 0, NetArchTest green (18/18: R-1..R-5 plus the Phase 20 Import location guard and the `System.IO.Compression` guard for Domain and Application), no schema change in Phase 20.
+- **Phase 20 shipped CSV/Excel import: an "Importar" button in the Expenses toolbar that opens `ImportView` in place.** It reads a generic CSV/TXT (UTF-8 strict, Windows-1252 fallback, UTF-16 with BOM; `,` `;` tab auto-detected) or a Phase-18 XLSX, chosen by content. Headers auto-map in English and Spanish (mapping step only when Date, Description or Amount is missing), a dry-run preview shows the first 50 rows and the first 50 problem rows, and confirming runs `CommitImportUseCase`, which re-parses the retained bytes and writes everything through `EfImportWriter` in a fresh DI scope with ONE `SaveChangesAsync` (all or nothing; 50,000 rows about 6.5 s). Duplicates are skipped by an occurrence-counting fingerprint, so re-importing the same file inserts 0. Missing categories can be created (cap 50, the 51st is rejected); expenses without a category fall back to the seeded "Otros" by Id. The governing rule is no silent corruption: no guessed day/month or decimal separator, more than 4 decimals rejected, undecodable text rejected, and ambiguous amounts/dates require an acknowledgement checkbox. No migration, no package, no setting; persisted mapping profiles were deferred on purpose. Verification PASSED WITH WARNINGS (0 critical, W1-W5 fixed in `43f7c38`); `b735ced` also fixed pre-existing Avalonia binding crashes. See gotcha #37 and `spec/features/phase-20/F-020-import.done.md`.
 - **Phase 19 shipped backup and restore: a Settings "Backup" block (before "Acerca de") with "Export everything to a file" and "Restore from a file".** `CreateBackupUseCase` -> `SqliteBackupService.CreateAsync` copies the live database with `SqliteConnection.BackupDatabase` (own connection, `Pooling=False`) into a temp file, runs `PRAGMA integrity_check`, redacts the `ai.apiKey` row (`secure_delete=ON`, `DELETE`, `VACUUM`, so no key bytes remain, even in free pages) and zips exactly `manifest.json` + `data.db` (SHA-256, `formatVersion`, `schemaVersion` = latest `MigrationId`); the destination is opened only after every check passes. Restore (`InspectBackupUseCase` feeds an inline confirmation panel with the backup date and a destructive warning; `RestoreBackupUseCase` re-validates everything) runs a fixed pipeline: ZIP shape, zip-slip guard, size caps (manifest 64 KiB, `data.db` 1 GiB, enforced on bytes actually read), SHA-256, `integrity_check`, `foreign_key_check`, migration-history comparison by `MigrationId` set (unknown id = `NewerSchema` showing both versions; older is accepted and migrated at next start), then a free-space check (3x, reported as `IoError` with reason `insufficientSpace`), a pre-restore safety ZIP under `<DataDir>\backups\pre-restore-*.zip` (keeps 3; safety ZIPs KEEP the API key and never leave the data dir, user exports redact it), and a WAL-aware atomic swap (`ClearAllPools`, one `File.Replace`, retry 200/600/1800 ms, rollback to the original bytes on any post-safety failure). `data.db.pre-restore.bak` is kept until `CompletePendingRestore()` runs after a successful startup `ApplyMigrations`; if a rollback itself fails, a `.rollback-failed` marker in `backups\` keeps the `.bak` and logs a warning on every start. The local API key is carried into the restored file when the backup has none. Notifications are suspended (`INotificationCenter.SuspendAsync`) during restore and a restart is required afterwards (`IAppRestartService`, with a "close and reopen" fallback). Four error codes (`NotABackup`, `Corrupt`, `NewerSchema`, `IoError`). `CONTROLDEFINANZASIA_DATA_DIR` overrides the data directory for throwaway runs. No migration, no new package, no new setting. Verification history: exhaustive verification PASSED WITH WARNINGS, 0 critical, no data-loss path found (10 corruption cases rejected with the live DB byte-identical; a restore over a WAL database with a second open connection fails closed, then succeeds); it caught that the live database runs in WAL mode (the spec assumed DELETE) and four issues fixed in `f87be48`. Manual checks (real dialogs, real relaunch, es-DO/en visual pass) were NOT run by hand. See gotchas #34-#36 below.
 - **Phase 18 shipped PDF and Excel export: "Exportar PDF" / "Exportar Excel" buttons on the Dashboard (the displayed month summary) and on Expenses (the current filter, every page).** `ExportMonthSummaryReportUseCase` composes the existing `GetMonthSummaryQuery`, `GetCategoryBreakdownQuery` (unfolded, no "Otras") and `GetBudgetVsActualQuery` plus every expense and income of the month (paged at 200); `ExportExpenseListReportUseCase` reads the filter page by page until done. Both build a fully computed DTO (`Application/DTOs/Reports/`) and hand it to the `IReportWriter` whose `Format` matches; `ReportOutput` renders into a `MemoryStream` and copies to the `SaveTarget` only on success, so a failed render never creates or truncates the file. `QuestPdfReportWriter` (QuestPDF Community, text and tables only) and `ClosedXmlReportWriter` (two sheets: styled `Summary`, flat `Data` with stable English headers `Date, Type, Description, Category, Amount, Currency, AmountDOP` — the Phase 20 import contract) live in `Infrastructure/Reports/`, registered by `AddReportExporters()`. `IFileSaveDialog` (Application port) is implemented by `AvaloniaFileSaveDialog` over `TopLevel.StorageProvider`; cancel is silent. Totals are DOP-normalized, each line keeps its original amount + currency, and a missing rate leaves `AmountDOP` blank (em dash in the PDF), never 0, with a localized footer note. `ReportLabels` are built by the ViewModel from resx, so writers are locale-agnostic. No schema change, no migration, no new setting. Verification history: the first independent verify FAILED (the PDF `WriteExpenseListAsync` was a stub, fixed in `3515cb9`); the second, exhaustive one PASSED WITH WARNINGS, 0 critical; warning W1 was closed with `ReportExportEndToEndTests`. See gotchas #31-#33 below.
 - **Phase 17 shipped in-app notifications: a bell + unread badge + popup in a new header row of the shell, fed by a deterministic detection run.** `DetectNotificationsUseCase` reads four existing sources sequentially (debt installments in `[today-7, today+3]` with overdue derived at display time, recurring charges in `[today, today+3]`, current-month budget Near/Exceeded — highest tier only —, unacknowledged `AnomalyAlert` rows) plus a periodic digest (`Off`/`Daily`/`Weekly`, default Weekly), and hands candidates to `NotificationReconciler`, which persists them in a `Notification` table keyed by a single unique `DedupKey` string (idempotent; a dismissed key is never recreated; an undismissed row whose source stops qualifying is removed; facts on undismissed rows are refreshed without touching `Id`/`CreatedAt`/`ReadAt`; 60-day purge; one `SaveChangesAsync` per run). `ScopedNotificationCenter` gives every run its own DI scope, guards against concurrent runs (manual refresh is a no-op while one is in flight; startup/settings runs are queued), and swallows and logs every failure. Runs happen at app start (`mainWindow.Opened`), after saving the Settings "Notificaciones" section (4 per-kind toggles, default on, plus the digest frequency picker, via new `SettingKeys`/`ISettingsStore` — `AppSettings` untouched), and via the popup's refresh button. The badge shows the full unread count (`9+` above 9), the popup lists at most 20 rows unread-first and marks them read on open, per-row dismiss is permanent, and there is no click-through. `Notification` stores facts only; `NotificationTextFormatter` renders text at display time from resx. See gotchas #28-#30 below.
@@ -36,7 +37,7 @@
 | Type | Cross-platform desktop (Windows, macOS, Linux), single-user, local data only |
 | UI pattern | MVVM strict with **CommunityToolkit.Mvvm** (`[ObservableProperty]`, `[RelayCommand]`) |
 | Localization | `es-DO` default + `en` via `IStringLocalizer` / resx |
-| Status | Phases 0–19 ✅ archived; Phase 20 (CSV/Excel import) next |
+| Status | Phases 0–20 ✅ archived; Phase 21 (packaging, polish, accessibility) next |
 
 ---
 
@@ -151,6 +152,11 @@ only) — see the TL;DR above.
 - `F-019-backup-restore.done.md` (umbrella). Chained slices: planning `b10eb60`, S1 `ecdbfd7`, S2 `4959915`,
   S3 `f0b42a1`, S4a `72c4f5d`, S4b `8b8a2ac` (plus a test flake fix `90f5719`), S5 `a7aed29`, data-dir
   override `557b404`, S6a `f59dffe`, S6b `e1b6575`, S7 `9091332`, post-verify fixes `f87be48`.
+
+**Phase 20** — `spec/features/phase-20/` (1 done, archived 2026-09-30)
+- `F-020-import.done.md` (umbrella). Chained slices: planning `a4b4f46`, S1 `aa36efa`, S2 `0a8d6dd`, S3 `6c8c17f`,
+  S4a `7035395`, S4b `88f44bc`, S5 `7b84eb2`, S6a `21ee899`/`fc274fd`/`e16c469`, S6b `9905715`, S7 `2f3108a`,
+  post-verify fixes `43f7c38`, UI binding fixes `b735ced`.
 
 ---
 
@@ -719,15 +725,40 @@ The full task breakdown is at `tasks/phase-19/F-019-backup-restore.tasks.md`. Ta
 (real native dialogs, real relaunch, locked-file manual check, es-DO/en visual pass) are deliberately left
 unchecked: they were not run by hand.
 
+### Phase 20 — what's done
+
+- Application: ports `Abstractions/{ITabularReader,IImportLookup,IImportWriter}` (+ `TabularReadOptions`), `IFileOpenDialog` multi-filter
+  overload, and `UseCases/Import/` with the DTOs (`RawTable`/`RawCell`, `ImportOptions`, `ImportPreview`,
+  `ImportCommitResult`), `ImportErrorCodes`/`ImportReason`/`ImportLimits`, the pure parsers (`HeaderMapper`,
+  `AmountParser`, `DateParser`, `ImportRowValidator`, `CategoryMatcher`, `DuplicateDetector`), `ImportPipeline`,
+  `ImportPlanner` (plan hash), `ImportMaterializer`, `PreviewImportUseCase` and `CommitImportUseCase`.
+- Infrastructure: `Import/{CsvTableReader,CsvRecordParser,ClosedXmlTableReader,SniffingTabularReader,EfImportLookup,EfImportWriter}` and
+  `AddImport()`. The reader is chosen by content (`PK\x03\x04` = XLSX), never by extension. `EfImportWriter` uses a
+  fresh DI scope and ONE `SaveChangesAsync`; 50,000 rows commit in about 6.5 s (ceiling 30 s), so no chunking.
+- UI: "Importar" button in the Expenses toolbar; `ImportView` replaces the list in place while `IsImportOpen` (no route);
+  `ImportViewModel` states `Idle/Loading/Mapping/Previewed/Importing/Done`, synchronous busy guards, silent cancel,
+  acknowledgement checkbox for ambiguous amounts/dates. All strings in resx es-DO + English with manual Designer accessors.
+- No migration, no new package, no new setting. Persisted mapping profiles were deferred on purpose (documented
+  deviation from the roadmap deliverable).
+- Commits: planning `a4b4f46`, S1 `aa36efa`, S2 `0a8d6dd`, S3 `6c8c17f`, S4a `7035395`, S4b `88f44bc`, S5 `7b84eb2`,
+  S6a `21ee899` + `fc274fd` (+ `e16c469`), S6b `9905715`, S7 `2f3108a`, post-verify fixes `43f7c38`, UI binding fixes
+  `b735ced`, then the closing docs commit.
+- Verify: exhaustive verification PASS WITH WARNINGS, 0 critical. W1/W2 (ambiguity banners were not enough: acknowledgement
+  gate), W3 (XLSX numbers with more than 4 decimals were silently rounded), W4 (lossy Windows-1252 text was stored),
+  W5 (spec drift, missing `System.IO.Compression` architecture guard) are all fixed. Verification also exposed two
+  pre-existing UI defect families, fixed in `b735ced`: row-template `#Root.((vm:X)DataContext)` crashes in 7 views and
+  `DatePicker` bindings to `DateOnly?` that never connected in 4 views.
+- Gates: build 0/0, 3323/3323 tests (2551 unit + 772 integration, up from 2289), format exit 0, NetArchTest 18/18.
+- NOT run by hand: real native open dialog with a Phase-18 XLSX, re-import via the UI, es-DO/en visual pass, Settings
+  screen smoke (tasks 8.2, 8.3). See `spec/features/phase-20/F-020-import.done.md`, `tasks/phase-20/`, `.atl/sdd/f-020p20-import/`.
+
 ---
 
 ## 5. What's pending (next up)
 
 Ordered by priority. Each item references its source-of-truth spec/plan.
 
-1. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20 (consumes the Phase 18 `Data` sheet contract and
-   reuses `IFileOpenDialog` from Phase 19). Check `.atl/sdd/f-020*` and `git log --oneline` for any in-flight
-   work before planning from scratch.
+1. **Follow-up, not phase-blocking**: Phase 20 (import) is archived. Open items: persisted/named mapping profiles (deferred on purpose, documented roadmap deviation), OFX/QIF/MT940 and PDF import, AI categorization on import, undo of an import (today: restore a Phase-19 backup), a general category-management UI, six `ExpensesAi*` resx keys without Designer accessors (pre-existing), `MainWindow.axaml:160` `$parent[ItemsControl].DataContext.DismissCommand` not exercised headless, non-`Data` XLSX falls back to the first sheet (accepted), and the manual checks (real native open dialog with a Phase-18 XLSX, re-import via the UI, es-DO/en visual pass, Settings smoke; tasks 8.2, 8.3) were NOT run by hand.
 2. **Follow-up, not phase-blocking**: Phase 16's `SavingsPlanNarrationGuard.IsGrounded` is a
    membership check, not a positional one (documented, accepted design cost) — do not "fix" it into a
    positional check; the goal name's digit runs are deliberately included in the allowed set (Spec
@@ -822,7 +853,7 @@ Ordered by priority. Each item references its source-of-truth spec/plan.
 19. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
 
 **MVP (no IA) = phases 0–12, fully complete. Phases 13–16 = first four shipped AI features. Phase 17
-(notifications), Phase 18 (export) and Phase 19 (backup and restore) are deterministic and AI-free.** Phase 20+ continues the roadmap.
+(notifications), Phase 18 (export) and Phase 19 (backup and restore) are deterministic and AI-free. Phase 20 (CSV/Excel import) is deterministic and AI-free too.** Phase 21 (packaging, polish, accessibility) is the last phase in the roadmap.
 
 ---
 
@@ -1096,8 +1127,8 @@ dotnet ef migrations add <Name> `
 
 ### Where to start
 
-1. **Read `spec/` first.** Phase 19 (backup and restore) is archived at `spec/features/phase-19/F-019-backup-restore.done.md`. Phase 20 (CSV/Excel import) is next per the roadmap — check `.atl/sdd/f-020*` and `git log --oneline` for in-flight work before planning from scratch.
-2. **Check tasks:** `tasks/phase-19/F-019-backup-restore.tasks.md` is the closed checklist for the last fully completed phase (chained slices; only the manual checks are deliberately unchecked); `tasks/phase-17/F-017-notifications.tasks.md` is the closed checklist for an earlier phase (9 strictly chained slices; only the manual task 10.2 is deliberately unchecked) — use it as the pattern reference for a multi-slice breakdown.
+1. **Read `spec/` first.** Phase 20 (CSV/Excel import) is archived at `spec/features/phase-20/F-020-import.done.md`. Phase 21 (packaging, polish, accessibility) is next per the roadmap — check `.atl/sdd/f-021*` and `git log --oneline` for in-flight work before planning from scratch.
+2. **Check tasks:** `tasks/phase-20/F-020-import.tasks.md` is the closed checklist for the last fully completed phase (chained slices plus post-verify fix commits; only the manual checks 8.2 and 8.3 are deliberately unchecked); `tasks/phase-19/F-019-backup-restore.tasks.md` is the closed checklist for an earlier phase (chained slices; only the manual checks are deliberately unchecked); `tasks/phase-17/F-017-notifications.tasks.md` is the closed checklist for an earlier phase (9 strictly chained slices; only the manual task 10.2 is deliberately unchecked) — use it as the pattern reference for a multi-slice breakdown.
 3. **Read constitution** if touching architecture or stack: `spec/constitution/mission.md`, `spec/constitution/tech-stack.md`.
 4. **Check the SDD working dir** for any in-flight change: `.atl/sdd/<change-id>/`.
 
@@ -1333,6 +1364,7 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
     tests instead of trusting the checklist; it found the WAL assumption and four smaller defects. Some slices
     (notably S6b ViewModel tests) were not literal strict TDD, and no manual UI check was performed. Keep
     verifying against source, not against the task list.
+37. **Phase 20: never guess, never round, never store corrupt text.** The import rejects instead of interpreting: a non-ISO date with no chosen format is `InvalidDate`, more than 4 decimals is `TooManyDecimals` (also for XLSX numeric cells, since `43f7c38`), the 51st new category is rejected (`TooManyNewCategories`), and text damaged by the Windows-1252 fallback is rejected (`UndecodableText`). .NET's Windows-1252 table decodes bytes 0x81, 0x8D, 0x8F, 0x90 and 0x9D to C1 controls (U+0080..U+009F), NOT to U+FFFD: the first assumption was wrong and a real-bytes test caught it. Ambiguous amounts/dates need the acknowledgement checkbox (`RequiresAcknowledgement`) before Confirm works. Also: an Avalonia row-template cast `#Root.((vm:XViewModel)DataContext)` crashes as soon as a row is realized (use `#Root.DataContext.<Command>`), and `DatePicker.SelectedDate` bound to `DateOnly?` needs `DateOnlyConverter`; headless tests live in the shared `HeadlessUi` harness. Verified against source and real bytes, not the task list.
 
 ---
 
@@ -1344,7 +1376,7 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 # 1. Confirm the build is clean before you do anything
 dotnet build -c Release
 
-# 2. Confirm the existing 2289 tests still pass
+# 2. Confirm the existing 3323 tests still pass
 dotnet test -c Release --no-build
 
 # 3. Confirm CI's format gate is green
@@ -1353,7 +1385,7 @@ dotnet format style --verify-no-changes
 # 4. Confirm the architecture rules still hold
 dotnet test --no-build -c Release --filter "FullyQualifiedName~Architecture"
 
-# 5. Phase 19 is archived; Phase 20 (CSV/Excel import) is next. Check for in-flight work first.
+# 5. Phase 20 is archived; Phase 21 (packaging + accessibility) is next. Check for in-flight work first.
 Get-ChildItem .\.atl\sdd; git log --oneline -10
 ```
 
