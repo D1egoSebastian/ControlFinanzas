@@ -384,6 +384,54 @@ public sealed class ArchitectureTests
         Assert.Equal(new[] { "QuestPdfConfiguration.cs" }, offenders);
     }
 
+    /// <summary>
+    /// F-020 (S5, D-26, DD-15): every import adapter that touches a library (CSV/XLSX parsing, EF Core) lives in
+    /// <c>ControlDeFinanzasIA.Infrastructure.Import</c>.
+    /// </summary>
+    [Theory]
+    [InlineData("CsvTableReader")]
+    [InlineData("ClosedXmlTableReader")]
+    [InlineData("SniffingTabularReader")]
+    [InlineData("EfImportLookup")]
+    [InlineData("EfImportWriter")]
+    public void F020_Import_Adapters_Residen_En_Infrastructure_Import(string typeName)
+    {
+        IEnumerable<Type> found = Types
+            .InAssembly(_infrastructureAssembly)
+            .That()
+            .HaveName(typeName)
+            .GetTypes();
+
+        Type type = Assert.Single(found);
+        Assert.Equal("ControlDeFinanzasIA.Infrastructure.Import", type.Namespace);
+    }
+
+    /// <summary>
+    /// F-020 (S5, D-26, DD-15): no Application type depends on the Infrastructure import namespace, and in the UI
+    /// only the composition root may.
+    /// </summary>
+    [Fact]
+    public void F020_Nadie_Depende_De_Infrastructure_Import_Salvo_CompositionRoot()
+    {
+        const string importNamespace = "ControlDeFinanzasIA.Infrastructure.Import";
+
+        TestResult application = Types
+            .InAssembly(_applicationAssembly)
+            .ShouldNot()
+            .HaveDependencyOn(importNamespace)
+            .GetResult();
+        TestResult ui = Types
+            .InAssembly(_uiAssembly)
+            .That()
+            .DoNotHaveName("Bootstrap")
+            .ShouldNot()
+            .HaveDependencyOn(importNamespace)
+            .GetResult();
+
+        Assert.True(application.IsSuccessful, FormatFailingTypes(application));
+        Assert.True(ui.IsSuccessful, FormatFailingTypes(ui));
+    }
+
     private static string GetProjectFilePath(Assembly assembly)
     {
         string assemblyName = assembly.GetName().Name!;

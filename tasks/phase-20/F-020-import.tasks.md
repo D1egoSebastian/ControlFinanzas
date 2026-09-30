@@ -394,14 +394,14 @@ builds domain entities, and `EfImportWriter` persists everything in ONE transact
 the shared UI `AppDbContext`. Size note: this is the largest slice; if it exceeds ~450 lines split at the seam
 "materializer + commit use case" vs "writer + timing + arch guard".
 
-- [ ] 5.1 Write failing `tests/…Unit/Import/ImportMaterializerTests.cs` against the REAL `ImportMaterializer.Build`:
+- [x] 5.1 Write failing `tests/…Unit/Import/ImportMaterializerTests.cs` against the REAL `ImportMaterializer.Build`:
   each `Valid` row builds via `Expense.Create` / `Income.Create` with `note: null`, `source: null`, resolved
   category/payment-method ids and `Money.Create(amount, currency)`; `Duplicate` and `Rejected` rows are excluded;
   new `Category` has a fresh Id, trimmed name, `Color = "#95A5A6"`, `Icon = null`, `IsSystem = false`,
   `CreatedAt = UpdatedAt = utcNow` from the `IClock` fake; an income with null category builds; a forced
   `ArgumentException` (constructed by handing the materializer a plan row the validator would have rejected) surfaces
   as an exception the use case maps, never a partially built batch. (R-15, R-19, S-16, DD-12, Reconciliation #10)
-- [ ] 5.2 Write failing `tests/…Integration/Import/EfImportWriterTests.cs` against the REAL `EfImportWriter` on
+- [x] 5.2 Write failing `tests/…Integration/Import/EfImportWriterTests.cs` against the REAL `EfImportWriter` on
   `ImportTestDb`: (a) happy path inserts categories + expenses + incomes and `SaveChangesAsync` is called exactly once
   (count via an `IInterceptor`/`DbCommandInterceptor` or `SavingChanges` event registered on the scope's context
   through the DI seam); (b) **forced failure** via a real SQLite trigger created in the test DB: `CREATE TRIGGER
@@ -415,7 +415,7 @@ the shared UI `AppDbContext`. Size note: this is the largest slice; if it exceed
   `ChangeTracker` holds no import entity; (e) cancellation token passed to `WriteAsync` is ignored once saving starts
   (the writer uses `CancellationToken.None`); (f) `AutoDetectChangesEnabled` is off on the scope's context while
   staging. (R-19, S-21, C-20, DD-13)
-- [ ] 5.3 Write failing `tests/…Integration/Import/CommitImportUseCaseTests.cs` against the REAL `CommitImportUseCase`,
+- [x] 5.3 Write failing `tests/…Integration/Import/CommitImportUseCaseTests.cs` against the REAL `CommitImportUseCase`,
   `ImportPipeline`, `EfImportLookup` and `EfImportWriter` (fakes only for `IClock`): (a) S-1 commit inserts the
   expected rows and returns counts; (b) **`Commit_DbChangedAfterPreview_Stale`**: an expense added between preview and
   commit changes the plan hash → `Result.Failure(PreviewStale)` and nothing written (C-19); (c) a different options
@@ -430,7 +430,7 @@ the shared UI `AppDbContext`. Size note: this is the largest slice; if it exceed
   with no partial data; (k) categories created only when the option is on, deduplicated by fold, cap 50 with the 51st
   falling to the creation-off path, unmatched expense with creation off uses "Otros" by Id (S-16, R-15). (R-15,
   R-18..R-20, S-1, S-16, S-19..S-22, C-17, C-18, C-19)
-- [ ] 5.4 **50,000-row timing test and decision gate.** Write `tests/…Integration/Import/ImportPerformanceTests.cs`:
+- [x] 5.4 **50,000-row timing test and decision gate.** Write `tests/…Integration/Import/ImportPerformanceTests.cs`:
   generate a 50,000-row CSV in memory (valid rows, a bounded set of categories), run the REAL commit through DI in
   Release and assert (a) it completes within the documented ceiling of 30 s, (b) exactly one `SaveChangesAsync`
   occurred, (c) 50,000 expenses exist, (d) the calling thread is released (the call is awaited from a test that also
@@ -440,30 +440,54 @@ the shared UI `AppDbContext`. Size note: this is the largest slice; if it exceed
   `ChangeTracker.Clear()`, update Reconciliation #19 wording in docs/notes ("one transaction"), and keep the
   forced-failure tests of 5.2 green (all-or-nothing must still hold, including a failure in a LATER chunk). If the
   ceiling had to be relaxed, say so and why; never silently raise it. (R-19, R-26, S-29, DD-13, Reconciliation #19)
-- [ ] 5.5 Create `src/…Application/UseCases/Import/ImportMaterializer.cs` and run 5.1 green. (DD-12)
-- [ ] 5.6 Create `src/…Application/UseCases/Import/CommitImport/CommitImportUseCase.cs` per DD-12 (build plan → mapping
+- [x] 5.5 Create `src/…Application/UseCases/Import/ImportMaterializer.cs` and run 5.1 green. (DD-12)
+- [x] 5.6 Create `src/…Application/UseCases/Import/CommitImport/CommitImportUseCase.cs` per DD-12 (build plan → mapping
   check → plan-hash comparison → materialize → `writer.WriteAsync(batch, CancellationToken.None)`; every non-OCE
   exception caught, logged and mapped to `LookupFailed`/`WriteFailed`; OCE only before the write). Run 5.3 green.
   (R-18..R-20, DD-12)
-- [ ] 5.7 Create `src/…Infrastructure/Import/EfImportWriter.cs` per DD-13 (fresh `AsyncServiceScope`, `Task.Run`,
+- [x] 5.7 Create `src/…Infrastructure/Import/EfImportWriter.cs` per DD-13 (fresh `AsyncServiceScope`, `Task.Run`,
   `AutoDetectChangesEnabled = false`, `AddRange`, one `SaveChangesAsync(CancellationToken.None)`, map
   `DbUpdateException`/`SqliteException`/`InvalidOperationException` to `WriteFailed`). Run 5.2 and 5.4 green. Existing
   repositories are NOT used or modified: `git diff` shows no change to any `*Repository.cs`. (R-19, DD-13, D-6)
-- [ ] 5.8 Create `src/…Infrastructure/Import/ImportServiceCollectionExtensions.cs` (`AddImport`: `TryAddSingleton` for
+- [x] 5.8 Create `src/…Infrastructure/Import/ImportServiceCollectionExtensions.cs` (`AddImport`: `TryAddSingleton` for
   `CsvTableReader`, `ClosedXmlTableReader`, `ITabularReader → SniffingTabularReader`, `IImportLookup`, `IImportWriter`)
   and `ImportServiceCollectionExtensionsTests`: resolves every port as a Singleton, calling `AddImport` twice is
   idempotent, and the singletons hold only `IServiceScopeFactory` (no captured scoped context). (R-25, DD-13)
-- [ ] 5.9 Append to `tests/…Unit/Architecture/ArchitectureTests.cs` (D-26/DD-15): `CsvTableReader`,
+- [x] 5.9 Append to `tests/…Unit/Architecture/ArchitectureTests.cs` (D-26/DD-15): `CsvTableReader`,
   `ClosedXmlTableReader`, `SniffingTabularReader`, `EfImportLookup`, `EfImportWriter` reside in
   `ControlDeFinanzasIA.Infrastructure.Import`; no Application/UI type depends on that namespace outside the
   composition root; the existing ClosedXML rules and R-1..R-5 stay green. (R-25)
-- [ ] 5.10 Confirm no new package/migration/setting: `git diff --name-only` for the slice contains no
+- [x] 5.10 Confirm no new package/migration/setting: `git diff --name-only` for the slice contains no
   `Directory.Packages.props`, `.csproj` (beyond the S2 fixtures item), `Migrations/`, `SettingKeys` or `AppSettings`.
   (R-25)
-- [ ] 5.11 Run all four gates plus the no-stubs grep over the slice's `src` and test files (must also return nothing for
+- [x] 5.11 Run all four gates plus the no-stubs grep over the slice's `src` and test files (must also return nothing for
   `Task\.FromResult\(Result\.Failure` in `EfImportWriter`/`CommitImportUseCase`). Confirm N > 0 for the new classes and
   that `ImportPerformanceTests` ran in Release. Run the FULL suite 3 consecutive times and record intermittent
   failures by test name (the timing test is the likeliest intermittent: report its 3 measured times). (R-25)
+  > Apply notes (S5): red/green honesty (rule 6): `ImportMaterializerTests` and `EfImportWriterTests` were written before
+  > their types (compile-failure red); the materializer tests went green on the first build. The unit commit tests had
+  > 11 assertion failures from a test-helper overload bug (fixed in the test, not the code), then 24/24 green. The
+  > integration commit/round-trip/performance tests were written after `CommitImportUseCase` existed (the unit tests
+  > drove it), so no red run was observed for them; a one-off mutation (a second `SaveChangesAsync` after the
+  > categories in `EfImportWriter`) was caught by 7 tests (both forced-failure tests, the one-save test, the shared
+  > context test) and reverted. **50k decision gate (Release, real CSV reader + planner + materializer + writer on a
+  > temp SQLite file, EF Core 8.0.11): single `SaveChangesAsync` KEPT.** Measured: preview 0.43-0.53 s, commit
+  > (re-plan + build + write) 6.33 / 6.54 / 6.68 s in the three full-suite runs (4.72 s when run alone); ceiling 30 s
+  > unchanged. A first full run without serialization measured 18.2-19.8 s because the parallel suite competes for
+  > CPU/disk, so the timing test now lives in a `DisableParallelization` xUnit collection (ceiling not raised).
+  > Reconciliation #19 wording ("one SaveChangesAsync = one transaction") stays as is; no chunking was needed.
+  > Deviations: (1) `EfImportWriter` catches every exception (not only DbUpdate/Sqlite/InvalidOperation) and maps it
+  > to `WriteFailed`, so no failure can escape half-handled; it returns `ImportCommitResult` counts and skips the save
+  > for an empty batch; (2) `CommitImportUseCase` merges those counts with the plan's duplicate/rejected counts and never
+  > calls the writer when there are zero valid rows; (3) the 51st distinct new category is REJECTED
+  > (`TooManyNewCategories`, S4a behavior) instead of falling to the creation-off path; (4) `AddImport()` calls
+  > `AddImportReaders()` then adds lookup and writer; `Bootstrap`/use-case DI stays in S6b (the composition test
+  > registers the transients itself under `ValidateScopes`); (5) `ImportTestDb` gained an optional `interceptor`
+  > parameter (AddDbContext does not stack in EF Core 8, so it swaps the registration) plus `Count`/`Execute` helpers;
+  > (6) unit-level forced materializer failure uses a payment method with an empty Guid (passes the validator, refused
+  > by `Expense.Create`); (7) the no-stubs grep hits one pre-existing, legitimate `Task.FromResult(Result.Failure(`
+  > in the S3 `SniffingTabularReader` (a real `legacyXls` failure), outside this slice. Full suite 3x green:
+  > 2158 unit + 755 integration, no intermittent failures.
 
 ## 6a. ImportViewModel and localized strings (S6a)
 

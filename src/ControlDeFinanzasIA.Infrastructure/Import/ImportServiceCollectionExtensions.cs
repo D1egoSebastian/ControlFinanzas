@@ -24,4 +24,23 @@ public static class ImportServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// Registers everything the import feature needs from Infrastructure (F-020, DD-13): the readers, the lookup
+    /// and the atomic writer, all singletons that hold only the <see cref="IServiceScopeFactory"/> (never a scoped
+    /// context). Safe to call more than once.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The same collection, for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> is <see langword="null"/>.</exception>
+    public static IServiceCollection AddImport(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        services.AddImportReaders();
+        services.TryAddSingleton<IImportLookup, EfImportLookup>();
+        services.TryAddSingleton<IImportWriter, EfImportWriter>();
+
+        return services;
+    }
 }

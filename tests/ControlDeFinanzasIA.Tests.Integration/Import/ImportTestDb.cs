@@ -6,7 +6,9 @@ using ControlDeFinanzasIA.Domain.ValueObjects;
 using ControlDeFinanzasIA.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ControlDeFinanzasIA.Tests.Integration.Import;
 
@@ -21,7 +23,7 @@ internal sealed class ImportTestDb : IDisposable
 
     private readonly ServiceProvider _provider;
 
-    public ImportTestDb(bool migrate = true)
+    public ImportTestDb(bool migrate = true, IInterceptor? interceptor = null)
     {
         DataDirectory = Path.Combine(Path.GetTempPath(), $"import-{Guid.NewGuid():N}");
         Directory.CreateDirectory(DataDirectory);
@@ -35,6 +37,14 @@ internal sealed class ImportTestDb : IDisposable
 
         var services = new ServiceCollection();
         services.AddPersistence(new TestPathResolver(DataDirectory, DatabasePath));
+        if (interceptor is not null)
+        {
+            // AddDbContext does not stack in EF Core 8: swap the registration for one that carries the interceptor.
+            services.RemoveAll<DbContextOptions<AppDbContext>>();
+            services.RemoveAll<AppDbContext>();
+            services.AddDbContext<AppDbContext>(options => options.UseSqlite($"Data Source={DatabasePath}").AddInterceptors(interceptor));
+        }
+
         _provider = services.BuildServiceProvider();
     }
 
@@ -72,6 +82,28 @@ internal sealed class ImportTestDb : IDisposable
     {
         SqliteConnection.ClearAllPools();
         return Backup.BackupTestDb.Snapshot(DatabasePath);
+    }
+
+    /// <summary>Row count of one table, read through a fresh connection.</summary>
+    public long Count(string table)
+    {
+        SqliteConnection.ClearAllPools();
+        using var connection = new SqliteConnection($"Data Source={DatabasePath};Pooling=False");
+        connection.Open();
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = $"SELECT COUNT(*) FROM \"{table}\"";
+        return (long)command.ExecuteScalar()!;
+    }
+
+    /// <summary>Runs one raw SQL statement (used to install a failure trigger).</summary>
+    public void Execute(string sql)
+    {
+        SqliteConnection.ClearAllPools();
+        using var connection = new SqliteConnection($"Data Source={DatabasePath};Pooling=False");
+        connection.Open();
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.ExecuteNonQuery();
     }
 
     /// <summary>Lower-case hex SHA-256 of the live database file (pools are released first so the file can be read).</summary>
