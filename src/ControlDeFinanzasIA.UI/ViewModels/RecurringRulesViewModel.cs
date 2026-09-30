@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ControlDeFinanzasIA.Application.Abstractions;
@@ -14,6 +15,7 @@ using ControlDeFinanzasIA.Application.UseCases.Recurring.UpdateSubscription;
 using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Enums;
 using ControlDeFinanzasIA.Domain.Recurring;
+using ControlDeFinanzasIA.UI.Resources;
 using Microsoft.Extensions.Logging;
 
 namespace ControlDeFinanzasIA.UI.ViewModels;
@@ -65,6 +67,7 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
         StartDate = DateTime.Today;
         Frequencies = ["Monthly", "Bimonthly", "Yearly"];
         Currencies = Enum.GetValues<Currency>();
+        Rules.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmptyNoData));
         _ = LoadAsync();
     }
 
@@ -89,6 +92,19 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
     [ObservableProperty] private string _formError = string.Empty;
     [ObservableProperty] private string _generationError = string.Empty;
     [ObservableProperty] private bool _isGenerating;
+    /// <summary>
+    /// Gets a value indicating whether the list has loaded successfully at least once. The empty state is never
+    /// shown before that, so a slow or failed first load never flashes "no data yet" (F-021, DD-9).
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmptyNoData))]
+    private bool _hasLoaded;
+
+    /// <summary>
+    /// Gets a value indicating whether the list is loaded and empty: there is no data yet (no filter exists here).
+    /// </summary>
+    public bool IsEmptyNoData => HasLoaded && Rules.Count == 0;
+
 
     public ObservableCollection<RecurringGenerationPreview> PreviewItems { get; } = [];
 
@@ -125,7 +141,7 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
         FormError = string.Empty;
         if (SelectedCategory is null || SelectedPaymentMethod is null || StartDate is null)
         {
-            FormError = "Selecciona categoría, método de pago y fecha de inicio.";
+            FormError = Strings.RecurringSelectionRequired;
             return;
         }
 
@@ -149,13 +165,13 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
 
         if (!result.IsSuccess)
         {
-            FormError = result.Error?.Message ?? "No se pudo guardar la regla recurrente.";
+            FormError = result.Error?.Message ?? Strings.RecurringSaveFailed;
             return;
         }
 
         StatusMessage = SelectedRule is null
-            ? "Regla recurrente creada correctamente."
-            : "Regla recurrente actualizada correctamente.";
+            ? Strings.RecurringCreated
+            : Strings.RecurringUpdated;
         await LoadRulesAsync();
         SelectedRule = null;
     }
@@ -189,7 +205,7 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unable to load recurring subscriptions.");
-            FormError = "No se pudieron cargar las reglas recurrentes.";
+            FormError = Strings.RecurringLoadFailed;
         }
     }
 
@@ -201,6 +217,8 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
         {
             Rules.Add(rule);
         }
+
+        HasLoaded = true;
     }
 
     private void ResetForm()
@@ -225,7 +243,7 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
             Result result = await _generateUseCase.PreviewAsync();
             if (!result.IsSuccess)
             {
-                GenerationError = result.Error?.Message ?? "No se pudo calcular la vista previa.";
+                GenerationError = result.Error?.Message ?? Strings.RecurringPreviewFailed;
                 return;
             }
             PreviewItems.Clear();
@@ -237,7 +255,7 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unable to preview recurring generation.");
-            GenerationError = "No se pudo calcular la vista previa.";
+            GenerationError = Strings.RecurringPreviewFailed;
         }
         finally { IsGenerating = false; }
     }
@@ -252,11 +270,11 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
             Result result = await _generateUseCase.ExecuteAsync();
             if (!result.IsSuccess)
             {
-                GenerationError = result.Error?.Message ?? "No se pudieron generar los movimientos.";
+                GenerationError = result.Error?.Message ?? Strings.RecurringGenerateFailed;
             }
             else
             {
-                StatusMessage = $"Se generaron {result.Value} movimientos.";
+                StatusMessage = string.Format(CultureInfo.CurrentUICulture, Strings.RecurringGenerated, result.Value);
             }
 
             PreviewItems.Clear();
@@ -264,7 +282,7 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unable to confirm recurring generation.");
-            GenerationError = "No se pudieron generar los movimientos.";
+            GenerationError = Strings.RecurringGenerateFailed;
         }
         finally { IsGenerating = false; }
     }
@@ -278,8 +296,8 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
         }
 
         Result result = await _deactivateUseCase.ExecuteAsync(SelectedRule.Id);
-        if (!result.IsSuccess) { FormError = result.Error?.Message ?? "No se pudo desactivar la regla."; return; }
-        StatusMessage = "Regla desactivada correctamente.";
+        if (!result.IsSuccess) { FormError = result.Error?.Message ?? Strings.RecurringDeactivateFailed; return; }
+        StatusMessage = Strings.RecurringDeactivated;
         await LoadRulesAsync();
     }
 
@@ -292,8 +310,8 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
         }
 
         Result result = await _skipUseCase.ExecuteAsync(SelectedRule.Id);
-        if (!result.IsSuccess) { FormError = result.Error?.Message ?? "No se pudo saltar la ocurrencia."; return; }
-        StatusMessage = "Ocurrencia saltada correctamente.";
+        if (!result.IsSuccess) { FormError = result.Error?.Message ?? Strings.RecurringSkipFailed; return; }
+        StatusMessage = Strings.RecurringSkipped;
         await LoadRulesAsync();
     }
 
@@ -306,8 +324,8 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
         }
 
         Result result = await _deleteUseCase.ExecuteAsync(SelectedRule.Id);
-        if (!result.IsSuccess) { FormError = result.Error?.Message ?? "No se pudo eliminar la regla."; return; }
-        StatusMessage = "Regla eliminada correctamente.";
+        if (!result.IsSuccess) { FormError = result.Error?.Message ?? Strings.RecurringDeleteFailed; return; }
+        StatusMessage = Strings.RecurringDeleted;
         SelectedRule = null;
         await LoadRulesAsync();
     }

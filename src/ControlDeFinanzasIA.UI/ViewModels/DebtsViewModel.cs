@@ -9,6 +9,7 @@ using ControlDeFinanzasIA.Application.UseCases.Debts.RegisterDebtPayment;
 using ControlDeFinanzasIA.Application.UseCases.Debts.SkipDebtPayment;
 using ControlDeFinanzasIA.Domain.Debts;
 using ControlDeFinanzasIA.Domain.Enums;
+using ControlDeFinanzasIA.UI.Resources;
 using Microsoft.Extensions.Logging;
 
 namespace ControlDeFinanzasIA.UI.ViewModels;
@@ -44,6 +45,7 @@ public sealed partial class DebtsViewModel : ViewModelBase
         StartDate = DateTime.Today;
         Frequencies = [nameof(DebtFrequency.Monthly), nameof(DebtFrequency.Biweekly)];
         Currencies = Enum.GetValues<Currency>();
+        Debts.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmptyNoData));
         _ = LoadDebtsAsync();
     }
 
@@ -66,6 +68,19 @@ public sealed partial class DebtsViewModel : ViewModelBase
     [ObservableProperty] private string _scheduleError = string.Empty;
     [ObservableProperty] private Debt? _selectedDebt;
     [ObservableProperty] private decimal _pendingBalance;
+    /// <summary>
+    /// Gets a value indicating whether the list has loaded successfully at least once. The empty state is never
+    /// shown before that, so a slow or failed first load never flashes "no data yet" (F-021, DD-9).
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmptyNoData))]
+    private bool _hasLoaded;
+
+    /// <summary>
+    /// Gets a value indicating whether the list is loaded and empty: there is no data yet (no filter exists here).
+    /// </summary>
+    public bool IsEmptyNoData => HasLoaded && Debts.Count == 0;
+
 
     partial void OnSelectedDebtChanged(Debt? value)
     {
@@ -83,7 +98,7 @@ public sealed partial class DebtsViewModel : ViewModelBase
         FormError = string.Empty;
         if (StartDate is null)
         {
-            FormError = "Selecciona la fecha de inicio.";
+            FormError = Strings.DebtsStartDateRequired;
             return;
         }
 
@@ -101,11 +116,11 @@ public sealed partial class DebtsViewModel : ViewModelBase
         Result result = await _createUseCase.ExecuteAsync(command);
         if (!result.IsSuccess)
         {
-            FormError = result.Error?.Message ?? "No se pudo crear la deuda.";
+            FormError = result.Error?.Message ?? Strings.DebtsCreateFailed;
             return;
         }
 
-        StatusMessage = "Deuda creada correctamente con su plan de cuotas.";
+        StatusMessage = Strings.DebtsCreated;
         ResetForm();
         await LoadDebtsAsync();
     }
@@ -122,11 +137,11 @@ public sealed partial class DebtsViewModel : ViewModelBase
         Result result = await _registerPaymentUseCase.ExecuteAsync(payment.Id);
         if (!result.IsSuccess)
         {
-            ScheduleError = result.Error?.Message ?? "No se pudo registrar el pago.";
+            ScheduleError = result.Error?.Message ?? Strings.DebtsPaymentFailed;
             return;
         }
 
-        StatusMessage = "Pago registrado correctamente.";
+        StatusMessage = Strings.DebtsPaymentRegistered;
         await LoadDebtsAsync();
         if (SelectedDebt is not null)
         {
@@ -146,11 +161,11 @@ public sealed partial class DebtsViewModel : ViewModelBase
         Result result = await _skipPaymentUseCase.ExecuteAsync(payment.Id);
         if (!result.IsSuccess)
         {
-            ScheduleError = result.Error?.Message ?? "No se pudo saltar la cuota.";
+            ScheduleError = result.Error?.Message ?? Strings.DebtsSkipFailed;
             return;
         }
 
-        StatusMessage = "Cuota saltada correctamente.";
+        StatusMessage = Strings.DebtsSkipped;
         if (SelectedDebt is not null)
         {
             await LoadScheduleAsync(SelectedDebt.Id);
@@ -164,7 +179,7 @@ public sealed partial class DebtsViewModel : ViewModelBase
             Result result = await _getDebtsQuery.ExecuteAsync();
             if (!result.IsSuccess)
             {
-                FormError = result.Error?.Message ?? "No se pudieron cargar las deudas.";
+                FormError = result.Error?.Message ?? Strings.DebtsLoadFailed;
                 return;
             }
 
@@ -173,11 +188,13 @@ public sealed partial class DebtsViewModel : ViewModelBase
             {
                 Debts.Add(debt);
             }
+
+            HasLoaded = true;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unable to load debts.");
-            FormError = "No se pudieron cargar las deudas.";
+            FormError = Strings.DebtsLoadFailed;
         }
     }
 
@@ -188,7 +205,7 @@ public sealed partial class DebtsViewModel : ViewModelBase
             Result result = await _getDebtScheduleQuery.ExecuteAsync(debtId);
             if (!result.IsSuccess)
             {
-                ScheduleError = result.Error?.Message ?? "No se pudo cargar el calendario de cuotas.";
+                ScheduleError = result.Error?.Message ?? Strings.DebtsScheduleLoadFailed;
                 return;
             }
 
@@ -205,7 +222,7 @@ public sealed partial class DebtsViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unable to load debt schedule for {DebtId}.", debtId);
-            ScheduleError = "No se pudo cargar el calendario de cuotas.";
+            ScheduleError = Strings.DebtsScheduleLoadFailed;
         }
     }
 

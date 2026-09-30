@@ -49,9 +49,9 @@ public sealed partial class ShellViewModel : ViewModelBase
             new RouteMenuItem(RouteNames.Dashboard, _localizer["SidebarDashboard"]),
             new RouteMenuItem(RouteNames.Expenses, _localizer["SidebarExpenses"]),
             new RouteMenuItem(RouteNames.Incomes, _localizer["SidebarIncomes"])
-            ,new RouteMenuItem(RouteNames.Recurring, "Recurrentes")
-            ,new RouteMenuItem(RouteNames.Debts, "Deudas")
-            ,new RouteMenuItem(RouteNames.Calendar, "Calendario")
+            ,new RouteMenuItem(RouteNames.Recurring, _localizer["SidebarRecurring"])
+            ,new RouteMenuItem(RouteNames.Debts, _localizer["SidebarDebts"])
+            ,new RouteMenuItem(RouteNames.Calendar, _localizer["SidebarCalendar"])
             ,new RouteMenuItem(RouteNames.Budgets, _localizer["SidebarBudgets"])
             ,new RouteMenuItem(RouteNames.Goals, _localizer["SidebarGoals"])
             ,new RouteMenuItem(RouteNames.Chat, _localizer["SidebarChat"])

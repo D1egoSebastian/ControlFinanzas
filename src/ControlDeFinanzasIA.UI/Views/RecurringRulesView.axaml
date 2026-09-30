@@ -3,6 +3,8 @@
              xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
              xmlns:domain="using:ControlDeFinanzasIA.Domain.Recurring"
              xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
+             xmlns:controls="using:ControlDeFinanzasIA.UI.Controls"
+             xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
              x:Class="ControlDeFinanzasIA.UI.Views.RecurringRulesView"
              x:DataType="vm:RecurringRulesViewModel"
              x:Name="Root"
@@ -13,37 +15,37 @@
     <Grid ColumnDefinitions="320,*" Margin="24">
         <ScrollViewer Grid.Column="0">
             <StackPanel Spacing="10">
-                <TextBlock Text="Reglas recurrentes" Classes="ledger-title" />
-                <TextBlock Text="Crea y administra pagos recurrentes." Foreground="{StaticResource PaperDimBrush}" />
+                <TextBlock Text="{x:Static resources:Strings.RecurringTitle}" Classes="ledger-title" />
+                <TextBlock Text="{x:Static resources:Strings.RecurringSubtitle}" Foreground="{StaticResource PaperDimBrush}" />
                 <ComboBox ItemsSource="{Binding RuleTypes}" SelectedItem="{Binding RuleType}" Classes="ledger-input" />
-                <TextBox Text="{Binding Name}" Watermark="Nombre" Classes="ledger-input" />
-                <TextBox Text="{Binding Amount}" Watermark="Monto" Classes="ledger-input" />
+                <TextBox Text="{Binding Name}" Watermark="{x:Static resources:Strings.RecurringNamePlaceholder}" Classes="ledger-input" />
+                <TextBox Text="{Binding Amount}" Watermark="{x:Static resources:Strings.RecurringAmountPlaceholder}" Classes="ledger-input" />
                 <ComboBox ItemsSource="{Binding Currencies}" SelectedItem="{Binding Currency}" Classes="ledger-input" />
                 <ComboBox ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input" />
                 <DatePicker SelectedDate="{Binding StartDate, Converter={StaticResource DateOnlyConverter}}" Classes="ledger-input" />
                 <ComboBox ItemsSource="{Binding Categories}"
                           DisplayMemberBinding="{Binding Name}"
                           SelectedItem="{Binding SelectedCategory}"
-                          PlaceholderText="Categoría"
+                          PlaceholderText="{x:Static resources:Strings.RecurringCategoryPlaceholder}"
                           Classes="ledger-input" />
                 <ComboBox ItemsSource="{Binding PaymentMethods}"
                           DisplayMemberBinding="{Binding Name}"
                           SelectedItem="{Binding SelectedPaymentMethod}"
-                          PlaceholderText="Método de pago"
+                          PlaceholderText="{x:Static resources:Strings.RecurringPaymentMethodPlaceholder}"
                           Classes="ledger-input" />
                 <TextBlock Text="{Binding FormError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button Content="Guardar" Command="{Binding SaveCommand}" Classes="ledger-btn-primary" />
-                    <Button Content="Cancelar" Command="{Binding CancelEditCommand}" Classes="ledger-btn" />
-                    <Button Content="Desactivar" Command="{Binding DeactivateSelectedCommand}" Classes="ledger-btn" />
-                    <Button Content="Eliminar" Command="{Binding DeleteSelectedCommand}" Classes="ledger-btn" />
+                    <Button Content="{x:Static resources:Strings.RecurringSaveButton}" Command="{Binding SaveCommand}" Classes="ledger-btn-primary" />
+                    <Button Content="{x:Static resources:Strings.RecurringCancelButton}" Command="{Binding CancelEditCommand}" Classes="ledger-btn" />
+                    <Button Content="{x:Static resources:Strings.RecurringDeactivateButton}" Command="{Binding DeactivateSelectedCommand}" Classes="ledger-btn" />
+                    <Button Content="{x:Static resources:Strings.RecurringDeleteButton}" Command="{Binding DeleteSelectedCommand}" Classes="ledger-btn" />
                 </StackPanel>
                 <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" />
                 <Separator Margin="0,12" />
-                <TextBlock Text="Generar del mes" Classes="ledger-section" />
+                <TextBlock Text="{x:Static resources:Strings.RecurringGenerateTitle}" Classes="ledger-section" />
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button Content="Previsualizar" Command="{Binding PreviewGenerationCommand}" Classes="ledger-btn" />
-                    <Button Content="Confirmar" Command="{Binding ConfirmGenerationCommand}" Classes="ledger-btn-primary" />
+                    <Button Content="{x:Static resources:Strings.RecurringPreviewButton}" Command="{Binding PreviewGenerationCommand}" Classes="ledger-btn" />
+                    <Button Content="{x:Static resources:Strings.RecurringConfirmButton}" Command="{Binding ConfirmGenerationCommand}" Classes="ledger-btn-primary" />
                 </StackPanel>
                 <TextBlock Text="{Binding GenerationError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
                 <ItemsControl ItemsSource="{Binding PreviewItems}">
@@ -57,7 +59,7 @@
         </ScrollViewer>
         <ScrollViewer Grid.Column="1" Margin="24,0,0,0">
             <StackPanel Spacing="12">
-                <TextBlock Text="Reglas activas" Classes="ledger-title" />
+                <TextBlock Text="{x:Static resources:Strings.RecurringActiveTitle}" Classes="ledger-title" />
                 <ItemsControl ItemsSource="{Binding Rules}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="domain:RecurringRule">
@@ -72,16 +74,18 @@
                                                Text="{Binding Amount.Amount, StringFormat={}{0:N2}}"
                                                Classes="ledger-amount" />
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" Margin="4,0,0,0">
-                                        <Button Content="Editar" Command="{Binding #Root.DataContext.EditCommand}" CommandParameter="{Binding}" Classes="ledger-btn" />
-                                        <Button Content="Saltar" Command="{Binding #Root.DataContext.SkipSelectedCommand}" Classes="ledger-btn" />
+                                        <Button Content="{x:Static resources:Strings.RecurringEditButton}" Command="{Binding #Root.DataContext.EditCommand}" CommandParameter="{Binding}" Classes="ledger-btn" />
+                                        <Button Content="{x:Static resources:Strings.RecurringSkipButton}" Command="{Binding #Root.DataContext.SkipSelectedCommand}" Classes="ledger-btn" />
                                     </StackPanel>
                                 </Grid>
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <TextBlock Text="Todavía no hay reglas recurrentes." IsVisible="{Binding !Rules.Count}"
-                           Foreground="{StaticResource PaperDimBrush}" />
+                <!-- F-021 (DD-9): shown only after a successful first load; there is no filter, so no filtered state. -->
+                <controls:EmptyState Title="{x:Static resources:Strings.EmptyStateRecurringTitle}"
+                                     Hint="{x:Static resources:Strings.EmptyStateRecurringHint}"
+                                     IsVisible="{Binding IsEmptyNoData}" />
             </StackPanel>
         </ScrollViewer>
     </Grid>

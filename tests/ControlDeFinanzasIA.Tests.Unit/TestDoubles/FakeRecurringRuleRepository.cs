@@ -58,6 +58,23 @@ public sealed class FakeRecurringRuleRepository : IRecurringRuleRepository
 
     /// <inheritdoc />
     public Task<IReadOnlyList<RecurringRule>> GetAllAsync(CancellationToken ct = default)
+        => GetAllGate is not null
+            ? GetAllGatedAsync()
+            : GetAllCore();
+
+    /// <summary>
+    /// Gets or sets a gate that holds <see cref="GetAllAsync"/> until completed (simulates a slow first load,
+    /// F-021 S6). <c>null</c> by default.
+    /// </summary>
+    public TaskCompletionSource? GetAllGate { get; set; }
+
+    private async Task<IReadOnlyList<RecurringRule>> GetAllGatedAsync()
+    {
+        await GetAllGate!.Task;
+        return await GetAllCore();
+    }
+
+    private Task<IReadOnlyList<RecurringRule>> GetAllCore()
         => _getAllException is not null
             ? Task.FromException<IReadOnlyList<RecurringRule>>(_getAllException)
             : Task.FromResult<IReadOnlyList<RecurringRule>>(new ReadOnlyCollection<RecurringRule>(_rules.ToList()));

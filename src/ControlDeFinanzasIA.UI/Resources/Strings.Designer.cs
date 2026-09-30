@@ -2401,4 +2401,314 @@ public class Strings
     /// Gets the income empty-state hint (F-021).
     /// </summary>
     public static string EmptyStateIncomeHint => ResourceManager.GetString("EmptyStateIncomeHint", Culture)!;
+
+    /// <summary>
+    /// Gets the sidebar label for the recurring rules route (F-021).
+    /// </summary>
+    public static string SidebarRecurring => ResourceManager.GetString("SidebarRecurring", Culture)!;
+
+    /// <summary>
+    /// Gets the sidebar label for the debts route (F-021).
+    /// </summary>
+    public static string SidebarDebts => ResourceManager.GetString("SidebarDebts", Culture)!;
+
+    /// <summary>
+    /// Gets the sidebar label for the calendar route (F-021).
+    /// </summary>
+    public static string SidebarCalendar => ResourceManager.GetString("SidebarCalendar", Culture)!;
+
+    /// <summary>
+    /// Gets the new-debt form heading (F-021).
+    /// </summary>
+    public static string DebtsNewTitle => ResourceManager.GetString("DebtsNewTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the new-debt form subtitle (F-021).
+    /// </summary>
+    public static string DebtsNewSubtitle => ResourceManager.GetString("DebtsNewSubtitle", Culture)!;
+
+    /// <summary>
+    /// Gets the debt description placeholder (F-021).
+    /// </summary>
+    public static string DebtsDescriptionPlaceholder => ResourceManager.GetString("DebtsDescriptionPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the debt original amount placeholder (F-021).
+    /// </summary>
+    public static string DebtsOriginalAmountPlaceholder => ResourceManager.GetString("DebtsOriginalAmountPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the debt installment count placeholder (F-021).
+    /// </summary>
+    public static string DebtsInstallmentsPlaceholder => ResourceManager.GetString("DebtsInstallmentsPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the debt installment amount placeholder (F-021).
+    /// </summary>
+    public static string DebtsInstallmentAmountPlaceholder => ResourceManager.GetString("DebtsInstallmentAmountPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the debt counterparty placeholder (F-021).
+    /// </summary>
+    public static string DebtsCounterpartyPlaceholder => ResourceManager.GetString("DebtsCounterpartyPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the debt note placeholder (F-021).
+    /// </summary>
+    public static string DebtsNotePlaceholder => ResourceManager.GetString("DebtsNotePlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the create debt button caption (F-021).
+    /// </summary>
+    public static string DebtsCreateButton => ResourceManager.GetString("DebtsCreateButton", Culture)!;
+
+    /// <summary>
+    /// Gets the debts list heading (F-021).
+    /// </summary>
+    public static string DebtsListTitle => ResourceManager.GetString("DebtsListTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the installment count format of a debt row (F-021).
+    /// </summary>
+    public static string DebtsInstallmentsFormat => ResourceManager.GetString("DebtsInstallmentsFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the installment schedule heading (F-021).
+    /// </summary>
+    public static string DebtsScheduleTitle => ResourceManager.GetString("DebtsScheduleTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the pending balance format (F-021).
+    /// </summary>
+    public static string DebtsPendingBalanceFormat => ResourceManager.GetString("DebtsPendingBalanceFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the pay installment button caption (F-021).
+    /// </summary>
+    public static string DebtsPayButton => ResourceManager.GetString("DebtsPayButton", Culture)!;
+
+    /// <summary>
+    /// Gets the skip installment button caption (F-021).
+    /// </summary>
+    public static string DebtsSkipButton => ResourceManager.GetString("DebtsSkipButton", Culture)!;
+
+    /// <summary>
+    /// Gets the hint shown while no debt is selected (F-021).
+    /// </summary>
+    public static string DebtsSelectHint => ResourceManager.GetString("DebtsSelectHint", Culture)!;
+
+    /// <summary>
+    /// Gets the debts empty-state headline (F-021).
+    /// </summary>
+    public static string EmptyStateDebtsTitle => ResourceManager.GetString("EmptyStateDebtsTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the debts empty-state hint (F-021).
+    /// </summary>
+    public static string EmptyStateDebtsHint => ResourceManager.GetString("EmptyStateDebtsHint", Culture)!;
+
+    /// <summary>
+    /// Gets the missing start date message (F-021).
+    /// </summary>
+    public static string DebtsStartDateRequired => ResourceManager.GetString("DebtsStartDateRequired", Culture)!;
+
+    /// <summary>
+    /// Gets the debt creation failure message (F-021).
+    /// </summary>
+    public static string DebtsCreateFailed => ResourceManager.GetString("DebtsCreateFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the debt created status (F-021).
+    /// </summary>
+    public static string DebtsCreated => ResourceManager.GetString("DebtsCreated", Culture)!;
+
+    /// <summary>
+    /// Gets the payment failure message (F-021).
+    /// </summary>
+    public static string DebtsPaymentFailed => ResourceManager.GetString("DebtsPaymentFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the payment registered status (F-021).
+    /// </summary>
+    public static string DebtsPaymentRegistered => ResourceManager.GetString("DebtsPaymentRegistered", Culture)!;
+
+    /// <summary>
+    /// Gets the skip installment failure message (F-021).
+    /// </summary>
+    public static string DebtsSkipFailed => ResourceManager.GetString("DebtsSkipFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the installment skipped status (F-021).
+    /// </summary>
+    public static string DebtsSkipped => ResourceManager.GetString("DebtsSkipped", Culture)!;
+
+    /// <summary>
+    /// Gets the debts load failure message (F-021).
+    /// </summary>
+    public static string DebtsLoadFailed => ResourceManager.GetString("DebtsLoadFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the schedule load failure message (F-021).
+    /// </summary>
+    public static string DebtsScheduleLoadFailed => ResourceManager.GetString("DebtsScheduleLoadFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the recurring rules form heading (F-021).
+    /// </summary>
+    public static string RecurringTitle => ResourceManager.GetString("RecurringTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the recurring rules form subtitle (F-021).
+    /// </summary>
+    public static string RecurringSubtitle => ResourceManager.GetString("RecurringSubtitle", Culture)!;
+
+    /// <summary>
+    /// Gets the recurring rule name placeholder (F-021).
+    /// </summary>
+    public static string RecurringNamePlaceholder => ResourceManager.GetString("RecurringNamePlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the recurring rule amount placeholder (F-021).
+    /// </summary>
+    public static string RecurringAmountPlaceholder => ResourceManager.GetString("RecurringAmountPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the recurring rule category placeholder (F-021).
+    /// </summary>
+    public static string RecurringCategoryPlaceholder => ResourceManager.GetString("RecurringCategoryPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the recurring rule payment method placeholder (F-021).
+    /// </summary>
+    public static string RecurringPaymentMethodPlaceholder => ResourceManager.GetString("RecurringPaymentMethodPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the save rule button caption (F-021).
+    /// </summary>
+    public static string RecurringSaveButton => ResourceManager.GetString("RecurringSaveButton", Culture)!;
+
+    /// <summary>
+    /// Gets the cancel edit button caption (F-021).
+    /// </summary>
+    public static string RecurringCancelButton => ResourceManager.GetString("RecurringCancelButton", Culture)!;
+
+    /// <summary>
+    /// Gets the deactivate rule button caption (F-021).
+    /// </summary>
+    public static string RecurringDeactivateButton => ResourceManager.GetString("RecurringDeactivateButton", Culture)!;
+
+    /// <summary>
+    /// Gets the delete rule button caption (F-021).
+    /// </summary>
+    public static string RecurringDeleteButton => ResourceManager.GetString("RecurringDeleteButton", Culture)!;
+
+    /// <summary>
+    /// Gets the monthly generation heading (F-021).
+    /// </summary>
+    public static string RecurringGenerateTitle => ResourceManager.GetString("RecurringGenerateTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the generation preview button caption (F-021).
+    /// </summary>
+    public static string RecurringPreviewButton => ResourceManager.GetString("RecurringPreviewButton", Culture)!;
+
+    /// <summary>
+    /// Gets the generation confirm button caption (F-021).
+    /// </summary>
+    public static string RecurringConfirmButton => ResourceManager.GetString("RecurringConfirmButton", Culture)!;
+
+    /// <summary>
+    /// Gets the active rules list heading (F-021).
+    /// </summary>
+    public static string RecurringActiveTitle => ResourceManager.GetString("RecurringActiveTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the rule row edit button caption (F-021).
+    /// </summary>
+    public static string RecurringEditButton => ResourceManager.GetString("RecurringEditButton", Culture)!;
+
+    /// <summary>
+    /// Gets the rule row skip button caption (F-021).
+    /// </summary>
+    public static string RecurringSkipButton => ResourceManager.GetString("RecurringSkipButton", Culture)!;
+
+    /// <summary>
+    /// Gets the recurring rules empty-state headline (F-021).
+    /// </summary>
+    public static string EmptyStateRecurringTitle => ResourceManager.GetString("EmptyStateRecurringTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the recurring rules empty-state hint (F-021).
+    /// </summary>
+    public static string EmptyStateRecurringHint => ResourceManager.GetString("EmptyStateRecurringHint", Culture)!;
+
+    /// <summary>
+    /// Gets the missing selection message (F-021).
+    /// </summary>
+    public static string RecurringSelectionRequired => ResourceManager.GetString("RecurringSelectionRequired", Culture)!;
+
+    /// <summary>
+    /// Gets the rule save failure message (F-021).
+    /// </summary>
+    public static string RecurringSaveFailed => ResourceManager.GetString("RecurringSaveFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the rule created status (F-021).
+    /// </summary>
+    public static string RecurringCreated => ResourceManager.GetString("RecurringCreated", Culture)!;
+
+    /// <summary>
+    /// Gets the rule updated status (F-021).
+    /// </summary>
+    public static string RecurringUpdated => ResourceManager.GetString("RecurringUpdated", Culture)!;
+
+    /// <summary>
+    /// Gets the rules load failure message (F-021).
+    /// </summary>
+    public static string RecurringLoadFailed => ResourceManager.GetString("RecurringLoadFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the preview failure message (F-021).
+    /// </summary>
+    public static string RecurringPreviewFailed => ResourceManager.GetString("RecurringPreviewFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the generation failure message (F-021).
+    /// </summary>
+    public static string RecurringGenerateFailed => ResourceManager.GetString("RecurringGenerateFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the generation success status (F-021).
+    /// </summary>
+    public static string RecurringGenerated => ResourceManager.GetString("RecurringGenerated", Culture)!;
+
+    /// <summary>
+    /// Gets the deactivate failure message (F-021).
+    /// </summary>
+    public static string RecurringDeactivateFailed => ResourceManager.GetString("RecurringDeactivateFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the rule deactivated status (F-021).
+    /// </summary>
+    public static string RecurringDeactivated => ResourceManager.GetString("RecurringDeactivated", Culture)!;
+
+    /// <summary>
+    /// Gets the skip occurrence failure message (F-021).
+    /// </summary>
+    public static string RecurringSkipFailed => ResourceManager.GetString("RecurringSkipFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the occurrence skipped status (F-021).
+    /// </summary>
+    public static string RecurringSkipped => ResourceManager.GetString("RecurringSkipped", Culture)!;
+
+    /// <summary>
+    /// Gets the delete rule failure message (F-021).
+    /// </summary>
+    public static string RecurringDeleteFailed => ResourceManager.GetString("RecurringDeleteFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the rule deleted status (F-021).
+    /// </summary>
+    public static string RecurringDeleted => ResourceManager.GetString("RecurringDeleted", Culture)!;
 }

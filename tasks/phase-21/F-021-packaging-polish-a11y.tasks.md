@@ -429,26 +429,28 @@ _Apply notes S5b (Strict TDD, reds observed): (1) 5b.1 red first: adding `Income
 Depends on 5b. Goal: finish R-19/R-20: Debts and Recurring views, ~15 VM literals (Reconciliation #14), the three
 sidebar labels. Empty states here are "no data yet" only (no filter).
 
-- [ ] 6.1 Extend `HardcodedStringsScanTests` to `DebtsView.axaml` and `RecurringRulesView.axaml` (red first). (R-19,
+- [x] 6.1 Extend `HardcodedStringsScanTests` to `DebtsView.axaml` and `RecurringRulesView.axaml` (red first). (R-19,
   S-38)
-- [ ] 6.2 Write failing `tests/…Unit/ViewModels/DebtsRecurringLocalizationTests.cs` against the REAL `DebtsViewModel` and
+- [x] 6.2 Write failing `tests/…Unit/ViewModels/DebtsRecurringLocalizationTests.cs` against the REAL `DebtsViewModel` and
   `RecurringRulesViewModel` (existing use-case fakes only): every status and error message produced by a successful and a
   failed path resolves through `Strings` in BOTH cultures (assert the es-DO text differs from en and contains no
   leftover literal from the old code; scan the two VM source files with a regex for remaining Spanish sentences as a
   regression guard). (R-19, design Reconciliation #1)
-- [ ] 6.3 Write failing `tests/…Unit/UI/DebtsRecurringEmptyStateTests.cs` (headless, es-DO and en, real VMs over temp DB):
+- [x] 6.3 Write failing `tests/…Unit/UI/DebtsRecurringEmptyStateTests.cs` (headless, es-DO and en, real VMs over temp DB):
   empty Debts and empty Recurring render `EmptyState` with localized title and hint (no action, no filter state);
   data present hides it; loading hides it; the former hardcoded empty `TextBlock`s are gone. (R-20, S-39, S-41)
-- [ ] 6.4 Write failing `tests/…Unit/ViewModels/ShellSidebarLabelTests.cs`: the real `ShellViewModel.MenuItems` labels
+- [x] 6.4 Write failing `tests/…Unit/ViewModels/ShellSidebarLabelTests.cs`: the real `ShellViewModel.MenuItems` labels
   for "Recurrentes"/"Deudas"/"Calendario" (and all ten) come from resx and render differently in es-DO vs en; no label is
   a literal in `ShellViewModel.cs`. (R-15, R-19, S-32, S-38)
-- [ ] 6.5 Implement: convert the two views (resx `Debts*`/`Recurring*`/`EmptyState*`, tokens instead of inline hex,
+- [x] 6.5 Implement: convert the two views (resx `Debts*`/`Recurring*`/`EmptyState*`, tokens instead of inline hex,
   `EmptyState` hosted), move the ~15 VM strings to resx, move the three sidebar labels to resx (`Sidebar*`), all in
   both resx files + manual Designer accessors (append-only; keep `RouteMenuItem`/`MenuItems` shapes for existing tests).
   Invoke `frontend-design` for the two empty states. Run 6.1-6.4 green. (R-19, R-20, DD-10)
-- [ ] 6.6 Final tally in the apply notes: all 62 view literals + 3 labels + VM strings converted; the scan covers all four
+- [x] 6.6 Final tally in the apply notes: all 62 view literals + 3 labels + VM strings converted; the scan covers all four
   views; the generic parity test passes with all new keys. **Run gate block G** (grep files: both views, both VMs,
   `ShellViewModel.cs`, resx, new tests).
+
+_Apply notes S6 (Strict TDD, reds observed): tests written first against the real view models/views/shell; resx keys + Designer accessors added as data and inert `HasLoaded`/`IsEmptyNoData` members (always false) so the tests compile, then run: 26 failed / 21 passed of 47 (Sidebar 5 of 6 failed; both VM source guards failed; the scan failed listing the Debts/Recurring literals and the new StringFormat scan failed on `{0} cuotas`; every `en` localization case failed while the `es-DO` ones passed because the old code was already Spanish; empty-state cases failed on the skeleton). After implementation: 62/62 of the focused filter (incl. DatePicker and RowTemplate suites) green. Gate G: build 0/0 (`--no-incremental`); full suite x3 = 2693 unit + 815 integration each run (baseline 2654 + 815; +39 unit: DebtsRecurringLocalizationTests 21 cases, DebtsRecurringEmptyStateTests 11, ShellSidebarLabelTests 6, scan +1), 0 skipped, no intermittents; format exit 0 (one using-order fix in the new test file); Architecture filter 20/20; no-stub grep empty; footprint clean (no Packages.props, Migrations, snapshot, SettingKeys/AppSettings, csproj); no stray dotnet/testhost process. Tally: view literals converted this slice 34 (Debts 17, Recurring 17; Expenses 15 + Income 15 before, so 64 in the four views vs the 62 pre-counted in R-19), 3 sidebar labels (`SidebarRecurring/Debts/Calendar`), 23 VM strings (Debts 9, Recurring 14; the Reconciliation #14 estimate was ~15), 62 new resx keys in both cultures; the scan now covers all four views. The DatePicker `DateOnlyConverter` bindings in both views are untouched (DatePickerBindingHeadlessTests green). No existing test asserted the moved Spanish literals, so none was modified. Deviations: (1) new test files live in `tests/…Unit/UI/` (the task text says `ViewModels/`, a folder that does not exist; all VM tests live in `UI/`). (2) 6.3 uses the real VMs + real use cases over the existing fake repositories (same precedent as S4/S5a/S5b: no EF in the Unit project); additive `GetAllGate` on `FakeDebtRepository`/`FakeRecurringRuleRepository` for the loading case. (3) Added a StringFormat scan (`{0} cuotas` hid a literal in a value starting with a brace, which the attribute scan skips) and moved the `StringFormat` texts to `x:Static` resx formats. (4) `HasLoaded`/`IsEmptyNoData` added to both VMs (no filter, so no `IsEmptyFiltered`); `HasLoaded` is set only after a SUCCESSFUL load. (5) Messages that arrive inside `Result.Error.Message` from Application use cases (validators) are not VM literals and remain out of scope. (6) Size: about 680 lines resx/Designer, about 150 lines of other production code, about 700 lines of tests. Unverified: a human visual pass of the two empty states in both locales (headless drawing is off, no frame captured); the Debts schedule-load failure and the Recurring preview-failure VM messages are covered by the source guard and the resx-difference test, not by a forced failure (no throwing fake for the payment repository/preview). Commit: see git log (slice S6/12)._
 
 ## 7a. Shortcut catalog, behavior, shell commands and gating (S7a)
 

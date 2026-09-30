@@ -14,6 +14,8 @@ public sealed class HardcodedStringsScanTests
     [
         Path.Combine("Views", "ExpensesView.axaml"),
         Path.Combine("Views", "IncomeView.axaml"),
+        Path.Combine("Views", "DebtsView.axaml"),
+        Path.Combine("Views", "RecurringRulesView.axaml"),
         Path.Combine("Controls", "EmptyState.axaml"),
     ];
 
@@ -68,6 +70,25 @@ public sealed class HardcodedStringsScanTests
         IReadOnlyList<string> hits = FindLiterals(_scannedViews);
 
         Assert.True(hits.Count == 0, "Hardcoded UI literals:" + Environment.NewLine + string.Join(Environment.NewLine, hits));
+    }
+
+    [Fact]
+    public void TheConvertedViews_HaveNoLiteralTextInsideBindingStringFormats()
+    {
+        // A binding such as StringFormat={}{0} cuotas hides a literal inside a value that starts with a brace,
+        // which the attribute scan above deliberately skips. Formats must come from resx via x:Static.
+        var escapedFormat = new System.Text.RegularExpressions.Regex("StringFormat=\\{\\}(?<format>[^\"]*)");
+        var placeholder = new System.Text.RegularExpressions.Regex("\\{[^}]*\\}");
+        string[] hits =
+        [
+            .. _scannedViews.SelectMany(view =>
+                File.ReadAllLines(RepoRoot.Combine("src", "ControlDeFinanzasIA.UI", view))
+                    .Select((line, index) => (line, index))
+                    .Where(x => escapedFormat.Matches(x.line).Any(m => placeholder.Replace(m.Groups["format"].Value, string.Empty).Any(char.IsLetter)))
+                    .Select(x => $"{view}:{x.index + 1} {x.line.Trim()}")),
+        ];
+
+        Assert.True(hits.Length == 0, "Hardcoded text in binding formats:" + Environment.NewLine + string.Join(Environment.NewLine, hits));
     }
 
     [Fact]

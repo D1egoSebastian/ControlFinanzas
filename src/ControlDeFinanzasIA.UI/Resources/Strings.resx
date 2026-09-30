@@ -1474,4 +1474,190 @@ Showing approximate conversions only.
   <data name="EmptyStateIncomeHint" xml:space="preserve">
     <value>Every payment you receive shows up here as a line in your ledger.</value>
   </data>
+  <data name="SidebarRecurring" xml:space="preserve">
+    <value>Recurring</value>
+  </data>
+  <data name="SidebarDebts" xml:space="preserve">
+    <value>Debts</value>
+  </data>
+  <data name="SidebarCalendar" xml:space="preserve">
+    <value>Calendar</value>
+  </data>
+  <data name="DebtsNewTitle" xml:space="preserve">
+    <value>New debt</value>
+  </data>
+  <data name="DebtsNewSubtitle" xml:space="preserve">
+    <value>Create a debt with its full installment plan.</value>
+  </data>
+  <data name="DebtsDescriptionPlaceholder" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="DebtsOriginalAmountPlaceholder" xml:space="preserve">
+    <value>Original amount</value>
+  </data>
+  <data name="DebtsInstallmentsPlaceholder" xml:space="preserve">
+    <value>Number of installments</value>
+  </data>
+  <data name="DebtsInstallmentAmountPlaceholder" xml:space="preserve">
+    <value>Amount per installment</value>
+  </data>
+  <data name="DebtsCounterpartyPlaceholder" xml:space="preserve">
+    <value>Counterparty (optional)</value>
+  </data>
+  <data name="DebtsNotePlaceholder" xml:space="preserve">
+    <value>Note (optional)</value>
+  </data>
+  <data name="DebtsCreateButton" xml:space="preserve">
+    <value>Create debt</value>
+  </data>
+  <data name="DebtsListTitle" xml:space="preserve">
+    <value>Debts</value>
+  </data>
+  <data name="DebtsInstallmentsFormat" xml:space="preserve">
+    <value>{0} installments</value>
+  </data>
+  <data name="DebtsScheduleTitle" xml:space="preserve">
+    <value>Installment schedule</value>
+  </data>
+  <data name="DebtsPendingBalanceFormat" xml:space="preserve">
+    <value>Pending balance: {0:N2}</value>
+  </data>
+  <data name="DebtsPayButton" xml:space="preserve">
+    <value>Pay</value>
+  </data>
+  <data name="DebtsSkipButton" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="DebtsSelectHint" xml:space="preserve">
+    <value>Select a debt to see its schedule.</value>
+  </data>
+  <data name="EmptyStateDebtsTitle" xml:space="preserve">
+    <value>No debts yet</value>
+  </data>
+  <data name="EmptyStateDebtsHint" xml:space="preserve">
+    <value>Add a debt with its installment plan and each payment gets its own line here.</value>
+  </data>
+  <data name="DebtsStartDateRequired" xml:space="preserve">
+    <value>Select the start date.</value>
+  </data>
+  <data name="DebtsCreateFailed" xml:space="preserve">
+    <value>The debt could not be created.</value>
+  </data>
+  <data name="DebtsCreated" xml:space="preserve">
+    <value>Debt created with its installment plan.</value>
+  </data>
+  <data name="DebtsPaymentFailed" xml:space="preserve">
+    <value>The payment could not be registered.</value>
+  </data>
+  <data name="DebtsPaymentRegistered" xml:space="preserve">
+    <value>Payment registered.</value>
+  </data>
+  <data name="DebtsSkipFailed" xml:space="preserve">
+    <value>The installment could not be skipped.</value>
+  </data>
+  <data name="DebtsSkipped" xml:space="preserve">
+    <value>Installment skipped.</value>
+  </data>
+  <data name="DebtsLoadFailed" xml:space="preserve">
+    <value>The debts could not be loaded.</value>
+  </data>
+  <data name="DebtsScheduleLoadFailed" xml:space="preserve">
+    <value>The installment schedule could not be loaded.</value>
+  </data>
+  <data name="RecurringTitle" xml:space="preserve">
+    <value>Recurring rules</value>
+  </data>
+  <data name="RecurringSubtitle" xml:space="preserve">
+    <value>Create and manage recurring payments.</value>
+  </data>
+  <data name="RecurringNamePlaceholder" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="RecurringAmountPlaceholder" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="RecurringCategoryPlaceholder" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="RecurringPaymentMethodPlaceholder" xml:space="preserve">
+    <value>Payment method</value>
+  </data>
+  <data name="RecurringSaveButton" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="RecurringCancelButton" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="RecurringDeactivateButton" xml:space="preserve">
+    <value>Deactivate</value>
+  </data>
+  <data name="RecurringDeleteButton" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="RecurringGenerateTitle" xml:space="preserve">
+    <value>Generate for the month</value>
+  </data>
+  <data name="RecurringPreviewButton" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="RecurringConfirmButton" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="RecurringActiveTitle" xml:space="preserve">
+    <value>Active rules</value>
+  </data>
+  <data name="RecurringEditButton" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="RecurringSkipButton" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="EmptyStateRecurringTitle" xml:space="preserve">
+    <value>No recurring rules yet</value>
+  </data>
+  <data name="EmptyStateRecurringHint" xml:space="preserve">
+    <value>Subscriptions and fixed expenses you add here are generated for you every month.</value>
+  </data>
+  <data name="RecurringSelectionRequired" xml:space="preserve">
+    <value>Select a category, a payment method and a start date.</value>
+  </data>
+  <data name="RecurringSaveFailed" xml:space="preserve">
+    <value>The recurring rule could not be saved.</value>
+  </data>
+  <data name="RecurringCreated" xml:space="preserve">
+    <value>Recurring rule created.</value>
+  </data>
+  <data name="RecurringUpdated" xml:space="preserve">
+    <value>Recurring rule updated.</value>
+  </data>
+  <data name="RecurringLoadFailed" xml:space="preserve">
+    <value>The recurring rules could not be loaded.</value>
+  </data>
+  <data name="RecurringPreviewFailed" xml:space="preserve">
+    <value>The preview could not be calculated.</value>
+  </data>
+  <data name="RecurringGenerateFailed" xml:space="preserve">
+    <value>The entries could not be generated.</value>
+  </data>
+  <data name="RecurringGenerated" xml:space="preserve">
+    <value>{0} entries generated.</value>
+  </data>
+  <data name="RecurringDeactivateFailed" xml:space="preserve">
+    <value>The rule could not be deactivated.</value>
+  </data>
+  <data name="RecurringDeactivated" xml:space="preserve">
+    <value>Rule deactivated.</value>
+  </data>
+  <data name="RecurringSkipFailed" xml:space="preserve">
+    <value>The occurrence could not be skipped.</value>
+  </data>
+  <data name="RecurringSkipped" xml:space="preserve">
+    <value>Occurrence skipped.</value>
+  </data>
+  <data name="RecurringDeleteFailed" xml:space="preserve">
+    <value>The rule could not be deleted.</value>
+  </data>
+  <data name="RecurringDeleted" xml:space="preserve">
+    <value>Rule deleted.</value>
+  </data>
 </root>

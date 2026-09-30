@@ -1474,4 +1474,190 @@ Mostrando conversiones aproximadas.
   <data name="EmptyStateIncomeHint" xml:space="preserve">
     <value>Cada pago que recibas aparece aquí como una línea de tu libro de cuentas.</value>
   </data>
+  <data name="SidebarRecurring" xml:space="preserve">
+    <value>Recurrentes</value>
+  </data>
+  <data name="SidebarDebts" xml:space="preserve">
+    <value>Deudas</value>
+  </data>
+  <data name="SidebarCalendar" xml:space="preserve">
+    <value>Calendario</value>
+  </data>
+  <data name="DebtsNewTitle" xml:space="preserve">
+    <value>Nueva deuda</value>
+  </data>
+  <data name="DebtsNewSubtitle" xml:space="preserve">
+    <value>Crea una deuda con su plan de cuotas completo.</value>
+  </data>
+  <data name="DebtsDescriptionPlaceholder" xml:space="preserve">
+    <value>Descripción</value>
+  </data>
+  <data name="DebtsOriginalAmountPlaceholder" xml:space="preserve">
+    <value>Monto original</value>
+  </data>
+  <data name="DebtsInstallmentsPlaceholder" xml:space="preserve">
+    <value>Número de cuotas</value>
+  </data>
+  <data name="DebtsInstallmentAmountPlaceholder" xml:space="preserve">
+    <value>Monto por cuota</value>
+  </data>
+  <data name="DebtsCounterpartyPlaceholder" xml:space="preserve">
+    <value>Contraparte (opcional)</value>
+  </data>
+  <data name="DebtsNotePlaceholder" xml:space="preserve">
+    <value>Nota (opcional)</value>
+  </data>
+  <data name="DebtsCreateButton" xml:space="preserve">
+    <value>Crear deuda</value>
+  </data>
+  <data name="DebtsListTitle" xml:space="preserve">
+    <value>Deudas</value>
+  </data>
+  <data name="DebtsInstallmentsFormat" xml:space="preserve">
+    <value>{0} cuotas</value>
+  </data>
+  <data name="DebtsScheduleTitle" xml:space="preserve">
+    <value>Calendario de cuotas</value>
+  </data>
+  <data name="DebtsPendingBalanceFormat" xml:space="preserve">
+    <value>Saldo pendiente: {0:N2}</value>
+  </data>
+  <data name="DebtsPayButton" xml:space="preserve">
+    <value>Pagar</value>
+  </data>
+  <data name="DebtsSkipButton" xml:space="preserve">
+    <value>Saltar</value>
+  </data>
+  <data name="DebtsSelectHint" xml:space="preserve">
+    <value>Selecciona una deuda para ver su calendario.</value>
+  </data>
+  <data name="EmptyStateDebtsTitle" xml:space="preserve">
+    <value>Aún no hay deudas</value>
+  </data>
+  <data name="EmptyStateDebtsHint" xml:space="preserve">
+    <value>Agrega una deuda con su plan de cuotas y cada pago tendrá su propia línea aquí.</value>
+  </data>
+  <data name="DebtsStartDateRequired" xml:space="preserve">
+    <value>Selecciona la fecha de inicio.</value>
+  </data>
+  <data name="DebtsCreateFailed" xml:space="preserve">
+    <value>No se pudo crear la deuda.</value>
+  </data>
+  <data name="DebtsCreated" xml:space="preserve">
+    <value>Deuda creada correctamente con su plan de cuotas.</value>
+  </data>
+  <data name="DebtsPaymentFailed" xml:space="preserve">
+    <value>No se pudo registrar el pago.</value>
+  </data>
+  <data name="DebtsPaymentRegistered" xml:space="preserve">
+    <value>Pago registrado correctamente.</value>
+  </data>
+  <data name="DebtsSkipFailed" xml:space="preserve">
+    <value>No se pudo saltar la cuota.</value>
+  </data>
+  <data name="DebtsSkipped" xml:space="preserve">
+    <value>Cuota saltada correctamente.</value>
+  </data>
+  <data name="DebtsLoadFailed" xml:space="preserve">
+    <value>No se pudieron cargar las deudas.</value>
+  </data>
+  <data name="DebtsScheduleLoadFailed" xml:space="preserve">
+    <value>No se pudo cargar el calendario de cuotas.</value>
+  </data>
+  <data name="RecurringTitle" xml:space="preserve">
+    <value>Reglas recurrentes</value>
+  </data>
+  <data name="RecurringSubtitle" xml:space="preserve">
+    <value>Crea y administra pagos recurrentes.</value>
+  </data>
+  <data name="RecurringNamePlaceholder" xml:space="preserve">
+    <value>Nombre</value>
+  </data>
+  <data name="RecurringAmountPlaceholder" xml:space="preserve">
+    <value>Monto</value>
+  </data>
+  <data name="RecurringCategoryPlaceholder" xml:space="preserve">
+    <value>Categoría</value>
+  </data>
+  <data name="RecurringPaymentMethodPlaceholder" xml:space="preserve">
+    <value>Método de pago</value>
+  </data>
+  <data name="RecurringSaveButton" xml:space="preserve">
+    <value>Guardar</value>
+  </data>
+  <data name="RecurringCancelButton" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="RecurringDeactivateButton" xml:space="preserve">
+    <value>Desactivar</value>
+  </data>
+  <data name="RecurringDeleteButton" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
+  <data name="RecurringGenerateTitle" xml:space="preserve">
+    <value>Generar del mes</value>
+  </data>
+  <data name="RecurringPreviewButton" xml:space="preserve">
+    <value>Previsualizar</value>
+  </data>
+  <data name="RecurringConfirmButton" xml:space="preserve">
+    <value>Confirmar</value>
+  </data>
+  <data name="RecurringActiveTitle" xml:space="preserve">
+    <value>Reglas activas</value>
+  </data>
+  <data name="RecurringEditButton" xml:space="preserve">
+    <value>Editar</value>
+  </data>
+  <data name="RecurringSkipButton" xml:space="preserve">
+    <value>Saltar</value>
+  </data>
+  <data name="EmptyStateRecurringTitle" xml:space="preserve">
+    <value>Aún no hay reglas recurrentes</value>
+  </data>
+  <data name="EmptyStateRecurringHint" xml:space="preserve">
+    <value>Las suscripciones y gastos fijos que agregues aquí se generan solos cada mes.</value>
+  </data>
+  <data name="RecurringSelectionRequired" xml:space="preserve">
+    <value>Selecciona categoría, método de pago y fecha de inicio.</value>
+  </data>
+  <data name="RecurringSaveFailed" xml:space="preserve">
+    <value>No se pudo guardar la regla recurrente.</value>
+  </data>
+  <data name="RecurringCreated" xml:space="preserve">
+    <value>Regla recurrente creada correctamente.</value>
+  </data>
+  <data name="RecurringUpdated" xml:space="preserve">
+    <value>Regla recurrente actualizada correctamente.</value>
+  </data>
+  <data name="RecurringLoadFailed" xml:space="preserve">
+    <value>No se pudieron cargar las reglas recurrentes.</value>
+  </data>
+  <data name="RecurringPreviewFailed" xml:space="preserve">
+    <value>No se pudo calcular la vista previa.</value>
+  </data>
+  <data name="RecurringGenerateFailed" xml:space="preserve">
+    <value>No se pudieron generar los movimientos.</value>
+  </data>
+  <data name="RecurringGenerated" xml:space="preserve">
+    <value>Se generaron {0} movimientos.</value>
+  </data>
+  <data name="RecurringDeactivateFailed" xml:space="preserve">
+    <value>No se pudo desactivar la regla.</value>
+  </data>
+  <data name="RecurringDeactivated" xml:space="preserve">
+    <value>Regla desactivada correctamente.</value>
+  </data>
+  <data name="RecurringSkipFailed" xml:space="preserve">
+    <value>No se pudo saltar la ocurrencia.</value>
+  </data>
+  <data name="RecurringSkipped" xml:space="preserve">
+    <value>Ocurrencia saltada correctamente.</value>
+  </data>
+  <data name="RecurringDeleteFailed" xml:space="preserve">
+    <value>No se pudo eliminar la regla.</value>
+  </data>
+  <data name="RecurringDeleted" xml:space="preserve">
+    <value>Regla eliminada correctamente.</value>
+  </data>
 </root>

@@ -82,6 +82,23 @@ public sealed class FakeDebtRepository : IDebtRepository
 
     /// <inheritdoc />
     public Task<IReadOnlyList<Debt>> GetAllAsync(CancellationToken ct = default)
+        => GetAllGate is not null
+            ? GetAllGatedAsync()
+            : GetAllCore();
+
+    /// <summary>
+    /// Gets or sets a gate that holds <see cref="GetAllAsync"/> until completed (simulates a slow first load,
+    /// F-021 S6). <c>null</c> by default.
+    /// </summary>
+    public TaskCompletionSource? GetAllGate { get; set; }
+
+    private async Task<IReadOnlyList<Debt>> GetAllGatedAsync()
+    {
+        await GetAllGate!.Task;
+        return await GetAllCore();
+    }
+
+    private Task<IReadOnlyList<Debt>> GetAllCore()
         => _getAllException is not null
             ? Task.FromException<IReadOnlyList<Debt>>(_getAllException)
             : Task.FromResult<IReadOnlyList<Debt>>(new ReadOnlyCollection<Debt>(_debts.ToList()));
