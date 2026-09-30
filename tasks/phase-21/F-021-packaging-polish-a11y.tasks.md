@@ -371,38 +371,41 @@ _Apply notes S4 (Strict TDD, reds observed): to get behavioral reds (not just co
 Depends on 4. Goal: reusable `EmptyState`, the failing-contrast fix, the generic resx parity test, and the full
 localization/empty-state treatment of Expenses, including `BeginNewEntry`. Uses `frontend-design` (DD-9 visual).
 
-- [ ] 5a.1 Write failing `tests/…Unit/Localization/StringsParityTests.cs` (generic, reflection + XML over the REAL
+- [x] 5a.1 Write failing `tests/…Unit/Localization/StringsParityTests.cs` (generic, reflection + XML over the REAL
   resx files and `Strings.Designer.cs`): every key in `Strings.resx` exists in `Strings.es-DO.resx` and vice versa, no
   empty values in either, every key that is referenced from a view through `{x:Static resources:Strings.*}` has a
   Designer property, and the `{0}` placeholder count matches between neutral and es-DO. Extends (does not replace) the
   existing per-feature completeness tests. Known pre-existing gaps (six `ExpensesAi*` keys without accessors) go to an
   explicit allowlist with a comment, not silently. (R-19, S-38, Reconciliation design #6)
-- [ ] 5a.2 Write failing `tests/…Unit/UI/HardcodedStringsScanTests.cs` (REAL `.axaml` files parsed as XML): for
+- [x] 5a.2 Write failing `tests/…Unit/UI/HardcodedStringsScanTests.cs` (REAL `.axaml` files parsed as XML): for
   `ExpensesView.axaml` (this slice; the other three views and `MainWindow` are added in 5b/6) no attribute among
   `Text`, `Content`, `Header`, `Watermark`, `PlaceholderText`, `ToolTip.Tip`, `AutomationProperties.Name` has a literal
   value containing a letter unless it starts with `{` (binding/resource). The scan helper takes a file list so later
   slices only append files. (R-19, S-38, DD-11 scan 3)
-- [ ] 5a.3 Write failing `tests/…Unit/UI/EmptyStateViewTests.cs` (headless, es-DO and en, real `ExpensesViewModel` over a
+- [x] 5a.3 Write failing `tests/…Unit/UI/EmptyStateViewTests.cs` (headless, es-DO and en, real `ExpensesViewModel` over a
   temp SQLite DB and the real use cases): empty DB after the first load shows the "no data yet" `EmptyState` with
   localized title/hint and the create action showing the `Ctrl+N` text; data present hides it; DURING loading
   (`HasLoaded == false`) it is not visible; a filter that matches nothing (data exists) shows the "no results" state with
   a clear-filter action and NOT the no-data state; invoking clear-filter restores the list; the create action raises
   `BeginNewEntry`. Also `ExpensesViewModel.BeginNewEntry()` cancels an edit in progress and produces a new
   `DescriptionFocusRequest` token each call. (R-14, R-20, S-39, S-40, S-41, DD-9)
-- [ ] 5a.4 Add `TerracottaTextColor #F08A82` + brush to `Styles/Tokens.axaml` and switch `ledger-status.export-error`
+- [x] 5a.4 Add `TerracottaTextColor #F08A82` + brush to `Styles/Tokens.axaml` and switch `ledger-status.export-error`
   to it (appended; `Terracotta` stays). Create `src/…UI/Controls/EmptyState.axaml(.cs)` (styled properties `Title`,
   `Hint`, `ActionText`, `ActionCommand`, `ShortcutText`; no logic). Invoke `frontend-design` for the editorial block
   (three Hairline rules + one Amber tick, `AccessibilityView=Raw`). (R-18 prerequisite, R-20, DD-9, Reconciliation #15)
-- [ ] 5a.5 Add `ExpensesViewModel` members (additive): `HasLoaded`, `HasActiveFilter` (predicate pinned by 5a.3: applied
+- [x] 5a.5 Add `ExpensesViewModel` members (additive): `HasLoaded`, `HasActiveFilter` (predicate pinned by 5a.3: applied
   filter differs from the VM default filter), `IsEmptyNoData`, `IsEmptyFiltered`, `BeginNewEntry()`,
   `BeginNewEntryCommand`, `ClearFilterCommand`, `DescriptionFocusRequest` (`FocusRequestToken`), raised on list refresh.
   Move every literal in `ExpensesView.axaml` to `{x:Static resources:Strings.*}` (`Expenses*`, `EmptyState*` prefixes),
   replace inline hex with tokens (`PaperDimBrush`, `SurfaceBrush`, `TerracottaTextBrush`, `SageBrush`), bind
   `FocusOnRequest.Token` on the Description `TextBox`, and host `EmptyState` (both states). Add all keys to both resx
   files + manual Designer accessors. Run 5a.1-5a.3 green. (R-14, R-19, R-20, DD-10)
-- [ ] 5a.6 Confirm existing Expenses/Import/Export tests still pass unmodified, and that no new view text bypasses resx
+- [x] 5a.6 Confirm existing Expenses/Import/Export tests still pass unmodified, and that no new view text bypasses resx
   (re-run the scan). **Run gate block G** (grep files: `EmptyState.axaml(.cs)`, `ExpensesView.axaml`,
   `ExpensesViewModel.cs`, `Tokens.axaml`, new tests).
+
+_Apply notes S5a (Strict TDD, reds observed): public surface first added as inert skeletons (VM flags returning false, no-op `BeginNewEntry`, empty `EmptyState` panel, resx keys + Designer accessors as data), tests run: 14 failed / 9 passed of 23 (`ExpensesViewModelEmptyStateTests` 7 of 8 failed, `EmptyStateViewTests` 6 of 6 failed at that point, `HardcodedStringsScanTests.TheConvertedViews_HaveNoLiteralUserVisibleText` failed on the current Spanish literals); `TerracottaTextTokenTests` 2/2 red before the token existed. The 9 that passed were already true: the six `StringsParityTests` (the repo was already in es-DO/en parity, so they are guards, NOT red-first), the scanner control case, and `AFailedFirstLoad_NeverReportsLoaded` (true of the skeleton). Not red-first: the `TheExpensesForm_RendersInTheActiveLanguage` theory (written after the view conversion; the scan was the red for that behavior). Green after implementation: 9/9 `EmptyStateViewTests` cases, 8/8 VM tests, scan 2/2, tokens 2/2, parity 6/6. Gate G: build 0/0 (`--no-incremental`); full suite x3 = 2636 unit + 815 integration each run (baseline 2609 + 815; +27 unit), 0 skipped, no intermittents; format exit 0; Architecture filter 20/20; no-stub grep empty; footprint clean (no Packages.props, Migrations, snapshot, SettingKeys/AppSettings, csproj). Existing tests updated minimally because they asserted literal Spanish that moved to resx: `ImportViewXamlTests.ImportPanel_IsHostedOnce...` (ordering marker `"No hay gastos registrados."` -> `IsVisible="{Binding IsEmptyNoData}"`) and `ImportViewHeadlessTests.ExpensesView_WithARow...` (`"Editar"` -> `Strings.ExpensesEditButton`). Deviations: (1) 5a.3 uses the real `ExpensesViewModel` + real use cases over the existing fake repositories (`FakeExpenseRepository { PageAddedItems = true }`), not a temp SQLite DB: the Unit project has no Infrastructure/EF reference and adding one is a package change (same precedent as S4 deviation 2); the loading case uses a small `GatedExpenseRepository` decorator around the fake (collaborator only). (2) `HasActiveFilter` predicate pinned: applied `CurrentFilter` has CategoryId, DateFrom, DateTo or non-empty TagIds (PaymentMethodIds ignored because the list ignores it); `IsEmptyNoData`/`IsEmptyFiltered` also require `HasLoaded` (set only after a SUCCESSFUL refresh) and `Expenses.Count == 0 && TotalPages == 0`. (3) `BeginNewEntry()` cancels an edit in progress but leaves a half-typed NEW entry untouched. (4) The `Ctrl+N` chip is a literal `ShortcutText="Ctrl+N"` in the view (attribute outside the scan list; S7a may switch it to the catalog display string). (5) Size: 1216 added / 30 deleted lines (about 400 production incl. 209 resx/Designer, about 750 tests), over the ~450 guideline; S5a has no named sub-seam (S5a/S5b is the seam and is already applied), so it was not split further. (6) Inline hex replaced by tokens in `ExpensesView` (Background `#16181D`->InkBrush, `#242932`->SurfaceBrush (Surface is `#1F232B`, per DD-10), text `#E8E4D9`/`#A9AFB8`/`#E8A33D`/`#F08A82`/`#71C7A4` -> Paper/PaperDim/Amber/TerracottaText/Sage brushes). The `ExpensesAi*` six keys are on an explicit allowlist in `StringsParityTests` (plus a stale-entry guard). Unverified: a human visual pass of `EmptyState` (headless drawing is off, no frame captured) in both locales and the real `Ctrl+N` key (window shortcut arrives in S7a); the `✕` dismiss button still has no `AutomationProperties.Name` (S8 scan). Commit: see git log (slice S5a/12)._
+
 
 ## 5b. Income localization and empty states (S5b)
 

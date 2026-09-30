@@ -1369,4 +1369,61 @@ Mostrando conversiones aproximadas.
   <data name="ErrorOverlayClose" xml:space="preserve">
     <value>Cerrar</value>
   </data>
+  <data name="ExpensesSubtitle" xml:space="preserve">
+    <value>Registra y administra tus gastos.</value>
+  </data>
+  <data name="ExpensesFormTitle" xml:space="preserve">
+    <value>Nuevo gasto</value>
+  </data>
+  <data name="ExpensesDescriptionPlaceholder" xml:space="preserve">
+    <value>Descripción</value>
+  </data>
+  <data name="ExpensesAmountPlaceholder" xml:space="preserve">
+    <value>Monto</value>
+  </data>
+  <data name="ExpensesCategoryPlaceholder" xml:space="preserve">
+    <value>Categoría</value>
+  </data>
+  <data name="ExpensesPaymentMethodPlaceholder" xml:space="preserve">
+    <value>Método de pago</value>
+  </data>
+  <data name="ExpensesCurrencyPlaceholder" xml:space="preserve">
+    <value>Moneda</value>
+  </data>
+  <data name="ExpensesNotePlaceholder" xml:space="preserve">
+    <value>Nota</value>
+  </data>
+  <data name="ExpensesRegisterButton" xml:space="preserve">
+    <value>Registrar gasto</value>
+  </data>
+  <data name="ExpensesUpdateButton" xml:space="preserve">
+    <value>Actualizar</value>
+  </data>
+  <data name="ExpensesCancelButton" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="ExpensesListTitle" xml:space="preserve">
+    <value>Movimientos</value>
+  </data>
+  <data name="ExpensesEditButton" xml:space="preserve">
+    <value>Editar</value>
+  </data>
+  <data name="EmptyStateExpensesTitle" xml:space="preserve">
+    <value>Aún no hay gastos</value>
+  </data>
+  <data name="EmptyStateExpensesHint" xml:space="preserve">
+    <value>Cada peso que registres aparecerá aquí como una línea de tu libro mayor.</value>
+  </data>
+  <data name="EmptyStateCreateFirstAction" xml:space="preserve">
+    <value>Registrar el primero</value>
+  </data>
+  <data name="EmptyStateFilteredTitle" xml:space="preserve">
+    <value>Sin resultados para este filtro</value>
+  </data>
+  <data name="EmptyStateFilteredHint" xml:space="preserve">
+    <value>Nada coincide con las fechas, la categoría o las etiquetas elegidas.</value>
+  </data>
+  <data name="EmptyStateClearFilterAction" xml:space="preserve">
+    <value>Quitar filtro</value>
+  </data>
 </root>

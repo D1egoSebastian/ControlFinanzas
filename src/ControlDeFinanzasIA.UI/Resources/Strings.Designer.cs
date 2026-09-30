@@ -2226,4 +2226,99 @@ public class Strings
     /// Gets the error overlay close button caption (F-021).
     /// </summary>
     public static string ErrorOverlayClose => ResourceManager.GetString("ErrorOverlayClose", Culture)!;
+
+    /// <summary>
+    /// Gets the expenses screen subtitle (F-021).
+    /// </summary>
+    public static string ExpensesSubtitle => ResourceManager.GetString("ExpensesSubtitle", Culture)!;
+
+    /// <summary>
+    /// Gets the new-expense form heading (F-021).
+    /// </summary>
+    public static string ExpensesFormTitle => ResourceManager.GetString("ExpensesFormTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the expense description placeholder (F-021).
+    /// </summary>
+    public static string ExpensesDescriptionPlaceholder => ResourceManager.GetString("ExpensesDescriptionPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the expense amount placeholder (F-021).
+    /// </summary>
+    public static string ExpensesAmountPlaceholder => ResourceManager.GetString("ExpensesAmountPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the expense category placeholder (F-021).
+    /// </summary>
+    public static string ExpensesCategoryPlaceholder => ResourceManager.GetString("ExpensesCategoryPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the expense payment method placeholder (F-021).
+    /// </summary>
+    public static string ExpensesPaymentMethodPlaceholder => ResourceManager.GetString("ExpensesPaymentMethodPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the expense currency placeholder (F-021).
+    /// </summary>
+    public static string ExpensesCurrencyPlaceholder => ResourceManager.GetString("ExpensesCurrencyPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the expense note placeholder (F-021).
+    /// </summary>
+    public static string ExpensesNotePlaceholder => ResourceManager.GetString("ExpensesNotePlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the register-expense button caption (F-021).
+    /// </summary>
+    public static string ExpensesRegisterButton => ResourceManager.GetString("ExpensesRegisterButton", Culture)!;
+
+    /// <summary>
+    /// Gets the update-expense button caption (F-021).
+    /// </summary>
+    public static string ExpensesUpdateButton => ResourceManager.GetString("ExpensesUpdateButton", Culture)!;
+
+    /// <summary>
+    /// Gets the cancel-edit button caption (F-021).
+    /// </summary>
+    public static string ExpensesCancelButton => ResourceManager.GetString("ExpensesCancelButton", Culture)!;
+
+    /// <summary>
+    /// Gets the expense list heading (F-021).
+    /// </summary>
+    public static string ExpensesListTitle => ResourceManager.GetString("ExpensesListTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the row edit button caption (F-021).
+    /// </summary>
+    public static string ExpensesEditButton => ResourceManager.GetString("ExpensesEditButton", Culture)!;
+
+    /// <summary>
+    /// Gets the expenses empty-state headline (F-021).
+    /// </summary>
+    public static string EmptyStateExpensesTitle => ResourceManager.GetString("EmptyStateExpensesTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the expenses empty-state hint (F-021).
+    /// </summary>
+    public static string EmptyStateExpensesHint => ResourceManager.GetString("EmptyStateExpensesHint", Culture)!;
+
+    /// <summary>
+    /// Gets the empty-state create action caption (F-021).
+    /// </summary>
+    public static string EmptyStateCreateFirstAction => ResourceManager.GetString("EmptyStateCreateFirstAction", Culture)!;
+
+    /// <summary>
+    /// Gets the filtered empty-state headline (F-021).
+    /// </summary>
+    public static string EmptyStateFilteredTitle => ResourceManager.GetString("EmptyStateFilteredTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the filtered empty-state hint (F-021).
+    /// </summary>
+    public static string EmptyStateFilteredHint => ResourceManager.GetString("EmptyStateFilteredHint", Culture)!;
+
+    /// <summary>
+    /// Gets the clear-filter action caption (F-021).
+    /// </summary>
+    public static string EmptyStateClearFilterAction => ResourceManager.GetString("EmptyStateClearFilterAction", Culture)!;
 }

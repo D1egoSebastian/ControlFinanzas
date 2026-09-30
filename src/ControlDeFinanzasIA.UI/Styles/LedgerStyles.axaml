@@ -174,7 +174,7 @@
     </Style>
     <!-- Failed-operation variant of the status message (F-018 export errors) -->
     <Style Selector="TextBlock.ledger-status.export-error">
-        <Setter Property="Foreground" Value="{StaticResource TerracottaBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TerracottaTextBrush}" />
     </Style>
 
     <!-- Amber rule used under titles -->

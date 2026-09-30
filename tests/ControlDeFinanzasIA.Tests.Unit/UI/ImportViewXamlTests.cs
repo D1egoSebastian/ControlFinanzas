@@ -64,7 +64,7 @@ public sealed class ImportViewXamlTests
         int panel = xaml.IndexOf("IsVisible=\"{Binding IsImportOpen}\"", StringComparison.Ordinal);
         int list = xaml.IndexOf("IsVisible=\"{Binding !IsImportOpen}\"", StringComparison.Ordinal);
         int expenses = xaml.IndexOf("<ItemsControl ItemsSource=\"{Binding Expenses}\">", StringComparison.Ordinal);
-        int empty = xaml.IndexOf("No hay gastos registrados.", StringComparison.Ordinal);
+        int empty = xaml.IndexOf("IsVisible=\"{Binding IsEmptyNoData}\"", StringComparison.Ordinal);
         Assert.True(panel < list && list < expenses && expenses < empty);
         Assert.Contains("{Binding CloseImportCommand}", xaml, StringComparison.Ordinal);
         Assert.Contains("{Binding HasImport}", xaml, StringComparison.Ordinal);

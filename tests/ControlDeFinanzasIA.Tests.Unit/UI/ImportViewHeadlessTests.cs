@@ -229,7 +229,7 @@ public sealed class ImportViewHeadlessTests
             Flush();
 
             Assert.Single(rig.ViewModel.Expenses);
-            Button edit = ButtonWithContent(view, "Editar");
+            Button edit = ButtonWithContent(view, Strings.ExpensesEditButton);
             Assert.True(edit.IsEffectivelyVisible);
             Assert.Same(rig.ViewModel.BeginEditCommand, edit.Command);
             return true;

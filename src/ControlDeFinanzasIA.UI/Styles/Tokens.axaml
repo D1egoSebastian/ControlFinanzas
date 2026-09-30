@@ -15,6 +15,8 @@
     <Color x:Key="AmberColor">#E8A33D</Color>
     <Color x:Key="SageColor">#7FB069</Color>
     <Color x:Key="TerracottaColor">#D96459</Color>
+    <!-- Lighter terracotta for error TEXT: Terracotta on Surface is 4.43:1 (fails 4.5:1), this is ~6.5:1 (F-021, D-12). -->
+    <Color x:Key="TerracottaTextColor">#F08A82</Color>
 
     <SolidColorBrush x:Key="InkBrush" Color="{StaticResource InkColor}" />
     <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
@@ -24,6 +26,7 @@
     <SolidColorBrush x:Key="AmberBrush" Color="{StaticResource AmberColor}" />
     <SolidColorBrush x:Key="SageBrush" Color="{StaticResource SageColor}" />
     <SolidColorBrush x:Key="TerracottaBrush" Color="{StaticResource TerracottaColor}" />
+    <SolidColorBrush x:Key="TerracottaTextBrush" Color="{StaticResource TerracottaTextColor}" />
 
     <!-- Typography -->
     <!--
