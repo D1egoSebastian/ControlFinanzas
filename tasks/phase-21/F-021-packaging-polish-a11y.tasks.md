@@ -411,16 +411,18 @@ _Apply notes S5a (Strict TDD, reds observed): public surface first added as iner
 
 Depends on 5a. Goal: the same pattern for Income, using the same control and helpers.
 
-- [ ] 5b.1 Extend `HardcodedStringsScanTests` to include `IncomeView.axaml` (append to the file list; red first: the scan
+- [x] 5b.1 Extend `HardcodedStringsScanTests` to include `IncomeView.axaml` (append to the file list; red first: the scan
   fails on the current literals). (R-19, S-38)
-- [ ] 5b.2 Write failing `tests/…Unit/UI/IncomeEmptyStateViewTests.cs` (headless, es-DO and en, real `IncomeViewModel` over
+- [x] 5b.2 Write failing `tests/…Unit/UI/IncomeEmptyStateViewTests.cs` (headless, es-DO and en, real `IncomeViewModel` over
   a temp SQLite DB): no data yet (action shows `Ctrl+Shift+N`), filtered-none with clear-filter, data present, loading;
   `BeginNewEntry` cancels an edit and raises the token. (R-14, R-20, S-39, S-40, S-41)
-- [ ] 5b.3 Implement the `IncomeViewModel` members (same shape as 5a.5), convert `IncomeView.axaml` (resx
+- [x] 5b.3 Implement the `IncomeViewModel` members (same shape as 5a.5), convert `IncomeView.axaml` (resx
   `Income*`/`EmptyState*` keys both cultures + Designer accessors, tokens instead of inline hex, `FocusOnRequest` on
   Description, `EmptyState` hosted). Run 5b.1, 5b.2 green; the generic `StringsParityTests` stays green. (R-19, R-20)
-- [ ] 5b.4 **Run gate block G** (grep files: `IncomeView.axaml`, `IncomeViewModel.cs`, resx, new tests). Record the
+- [x] 5b.4 **Run gate block G** (grep files: `IncomeView.axaml`, `IncomeViewModel.cs`, resx, new tests). Record the
   running total of localized literals converted (Expenses + Income) against the 62 in R-19.
+
+_Apply notes S5b (Strict TDD, reds observed): (1) 5b.1 red first: adding `IncomeView.axaml` to `_scannedViews` failed with the 15 real Spanish literals listed by the scan. (2) Public surface added as inert skeletons (flags returning false, no-op `BeginNewEntry`, resx keys + Designer accessors as data, a `GetByFilterGate` on `FakeIncomeRepository`), then `IncomeViewModelEmptyStateTests` + `IncomeEmptyStateViewTests` + parity + scan run: 16 failed / 10 passed of 26 (the 10 passing were already true: 6 parity guards, scanner control case, and cases true of the skeleton such as `AFailedFirstLoad_NeverReportsLoaded` and the 2 "no empty state with data" cases; `TheIncomeForm_RendersInTheActiveLanguage` es-DO passed because the old view was already Spanish, only `en` was red). After implementation 26/26 green. Gate G: build 0/0 (`--no-incremental`); full suite x3 = 2654 unit + 815 integration each run (baseline 2636 + 815; +18 unit: IncomeViewModelEmptyStateTests 8, IncomeEmptyStateViewTests 10 cases), 0 skipped, no intermittents; format exit 0; Architecture filter 20/20; no-stub grep empty; footprint clean (no Packages.props, Migrations, snapshot, SettingKeys/AppSettings, csproj). Localized literals converted in IncomeView: 15 (14 visible attributes + the old empty message replaced by `EmptyState`); running total Expenses 15 + Income 15 = 30 of the 62 in R-19 (the Expenses figure is by symmetry of the S5a key set, not recounted). No existing test asserted Income literals, so no existing test was modified. Deviations: (1) 5b.2 uses the real `IncomeViewModel` + real use cases over the existing fake repositories (same precedent as S4/S5a: the Unit project has no EF reference); the loading case uses a new additive `FakeIncomeRepository.GetByFilterGate` (test double only). (2) Same predicate/`HasLoaded` semantics as Expenses. (3) `Ctrl+Shift+N` is a literal `ShortcutText` in the view (outside the scan list; S7a may switch to the catalog). (4) Extra `IncomeViewModelEmptyStateTests` (8) mirror the Expenses VM tests. (5) Inline hex in IncomeView replaced by tokens (`InkBrush`, `SurfaceBrush`, `PaperBrush`, `PaperDimBrush`, `SageBrush`, `TerracottaTextBrush`). Unverified: a human visual pass of the Income empty states in both locales (headless drawing is off), the real `Ctrl+Shift+N` key (arrives in S7a). Commit: see git log (slice S5b/12)._
 
 ## 6. Debts, Recurring, VM strings and sidebar labels (S6)
 

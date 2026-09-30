@@ -13,6 +13,7 @@ public sealed class HardcodedStringsScanTests
     private static readonly string[] _scannedViews =
     [
         Path.Combine("Views", "ExpensesView.axaml"),
+        Path.Combine("Views", "IncomeView.axaml"),
         Path.Combine("Controls", "EmptyState.axaml"),
     ];
 

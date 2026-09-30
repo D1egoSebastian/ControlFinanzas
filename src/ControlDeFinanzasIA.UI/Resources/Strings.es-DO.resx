@@ -1426,4 +1426,52 @@ Mostrando conversiones aproximadas.
   <data name="EmptyStateClearFilterAction" xml:space="preserve">
     <value>Quitar filtro</value>
   </data>
+  <data name="IncomeTitle" xml:space="preserve">
+    <value>Ingresos</value>
+  </data>
+  <data name="IncomeSubtitle" xml:space="preserve">
+    <value>Registra y administra tus ingresos.</value>
+  </data>
+  <data name="IncomeFormTitle" xml:space="preserve">
+    <value>Nuevo ingreso</value>
+  </data>
+  <data name="IncomeDescriptionPlaceholder" xml:space="preserve">
+    <value>Descripción</value>
+  </data>
+  <data name="IncomeAmountPlaceholder" xml:space="preserve">
+    <value>Monto</value>
+  </data>
+  <data name="IncomeCategoryPlaceholder" xml:space="preserve">
+    <value>Categoría</value>
+  </data>
+  <data name="IncomePaymentMethodPlaceholder" xml:space="preserve">
+    <value>Método de pago</value>
+  </data>
+  <data name="IncomeCurrencyPlaceholder" xml:space="preserve">
+    <value>Moneda</value>
+  </data>
+  <data name="IncomeNotePlaceholder" xml:space="preserve">
+    <value>Nota</value>
+  </data>
+  <data name="IncomeRegisterButton" xml:space="preserve">
+    <value>Registrar ingreso</value>
+  </data>
+  <data name="IncomeUpdateButton" xml:space="preserve">
+    <value>Actualizar</value>
+  </data>
+  <data name="IncomeCancelButton" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="IncomeListTitle" xml:space="preserve">
+    <value>Movimientos</value>
+  </data>
+  <data name="IncomeEditButton" xml:space="preserve">
+    <value>Editar</value>
+  </data>
+  <data name="EmptyStateIncomeTitle" xml:space="preserve">
+    <value>Aún no hay ingresos</value>
+  </data>
+  <data name="EmptyStateIncomeHint" xml:space="preserve">
+    <value>Cada pago que recibas aparece aquí como una línea de tu libro de cuentas.</value>
+  </data>
 </root>

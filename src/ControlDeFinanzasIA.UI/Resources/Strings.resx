@@ -1426,4 +1426,52 @@ Showing approximate conversions only.
   <data name="EmptyStateClearFilterAction" xml:space="preserve">
     <value>Clear filter</value>
   </data>
+  <data name="IncomeTitle" xml:space="preserve">
+    <value>Income</value>
+  </data>
+  <data name="IncomeSubtitle" xml:space="preserve">
+    <value>Record and manage your income.</value>
+  </data>
+  <data name="IncomeFormTitle" xml:space="preserve">
+    <value>New income</value>
+  </data>
+  <data name="IncomeDescriptionPlaceholder" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="IncomeAmountPlaceholder" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="IncomeCategoryPlaceholder" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="IncomePaymentMethodPlaceholder" xml:space="preserve">
+    <value>Payment method</value>
+  </data>
+  <data name="IncomeCurrencyPlaceholder" xml:space="preserve">
+    <value>Currency</value>
+  </data>
+  <data name="IncomeNotePlaceholder" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="IncomeRegisterButton" xml:space="preserve">
+    <value>Register income</value>
+  </data>
+  <data name="IncomeUpdateButton" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="IncomeCancelButton" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="IncomeListTitle" xml:space="preserve">
+    <value>Transactions</value>
+  </data>
+  <data name="IncomeEditButton" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="EmptyStateIncomeTitle" xml:space="preserve">
+    <value>No income yet</value>
+  </data>
+  <data name="EmptyStateIncomeHint" xml:space="preserve">
+    <value>Every payment you receive shows up here as a line in your ledger.</value>
+  </data>
 </root>

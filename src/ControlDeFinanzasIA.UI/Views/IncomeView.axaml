@@ -2,55 +2,69 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
              xmlns:dto="using:ControlDeFinanzasIA.Application.DTOs"
+             xmlns:behaviors="using:ControlDeFinanzasIA.UI.Behaviors"
+             xmlns:controls="using:ControlDeFinanzasIA.UI.Controls"
+             xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
              xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
              x:Class="ControlDeFinanzasIA.UI.Views.IncomeView"
              x:DataType="vm:IncomeViewModel"
              x:Name="Root"
-             Background="#16181D">
+             Background="{StaticResource InkBrush}">
     <UserControl.Resources>
         <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
     </UserControl.Resources>
     <ScrollViewer>
         <StackPanel Margin="28" Spacing="16">
-            <TextBlock Text="Ingresos" Foreground="#E8E4D9" FontSize="28" FontWeight="Bold" />
-            <TextBlock Text="Registra y administra tus ingresos." Foreground="#A9AFB8" />
-            <Border Background="#242932" CornerRadius="10" Padding="20">
+            <TextBlock Text="{x:Static resources:Strings.IncomeTitle}" Foreground="{StaticResource PaperBrush}" FontSize="28" FontWeight="Bold" />
+            <TextBlock Text="{x:Static resources:Strings.IncomeSubtitle}" Foreground="{StaticResource PaperDimBrush}" />
+            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="20">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Nuevo ingreso" Foreground="#71C7A4" FontSize="18" FontWeight="Bold" />
+                    <TextBlock Text="{x:Static resources:Strings.IncomeFormTitle}" Foreground="{StaticResource SageBrush}" FontSize="18" FontWeight="Bold" />
                     <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
-                        <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding Description}" Watermark="Descripción" />
-                        <TextBox Grid.Row="0" Grid.Column="1" Margin="12,0,0,0" Text="{Binding Amount}" Watermark="Monto" />
-                        <ComboBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Categories}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedCategoryId}" SelectedValueBinding="{Binding Id}" PlaceholderText="Categoría" />
-                        <ComboBox Grid.Row="1" Grid.Column="1" Margin="12,0,0,0" ItemsSource="{Binding PaymentMethods}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedPaymentMethodId}" SelectedValueBinding="{Binding Id}" PlaceholderText="Método de pago" />
-                        <ComboBox Grid.Row="2" Grid.Column="0" ItemsSource="{x:Static converters:EnumValues.Currencies}" SelectedItem="{Binding Currency}" PlaceholderText="Moneda" />
+                        <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding Description}" behaviors:FocusOnRequest.Token="{Binding DescriptionFocusRequest}" Watermark="{x:Static resources:Strings.IncomeDescriptionPlaceholder}" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Margin="12,0,0,0" Text="{Binding Amount}" Watermark="{x:Static resources:Strings.IncomeAmountPlaceholder}" />
+                        <ComboBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Categories}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedCategoryId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.IncomeCategoryPlaceholder}" />
+                        <ComboBox Grid.Row="1" Grid.Column="1" Margin="12,0,0,0" ItemsSource="{Binding PaymentMethods}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedPaymentMethodId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.IncomePaymentMethodPlaceholder}" />
+                        <ComboBox Grid.Row="2" Grid.Column="0" ItemsSource="{x:Static converters:EnumValues.Currencies}" SelectedItem="{Binding Currency}" PlaceholderText="{x:Static resources:Strings.IncomeCurrencyPlaceholder}" />
                         <DatePicker Grid.Row="2" Grid.Column="1" Margin="12,0,0,0" SelectedDate="{Binding Date, Converter={StaticResource DateOnlyConverter}}" />
-                        <TextBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Note}" Watermark="Nota" AcceptsReturn="True" Height="70" />
-                        <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding FormError}" Foreground="#F08A82" TextWrapping="Wrap" />
+                        <TextBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Note}" Watermark="{x:Static resources:Strings.IncomeNotePlaceholder}" AcceptsReturn="True" Height="70" />
+                        <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
                         <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10">
-                            <Button Content="Registrar ingreso" Command="{Binding RegisterIncomeCommand}" Background="#71C7A4" Foreground="#16181D" />
-                            <Button Content="Actualizar" Command="{Binding UpdateIncomeCommand}" IsVisible="{Binding IsEditMode}" />
-                            <Button Content="Cancelar" Command="{Binding CancelEditCommand}" IsVisible="{Binding IsEditMode}" />
+                            <Button Content="{x:Static resources:Strings.IncomeRegisterButton}" Command="{Binding RegisterIncomeCommand}" Background="{StaticResource SageBrush}" Foreground="{StaticResource InkBrush}" />
+                            <Button Content="{x:Static resources:Strings.IncomeUpdateButton}" Command="{Binding UpdateIncomeCommand}" IsVisible="{Binding IsEditMode}" />
+                            <Button Content="{x:Static resources:Strings.IncomeCancelButton}" Command="{Binding CancelEditCommand}" IsVisible="{Binding IsEditMode}" />
                         </StackPanel>
                     </Grid>
                 </StackPanel>
             </Border>
-            <TextBlock Text="{Binding StatusMessage}" Foreground="#71C7A4" TextWrapping="Wrap" />
-            <TextBlock Text="Movimientos" Foreground="#E8E4D9" FontSize="20" FontWeight="Bold" />
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+            <TextBlock Text="{x:Static resources:Strings.IncomeListTitle}" Foreground="{StaticResource PaperBrush}" FontSize="20" FontWeight="Bold" />
             <ItemsControl ItemsSource="{Binding Incomes}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="dto:IncomeDto">
-                        <Border Background="#242932" CornerRadius="8" Padding="14" Margin="0,0,0,8">
+                        <Border Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="14" Margin="0,0,0,8">
                             <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                                <TextBlock Grid.Column="0" Text="{Binding Date}" Foreground="#A9AFB8" VerticalAlignment="Center" />
-                                <StackPanel Grid.Column="1"><TextBlock Text="{Binding Description}" Foreground="#E8E4D9" FontWeight="Bold" /><TextBlock Text="{Binding PaymentMethodName}" Foreground="#A9AFB8" /></StackPanel>
-                                <TextBlock Grid.Column="2" Text="{Binding Amount, StringFormat={}{0:N2}}" Foreground="#71C7A4" FontSize="16" VerticalAlignment="Center" />
-                                <Button Grid.Column="3" Content="Editar" Command="{Binding #Root.DataContext.BeginEditCommand}" CommandParameter="{Binding}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="0" Text="{Binding Date}" Foreground="{StaticResource PaperDimBrush}" VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1"><TextBlock Text="{Binding Description}" Foreground="{StaticResource PaperBrush}" FontWeight="Bold" /><TextBlock Text="{Binding PaymentMethodName}" Foreground="{StaticResource PaperDimBrush}" /></StackPanel>
+                                <TextBlock Grid.Column="2" Text="{Binding Amount, StringFormat={}{0:N2}}" Foreground="{StaticResource SageBrush}" FontSize="16" VerticalAlignment="Center" />
+                                <Button Grid.Column="3" Content="{x:Static resources:Strings.IncomeEditButton}" Command="{Binding #Root.DataContext.BeginEditCommand}" CommandParameter="{Binding}" VerticalAlignment="Center" />
                             </Grid>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-            <TextBlock Text="No hay ingresos registrados." Foreground="#A9AFB8" IsVisible="{Binding !Incomes.Count}" />
+            <!-- F-021 (DD-9): "no data yet" and "no results for this filter" are distinct states; neither shows before the first load. -->
+            <controls:EmptyState Title="{x:Static resources:Strings.EmptyStateIncomeTitle}"
+                                 Hint="{x:Static resources:Strings.EmptyStateIncomeHint}"
+                                 ActionText="{x:Static resources:Strings.EmptyStateCreateFirstAction}"
+                                 ActionCommand="{Binding BeginNewEntryCommand}"
+                                 ShortcutText="Ctrl+Shift+N"
+                                 IsVisible="{Binding IsEmptyNoData}" />
+            <controls:EmptyState Title="{x:Static resources:Strings.EmptyStateFilteredTitle}"
+                                 Hint="{x:Static resources:Strings.EmptyStateFilteredHint}"
+                                 ActionText="{x:Static resources:Strings.EmptyStateClearFilterAction}"
+                                 ActionCommand="{Binding ClearFilterCommand}"
+                                 IsVisible="{Binding IsEmptyFiltered}" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

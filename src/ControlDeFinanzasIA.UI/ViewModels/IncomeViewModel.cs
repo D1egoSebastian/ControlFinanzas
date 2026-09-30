@@ -21,6 +21,7 @@ using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Enums;
 using ControlDeFinanzasIA.Domain.ValueObjects;
 using ControlDeFinanzasIA.Domain.Views;
+using ControlDeFinanzasIA.UI.Input;
 using ControlDeFinanzasIA.UI.Resources;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
@@ -211,6 +212,8 @@ public sealed partial class IncomeViewModel : ViewModelBase
     /// Gets or sets the total number of pages available.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmptyNoData))]
+    [NotifyPropertyChangedFor(nameof(IsEmptyFiltered))]
     private int _totalPages;
 
     /// <summary>
@@ -253,6 +256,9 @@ public sealed partial class IncomeViewModel : ViewModelBase
     /// Gets or sets the filter applied to the income query.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasActiveFilter))]
+    [NotifyPropertyChangedFor(nameof(IsEmptyNoData))]
+    [NotifyPropertyChangedFor(nameof(IsEmptyFiltered))]
     private IncomeFilter _currentFilter;
 
     /// <summary>
@@ -308,6 +314,60 @@ public sealed partial class IncomeViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     private Guid? _pendingDeleteViewId;
+
+    /// <summary>
+    /// Gets a value indicating whether the list has been loaded successfully at least once. Until then no empty
+    /// state is shown, so a slow or failed first load never flashes "no data yet" (F-021, DD-9).
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmptyNoData))]
+    [NotifyPropertyChangedFor(nameof(IsEmptyFiltered))]
+    private bool _hasLoaded;
+
+    /// <summary>
+    /// Gets a value indicating whether the APPLIED filter narrows the list, i.e. it differs from the default
+    /// filter on the dimensions the list query honors (category, dates, tags). Edits in the filter rail that were
+    /// not applied do not count, and neither does the payment-method selection, which the list ignores.
+    /// </summary>
+    public bool HasActiveFilter =>
+        CurrentFilter.CategoryId is not null
+        || CurrentFilter.DateFrom is not null
+        || CurrentFilter.DateTo is not null
+        || CurrentFilter.TagIds is { Count: > 0 };
+
+    /// <summary>
+    /// Gets a value indicating whether the list is loaded, empty, and no filter is narrowing it: there is no data yet.
+    /// </summary>
+    public bool IsEmptyNoData => IsListEmpty && !HasActiveFilter;
+
+    /// <summary>
+    /// Gets a value indicating whether the list is loaded and empty only because the applied filter matches nothing.
+    /// </summary>
+    public bool IsEmptyFiltered => IsListEmpty && HasActiveFilter;
+
+    private bool IsListEmpty => HasLoaded && Incomes.Count == 0 && TotalPages == 0;
+
+    /// <summary>
+    /// Gets the focus request that moves keyboard focus to the description box. A NEW token is assigned on every
+    /// <see cref="BeginNewEntry"/> so the change notification is always raised (F-021, DD-5).
+    /// </summary>
+    [ObservableProperty]
+    private FocusRequestToken? _descriptionFocusRequest;
+
+    /// <summary>
+    /// Starts a new entry: cancels an edit in progress (an unsaved new entry is left untouched) and asks the view
+    /// to focus the description box. Bound to the empty-state create action and, later, to <c>Ctrl+Shift+N</c>.
+    /// </summary>
+    [RelayCommand]
+    public void BeginNewEntry()
+    {
+        if (IsEditMode)
+        {
+            CancelEdit();
+        }
+
+        DescriptionFocusRequest = new FocusRequestToken();
+    }
 
     /// <summary>
     /// Gets a value indicating whether the previous page command can execute.
@@ -579,6 +639,7 @@ public sealed partial class IncomeViewModel : ViewModelBase
             }
 
             TotalPages = paged.TotalPages;
+            HasLoaded = true;
         }
         else
         {
@@ -590,6 +651,10 @@ public sealed partial class IncomeViewModel : ViewModelBase
                 result.Error?.Code,
                 result.Error?.Message);
         }
+
+        // The empty flags depend on the collection count, which raises no property notification of its own.
+        OnPropertyChanged(nameof(IsEmptyNoData));
+        OnPropertyChanged(nameof(IsEmptyFiltered));
     }
 
     /// <summary>

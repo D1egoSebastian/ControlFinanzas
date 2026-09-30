@@ -2321,4 +2321,84 @@ public class Strings
     /// Gets the clear-filter action caption (F-021).
     /// </summary>
     public static string EmptyStateClearFilterAction => ResourceManager.GetString("EmptyStateClearFilterAction", Culture)!;
+
+    /// <summary>
+    /// Gets the income screen title (F-021).
+    /// </summary>
+    public static string IncomeTitle => ResourceManager.GetString("IncomeTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the income screen subtitle (F-021).
+    /// </summary>
+    public static string IncomeSubtitle => ResourceManager.GetString("IncomeSubtitle", Culture)!;
+
+    /// <summary>
+    /// Gets the income form heading (F-021).
+    /// </summary>
+    public static string IncomeFormTitle => ResourceManager.GetString("IncomeFormTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the income description placeholder (F-021).
+    /// </summary>
+    public static string IncomeDescriptionPlaceholder => ResourceManager.GetString("IncomeDescriptionPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the income amount placeholder (F-021).
+    /// </summary>
+    public static string IncomeAmountPlaceholder => ResourceManager.GetString("IncomeAmountPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the income category placeholder (F-021).
+    /// </summary>
+    public static string IncomeCategoryPlaceholder => ResourceManager.GetString("IncomeCategoryPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the income payment method placeholder (F-021).
+    /// </summary>
+    public static string IncomePaymentMethodPlaceholder => ResourceManager.GetString("IncomePaymentMethodPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the income currency placeholder (F-021).
+    /// </summary>
+    public static string IncomeCurrencyPlaceholder => ResourceManager.GetString("IncomeCurrencyPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the income note placeholder (F-021).
+    /// </summary>
+    public static string IncomeNotePlaceholder => ResourceManager.GetString("IncomeNotePlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the register income button caption (F-021).
+    /// </summary>
+    public static string IncomeRegisterButton => ResourceManager.GetString("IncomeRegisterButton", Culture)!;
+
+    /// <summary>
+    /// Gets the update income button caption (F-021).
+    /// </summary>
+    public static string IncomeUpdateButton => ResourceManager.GetString("IncomeUpdateButton", Culture)!;
+
+    /// <summary>
+    /// Gets the cancel edit button caption on the income screen (F-021).
+    /// </summary>
+    public static string IncomeCancelButton => ResourceManager.GetString("IncomeCancelButton", Culture)!;
+
+    /// <summary>
+    /// Gets the income list heading (F-021).
+    /// </summary>
+    public static string IncomeListTitle => ResourceManager.GetString("IncomeListTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the income row edit button caption (F-021).
+    /// </summary>
+    public static string IncomeEditButton => ResourceManager.GetString("IncomeEditButton", Culture)!;
+
+    /// <summary>
+    /// Gets the income empty-state headline (F-021).
+    /// </summary>
+    public static string EmptyStateIncomeTitle => ResourceManager.GetString("EmptyStateIncomeTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the income empty-state hint (F-021).
+    /// </summary>
+    public static string EmptyStateIncomeHint => ResourceManager.GetString("EmptyStateIncomeHint", Culture)!;
 }

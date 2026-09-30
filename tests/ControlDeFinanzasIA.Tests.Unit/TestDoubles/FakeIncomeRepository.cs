@@ -149,6 +149,28 @@ public sealed class FakeIncomeRepository : IIncomeRepository
     /// <inheritdoc />
     public Task<PagedResult<Income>> GetByFilterAsync(IncomeFilter filter, CancellationToken ct = default)
     {
+        if (GetByFilterGate is not null)
+        {
+            return GetByFilterGatedAsync(filter, ct);
+        }
+
+        return GetByFilterCore(filter);
+    }
+
+    /// <summary>
+    /// Gets or sets a gate that holds every <see cref="GetByFilterAsync"/> call until it completes
+    /// (simulates a slow first load). <c>null</c> by default.
+    /// </summary>
+    public TaskCompletionSource? GetByFilterGate { get; set; }
+
+    private async Task<PagedResult<Income>> GetByFilterGatedAsync(IncomeFilter filter, CancellationToken ct)
+    {
+        await GetByFilterGate!.Task;
+        return await GetByFilterCore(filter);
+    }
+
+    private Task<PagedResult<Income>> GetByFilterCore(IncomeFilter filter)
+    {
         GetByFilterCallCount++;
         LastIncomeFilter = filter;
 
