@@ -70,6 +70,9 @@ public sealed class ImportViewModelTests : IDisposable
         return details;
     }
 
+    // Every await on work a test can gate goes through here, so a regression fails fast instead of hanging.
+    private static Task Bounded(Task task) => task.WaitAsync(TimeSpan.FromSeconds(5));
+
     private static async Task WaitUntilAsync(Func<bool> condition)
     {
         for (int i = 0; i < 400 && !condition(); i++)
@@ -194,7 +197,7 @@ public sealed class ImportViewModelTests : IDisposable
         public async Task ChooseAsync()
         {
             Dialog.Result = NewTarget();
-            await ViewModel.ChooseFileCommand.ExecuteAsync(null);
+            await Bounded(ViewModel.ChooseFileCommand.ExecuteAsync(null));
         }
     }
 
@@ -206,7 +209,7 @@ public sealed class ImportViewModelTests : IDisposable
         var f = new Fixture();
         f.Dialog.Result = null;
 
-        await f.ViewModel.ChooseFileCommand.ExecuteAsync(null);
+        await Bounded(f.ViewModel.ChooseFileCommand.ExecuteAsync(null));
 
         Assert.Equal(["Close"], f.Events);
         Assert.Equal(string.Empty, f.ViewModel.StatusMessage);
@@ -221,7 +224,7 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var f = new Fixture();
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.Equal(["csv", "txt", "xlsx"], f.Dialog.LastFilters.Select(x => x.Extension));
         Assert.Equal(
@@ -256,7 +259,7 @@ public sealed class ImportViewModelTests : IDisposable
                 : Result.Failure(code, @"C:\secret\folder\bank.csv exploded", Details(reason, line));
             var f = new Fixture(readerResult: failure);
 
-            await f.ChooseAsync();
+            await Bounded(f.ChooseAsync());
 
             object[] args = expectedKey switch
             {
@@ -285,7 +288,7 @@ public sealed class ImportViewModelTests : IDisposable
         var f = new Fixture();
         f.Dialog.Result = new OpenTarget("bank.csv", _ => throw new IOException(@"C:\secret\bank.csv locked"));
 
-        await f.ViewModel.ChooseFileCommand.ExecuteAsync(null);
+        await Bounded(f.ViewModel.ChooseFileCommand.ExecuteAsync(null));
 
         Assert.Equal(Strings.ImportErrorUnreadable, f.ViewModel.StatusMessage);
         Assert.DoesNotContain("secret", f.ViewModel.StatusMessage);
@@ -300,7 +303,7 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var f = new Fixture();
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.Equal(ImportPanelState.Previewed, f.ViewModel.State);
         Assert.NotNull(f.ViewModel.Preview);
@@ -318,7 +321,7 @@ public sealed class ImportViewModelTests : IDisposable
         RawTable table = TableWith(["When", "What", "How much"], null, ["2026-03-01", "Uno", "10"], ["2026-03-02", "Dos", "20"]);
         var f = new Fixture(table);
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.Equal(ImportPanelState.Mapping, f.ViewModel.State);
         Assert.False(f.ViewModel.ConfirmCommand.CanExecute(null));
@@ -327,11 +330,16 @@ public sealed class ImportViewModelTests : IDisposable
         Assert.Null(f.ViewModel.ColumnChoices[0].Index);
         Assert.Equal(Strings.ImportColumnNone, f.ViewModel.ColumnChoices[0].Label);
 
+        // One change at a time, like a user: with a zero debounce each refresh continues on another thread
+        // (Task.Yield), so changing the next property while it applies its preview would race the VM's
+        // UI-thread-confined state (the change made while suppressed is silently dropped). Settle each refresh first.
         f.ViewModel.SelectedDateColumn = f.ViewModel.ColumnChoices[1];
+        await Bounded(f.ViewModel.RefreshTask);
         f.ViewModel.SelectedDescriptionColumn = f.ViewModel.ColumnChoices[2];
+        await Bounded(f.ViewModel.RefreshTask);
         Assert.False(f.ViewModel.ConfirmCommand.CanExecute(null));
         f.ViewModel.SelectedAmountColumn = f.ViewModel.ColumnChoices[3];
-        await f.ViewModel.RefreshTask;
+        await Bounded(f.ViewModel.RefreshTask);
 
         Assert.Equal(ImportPanelState.Previewed, f.ViewModel.State);
         Assert.True(f.ViewModel.ConfirmCommand.CanExecute(null));
@@ -344,20 +352,25 @@ public sealed class ImportViewModelTests : IDisposable
     [Fact]
     public async Task OptionChange_MarksPreviewStale_ThenReprevewsOnceFromTheRetainedBytes()
     {
-        var f = new Fixture();
-        await f.ChooseAsync();
-        Assert.Equal(1, f.Reader.Calls);
+        var reader = new GatedReader(GoodTable());
+        var f = new Fixture(reader: reader);
+        await Bounded(f.ChooseAsync());
+        Assert.Equal(1, reader.Calls);
+        reader.Gate = new TaskCompletionSource();
 
         f.ViewModel.DecimalStyle = DecimalStyle.Comma;
+        await WaitUntilAsync(() => reader.Calls == 2);
 
+        // The re-preview is held at the reader, so the stale state is observed deterministically.
         Assert.True(f.ViewModel.IsPreviewStale);
         Assert.False(f.ViewModel.ConfirmCommand.CanExecute(null));
 
-        await f.ViewModel.RefreshTask;
+        reader.Gate.SetResult();
+        await Bounded(f.ViewModel.RefreshTask);
 
         Assert.False(f.ViewModel.IsPreviewStale);
         Assert.Equal(ImportPanelState.Previewed, f.ViewModel.State);
-        Assert.Equal(2, f.Reader.Calls);
+        Assert.Equal(2, reader.Calls);
         Assert.Equal(1, f.Dialog.Calls);
     }
 
@@ -365,14 +378,14 @@ public sealed class ImportViewModelTests : IDisposable
     public async Task RapidOptionChanges_CollapseIntoOneDebouncedPreview()
     {
         var f = new Fixture();
-        await f.ChooseAsync();
-        f.ViewModel.PreviewDebounce = TimeSpan.FromMilliseconds(300);
+        await Bounded(f.ChooseAsync());
+        f.ViewModel.PreviewDebounce = TimeSpan.FromSeconds(1);
 
         f.ViewModel.DecimalStyle = DecimalStyle.Point;
         f.ViewModel.SkipDuplicates = false;
         f.ViewModel.DefaultCurrency = Currency.USD;
         f.ViewModel.SignMode = SignMode.NegativeIsExpense;
-        await f.ViewModel.RefreshTask;
+        await Bounded(f.ViewModel.RefreshTask);
 
         Assert.Equal(2, f.Reader.Calls);
         Assert.False(f.ViewModel.IsPreviewStale);
@@ -383,7 +396,7 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var reader = new GatedReader(GoodTable());
         var f = new Fixture(reader: reader);
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
         reader.Gate = new TaskCompletionSource();
 
         f.ViewModel.DecimalStyle = DecimalStyle.Point;
@@ -392,8 +405,8 @@ public sealed class ImportViewModelTests : IDisposable
         f.ViewModel.DecimalStyle = DecimalStyle.Comma;
         await WaitUntilAsync(() => reader.Cancelled == 1);
         reader.Gate.SetResult();
-        await f.ViewModel.RefreshTask;
-        await first;
+        await Bounded(f.ViewModel.RefreshTask);
+        await Bounded(first);
 
         Assert.Equal(1, reader.Cancelled);
         Assert.Equal(ImportPanelState.Previewed, f.ViewModel.State);
@@ -405,10 +418,10 @@ public sealed class ImportViewModelTests : IDisposable
     public async Task DelimiterOverride_ReparsesTheRetainedBytesWithThatDelimiter()
     {
         var f = new Fixture();
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         f.ViewModel.SelectedDelimiter = ';';
-        await f.ViewModel.RefreshTask;
+        await Bounded(f.ViewModel.RefreshTask);
 
         Assert.Equal(';', f.Reader.LastOptions!.Delimiter);
         Assert.Equal(2, f.Reader.Calls);
@@ -419,12 +432,13 @@ public sealed class ImportViewModelTests : IDisposable
     public async Task Confirm_AfterAnOptionChange_CommitsWithTheExactOptionsOfTheLastPreview()
     {
         var f = new Fixture();
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
         f.ViewModel.SkipDuplicates = false;
+        await Bounded(f.ViewModel.RefreshTask);
         f.ViewModel.CreateMissingCategories = false;
-        await f.ViewModel.RefreshTask;
+        await Bounded(f.ViewModel.RefreshTask);
 
-        await f.ViewModel.ConfirmCommand.ExecuteAsync(null);
+        await Bounded(f.ViewModel.ConfirmCommand.ExecuteAsync(null));
 
         Assert.Equal(ImportPanelState.Done, f.ViewModel.State);
         Assert.Single(f.Writer.Batches);
@@ -438,10 +452,10 @@ public sealed class ImportViewModelTests : IDisposable
             ++calls == 1
                 ? Result.Success(GoodTable())
                 : Result.Failure(ImportErrorCodes.UnreadableFile, "x", Details(ImportErrorCodes.ReasonMalformedCsv, "3"))));
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         f.ViewModel.SelectedDelimiter = '\t';
-        await f.ViewModel.RefreshTask;
+        await Bounded(f.ViewModel.RefreshTask);
 
         Assert.True(f.ViewModel.IsError);
         Assert.Equal(Text("ImportErrorMalformedCsv", CultureInfo.CurrentUICulture, "3"), f.ViewModel.StatusMessage);
@@ -458,12 +472,12 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var f = new Fixture(Table(Row("2026-03-01", "Uno", "abc"), Row("2026-03-02", "Dos", "xyz")));
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.Equal(ImportPanelState.Previewed, f.ViewModel.State);
         Assert.Equal(0, f.ViewModel.Preview!.ToImportCount);
         Assert.False(f.ViewModel.ConfirmCommand.CanExecute(null));
-        await f.ViewModel.ConfirmCommand.ExecuteAsync(null);
+        await Bounded(f.ViewModel.ConfirmCommand.ExecuteAsync(null));
         Assert.Empty(f.Writer.Batches);
     }
 
@@ -471,14 +485,15 @@ public sealed class ImportViewModelTests : IDisposable
     public async Task Confirm_WhileStale_DoesNothingEvenWhenExecutedDirectly()
     {
         var f = new Fixture();
-        await f.ChooseAsync();
-        f.ViewModel.PreviewDebounce = TimeSpan.FromMilliseconds(200);
+        await Bounded(f.ChooseAsync());
+        f.ViewModel.PreviewDebounce = TimeSpan.FromMinutes(5);
         f.ViewModel.DecimalStyle = DecimalStyle.Point;
 
-        await f.ViewModel.ConfirmCommand.ExecuteAsync(null);
+        await Bounded(f.ViewModel.ConfirmCommand.ExecuteAsync(null));
 
         Assert.Empty(f.Writer.Batches);
-        await f.ViewModel.RefreshTask;
+        f.ViewModel.CancelCommand.Execute(null);
+        await Bounded(f.ViewModel.RefreshTask);
     }
 
     // ---- (f) busy guards (S-25, R-22) ----
@@ -491,8 +506,8 @@ public sealed class ImportViewModelTests : IDisposable
 
         Task first = f.ViewModel.ChooseFileCommand.ExecuteAsync(null);
         Task second = f.ViewModel.ChooseFileCommand.ExecuteAsync(null);
-        await second;
-        await f.ViewModel.ConfirmCommand.ExecuteAsync(null);
+        await Bounded(second);
+        await Bounded(f.ViewModel.ConfirmCommand.ExecuteAsync(null));
         f.ViewModel.CloseCommand.Execute(null);
 
         Assert.Equal(1, f.Dialog.Calls);
@@ -501,7 +516,7 @@ public sealed class ImportViewModelTests : IDisposable
         Assert.Empty(f.Events);
 
         f.Dialog.Gate.SetResult();
-        await first;
+        await Bounded(first);
 
         Assert.Equal(1, f.Dialog.Calls);
         Assert.Equal(ImportPanelState.Previewed, f.ViewModel.State);
@@ -513,20 +528,20 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var writer = new GatedWriter();
         var f = new Fixture(writer: writer);
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Task first = f.ViewModel.ConfirmCommand.ExecuteAsync(null);
         await WaitUntilAsync(() => writer.Calls == 1);
         Task second = f.ViewModel.ConfirmCommand.ExecuteAsync(null);
-        await second;
-        await f.ViewModel.ChooseFileCommand.ExecuteAsync(null);
+        await Bounded(second);
+        await Bounded(f.ViewModel.ChooseFileCommand.ExecuteAsync(null));
 
         Assert.Equal(ImportPanelState.Importing, f.ViewModel.State);
         Assert.True(f.ViewModel.IsBusy);
         Assert.Equal(1, f.Dialog.Calls);
 
         writer.Gate.SetResult(Result.Success(new ImportCommitResult(2, 0, 0, 0, 0)));
-        await first;
+        await Bounded(first);
 
         Assert.Equal(1, writer.Calls);
         Assert.Equal(ImportPanelState.Done, f.ViewModel.State);
@@ -547,10 +562,10 @@ public sealed class ImportViewModelTests : IDisposable
                 [
                     new ExistingTransactionKey(new DateOnly(2026, 3, 1), TransactionType.Expense, 10m, Currency.DOP, "Uno", comida),
                 ])));
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
         Assert.Equal(0, f.ViewModel.Preview!.DuplicateCount);
 
-        await f.ViewModel.ConfirmCommand.ExecuteAsync(null);
+        await Bounded(f.ViewModel.ConfirmCommand.ExecuteAsync(null));
 
         Assert.Empty(f.Writer.Batches);
         Assert.Equal(ImportPanelState.Previewed, f.ViewModel.State);
@@ -567,11 +582,11 @@ public sealed class ImportViewModelTests : IDisposable
     public async Task Confirm_Success_RaisesCompletedBeforeClose_AndRefreshesNotificationsOnce()
     {
         var f = new Fixture(Table(Row("2026-03-01", "Uno", "10", "Mascotas"), Row("2026-03-02", "Dos", "20")));
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
         ImportCompletedEventArgs? args = null;
         f.ViewModel.Completed += (_, e) => args = e;
 
-        await f.ViewModel.ConfirmCommand.ExecuteAsync(null);
+        await Bounded(f.ViewModel.ConfirmCommand.ExecuteAsync(null));
 
         Assert.Equal(ImportPanelState.Done, f.ViewModel.State);
         Assert.Equal(["Completed"], f.Events);
@@ -596,9 +611,9 @@ public sealed class ImportViewModelTests : IDisposable
         var gate = new TaskCompletionSource<bool>();
         gate.SetException(new InvalidOperationException("boom"));
         f.Center.TryRefreshGate = gate;
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
-        await f.ViewModel.ConfirmCommand.ExecuteAsync(null);
+        await Bounded(f.ViewModel.ConfirmCommand.ExecuteAsync(null));
 
         Assert.Equal(ImportPanelState.Done, f.ViewModel.State);
         Assert.Equal(1, f.Center.TryRefreshCalls);
@@ -609,9 +624,9 @@ public sealed class ImportViewModelTests : IDisposable
     public async Task Confirm_Success_WorksWithoutANotificationCenter()
     {
         var f = new Fixture(withCenter: false);
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
-        await f.ViewModel.ConfirmCommand.ExecuteAsync(null);
+        await Bounded(f.ViewModel.ConfirmCommand.ExecuteAsync(null));
 
         Assert.Equal(ImportPanelState.Done, f.ViewModel.State);
         Assert.Equal(0, f.Center.TryRefreshCalls);
@@ -622,9 +637,9 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var f = new Fixture();
         f.ViewModel.Completed += (_, _) => throw new InvalidOperationException("subscriber bug");
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
-        await f.ViewModel.ConfirmCommand.ExecuteAsync(null);
+        await Bounded(f.ViewModel.ConfirmCommand.ExecuteAsync(null));
 
         Assert.Equal(ImportPanelState.Done, f.ViewModel.State);
         Assert.False(f.ViewModel.IsError);
@@ -638,9 +653,9 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var writer = new FakeImportWriter(_ => Result.Failure(ImportErrorCodes.WriteFailed, @"C:\secret\data.db locked"));
         var f = new Fixture(writer: writer);
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
-        await f.ViewModel.ConfirmCommand.ExecuteAsync(null);
+        await Bounded(f.ViewModel.ConfirmCommand.ExecuteAsync(null));
 
         Assert.Equal(Strings.ImportErrorWriteFailed, f.ViewModel.StatusMessage);
         Assert.True(f.ViewModel.IsError);
@@ -658,7 +673,7 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var f = new Fixture(dialog: new ThrowingDialog(new InvalidOperationException(@"C:\secret\path exploded")));
 
-        await f.ViewModel.ChooseFileCommand.ExecuteAsync(null);
+        await Bounded(f.ViewModel.ChooseFileCommand.ExecuteAsync(null));
 
         Assert.Equal(Strings.ImportErrorFailed, f.ViewModel.StatusMessage);
         Assert.True(f.ViewModel.IsError);
@@ -673,7 +688,7 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var f = new Fixture(dialog: new ThrowingDialog(new OperationCanceledException()));
 
-        await f.ViewModel.ChooseFileCommand.ExecuteAsync(null);
+        await Bounded(f.ViewModel.ChooseFileCommand.ExecuteAsync(null));
 
         Assert.Equal(string.Empty, f.ViewModel.StatusMessage);
         Assert.False(f.ViewModel.IsError);
@@ -686,7 +701,7 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var f = new Fixture(lookup: () => Result.Failure(ImportErrorCodes.LookupFailed, "db"));
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.Equal(Strings.ImportErrorLookupFailed, f.ViewModel.StatusMessage);
         Assert.Equal(ImportPanelState.Idle, f.ViewModel.State);
@@ -703,7 +718,7 @@ public sealed class ImportViewModelTests : IDisposable
             ? TableWith(["When", "What", "How much"], null, ["2026-03-01", "Uno", "10"])
             : GoodTable();
         var f = new Fixture(table);
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
         Assert.Equal(from == "mapping" ? ImportPanelState.Mapping : ImportPanelState.Previewed, f.ViewModel.State);
 
         f.ViewModel.CancelCommand.Execute(null);
@@ -715,7 +730,7 @@ public sealed class ImportViewModelTests : IDisposable
 
         f.ViewModel.DecimalStyle = DecimalStyle.Comma;
         Assert.False(f.ViewModel.IsPreviewStale);
-        await f.ViewModel.RefreshTask;
+        await Bounded(f.ViewModel.RefreshTask);
         Assert.Equal(1, f.Reader.Calls);
     }
 
@@ -728,7 +743,7 @@ public sealed class ImportViewModelTests : IDisposable
         Assert.Equal(ImportPanelState.Loading, f.ViewModel.State);
 
         f.ViewModel.CancelCommand.Execute(null);
-        await choose;
+        await Bounded(choose);
 
         Assert.Equal(ImportPanelState.Idle, f.ViewModel.State);
         Assert.Equal(["Close"], f.Events);
@@ -741,7 +756,7 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var writer = new GatedWriter();
         var f = new Fixture(writer: writer);
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
         Task confirm = f.ViewModel.ConfirmCommand.ExecuteAsync(null);
         await WaitUntilAsync(() => writer.Calls == 1);
 
@@ -750,7 +765,7 @@ public sealed class ImportViewModelTests : IDisposable
         Assert.Equal(ImportPanelState.Importing, f.ViewModel.State);
         Assert.Empty(f.Events);
         writer.Gate.SetResult(Result.Success(new ImportCommitResult(2, 0, 0, 0, 0)));
-        await confirm;
+        await Bounded(confirm);
     }
 
     // ---- (l) banners (C-6) ----
@@ -760,7 +775,7 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var f = new Fixture(Table(Row("03/04/2026", "Uno", "10"), Row("05/06/2026", "Dos", "20")));
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.Equal(DateEvidence.AmbiguousOnly, f.ViewModel.Preview!.Dates);
         Assert.Equal([Strings.ImportDateAmbiguousBanner], f.ViewModel.Banners);
@@ -772,7 +787,7 @@ public sealed class ImportViewModelTests : IDisposable
         UseCulture("en");
         var f = new Fixture(Table(Row("25/03/2026", "Uno", "10"), Row("05/06/2026", "Dos", "20")));
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.Equal(ImportDateFormat.MonthDayYear, f.ViewModel.DateFormat);
         Assert.Equal(DateEvidence.Contradicts, f.ViewModel.Preview!.Dates);
@@ -784,7 +799,7 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var f = new Fixture(Table(Row("2026-03-01", "Uno", "1,234.56"), Row("2026-03-02", "Dos", "1.234,56")));
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.True(f.ViewModel.Preview!.Decimal.IsConflict);
         Assert.Contains(Strings.ImportDecimalConflictBanner, f.ViewModel.Banners);
@@ -796,13 +811,13 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var f = new Fixture(Table(Row("2026-03-01", "Uno", "1,234"), Row("2026-03-02", "Dos", "2,500")));
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.Contains(Strings.ImportDecimalAmbiguousBanner, f.ViewModel.Banners);
         Assert.Contains(Text("ImportDecimalStyleAutoDetectedFormat", CultureInfo.CurrentUICulture, "1,234.56"), f.ViewModel.DecimalDetectionNote);
 
         f.ViewModel.DecimalStyle = DecimalStyle.Point;
-        await f.ViewModel.RefreshTask;
+        await Bounded(f.ViewModel.RefreshTask);
 
         Assert.DoesNotContain(Strings.ImportDecimalAmbiguousBanner, f.ViewModel.Banners);
     }
@@ -813,7 +828,7 @@ public sealed class ImportViewModelTests : IDisposable
         var source = new TableSourceInfo(ImportFileKind.Csv, "Windows-1252", true, ';', null, "Categoría;Café");
         var f = new Fixture(TableWith(_headers, source, Row("2026-03-01", "Uno", "10")));
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.Contains(Text("ImportEncodingFallbackBanner", CultureInfo.CurrentUICulture, "Categoría;Café"), f.ViewModel.Banners);
     }
@@ -823,7 +838,7 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var f = new Fixture();
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.Empty(f.ViewModel.Banners);
     }
@@ -838,7 +853,7 @@ public sealed class ImportViewModelTests : IDisposable
         UseCulture(culture);
         var f = new Fixture();
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.Equal(expected, f.ViewModel.DateFormat);
         Assert.Equal(DecimalStyle.Auto, f.ViewModel.DecimalStyle);
@@ -943,7 +958,7 @@ public sealed class ImportViewModelTests : IDisposable
     public async Task ConfirmPanel_ShowsTheBackupRecommendation_ButDoesNotGateOnIt()
     {
         var f = new Fixture();
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.Equal(Strings.ImportBackupRecommendation, f.ViewModel.BackupRecommendation);
         Assert.True(f.ViewModel.ConfirmCommand.CanExecute(null));
@@ -958,7 +973,7 @@ public sealed class ImportViewModelTests : IDisposable
             Row("2026-03-04", "Uno", "1234.5", "Mascotas"),
             Row("2026-03-05", "Dos", "abc")));
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         ImportRowItem first = f.ViewModel.SampleRows[0];
         Assert.Equal(new DateTime(2026, 3, 4).ToString("dd MMM yyyy", CultureInfo.CurrentUICulture), first.DateText);
@@ -987,7 +1002,7 @@ public sealed class ImportViewModelTests : IDisposable
         UseCulture("en");
         var f = new Fixture(Table(Row("2026-03-04", "Uno", "10")));
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.Equal("04 Mar 2026", f.ViewModel.SampleRows[0].DateText);
     }
@@ -997,7 +1012,7 @@ public sealed class ImportViewModelTests : IDisposable
     {
         var f = new Fixture(Table(Row("2026-03-01", "Uno", "10"), Row("2026-03-02", "Dos", "abc")));
 
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
         Assert.Equal(Text("ImportSourceFactsCsvFormat", CultureInfo.CurrentUICulture, "UTF-8", ",", "2"), f.ViewModel.SourceFacts);
         Assert.Equal("recorded.zip", f.ViewModel.FileName);
@@ -1008,9 +1023,9 @@ public sealed class ImportViewModelTests : IDisposable
     public async Task Done_ShowsTheInsertedAndSkippedCounts()
     {
         var f = new Fixture();
-        await f.ChooseAsync();
+        await Bounded(f.ChooseAsync());
 
-        await f.ViewModel.ConfirmCommand.ExecuteAsync(null);
+        await Bounded(f.ViewModel.ConfirmCommand.ExecuteAsync(null));
 
         Assert.Equal(Text("ImportDoneFormat", CultureInfo.CurrentUICulture, "2", "0", "0", "0"), f.ViewModel.DoneMessage);
         Assert.True(f.ViewModel.IsDonePanelVisible);
