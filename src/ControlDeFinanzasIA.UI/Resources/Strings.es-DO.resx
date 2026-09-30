@@ -1033,4 +1033,307 @@ Mostrando conversiones aproximadas.
   <data name="BackupErrorInsufficientSpace" xml:space="preserve">
     <value>No hay suficiente espacio libre en el disco para completar la operación. Libera espacio e inténtalo de nuevo. Tus datos actuales no se modificaron.</value>
   </data>
+  <data name="ImportButton" xml:space="preserve">
+    <value>Importar</value>
+  </data>
+  <data name="ImportDialogTitle" xml:space="preserve">
+    <value>Elige un archivo para importar</value>
+  </data>
+  <data name="FileDialogAllSupportedTypes" xml:space="preserve">
+    <value>Todos los archivos compatibles</value>
+  </data>
+  <data name="ImportFileTypeCsv" xml:space="preserve">
+    <value>Archivos CSV</value>
+  </data>
+  <data name="ImportFileTypeText" xml:space="preserve">
+    <value>Archivos de texto</value>
+  </data>
+  <data name="ImportFileTypeExcel" xml:space="preserve">
+    <value>Libros de Excel</value>
+  </data>
+  <data name="ImportTitle" xml:space="preserve">
+    <value>Importar transacciones</value>
+  </data>
+  <data name="ImportSourceFactsCsvFormat" xml:space="preserve">
+    <value>CSV · {0} · delimitador {1} · {2} filas</value>
+  </data>
+  <data name="ImportSourceFactsXlsxFormat" xml:space="preserve">
+    <value>Excel · hoja {0} · {1} filas</value>
+  </data>
+  <data name="ImportEncodingFallbackBanner" xml:space="preserve">
+    <value>Este archivo no es UTF-8 válido, por lo que se leyó como Windows-1252. Verifica que los acentos y símbolos se vean bien: {0}</value>
+  </data>
+  <data name="ImportDecimalConflictBanner" xml:space="preserve">
+    <value>Los montos mezclan dos estilos numéricos (1,234.56 y 1.234,56). Las filas que no siguen el estilo seleccionado se rechazan. Elige el estilo decimal que corresponde a tu archivo.</value>
+  </data>
+  <data name="ImportDecimalAmbiguousBanner" xml:space="preserve">
+    <value>Algunos montos como 1,234 pueden interpretarse de dos maneras. Revisa el estilo decimal antes de importar.</value>
+  </data>
+  <data name="ImportDateAmbiguousBanner" xml:space="preserve">
+    <value>Todas las fechas de este archivo podrían tener el día o el mes primero. Revisa el formato de fecha y la vista previa antes de importar.</value>
+  </data>
+  <data name="ImportDateContradictsBanner" xml:space="preserve">
+    <value>Algunas fechas no se pueden leer con el formato seleccionado (por ejemplo, un mes mayor que 12). Elige el formato que corresponde a tu archivo.</value>
+  </data>
+  <data name="ImportFieldDate" xml:space="preserve">
+    <value>Fecha</value>
+  </data>
+  <data name="ImportFieldType" xml:space="preserve">
+    <value>Tipo</value>
+  </data>
+  <data name="ImportFieldDescription" xml:space="preserve">
+    <value>Descripción</value>
+  </data>
+  <data name="ImportFieldCategory" xml:space="preserve">
+    <value>Categoría</value>
+  </data>
+  <data name="ImportFieldAmount" xml:space="preserve">
+    <value>Monto</value>
+  </data>
+  <data name="ImportFieldCurrency" xml:space="preserve">
+    <value>Moneda</value>
+  </data>
+  <data name="ImportFieldPaymentMethod" xml:space="preserve">
+    <value>Método de pago</value>
+  </data>
+  <data name="ImportColumnNone" xml:space="preserve">
+    <value>(ninguna)</value>
+  </data>
+  <data name="ImportMappingTitle" xml:space="preserve">
+    <value>Asignación de columnas</value>
+  </data>
+  <data name="ImportMappingToggle" xml:space="preserve">
+    <value>Cambiar asignación de columnas</value>
+  </data>
+  <data name="ImportDelimiterLabel" xml:space="preserve">
+    <value>Delimitador</value>
+  </data>
+  <data name="ImportDelimiterAuto" xml:space="preserve">
+    <value>Automático</value>
+  </data>
+  <data name="ImportDelimiterComma" xml:space="preserve">
+    <value>Coma (,)</value>
+  </data>
+  <data name="ImportDelimiterSemicolon" xml:space="preserve">
+    <value>Punto y coma (;)</value>
+  </data>
+  <data name="ImportDelimiterTab" xml:space="preserve">
+    <value>Tabulación</value>
+  </data>
+  <data name="ImportDecimalStyleLabel" xml:space="preserve">
+    <value>Estilo decimal</value>
+  </data>
+  <data name="ImportDecimalStyleAuto" xml:space="preserve">
+    <value>Automático</value>
+  </data>
+  <data name="ImportDecimalStyleAutoDetectedFormat" xml:space="preserve">
+    <value>Automático (detectado: {0})</value>
+  </data>
+  <data name="ImportDecimalStylePoint" xml:space="preserve">
+    <value>Punto decimal (1,234.56)</value>
+  </data>
+  <data name="ImportDecimalStyleComma" xml:space="preserve">
+    <value>Coma decimal (1.234,56)</value>
+  </data>
+  <data name="ImportDateFormatLabel" xml:space="preserve">
+    <value>Formato de fecha</value>
+  </data>
+  <data name="ImportDateFormatDayMonthYear" xml:space="preserve">
+    <value>Día / mes / año (31/12/2026)</value>
+  </data>
+  <data name="ImportDateFormatMonthDayYear" xml:space="preserve">
+    <value>Mes / día / año (12/31/2026)</value>
+  </data>
+  <data name="ImportDateFormatDayMonthYearDash" xml:space="preserve">
+    <value>Día - mes - año (31-12-2026)</value>
+  </data>
+  <data name="ImportDefaultTypeLabel" xml:space="preserve">
+    <value>Tipo predeterminado</value>
+  </data>
+  <data name="ImportDefaultCurrencyLabel" xml:space="preserve">
+    <value>Moneda predeterminada</value>
+  </data>
+  <data name="ImportTypeExpense" xml:space="preserve">
+    <value>Gasto</value>
+  </data>
+  <data name="ImportTypeIncome" xml:space="preserve">
+    <value>Ingreso</value>
+  </data>
+  <data name="ImportSignModeLabel" xml:space="preserve">
+    <value>Signo del monto</value>
+  </data>
+  <data name="ImportSignModeUnsigned" xml:space="preserve">
+    <value>Los montos son positivos; usar la columna Tipo o el tipo predeterminado</value>
+  </data>
+  <data name="ImportSignModeNegativeIsExpense" xml:space="preserve">
+    <value>Los montos negativos son gastos y los positivos son ingresos</value>
+  </data>
+  <data name="ImportSkipDuplicates" xml:space="preserve">
+    <value>Omitir filas que ya existen</value>
+  </data>
+  <data name="ImportCreateCategories" xml:space="preserve">
+    <value>Crear las categorías que no existen</value>
+  </data>
+  <data name="ImportSummaryFormat" xml:space="preserve">
+    <value>{0} por importar · {1} duplicadas · {2} rechazadas · {3} con advertencias</value>
+  </data>
+  <data name="ImportCategoriesToCreate" xml:space="preserve">
+    <value>Categorías por crear</value>
+  </data>
+  <data name="ImportOnlyProblems" xml:space="preserve">
+    <value>Solo problemas</value>
+  </data>
+  <data name="ImportStatusValid" xml:space="preserve">
+    <value>Se importará</value>
+  </data>
+  <data name="ImportStatusDuplicate" xml:space="preserve">
+    <value>Duplicada</value>
+  </data>
+  <data name="ImportStatusRejected" xml:space="preserve">
+    <value>Rechazada</value>
+  </data>
+  <data name="ImportNewCategoryTag" xml:space="preserve">
+    <value>nueva</value>
+  </data>
+  <data name="ImportBackupRecommendation" xml:space="preserve">
+    <value>Consejo: crea un respaldo en Configuración antes de importar. Una importación no se puede deshacer, pero restaurar un respaldo recupera tus datos.</value>
+  </data>
+  <data name="ImportConfirmButton" xml:space="preserve">
+    <value>Importar</value>
+  </data>
+  <data name="ImportCancelButton" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="ImportCloseButton" xml:space="preserve">
+    <value>Cerrar</value>
+  </data>
+  <data name="ImportWorkingRead" xml:space="preserve">
+    <value>Leyendo el archivo…</value>
+  </data>
+  <data name="ImportWorkingPreview" xml:space="preserve">
+    <value>Preparando la vista previa…</value>
+  </data>
+  <data name="ImportWorkingCommit" xml:space="preserve">
+    <value>Importando…</value>
+  </data>
+  <data name="ImportDoneFormat" xml:space="preserve">
+    <value>Se importaron {0} transacciones y se crearon {3} categorías. Se omitieron {1} duplicadas y {2} filas rechazadas.</value>
+  </data>
+  <data name="ImportStaleMessage" xml:space="preserve">
+    <value>Tus datos cambiaron después de la vista previa. Revisa la vista previa actualizada y confirma de nuevo. No se importó nada.</value>
+  </data>
+  <data name="ImportErrorFailed" xml:space="preserve">
+    <value>No se pudo completar la importación. No se modificó nada. Inténtalo de nuevo.</value>
+  </data>
+  <data name="ImportErrorUnreadable" xml:space="preserve">
+    <value>No se pudo leer el archivo. Verifica que sea un archivo CSV, de texto o de Excel (.xlsx) y que no esté abierto en otro programa.</value>
+  </data>
+  <data name="ImportErrorMalformedCsv" xml:space="preserve">
+    <value>El archivo CSV está mal formado cerca de la línea {0} (por ejemplo, una comilla sin cerrar). Corrige el archivo e inténtalo de nuevo.</value>
+  </data>
+  <data name="ImportErrorLegacyXls" xml:space="preserve">
+    <value>Los archivos antiguos de Excel (.xls) no son compatibles. Guarda el libro como .xlsx o CSV e inténtalo de nuevo.</value>
+  </data>
+  <data name="ImportErrorBinary" xml:space="preserve">
+    <value>Este archivo no parece un archivo de texto. Elige un archivo CSV, de texto o de Excel (.xlsx).</value>
+  </data>
+  <data name="ImportErrorTooLarge" xml:space="preserve">
+    <value>El archivo es demasiado grande. Los límites son {0} MB, {1} filas, {2} columnas y {3} caracteres por celda.</value>
+  </data>
+  <data name="ImportErrorNoRows" xml:space="preserve">
+    <value>El archivo no tiene filas de datos para importar.</value>
+  </data>
+  <data name="ImportErrorPreviewStale" xml:space="preserve">
+    <value>Los datos cambiaron desde la vista previa. Revisa la vista previa actualizada y confirma de nuevo.</value>
+  </data>
+  <data name="ImportErrorLookupFailed" xml:space="preserve">
+    <value>No se pudieron revisar tus datos existentes. No se importó nada. Inténtalo de nuevo.</value>
+  </data>
+  <data name="ImportErrorWriteFailed" xml:space="preserve">
+    <value>La importación falló y se revirtió. No se agregó ninguna transacción.</value>
+  </data>
+  <data name="ImportErrorMappingIncomplete" xml:space="preserve">
+    <value>Elige una columna para Fecha, Descripción y Monto para continuar.</value>
+  </data>
+  <data name="ImportReasonColumnCountMismatch" xml:space="preserve">
+    <value>La fila tiene un número de columnas distinto al del encabezado.</value>
+  </data>
+  <data name="ImportReasonCellError" xml:space="preserve">
+    <value>Una celda contiene un error de hoja de cálculo.</value>
+  </data>
+  <data name="ImportReasonMissingDate" xml:space="preserve">
+    <value>Falta la fecha.</value>
+  </data>
+  <data name="ImportReasonInvalidDate" xml:space="preserve">
+    <value>La fecha no es válida para el formato de fecha seleccionado.</value>
+  </data>
+  <data name="ImportReasonDateBefore1900" xml:space="preserve">
+    <value>La fecha es anterior a 1900.</value>
+  </data>
+  <data name="ImportReasonMissingAmount" xml:space="preserve">
+    <value>Falta el monto.</value>
+  </data>
+  <data name="ImportReasonInvalidAmount" xml:space="preserve">
+    <value>El monto no es un número válido.</value>
+  </data>
+  <data name="ImportReasonZeroAmount" xml:space="preserve">
+    <value>El monto es cero.</value>
+  </data>
+  <data name="ImportReasonNegativeAmount" xml:space="preserve">
+    <value>El monto es negativo. Cambia la opción de signo del monto para importarlo.</value>
+  </data>
+  <data name="ImportReasonTooManyDecimals" xml:space="preserve">
+    <value>El monto tiene más de 4 decimales.</value>
+  </data>
+  <data name="ImportReasonAmountTooLarge" xml:space="preserve">
+    <value>El monto es demasiado grande.</value>
+  </data>
+  <data name="ImportReasonMissingDescription" xml:space="preserve">
+    <value>Falta la descripción.</value>
+  </data>
+  <data name="ImportReasonDescriptionTooLong" xml:space="preserve">
+    <value>La descripción tiene más de 200 caracteres.</value>
+  </data>
+  <data name="ImportReasonInvalidType" xml:space="preserve">
+    <value>No se reconoce el tipo. Usa Gasto o Ingreso.</value>
+  </data>
+  <data name="ImportReasonUnsupportedCurrency" xml:space="preserve">
+    <value>La moneda no es compatible. Solo se aceptan DOP y USD.</value>
+  </data>
+  <data name="ImportReasonAmbiguousCategory" xml:space="preserve">
+    <value>Varias categorías existentes coinciden con este nombre.</value>
+  </data>
+  <data name="ImportReasonCategoryNameTooLong" xml:space="preserve">
+    <value>El nombre de la categoría tiene más de 100 caracteres.</value>
+  </data>
+  <data name="ImportReasonTooManyNewCategories" xml:space="preserve">
+    <value>La importación crearía demasiadas categorías nuevas (el límite es 50).</value>
+  </data>
+  <data name="ImportReasonNoFallbackCategory" xml:space="preserve">
+    <value>No se encontró la categoría predeterminada (Otros).</value>
+  </data>
+  <data name="ImportReasonFutureDate" xml:space="preserve">
+    <value>La fecha está en el futuro.</value>
+  </data>
+  <data name="ImportReasonAmbiguousAmount" xml:space="preserve">
+    <value>El monto puede interpretarse de dos maneras. Revisa el estilo decimal.</value>
+  </data>
+  <data name="ImportReasonTypeDefaulted" xml:space="preserve">
+    <value>La fila no tiene tipo, por lo que se usó el tipo predeterminado.</value>
+  </data>
+  <data name="ImportReasonCurrencyDefaulted" xml:space="preserve">
+    <value>La fila no tiene moneda, por lo que se usó la moneda predeterminada.</value>
+  </data>
+  <data name="ImportReasonCategoryFallback" xml:space="preserve">
+    <value>La categoría está vacía o no existe, por lo que se usó la categoría predeterminada (Otros).</value>
+  </data>
+  <data name="ImportReasonCategoryDropped" xml:space="preserve">
+    <value>La categoría no existe, por lo que el ingreso se importa sin categoría.</value>
+  </data>
+  <data name="ImportReasonPaymentMethodNotFound" xml:space="preserve">
+    <value>No se encontró el método de pago, por lo que se dejó vacío.</value>
+  </data>
+  <data name="ImportReasonDuplicateImported" xml:space="preserve">
+    <value>Esta fila parece duplicada pero se importa porque no se omiten las duplicadas.</value>
+  </data>
 </root>

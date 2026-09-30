@@ -1666,4 +1666,509 @@ public class Strings
     /// Gets the localized insufficient-space error message (F-019).
     /// </summary>
     public static string BackupErrorInsufficientSpace => ResourceManager.GetString("BackupErrorInsufficientSpace", Culture)!;
+
+    /// <summary>
+    /// Gets the Import button label (F-020).
+    /// </summary>
+    public static string ImportButton => ResourceManager.GetString("ImportButton", Culture)!;
+
+    /// <summary>
+    /// Gets the import file dialog title (F-020).
+    /// </summary>
+    public static string ImportDialogTitle => ResourceManager.GetString("ImportDialogTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the combined file type entry of the picker (F-020).
+    /// </summary>
+    public static string FileDialogAllSupportedTypes => ResourceManager.GetString("FileDialogAllSupportedTypes", Culture)!;
+
+    /// <summary>
+    /// Gets the CSV file type name (F-020).
+    /// </summary>
+    public static string ImportFileTypeCsv => ResourceManager.GetString("ImportFileTypeCsv", Culture)!;
+
+    /// <summary>
+    /// Gets the text file type name (F-020).
+    /// </summary>
+    public static string ImportFileTypeText => ResourceManager.GetString("ImportFileTypeText", Culture)!;
+
+    /// <summary>
+    /// Gets the Excel file type name (F-020).
+    /// </summary>
+    public static string ImportFileTypeExcel => ResourceManager.GetString("ImportFileTypeExcel", Culture)!;
+
+    /// <summary>
+    /// Gets the import panel title (F-020).
+    /// </summary>
+    public static string ImportTitle => ResourceManager.GetString("ImportTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the CSV source facts line ({0} = encoding, {1} = delimiter, {2} = rows) (F-020).
+    /// </summary>
+    public static string ImportSourceFactsCsvFormat => ResourceManager.GetString("ImportSourceFactsCsvFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the Excel source facts line ({0} = sheet, {1} = rows) (F-020).
+    /// </summary>
+    public static string ImportSourceFactsXlsxFormat => ResourceManager.GetString("ImportSourceFactsXlsxFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the encoding fallback banner ({0} = sample text) (F-020).
+    /// </summary>
+    public static string ImportEncodingFallbackBanner => ResourceManager.GetString("ImportEncodingFallbackBanner", Culture)!;
+
+    /// <summary>
+    /// Gets the decimal conflict banner (F-020).
+    /// </summary>
+    public static string ImportDecimalConflictBanner => ResourceManager.GetString("ImportDecimalConflictBanner", Culture)!;
+
+    /// <summary>
+    /// Gets the ambiguous decimal banner (F-020).
+    /// </summary>
+    public static string ImportDecimalAmbiguousBanner => ResourceManager.GetString("ImportDecimalAmbiguousBanner", Culture)!;
+
+    /// <summary>
+    /// Gets the ambiguous date banner (F-020).
+    /// </summary>
+    public static string ImportDateAmbiguousBanner => ResourceManager.GetString("ImportDateAmbiguousBanner", Culture)!;
+
+    /// <summary>
+    /// Gets the contradicting date banner (F-020).
+    /// </summary>
+    public static string ImportDateContradictsBanner => ResourceManager.GetString("ImportDateContradictsBanner", Culture)!;
+
+    /// <summary>
+    /// Gets the Date field label (F-020).
+    /// </summary>
+    public static string ImportFieldDate => ResourceManager.GetString("ImportFieldDate", Culture)!;
+
+    /// <summary>
+    /// Gets the Type field label (F-020).
+    /// </summary>
+    public static string ImportFieldType => ResourceManager.GetString("ImportFieldType", Culture)!;
+
+    /// <summary>
+    /// Gets the Description field label (F-020).
+    /// </summary>
+    public static string ImportFieldDescription => ResourceManager.GetString("ImportFieldDescription", Culture)!;
+
+    /// <summary>
+    /// Gets the Category field label (F-020).
+    /// </summary>
+    public static string ImportFieldCategory => ResourceManager.GetString("ImportFieldCategory", Culture)!;
+
+    /// <summary>
+    /// Gets the Amount field label (F-020).
+    /// </summary>
+    public static string ImportFieldAmount => ResourceManager.GetString("ImportFieldAmount", Culture)!;
+
+    /// <summary>
+    /// Gets the Currency field label (F-020).
+    /// </summary>
+    public static string ImportFieldCurrency => ResourceManager.GetString("ImportFieldCurrency", Culture)!;
+
+    /// <summary>
+    /// Gets the Payment method field label (F-020).
+    /// </summary>
+    public static string ImportFieldPaymentMethod => ResourceManager.GetString("ImportFieldPaymentMethod", Culture)!;
+
+    /// <summary>
+    /// Gets the empty column choice (F-020).
+    /// </summary>
+    public static string ImportColumnNone => ResourceManager.GetString("ImportColumnNone", Culture)!;
+
+    /// <summary>
+    /// Gets the column mapping title (F-020).
+    /// </summary>
+    public static string ImportMappingTitle => ResourceManager.GetString("ImportMappingTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the mapping expander label (F-020).
+    /// </summary>
+    public static string ImportMappingToggle => ResourceManager.GetString("ImportMappingToggle", Culture)!;
+
+    /// <summary>
+    /// Gets the delimiter option label (F-020).
+    /// </summary>
+    public static string ImportDelimiterLabel => ResourceManager.GetString("ImportDelimiterLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the automatic delimiter choice (F-020).
+    /// </summary>
+    public static string ImportDelimiterAuto => ResourceManager.GetString("ImportDelimiterAuto", Culture)!;
+
+    /// <summary>
+    /// Gets the comma delimiter choice (F-020).
+    /// </summary>
+    public static string ImportDelimiterComma => ResourceManager.GetString("ImportDelimiterComma", Culture)!;
+
+    /// <summary>
+    /// Gets the semicolon delimiter choice (F-020).
+    /// </summary>
+    public static string ImportDelimiterSemicolon => ResourceManager.GetString("ImportDelimiterSemicolon", Culture)!;
+
+    /// <summary>
+    /// Gets the tab delimiter choice (F-020).
+    /// </summary>
+    public static string ImportDelimiterTab => ResourceManager.GetString("ImportDelimiterTab", Culture)!;
+
+    /// <summary>
+    /// Gets the decimal style option label (F-020).
+    /// </summary>
+    public static string ImportDecimalStyleLabel => ResourceManager.GetString("ImportDecimalStyleLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the automatic decimal style choice (F-020).
+    /// </summary>
+    public static string ImportDecimalStyleAuto => ResourceManager.GetString("ImportDecimalStyleAuto", Culture)!;
+
+    /// <summary>
+    /// Gets the automatic decimal style choice with the detected example ({0} = example) (F-020).
+    /// </summary>
+    public static string ImportDecimalStyleAutoDetectedFormat => ResourceManager.GetString("ImportDecimalStyleAutoDetectedFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the point decimal style choice (F-020).
+    /// </summary>
+    public static string ImportDecimalStylePoint => ResourceManager.GetString("ImportDecimalStylePoint", Culture)!;
+
+    /// <summary>
+    /// Gets the comma decimal style choice (F-020).
+    /// </summary>
+    public static string ImportDecimalStyleComma => ResourceManager.GetString("ImportDecimalStyleComma", Culture)!;
+
+    /// <summary>
+    /// Gets the date format option label (F-020).
+    /// </summary>
+    public static string ImportDateFormatLabel => ResourceManager.GetString("ImportDateFormatLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the day-first date format choice (F-020).
+    /// </summary>
+    public static string ImportDateFormatDayMonthYear => ResourceManager.GetString("ImportDateFormatDayMonthYear", Culture)!;
+
+    /// <summary>
+    /// Gets the month-first date format choice (F-020).
+    /// </summary>
+    public static string ImportDateFormatMonthDayYear => ResourceManager.GetString("ImportDateFormatMonthDayYear", Culture)!;
+
+    /// <summary>
+    /// Gets the dashed day-first date format choice (F-020).
+    /// </summary>
+    public static string ImportDateFormatDayMonthYearDash => ResourceManager.GetString("ImportDateFormatDayMonthYearDash", Culture)!;
+
+    /// <summary>
+    /// Gets the default type option label (F-020).
+    /// </summary>
+    public static string ImportDefaultTypeLabel => ResourceManager.GetString("ImportDefaultTypeLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the default currency option label (F-020).
+    /// </summary>
+    public static string ImportDefaultCurrencyLabel => ResourceManager.GetString("ImportDefaultCurrencyLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the expense type choice (F-020).
+    /// </summary>
+    public static string ImportTypeExpense => ResourceManager.GetString("ImportTypeExpense", Culture)!;
+
+    /// <summary>
+    /// Gets the income type choice (F-020).
+    /// </summary>
+    public static string ImportTypeIncome => ResourceManager.GetString("ImportTypeIncome", Culture)!;
+
+    /// <summary>
+    /// Gets the sign mode option label (F-020).
+    /// </summary>
+    public static string ImportSignModeLabel => ResourceManager.GetString("ImportSignModeLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the unsigned sign mode choice (F-020).
+    /// </summary>
+    public static string ImportSignModeUnsigned => ResourceManager.GetString("ImportSignModeUnsigned", Culture)!;
+
+    /// <summary>
+    /// Gets the negative-is-expense sign mode choice (F-020).
+    /// </summary>
+    public static string ImportSignModeNegativeIsExpense => ResourceManager.GetString("ImportSignModeNegativeIsExpense", Culture)!;
+
+    /// <summary>
+    /// Gets the skip duplicates option label (F-020).
+    /// </summary>
+    public static string ImportSkipDuplicates => ResourceManager.GetString("ImportSkipDuplicates", Culture)!;
+
+    /// <summary>
+    /// Gets the create missing categories option label (F-020).
+    /// </summary>
+    public static string ImportCreateCategories => ResourceManager.GetString("ImportCreateCategories", Culture)!;
+
+    /// <summary>
+    /// Gets the preview summary line ({0} = to import, {1} = duplicates, {2} = rejected, {3} = warnings) (F-020).
+    /// </summary>
+    public static string ImportSummaryFormat => ResourceManager.GetString("ImportSummaryFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the categories to create heading (F-020).
+    /// </summary>
+    public static string ImportCategoriesToCreate => ResourceManager.GetString("ImportCategoriesToCreate", Culture)!;
+
+    /// <summary>
+    /// Gets the only-problems toggle label (F-020).
+    /// </summary>
+    public static string ImportOnlyProblems => ResourceManager.GetString("ImportOnlyProblems", Culture)!;
+
+    /// <summary>
+    /// Gets the valid row status (F-020).
+    /// </summary>
+    public static string ImportStatusValid => ResourceManager.GetString("ImportStatusValid", Culture)!;
+
+    /// <summary>
+    /// Gets the duplicate row status (F-020).
+    /// </summary>
+    public static string ImportStatusDuplicate => ResourceManager.GetString("ImportStatusDuplicate", Culture)!;
+
+    /// <summary>
+    /// Gets the rejected row status (F-020).
+    /// </summary>
+    public static string ImportStatusRejected => ResourceManager.GetString("ImportStatusRejected", Culture)!;
+
+    /// <summary>
+    /// Gets the new category tag (F-020).
+    /// </summary>
+    public static string ImportNewCategoryTag => ResourceManager.GetString("ImportNewCategoryTag", Culture)!;
+
+    /// <summary>
+    /// Gets the backup recommendation copy (F-020).
+    /// </summary>
+    public static string ImportBackupRecommendation => ResourceManager.GetString("ImportBackupRecommendation", Culture)!;
+
+    /// <summary>
+    /// Gets the confirm button label (F-020).
+    /// </summary>
+    public static string ImportConfirmButton => ResourceManager.GetString("ImportConfirmButton", Culture)!;
+
+    /// <summary>
+    /// Gets the cancel button label (F-020).
+    /// </summary>
+    public static string ImportCancelButton => ResourceManager.GetString("ImportCancelButton", Culture)!;
+
+    /// <summary>
+    /// Gets the close button label (F-020).
+    /// </summary>
+    public static string ImportCloseButton => ResourceManager.GetString("ImportCloseButton", Culture)!;
+
+    /// <summary>
+    /// Gets the reading progress caption (F-020).
+    /// </summary>
+    public static string ImportWorkingRead => ResourceManager.GetString("ImportWorkingRead", Culture)!;
+
+    /// <summary>
+    /// Gets the preview progress caption (F-020).
+    /// </summary>
+    public static string ImportWorkingPreview => ResourceManager.GetString("ImportWorkingPreview", Culture)!;
+
+    /// <summary>
+    /// Gets the importing progress caption (F-020).
+    /// </summary>
+    public static string ImportWorkingCommit => ResourceManager.GetString("ImportWorkingCommit", Culture)!;
+
+    /// <summary>
+    /// Gets the import result ({0} = imported, {1} = duplicates skipped, {2} = rejected, {3} = categories created) (F-020).
+    /// </summary>
+    public static string ImportDoneFormat => ResourceManager.GetString("ImportDoneFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the stale preview notice (F-020).
+    /// </summary>
+    public static string ImportStaleMessage => ResourceManager.GetString("ImportStaleMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the generic import error (F-020).
+    /// </summary>
+    public static string ImportErrorFailed => ResourceManager.GetString("ImportErrorFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the unreadable file error (F-020).
+    /// </summary>
+    public static string ImportErrorUnreadable => ResourceManager.GetString("ImportErrorUnreadable", Culture)!;
+
+    /// <summary>
+    /// Gets the malformed CSV error ({0} = line number) (F-020).
+    /// </summary>
+    public static string ImportErrorMalformedCsv => ResourceManager.GetString("ImportErrorMalformedCsv", Culture)!;
+
+    /// <summary>
+    /// Gets the legacy Excel error (F-020).
+    /// </summary>
+    public static string ImportErrorLegacyXls => ResourceManager.GetString("ImportErrorLegacyXls", Culture)!;
+
+    /// <summary>
+    /// Gets the binary file error (F-020).
+    /// </summary>
+    public static string ImportErrorBinary => ResourceManager.GetString("ImportErrorBinary", Culture)!;
+
+    /// <summary>
+    /// Gets the too-large error ({0} = MB, {1} = rows, {2} = columns, {3} = characters per cell) (F-020).
+    /// </summary>
+    public static string ImportErrorTooLarge => ResourceManager.GetString("ImportErrorTooLarge", Culture)!;
+
+    /// <summary>
+    /// Gets the no-rows error (F-020).
+    /// </summary>
+    public static string ImportErrorNoRows => ResourceManager.GetString("ImportErrorNoRows", Culture)!;
+
+    /// <summary>
+    /// Gets the stale preview error (F-020).
+    /// </summary>
+    public static string ImportErrorPreviewStale => ResourceManager.GetString("ImportErrorPreviewStale", Culture)!;
+
+    /// <summary>
+    /// Gets the lookup failure error (F-020).
+    /// </summary>
+    public static string ImportErrorLookupFailed => ResourceManager.GetString("ImportErrorLookupFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the write failure error (F-020).
+    /// </summary>
+    public static string ImportErrorWriteFailed => ResourceManager.GetString("ImportErrorWriteFailed", Culture)!;
+
+    /// <summary>
+    /// Gets the incomplete mapping error (F-020).
+    /// </summary>
+    public static string ImportErrorMappingIncomplete => ResourceManager.GetString("ImportErrorMappingIncomplete", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for ColumnCountMismatch (F-020).
+    /// </summary>
+    public static string ImportReasonColumnCountMismatch => ResourceManager.GetString("ImportReasonColumnCountMismatch", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for CellError (F-020).
+    /// </summary>
+    public static string ImportReasonCellError => ResourceManager.GetString("ImportReasonCellError", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for MissingDate (F-020).
+    /// </summary>
+    public static string ImportReasonMissingDate => ResourceManager.GetString("ImportReasonMissingDate", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for InvalidDate (F-020).
+    /// </summary>
+    public static string ImportReasonInvalidDate => ResourceManager.GetString("ImportReasonInvalidDate", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for DateBefore1900 (F-020).
+    /// </summary>
+    public static string ImportReasonDateBefore1900 => ResourceManager.GetString("ImportReasonDateBefore1900", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for MissingAmount (F-020).
+    /// </summary>
+    public static string ImportReasonMissingAmount => ResourceManager.GetString("ImportReasonMissingAmount", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for InvalidAmount (F-020).
+    /// </summary>
+    public static string ImportReasonInvalidAmount => ResourceManager.GetString("ImportReasonInvalidAmount", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for ZeroAmount (F-020).
+    /// </summary>
+    public static string ImportReasonZeroAmount => ResourceManager.GetString("ImportReasonZeroAmount", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for NegativeAmount (F-020).
+    /// </summary>
+    public static string ImportReasonNegativeAmount => ResourceManager.GetString("ImportReasonNegativeAmount", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for TooManyDecimals (F-020).
+    /// </summary>
+    public static string ImportReasonTooManyDecimals => ResourceManager.GetString("ImportReasonTooManyDecimals", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for AmountTooLarge (F-020).
+    /// </summary>
+    public static string ImportReasonAmountTooLarge => ResourceManager.GetString("ImportReasonAmountTooLarge", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for MissingDescription (F-020).
+    /// </summary>
+    public static string ImportReasonMissingDescription => ResourceManager.GetString("ImportReasonMissingDescription", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for DescriptionTooLong (F-020).
+    /// </summary>
+    public static string ImportReasonDescriptionTooLong => ResourceManager.GetString("ImportReasonDescriptionTooLong", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for InvalidType (F-020).
+    /// </summary>
+    public static string ImportReasonInvalidType => ResourceManager.GetString("ImportReasonInvalidType", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for UnsupportedCurrency (F-020).
+    /// </summary>
+    public static string ImportReasonUnsupportedCurrency => ResourceManager.GetString("ImportReasonUnsupportedCurrency", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for AmbiguousCategory (F-020).
+    /// </summary>
+    public static string ImportReasonAmbiguousCategory => ResourceManager.GetString("ImportReasonAmbiguousCategory", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for CategoryNameTooLong (F-020).
+    /// </summary>
+    public static string ImportReasonCategoryNameTooLong => ResourceManager.GetString("ImportReasonCategoryNameTooLong", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for TooManyNewCategories (F-020).
+    /// </summary>
+    public static string ImportReasonTooManyNewCategories => ResourceManager.GetString("ImportReasonTooManyNewCategories", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for NoFallbackCategory (F-020).
+    /// </summary>
+    public static string ImportReasonNoFallbackCategory => ResourceManager.GetString("ImportReasonNoFallbackCategory", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for FutureDate (F-020).
+    /// </summary>
+    public static string ImportReasonFutureDate => ResourceManager.GetString("ImportReasonFutureDate", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for AmbiguousAmount (F-020).
+    /// </summary>
+    public static string ImportReasonAmbiguousAmount => ResourceManager.GetString("ImportReasonAmbiguousAmount", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for TypeDefaulted (F-020).
+    /// </summary>
+    public static string ImportReasonTypeDefaulted => ResourceManager.GetString("ImportReasonTypeDefaulted", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for CurrencyDefaulted (F-020).
+    /// </summary>
+    public static string ImportReasonCurrencyDefaulted => ResourceManager.GetString("ImportReasonCurrencyDefaulted", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for CategoryFallback (F-020).
+    /// </summary>
+    public static string ImportReasonCategoryFallback => ResourceManager.GetString("ImportReasonCategoryFallback", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for CategoryDropped (F-020).
+    /// </summary>
+    public static string ImportReasonCategoryDropped => ResourceManager.GetString("ImportReasonCategoryDropped", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for PaymentMethodNotFound (F-020).
+    /// </summary>
+    public static string ImportReasonPaymentMethodNotFound => ResourceManager.GetString("ImportReasonPaymentMethodNotFound", Culture)!;
+
+    /// <summary>
+    /// Gets the reason text for DuplicateImported (F-020).
+    /// </summary>
+    public static string ImportReasonDuplicateImported => ResourceManager.GetString("ImportReasonDuplicateImported", Culture)!;
 }

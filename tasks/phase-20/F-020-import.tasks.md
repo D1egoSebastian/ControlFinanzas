@@ -494,7 +494,7 @@ the shared UI `AppDbContext`. Size note: this is the largest slice; if it exceed
 Depends on 5. Goal: the whole import flow is testable without a UI, and every reason/error code has a localized message
 in both locales. Size note: if it exceeds ~450 lines, split at the seam "strings + completeness" vs "ViewModel".
 
-- [ ] 6a.1 Append the `Import*` keys to `src/…UI/Resources/Strings.resx` (neutral English) and `Strings.es-DO.resx`
+- [x] 6a.1 Append the `Import*` keys to `src/…UI/Resources/Strings.resx` (neutral English) and `Strings.es-DO.resx`
   (neutral professional Spanish) and add the **manual** accessors to `Strings.Designer.cs` (the file is hand-maintained;
   do not regenerate it): the DD-14 list — banners, `ImportField*` ×7, `ImportDecimalStyle*` ×3, `ImportDateFormat*` ×3,
   `ImportSignMode*` ×2, option labels, summary/status/tag/backup-recommendation/confirm/cancel/close/working/done/
@@ -502,14 +502,14 @@ in both locales. Size note: if it exceeds ~450 lines, split at the seam "strings
   `TooLarge` with the limits in the text, `NoRows`, `PreviewStale`, `LookupFailed`, `WriteFailed`,
   `MappingIncomplete`), and `ImportReason<Name>` for EVERY `ImportReason` value. Append only; no existing key touched.
   (R-24, R-22, DD-14)
-- [ ] 6a.2 Extend the existing resx completeness test (do not add a parallel weaker one): every neutral key exists in
+- [x] 6a.2 Extend the existing resx completeness test (do not add a parallel weaker one): every neutral key exists in
   es-DO and vice versa, no empty values, including the new keys; add `ImportResourcesTests`: reflection over
   `Enum.GetValues<ImportReason>()` proves `Strings.ResourceManager.GetString("ImportReason" + name, culture)` is
   non-empty for `es-DO` and `en`; every `ImportErrorCodes` file-level code and every `Reason*` detail maps to a
   non-empty message in both cultures; the Designer accessor exists for each new key (reflection over `Strings`
   properties vs resx keys); the `{0}` placeholder is present in `ImportErrorMalformedCsv` for both cultures. (R-24,
   S-27)
-- [ ] 6a.3 Write failing `tests/…Unit/UI/ImportViewModelTests.cs` against the REAL `ImportViewModel` with fake picker,
+- [x] 6a.3 Write failing `tests/…Unit/UI/ImportViewModelTests.cs` against the REAL `ImportViewModel` with fake picker,
   fake use-case collaborators (interfaces are the use cases' own ports: fakes of `ITabularReader`/`IImportLookup`/
   `IImportWriter` feed the REAL `PreviewImportUseCase`/`CommitImportUseCase`) and `FakeNotificationCenter`:
   (a) **cancelled picker** (`null`) → `CloseRequested` raised, no message, `IsError` false, no use case called
@@ -534,7 +534,7 @@ in both locales. Size note: if it exceeds ~450 lines, split at the seam "strings
   MonthDayYear); (n) the `ImportErrorKey(code, reason)` mapper covers every code and defaults to `ImportErrorFailed`;
   (o) the confirm panel exposes the backup recommendation copy but Confirm is not gated on it (copy only). (R-5, R-22,
   R-24, S-5, S-9, S-22, S-24..S-28, C-6, C-19)
-- [ ] 6a.4 Create `src/…UI/ViewModels/ImportViewModel.cs` (+ `ImportRowItem`, `ColumnChoice`, `ImportPanelState`,
+- [x] 6a.4 Create `src/…UI/ViewModels/ImportViewModel.cs` (+ `ImportRowItem`, `ColumnChoice`, `ImportPanelState`,
   `ImportCompletedEventArgs`) per DD-14: Transient; `[ObservableProperty]` state with `NotifyCanExecuteChangedFor` on
   every command; each command starts with a synchronous `State` check before its first `await`;
   `try/catch/finally`; `Completed` then `CloseRequested`; `_previewOptions` is the exact instance used for the last
@@ -545,10 +545,29 @@ in both locales. Size note: if it exceeds ~450 lines, split at the seam "strings
   Add the interface member and the `FakeFileOpenDialog` overload as the FIRST commit of this slice (a five-line
   additive change described in 8.1), and let S6b add only the Avalonia implementation. If that split is undesirable,
   swap so the overload lands in S6a; record which was chosen in the apply notes.
-- [ ] 6a.5 Register nothing in `Bootstrap` yet (S6b). `ImportViewModel` is constructed directly in tests. (DD-15)
-- [ ] 6a.6 Run all four gates plus the no-stubs grep over `src/ControlDeFinanzasIA.UI/ViewModels`, the resx/Designer
+- [x] 6a.5 Register nothing in `Bootstrap` yet (S6b). `ImportViewModel` is constructed directly in tests. (DD-15)
+- [x] 6a.6 Run all four gates plus the no-stubs grep over `src/ControlDeFinanzasIA.UI/ViewModels`, the resx/Designer
   additions and the slice's tests. Confirm N > 0 for `ImportViewModelTests` and `ImportResourcesTests`. Run the FULL
   suite 3 consecutive times and record intermittent failures by test name. (R-24)
+  > Apply notes (S6a): ordering note resolved as the FIRST commit of the slice (21ee899): `IFileOpenDialog` gained the list
+  > overload as a default interface member (falls back to the first filter, throws on an empty list) so the Avalonia
+  > implementation still compiles untouched; `FakeFileOpenDialog` implements both members (`LastFilters`, `LastFilter =
+  > filters[0]`, single-filter delegates) with `FakeFileOpenDialogTests`. S6b (6b.2) must OVERRIDE the list overload in
+  > `AvaloniaFileOpenDialog` (with the "All supported files" entry); until then it silently offers only the first filter.
+  > Red/green honesty (rule 6): `ImportResourcesTests` was red by compile failure (`Strings.ImportCloseButton` missing),
+  > then green after the resx and Designer additions; `ImportViewModelTests` (52) was written before the VM (compile-failure
+  > red) and went green on the first run, so no assertion-level red was observed. A mutation of the `ChooseFile` state
+  > guard made the busy-guard test hang (not fail), so the guard is covered. Deviations: (1) 6a.2: there was no generic
+  > resx completeness test to extend (only per-feature Backup/Export ones), so `ImportResourcesTests` follows that pattern
+  > and also asserts the whole neutral and es-DO key sets are identical with no empty value; (2) the resx also carries the
+  > picker/toolbar keys (`ImportButton`, `ImportDialogTitle`, `FileDialogAllSupportedTypes`, `ImportFileType*`) and a few
+  > extra option keys (`ImportDelimiter*`, `ImportType*`, `ImportMappingToggle`, `ImportDecimalStyleAutoDetectedFormat`);
+  > `ImportSourceFactsFormat` became `ImportSourceFactsCsvFormat` / `ImportSourceFactsXlsxFormat`; (3) the decimal and
+  > date toggles are NOT silently rewritten from the evidence: they keep `Auto` / the culture default and the evidence is
+  > shown as `DecimalDetectionNote` plus banners (a silent rewrite would change the plan hash and the warnings);
+  > (4) `Cancel`/`Close` are synchronous `RelayCommand`s; (5) a failed re-preview keeps the last preview on screen, stale,
+  > in `Mapping` with the message; (6) `ImportViewModel.cs` is ~1,000 lines with XML docs (over the slice budget, kept as
+  > one class). Full suite 3x green: 2450 unit + 755 integration, no intermittent failures; format exit 0; stub grep clean.
 
 ## 6b. Picker overload, Expenses hosting and DI (S6b)
 
