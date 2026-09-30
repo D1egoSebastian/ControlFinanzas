@@ -144,7 +144,7 @@ public sealed class BudgetsViewModelTests
         Assert.Equal(7000m, viewModel.Budgets[0].Amount);
     }
 
-    private static BudgetsViewModel CreateViewModel(
+    internal static BudgetsViewModel CreateViewModel(
         FakeBudgetRepository? budgets = null,
         FakeCategoryRepository? categories = null,
         FakeClock? clock = null)

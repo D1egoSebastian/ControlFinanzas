@@ -14,7 +14,7 @@ namespace ControlDeFinanzasIA.Tests.Unit.UI;
 
 public sealed class DebtsViewModelTests
 {
-    private static DebtsViewModel CreateViewModel(FakeDebtRepository debts, FakeDebtPaymentRepository payments)
+    internal static DebtsViewModel CreateViewModel(FakeDebtRepository debts, FakeDebtPaymentRepository payments)
     {
         var getDebts = new GetDebtsQuery(debts);
         var getSchedule = new GetDebtScheduleQuery(debts, payments);

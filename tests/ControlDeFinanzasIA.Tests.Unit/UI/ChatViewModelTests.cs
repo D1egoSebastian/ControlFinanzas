@@ -36,7 +36,7 @@ public sealed class ChatViewModelTests
     private static readonly DateOnly _today = new(2026, 9, 20);
     private static readonly DateOnly _currentMonthAnchor = new(2026, 9, 1);
 
-    private sealed record Sut(
+    internal sealed record Sut(
         ChatViewModel ViewModel,
         FakeSettingsStore SettingsStore,
         FakeLlmClientFactory Factory,
@@ -45,7 +45,7 @@ public sealed class ChatViewModelTests
         FakeExpenseRepository ExpenseRepo,
         RecordingLogger<ChatViewModel> Logger);
 
-    private static Sut CreateSut(AppSettings? settings = null)
+    internal static Sut CreateSut(AppSettings? settings = null)
     {
         var settingsStore = new FakeSettingsStore
         {

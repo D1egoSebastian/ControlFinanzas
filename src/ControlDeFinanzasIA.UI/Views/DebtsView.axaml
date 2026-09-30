@@ -2,10 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
              xmlns:domain="using:ControlDeFinanzasIA.Domain.Debts"
+             xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
              x:Class="ControlDeFinanzasIA.UI.Views.DebtsView"
              x:DataType="vm:DebtsViewModel"
              x:Name="Root"
              Background="{StaticResource InkBrush}">
+    <UserControl.Resources>
+        <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
+    </UserControl.Resources>
     <Grid ColumnDefinitions="320,*,320" Margin="24">
         <ScrollViewer Grid.Column="0">
             <StackPanel Spacing="10">
@@ -17,7 +21,7 @@
                 <TextBox Text="{Binding TotalInstallments}" Watermark="Número de cuotas" Classes="ledger-input" />
                 <TextBox Text="{Binding InstallmentAmount}" Watermark="Monto por cuota" Classes="ledger-input" />
                 <ComboBox ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input" />
-                <DatePicker SelectedDate="{Binding StartDate}" Classes="ledger-input" />
+                <DatePicker SelectedDate="{Binding StartDate, Converter={StaticResource DateOnlyConverter}}" Classes="ledger-input" />
                 <TextBox Text="{Binding CounterpartyName}" Watermark="Contraparte (opcional)" Classes="ledger-input" />
                 <TextBox Text="{Binding Note}" Watermark="Nota (opcional)" Classes="ledger-input" />
                 <TextBlock Text="{Binding FormError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
@@ -74,11 +78,11 @@
                                         <TextBlock Text="{Binding Status}" Foreground="{StaticResource PaperDimBrush}" />
                                     </StackPanel>
                                     <Button Grid.Column="2" Content="Pagar"
-                                            Command="{Binding #Root.((vm:DebtsViewModel)DataContext).RegisterPaymentCommand}"
+                                            Command="{Binding #Root.DataContext.RegisterPaymentCommand}"
                                             CommandParameter="{Binding}"
                                             Classes="ledger-btn-primary" />
                                     <Button Grid.Column="3" Content="Saltar"
-                                            Command="{Binding #Root.((vm:DebtsViewModel)DataContext).SkipPaymentCommand}"
+                                            Command="{Binding #Root.DataContext.SkipPaymentCommand}"
                                             CommandParameter="{Binding}"
                                             Classes="ledger-btn"
                                             Margin="4,0,0,0" />

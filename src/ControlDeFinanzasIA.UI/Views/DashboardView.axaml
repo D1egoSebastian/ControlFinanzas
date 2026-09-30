@@ -242,7 +242,7 @@
                                                    VerticalAlignment="Center" />
                                         <Button Grid.Column="3"
                                                 Content="{x:Static resources:Strings.DashboardAnomalyDismissButton}"
-                                                Command="{Binding #Root.((vm:DashboardViewModel)DataContext).DismissAnomalyCommand}"
+                                                Command="{Binding #Root.DataContext.DismissAnomalyCommand}"
                                                 CommandParameter="{Binding}"
                                                 Classes="ledger-btn"
                                                 VerticalAlignment="Center" />

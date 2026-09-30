@@ -108,7 +108,7 @@
 
                                     <!-- AI savings-plan narration (F-016, R-1, D-8): inline button + narration/fallback caption, no new route. -->
                                     <Button Content="{x:Static resources:Strings.GoalsRequestPlanButton}"
-                                            Command="{Binding #Root.((vm:GoalsViewModel)DataContext).RequestPlanCommand}"
+                                            Command="{Binding #Root.DataContext.RequestPlanCommand}"
                                             CommandParameter="{Binding}"
                                             IsEnabled="{Binding !IsGeneratingPlan}"
                                             Classes="ledger-btn"
@@ -125,11 +125,11 @@
 
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <Button Content="{x:Static resources:Strings.GoalsSelectButton}"
-                                                Command="{Binding #Root.((vm:GoalsViewModel)DataContext).SelectCommand}"
+                                                Command="{Binding #Root.DataContext.SelectCommand}"
                                                 CommandParameter="{Binding}"
                                                 Classes="ledger-btn" />
                                         <Button Content="{x:Static resources:Strings.DeleteButton}"
-                                                Command="{Binding #Root.((vm:GoalsViewModel)DataContext).DeleteCommand}"
+                                                Command="{Binding #Root.DataContext.DeleteCommand}"
                                                 CommandParameter="{Binding}"
                                                 Classes="ledger-btn" />
                                     </StackPanel>

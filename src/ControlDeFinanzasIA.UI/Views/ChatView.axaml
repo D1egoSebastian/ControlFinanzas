@@ -70,7 +70,7 @@
                                                        Margin="0" />
                                             <Button Grid.Column="1"
                                                     Content="{x:Static resources:Strings.ChatCopyButton}"
-                                                    Command="{Binding #Root.((vm:ChatViewModel)DataContext).CopyCommand}"
+                                                    Command="{Binding #Root.DataContext.CopyCommand}"
                                                     CommandParameter="{Binding}"
                                                     IsEnabled="{Binding State, Converter={x:Static converters:ChatMessageCopyableConverter.Instance}}"
                                                     Classes="ledger-btn"

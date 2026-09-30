@@ -5,9 +5,9 @@ using Avalonia.Data.Converters;
 namespace ControlDeFinanzasIA.UI.Converters;
 
 /// <summary>
-/// Converts between <see cref="DateOnly" /> (and nullable variants) and
+/// Converts between <see cref="DateOnly" /> / <see cref="DateTime" /> (and nullable variants) and
 /// <see cref="DateTimeOffset" /> so that an Avalonia <see cref="Avalonia.Controls.DatePicker" />
-/// can be bound to ViewModel properties that expose <c>DateOnly?</c>.
+/// can be bound to ViewModel properties that expose <c>DateOnly?</c> or <c>DateTime?</c>.
 /// </summary>
 public sealed class DateOnlyConverter : IValueConverter
 {
@@ -42,7 +42,9 @@ public sealed class DateOnlyConverter : IValueConverter
 
         if (value is DateTimeOffset offset)
         {
-            return DateOnly.FromDateTime(offset.DateTime);
+            // A DateTime-typed property (for example the debt or recurring-rule start date) needs a DateTime back.
+            Type target = Nullable.GetUnderlyingType(targetType) ?? targetType;
+            return target == typeof(DateTime) ? offset.DateTime : DateOnly.FromDateTime(offset.DateTime);
         }
 
         if (value is DateTime dateTime)

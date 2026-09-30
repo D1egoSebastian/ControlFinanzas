@@ -36,13 +36,13 @@ public static class ImportHeadlessEntry
 /// actually visible per state, and that the host "Close" button reaches an idle panel left by a failed load. The
 /// native file dialog is NOT exercised (it is a platform dialog).
 /// </summary>
+[Collection(HeadlessUi.CollectionName)]
 public sealed class ImportViewHeadlessTests
 {
-    private static readonly Lazy<HeadlessUnitTestSession> _session =
-        new(() => HeadlessUnitTestSession.StartNew(typeof(ImportHeadlessEntry)));
+    // The session is shared with the other headless view tests (see HeadlessUi).
 
     private static Task<T> OnUiThread<T>(Func<Task<T>> body) =>
-        _session.Value.Dispatch(body, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(60));
+        HeadlessUi.OnUiThread(body);
 
     private static void Flush() => Dispatcher.UIThread.RunJobs();
 

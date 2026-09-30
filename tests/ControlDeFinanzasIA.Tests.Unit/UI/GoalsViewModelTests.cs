@@ -442,7 +442,7 @@ public sealed class GoalsViewModelTests
         Assert.False(row.ShowPlan);
     }
 
-    private static GoalsViewModel CreateViewModel(
+    internal static GoalsViewModel CreateViewModel(
         FakeGoalRepository? goals = null,
         FakeGoalContributionRepository? contributions = null,
         ContributeToGoalUseCase? contributeUseCase = null,

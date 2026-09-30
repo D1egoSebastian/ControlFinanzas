@@ -2,10 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
              xmlns:domain="using:ControlDeFinanzasIA.Domain.Recurring"
+             xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
              x:Class="ControlDeFinanzasIA.UI.Views.RecurringRulesView"
              x:DataType="vm:RecurringRulesViewModel"
              x:Name="Root"
              Background="{StaticResource InkBrush}">
+    <UserControl.Resources>
+        <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
+    </UserControl.Resources>
     <Grid ColumnDefinitions="320,*" Margin="24">
         <ScrollViewer Grid.Column="0">
             <StackPanel Spacing="10">
@@ -16,7 +20,7 @@
                 <TextBox Text="{Binding Amount}" Watermark="Monto" Classes="ledger-input" />
                 <ComboBox ItemsSource="{Binding Currencies}" SelectedItem="{Binding Currency}" Classes="ledger-input" />
                 <ComboBox ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input" />
-                <DatePicker SelectedDate="{Binding StartDate}" Classes="ledger-input" />
+                <DatePicker SelectedDate="{Binding StartDate, Converter={StaticResource DateOnlyConverter}}" Classes="ledger-input" />
                 <ComboBox ItemsSource="{Binding Categories}"
                           DisplayMemberBinding="{Binding Name}"
                           SelectedItem="{Binding SelectedCategory}"
@@ -68,8 +72,8 @@
                                                Text="{Binding Amount.Amount, StringFormat={}{0:N2}}"
                                                Classes="ledger-amount" />
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" Margin="4,0,0,0">
-                                        <Button Content="Editar" Command="{Binding #Root.((vm:RecurringRulesViewModel)DataContext).EditCommand}" CommandParameter="{Binding}" Classes="ledger-btn" />
-                                        <Button Content="Saltar" Command="{Binding #Root.((vm:RecurringRulesViewModel)DataContext).SkipSelectedCommand}" Classes="ledger-btn" />
+                                        <Button Content="Editar" Command="{Binding #Root.DataContext.EditCommand}" CommandParameter="{Binding}" Classes="ledger-btn" />
+                                        <Button Content="Saltar" Command="{Binding #Root.DataContext.SkipSelectedCommand}" Classes="ledger-btn" />
                                     </StackPanel>
                                 </Grid>
                             </Border>

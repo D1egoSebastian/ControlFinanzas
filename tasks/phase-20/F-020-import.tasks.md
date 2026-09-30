@@ -797,6 +797,33 @@ with the REAL exporter.
 > - Gates: build 0/0; unit 2497 -> 2527, integration 766 -> 772 (total 3299); `dotnet format style
 >   --verify-no-changes` exit 0; NetArchTest green; full suite 3x consecutive green, no intermittent failure.
 
+> Apply notes (pre-existing UI defects found during verification, commit B; 8.1-8.6 stay OPEN): two bug families outside
+> the import feature, fixed test-first with headless Avalonia tests (`HeadlessUi` shares ONE session and an xUnit
+> collection across all headless classes; a failing body used to be masked by the session's own render-on-dispose error,
+> so `OnUiThread` now carries the real failure out of the dispatch).
+> - Row-template cast pattern `#Root.((vm:XViewModel)DataContext)` threw `ArgumentException: Unable to resolve type
+>   vm:XViewModel` as soon as a data-bound row was realized. Crash reproduced per view (before the fix): BudgetsView yes,
+>   ChatView yes (any message row), DashboardView yes (anomaly row), DebtsView yes (schedule row), GoalsView yes (goal
+>   row), IncomeView yes (income row), RecurringRulesView yes (rule row). Fixed with `#Root.DataContext.<Command>` as in
+>   `ExpensesView`; each test proves the row button is bound to the view-model's command instance and runs it where the
+>   effect is observable. No `#Root.((vm:` occurrence is left in `Views/`.
+> - `DatePicker.SelectedDate` (a `DateTimeOffset?`) bound to `DateOnly?` / `DateTime?` never connected in either
+>   direction (the initial value did not reach the picker and a picked date was ignored; the expense saved with the
+>   view-model default). Red in ExpensesView, IncomeView, DebtsView and RecurringRulesView; GoalsView already worked.
+>   Fixed by reusing `DateOnlyConverter` (no duplicate); its `ConvertBack` is now target-aware so the `DateTime?`
+>   `StartDate` of Debts and Recurring gets a `DateTime` back instead of a `DateOnly`. Tests: two-way for each view, the
+>   saved expense/income carries the picked date, Goals stays two-way, and 9 converter unit tests.
+> - Other findings: no other `DateOnly` property is bound to a DateTimeOffset control (the `FilterDateFrom`/`FilterDateTo`
+>   properties of Expenses and Income have no date control bound in any view); `MainWindow.axaml:160` uses
+>   `$parent[ItemsControl].DataContext.DismissCommand` in the notification popup, a different pattern that was NOT
+>   exercised headlessly here.
+> - Smoke (throwaway data dir, UI Automation): the app started and stayed alive through Panel, Ingresos, Recurrentes,
+>   Deudas, Calendario, Presupuestos, Metas and Chat; in Gastos the date picker's value was set to 2026-04-06 through its
+>   value pattern, the expense was saved, and the list row showed 4/6/2026 (the default date was 9/30/2026). The
+>   Configuracion screen, the es-DO/en visual pass and the real native dialogs were not driven by hand.
+> - Gates: build 0/0; unit 2527 -> 2551, integration 772 (total 3323); `dotnet format style --verify-no-changes` exit 0;
+>   NetArchTest green; full suite 3x consecutive green, no intermittent failure.
+
 ## Threat-table traceability (design C-1..C-22 → named test tasks)
 
 | Row | Vector | Test task(s) |

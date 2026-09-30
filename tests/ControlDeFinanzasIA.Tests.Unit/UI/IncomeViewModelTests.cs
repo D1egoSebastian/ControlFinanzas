@@ -527,7 +527,7 @@ public sealed class IncomeViewModelTests
         Assert.Equal("Nueva vista", viewModel.NewViewName);
     }
 
-    private static IncomeViewModel CreateViewModel(
+    internal static IncomeViewModel CreateViewModel(
         FakeClock? clock = null,
         FakeIncomeRepository? incomeRepo = null,
         FakeExpenseRepository? expenseRepo = null,

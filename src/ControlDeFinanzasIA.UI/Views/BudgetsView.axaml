@@ -71,12 +71,12 @@
                                                Margin="0,0,12,0" />
                                     <Button Grid.Column="2"
                                             Content="{x:Static resources:Strings.EditButton}"
-                                            Command="{Binding #Root.((vm:BudgetsViewModel)DataContext).EditCommand}"
+                                            Command="{Binding #Root.DataContext.EditCommand}"
                                             CommandParameter="{Binding}"
                                             Classes="ledger-btn" />
                                     <Button Grid.Column="3"
                                             Content="{x:Static resources:Strings.DeleteButton}"
-                                            Command="{Binding #Root.((vm:BudgetsViewModel)DataContext).DeleteCommand}"
+                                            Command="{Binding #Root.DataContext.DeleteCommand}"
                                             CommandParameter="{Binding}"
                                             Classes="ledger-btn"
                                             Margin="4,0,0,0" />
