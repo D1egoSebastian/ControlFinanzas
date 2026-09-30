@@ -335,20 +335,20 @@ if it exceeds ~450 lines, split at the seam "validator" vs "matcher + duplicates
 
 Depends on 4a. Goal: `PreviewImportUseCase` produces an honest dry run against a real SQLite database and never writes.
 
-- [ ] 4b.1 Create `tests/…Integration/Import/ImportTestDb.cs` (mirrors `BackupTestDb`): `<temp>\import-<guid>\data.db`
+- [x] 4b.1 Create `tests/…Integration/Import/ImportTestDb.cs` (mirrors `BackupTestDb`): `<temp>\import-<guid>\data.db`
   migrated with `Database.Migrate()`, a real `ServiceCollection` with `AddPersistence(TestPathResolver)` so
   `IServiceScopeFactory` is genuine, seed helpers for categories/expenses/incomes/payment methods, and `Dispose` doing
   `SqliteConnection.ClearAllPools()` plus recursive delete. Never touches the real AppData. Create
   `tests/…Unit/TestDoubles/{FakeTabularReader,FakeImportLookup}.cs` (fakes only for collaborators; used where the
   component under test is NOT the reader/lookup). (R-26)
-- [ ] 4b.2 Write failing `tests/…Integration/Import/EfImportLookupTests.cs` against the REAL `EfImportLookup`: date
+- [x] 4b.2 Write failing `tests/…Integration/Import/EfImportLookupTests.cs` against the REAL `EfImportLookup`: date
   span filter includes both bounds and excludes outside rows; expenses AND incomes returned as
   `ExistingTransactionKey` with amount at 4 places; categories and payment methods returned; the migrated DB has the
   seeded "Otros" with Id `11111111-1111-1111-1111-000000000009` and `IsSystem = true` (guards the duplicated
   `FallbackCategoryId` constant); null min/max → no existing-row query; **fresh scope**: the lookup works when the
   ambient/shared `AppDbContext` is disposed and never reads through a supplied context; a thrown query error maps to
   `Result.Failure(LookupFailed)` and is logged. (R-19, S-15, DD-11, D-15, D-16, D-23)
-- [ ] 4b.3 Write failing `tests/…Integration/Import/PreviewImportUseCaseTests.cs` against the REAL
+- [x] 4b.3 Write failing `tests/…Integration/Import/PreviewImportUseCaseTests.cs` against the REAL
   `PreviewImportUseCase` with the REAL `SniffingTabularReader`, `EfImportLookup` and `ImportTestDb`: (a) S-1 happy path
   (3 valid rows, auto-mapped, no mapping step, counts, `PlanHash` present); (b) counts per outcome (valid, duplicate,
   rejected, warning) on a mixed file; (c) **`Preview_ProblemRowsBeyondSample`**: a problem row at row 5,000 appears in
@@ -362,18 +362,30 @@ Depends on 4a. Goal: `PreviewImportUseCase` produces an honest dry run against a
   performs no writes**: row counts of every table and the live file SHA-256 are unchanged after the call; (l) a
   user-supplied mapping with an out-of-range or reused index → `MappingIncomplete`; (m) decimal and date evidence
   fields are populated for the ambiguous cases. (R-9, R-17, R-18, R-20, S-1, S-9, S-16, S-22, S-28, C-5, C-21)
-- [ ] 4b.4 Create `src/…Infrastructure/Import/EfImportLookup.cs` per DD-11 (Singleton, `IServiceScopeFactory`,
+- [x] 4b.4 Create `src/…Infrastructure/Import/EfImportLookup.cs` per DD-11 (Singleton, `IServiceScopeFactory`,
   `Task.Run` + `CreateAsyncScope`, three `AsNoTracking` projections). Run 4b.2 green. (R-19, DD-11)
-- [ ] 4b.5 Create `src/…Application/UseCases/Import/{ImportPipeline,ImportPlanner,ImportPlan}.cs` per DD-11/DD-8
+- [x] 4b.5 Create `src/…Application/UseCases/Import/{ImportPipeline,ImportPlanner,ImportPlan}.cs` per DD-11/DD-8
   (mapping check, `Detect` → resolved style, `ImportRowValidator.Parse`, min/max date, lookup, `CategoryMatcher`,
   cap 50, fingerprints, occurrence counting, PlanHash from `row#:status:fingerprint|reasons` plus ordered new
   category names). (R-17, R-18, DD-11)
-- [ ] 4b.6 Create `src/…Application/UseCases/Import/PreviewImport/PreviewImportUseCase.cs` (returns `ImportPreview`,
+- [x] 4b.6 Create `src/…Application/UseCases/Import/PreviewImport/PreviewImportUseCase.cs` (returns `ImportPreview`,
   success-shaped for row outcomes, `Result.Failure` only for file-level codes and `LookupFailed`, catches every
   non-OCE exception and logs). Run 4b.3 green. (R-18, R-20, DD-12)
-- [ ] 4b.7 Run all four gates plus the no-stubs grep over the slice's `src` and test files. Confirm N > 0 for
+- [x] 4b.7 Run all four gates plus the no-stubs grep over the slice's `src` and test files. Confirm N > 0 for
   `EfImportLookupTests` and `PreviewImportUseCaseTests`. Run the FULL suite 3 consecutive times and record
   intermittent failures by test name. (R-25)
+  > Apply notes (S4b): tests were written before the types existed (compile-failure red, rule 6); they all went green
+  > on the first implementation build, so no assertion-level red was observed. A one-off mutation (lower date bound
+  > `>=` -> `>` in `EfImportLookup`) was caught by `Load_DateSpan_IncludesBothBoundsAndExcludesOutsideRows`, then
+  > reverted. Deviations: (1) `ImportPlan` also carries `MissingFields`, `ConflictingFields` and `TotalRows`, and
+  > `ImportPlanner.Plan` returns `PlannedRows`; (2) the plan hash appends `|pm:<paymentMethodId>` to each row
+  > signature because the payment method id is written but is not part of the duplicate fingerprint; (3) the lookup
+  > is called with the span of NON-rejected rows only, and is skipped while the mapping is incomplete; (4) zero
+  > non-blank rows after filtering is `Result.Failure(NoRows)`; (5) `WarningCount` counts Valid rows with at least
+  > one warning (duplicates are counted only as duplicates); (6) decimal/date evidence uses only rows with the
+  > expected shape, and `Decimal.Resolved` is the style actually applied (user choice or detection);
+  > (7) `ImportRowValidator.HasExpectedShape` became `internal` (was private); (8) DI is untouched (`AddImport`
+  > is S5). Full suite 3x green: 2128 unit + 717 integration, no intermittent failures.
 
 ## 5. Materializer, commit and atomic writer (S5)
 

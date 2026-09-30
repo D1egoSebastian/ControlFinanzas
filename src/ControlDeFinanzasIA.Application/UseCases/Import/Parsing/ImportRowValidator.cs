@@ -119,7 +119,7 @@ public static class ImportRowValidator
     }
 
     /// <summary>Trailing empty fields beyond the header are dropped; any other length difference is a mismatch.</summary>
-    private static bool HasExpectedShape(IReadOnlyList<RawCell> cells, int headerCount)
+    internal static bool HasExpectedShape(IReadOnlyList<RawCell> cells, int headerCount)
     {
         if (cells.Count == headerCount)
         {
