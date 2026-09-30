@@ -88,20 +88,20 @@ Depends on nothing (Phases 0-19 archived). Goal: library-free ports, DTOs, codes
 the three pure parsers live in Application. No type from ClosedXML, EF Core, `System.IO.Compression` or Avalonia
 (R-1, R-25). Size note: if it exceeds ~450 lines, split at the seam "contracts + loader" vs "three parsers".
 
-- [ ] 1.1 Write failing `tests/…Unit/Import/ImportSourceLoaderTests.cs` against the REAL `ImportSourceLoader.LoadAsync`
+- [x] 1.1 Write failing `tests/…Unit/Import/ImportSourceLoaderTests.cs` against the REAL `ImportSourceLoader.LoadAsync`
   using in-memory streams wrapped in `OpenTargets.Recording()`: a stream of exactly `ImportLimits.MaxFileBytes`
   passes and the retained bytes equal the input; `MaxFileBytes + 1` returns `Result.Failure(TooLarge)` with
   `Details["reason"] = fileTooLarge` and reads no more than cap + 1 bytes (counting stream asserts the read total);
   a NON-seekable stream with unknown `Length` is read to EOF and equals the input (no truncation); the target is
   opened exactly once and disposed. (R-2, R-6, S-6, C-22)
-- [ ] 1.2 Write failing `tests/…Unit/Import/HeaderMapperTests.cs`: the exact Phase-18 headers (`Date, Type, Description,
+- [x] 1.2 Write failing `tests/…Unit/Import/HeaderMapperTests.cs`: the exact Phase-18 headers (`Date, Type, Description,
   Category, Amount, Currency, AmountDOP`) map completely and `AmountDOP` lands in `Ignored`, never on Amount; es
   synonyms `Fecha, Concepto, Monto, Categoría, Moneda` (and the same without accents/with odd case/`Método de pago`,
   `Medio`-style separators collapsed) map completely; exact-equality only (`AmountDOPExtra`, `Dates` do not map);
   duplicate `Fecha`/`Date` leaves Date unmapped and listed in `Conflicting`; unknown headers are ignored;
   `When, What, How much` maps nothing and lists Date/Description/Amount as `Missing`; `IsComplete` needs Date,
   Description and Amount. (R-9, S-9, C-11)
-- [ ] 1.3 Write failing `tests/…Unit/Import/AmountParserTests.cs` (table-driven, one `[Theory]` row per DD-4 table row ×
+- [x] 1.3 Write failing `tests/…Unit/Import/AmountParserTests.cs` (table-driven, one `[Theory]` row per DD-4 table row ×
   style, asserting `Value`, `Error`, `WasAmbiguous`): `1234.56`, `1,234.56`, `1.234,56`, `(1,234.50)`, `-50`, `+50`;
   `1,234`/`1.234` are 1234 under Point (warn `AmbiguousAmount` in Auto) and 1.234/1234 under Comma; `12,5`,
   `1.234.567`, `1 234,56`, `12,34,567`; NBSP/U+202F group separators; `RD$ 1,500.00`, `$50`, `50 DOP`, `1e5`, `--3`,
@@ -111,7 +111,7 @@ the three pure parsers live in Application. No type from ClosedXML, EF Core, `Sy
   `IsConflict`, no-evidence → Point, majority resolve; and `Parse_Contradicting_Rejected` (a `1.234,56` token under the
   resolved Point style is `InvalidAmount`). Result is `decimal`, never `double`; the current culture (set to es-DO
   and en inside the test) never changes any result. (R-11, R-12, S-10, C-1, C-2, C-3, C-4)
-- [ ] 1.4 Write failing `tests/…Unit/Import/DateParserTests.cs`: ISO `2026-03-04` needs no options; ISO with
+- [x] 1.4 Write failing `tests/…Unit/Import/DateParserTests.cs`: ISO `2026-03-04` needs no options; ISO with
   `T12:30:00`, `T12:30:00Z`, `T12:30:00+05:00` and a space time suffix takes the date as written (no time-zone shift);
   `2026-02-30` → `InvalidDate` with no fall-through to a user format; `03/04/2026` under each of
   `DayMonthYear` (3 April), `MonthDayYear` (4 March), `03-04-2026` under `DayMonthYearDash`; 1- and 2-digit parts;
@@ -120,15 +120,15 @@ the three pure parsers live in Application. No type from ClosedXML, EF Core, `Sy
   `DateEvidence` classification (`25/03/2026` under MonthDayYear → `Contradicts`; only both-≤12 tokens →
   `AmbiguousOnly`; consistent; no text dates → `NotApplicable`). The current culture never changes any result.
   (R-13, S-11, C-6, C-7)
-- [ ] 1.5 Create `src/…Application/Abstractions/{ITabularReader,IImportLookup,IImportWriter,TabularReadOptions}.cs`
+- [x] 1.5 Create `src/…Application/Abstractions/{ITabularReader,IImportLookup,IImportWriter,TabularReadOptions}.cs`
   exactly as DD-1 (non-generic `Result`; `ITabularReader.ReadAsync(ReadOnlyMemory<byte>, TabularReadOptions,
   CancellationToken)`). `IFileOpenDialog` is NOT touched in this slice (S6b). (R-1, DD-1)
-- [ ] 1.6 Create `src/…Application/UseCases/Import/Common/{RawCell,RawRow,RawTable,TableSourceInfo,ImportOptions,
+- [x] 1.6 Create `src/…Application/UseCases/Import/Common/{RawCell,RawRow,RawTable,TableSourceInfo,ImportOptions,
   ColumnMapping,ImportEnums,ImportRowResult,ImportPreview,ImportCommitResult,ImportBatch,ImportLookupSnapshot,
   ImportSource}.cs` per DD-1 (typed `RawCell(Text, Kind)`, `ColumnMapping.IsComplete`, `ImportOptions` defaults:
   `DefaultType = Expense`, `DefaultCurrency = DOP`, `SkipDuplicates = true`, `CreateMissingCategories = true`). No
   behavior beyond the records. (R-1, R-18, Reconciliation #1)
-- [ ] 1.7 Create `Common/{ImportErrorCodes,ImportReason,ImportReasons,ImportLimits}.cs` per DD-2: file-level codes
+- [x] 1.7 Create `Common/{ImportErrorCodes,ImportReason,ImportReasons,ImportLimits}.cs` per DD-2: file-level codes
   including `PreviewStale`, `LookupFailed`, `WriteFailed`, `MappingIncomplete`, `Details` keys and `Reason*`
   constants; the full `ImportReason` enum with `ImportReasons.IsRejection` (`r < FutureDate`); `ImportLimits` with
   `MaxFileBytes = 10_485_760`, `MaxDataRows = 50_000`, `MaxColumns = 50`, `MaxFieldChars = 32_768`,
@@ -136,18 +136,18 @@ the three pure parsers live in Application. No type from ClosedXML, EF Core, `Sy
   `FallbackCategoryId = 11111111-1111-1111-1111-000000000009`, `NewCategoryColor = "#95A5A6"`. A unit test
   (`ImportReasonTests`) asserts `IsRejection` is true for every value before `FutureDate` and false from it on, and
   that the enum has no duplicate names. (R-20, R-24, DD-2)
-- [ ] 1.8 Create `Common/ImportSourceLoader.cs` (`LoadAsync(OpenTarget, CancellationToken)`, bounded copy to cap + 1 in
+- [x] 1.8 Create `Common/ImportSourceLoader.cs` (`LoadAsync(OpenTarget, CancellationToken)`, bounded copy to cap + 1 in
   buffers, never `Stream.Length`) and run 1.1 green. (R-2, R-6, C-22)
-- [ ] 1.9 Create `Parsing/HeaderMapper.cs` (`AutoMap`, `NormalizeHeader`, exact-equality synonym table from DD-3, ignore
+- [x] 1.9 Create `Parsing/HeaderMapper.cs` (`AutoMap`, `NormalizeHeader`, exact-equality synonym table from DD-3, ignore
   list `AMOUNTDOP`/`MONTODOP`) and run 1.2 green. (R-9, C-11)
-- [ ] 1.10 Create `Parsing/AmountParser.cs` (`Detect`, `Parse`, strict grammar of DD-4, `decimal` only) and run 1.3
+- [x] 1.10 Create `Parsing/AmountParser.cs` (`Detect`, `Parse`, strict grammar of DD-4, `decimal` only) and run 1.3
   green. No `double` and no `CultureInfo.CurrentCulture` reference (grep in 1.12). (R-11, R-12, C-1..C-4)
-- [ ] 1.11 Create `Parsing/DateParser.cs` (`Parse`, `Detect`, `DateEvidence`, literal-separator `TryParseExact`, ISO
+- [x] 1.11 Create `Parsing/DateParser.cs` (`Parse`, `Detect`, `DateEvidence`, literal-separator `TryParseExact`, ISO
   first) and run 1.4 green. (R-13, C-6, C-7)
-- [ ] 1.12 Purity checks: `rg -n "CurrentCulture|DateTime\.Now|DateTime\.UtcNow|File\.|Stream\b|double|float"
+- [x] 1.12 Purity checks: `rg -n "CurrentCulture|DateTime\.Now|DateTime\.UtcNow|File\.|Stream\b|double|float"
   src/ControlDeFinanzasIA.Application/UseCases/Import/Parsing` returns nothing; `git diff --name-status` shows only
   `A` entries under `Application/Abstractions`, `Application/UseCases/Import` and `tests/…Unit/Import`. (R-1, R-25)
-- [ ] 1.13 Run all four gates: `dotnet build -c Release`, `dotnet test -c Release --no-build`, `dotnet format style
+- [x] 1.13 Run all four gates: `dotnet build -c Release`, `dotnet test -c Release --no-build`, `dotnet format style
   --verify-no-changes`, NetArchTest R-1..R-5 (Application has no ClosedXML/EF/Compression/Avalonia reference). Then the
   no-stubs grep over `src/ControlDeFinanzasIA.Application/UseCases/Import`, `src/ControlDeFinanzasIA.Application/
   Abstractions` (new files) and `tests/ControlDeFinanzasIA.Tests.Unit/Import`, which returns nothing. Confirm N > 0
