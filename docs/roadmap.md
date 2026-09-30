@@ -1327,11 +1327,23 @@ una feature "de producto" en el mismo sentido.
 
 ---
 
-### Fase 19 — Backup y restauración ✅ IMPLEMENTADA (pendiente de archivo)
+### Fase 19 — Backup y restauración ✅ COMPLETADA (2026-09-29)
 
-**Estado (2026-09-29):** slices S1–S7 implementadas; falta el cierre (verify, comprobaciones manuales con los diálogos
-nativos y archivo). Casos de uso reales: `CreateBackupUseCase`, `InspectBackupUseCase`, `RestoreBackupUseCase` sobre
+**Estado (2026-09-29) — ✅ FASE COMPLETADA:** slices S1–S7 implementadas y archivadas (`spec/features/phase-19/F-019-backup-restore.done.md`).
+Casos de uso reales: `CreateBackupUseCase`, `InspectBackupUseCase`, `RestoreBackupUseCase` sobre
 `SqliteBackupService`; ver `docs/architecture.md` §11f.
+
+- ✅ Gates: build limpio, 2289/2289 tests verdes (1725 unit + 564 integration, subiendo desde 1908/1908 al cierre
+  de Fase 18), `dotnet format style` limpio, NetArchTest verde. Sin migración, sin paquete nuevo, sin clave nueva.
+- ✅ Verificación: exhaustiva, PASS WITH WARNINGS, 0 críticos, sin ruta de pérdida de datos (10 casos de corrupción
+  rechazados con la base viva idéntica byte a byte; restauración sobre WAL con una segunda conexión abierta falla
+  cerrada y luego tiene éxito). Corregido en `f87be48`: rollback fallido conserva el `.bak` (marcador
+  `.rollback-failed`), la espera del centro de notificaciones ya no se cuelga tras restaurar, barrido de
+  `pre-restore-*.zip.tmp` huérfanos, retención ordenada por hora de escritura.
+- ✅ SDD archivado: `spec/features/phase-19/F-019-backup-restore.done.md`.
+- ⚠️ Pendiente no bloqueante: las comprobaciones manuales (diálogos nativos reales de guardar/abrir, relanzamiento
+  real con `IAppRestartService`, revisión visual de la sección Backup en es-DO y en; tareas 6a.8, 6b.5, 8.2-8.5) NO
+  se ejecutaron a mano.
 
 - Criterio «export, instalación limpia, import, datos idénticos»: cumplido. Evidencia:
   `tests/ControlDeFinanzasIA.Tests.Integration/Backup/BackupRestoreEndToEndTests.cs`

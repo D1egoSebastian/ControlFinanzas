@@ -718,7 +718,7 @@ Exportación de Deudas (~250 líneas estimadas) y salida CSV: no implementadas.
 
 ## 11f. Backup y restauración (Fase 19)
 
-**Fase 19, implementada; pendiente de archivo.** Como las Fases 17 y 18, no usa `ILLMClient`, no añade migración, paquete
+**Fase 19, implementada y archivada (2026-09-29).** Como las Fases 17 y 18, no usa `ILLMClient`, no añade migración, paquete
 ni clave de configuración. El respaldo es **distinto** de los reportes de la Fase 18: copia toda la base para poder
 recuperarla, no proyecta datos para leerlos.
 
@@ -821,6 +821,8 @@ Si una restauración falla de forma irrecuperable o la migración posterior a un
 
 1. Cierre la aplicación.
 2. En el directorio de datos, copie `data.db.pre-restore.bak` sobre `data.db` (es la base original exacta, byte a byte), **o** descomprima `data.db` de `backups\pre-restore-*.zip` (copia de seguridad previa al restore, la más reciente ordena al final) y sustitúyalo.
+4. Si existe `backups\.rollback-failed`, un rollback anterior no pudo devolver la base original: mientras el marcador exista `CompletePendingRestore` conserva el `.bak` y registra una advertencia en cada arranque. Tras recuperar a mano, borre el marcador (el código nunca lo borra).
+5. Los archivos sueltos `data.db.pre-restore-<utc>.bak` y `data.db.rollback-*` nunca se barren y contienen una copia completa, incluida la API key; bórrelos a mano cuando ya no los necesite.
 3. Borre los archivos `data.db-wal` y `data.db-shm` si existen, y arranque de nuevo.
 
 ### Import CSV

@@ -9,8 +9,9 @@
 ## 1. TL;DR
 
 - **What it is:** `ControlDeFinanzasIA` — a cross-platform (.NET 8 + Avalonia MVVM) desktop app for personal-finance control with AI assist. 100% local data. DOP + USD.
-- **Current phase:** **Phase 18 archived** (PDF/Excel export). Phases 0–18 fully archived. Next per the roadmap: Phase 19 (backup and restore) — check `.atl/sdd/` and `git log --oneline` for any in-flight work before starting.
-- **Test count:** 1908/1908 passing (1550 unit + 358 integration) as of 2026-09-29, Phase 18 close (up from 1700 at Phase 17 close). Build 0 warnings/0 errors, `dotnet format style --verify-no-changes` exit 0, NetArchTest green (R-1..R-5 plus the Phase 18 library-confinement and single-license-assignment rules), `ModelSnapshotConsistencyTests` green (no schema change in Phase 18).
+- **Current phase:** **Phase 19 archived** (backup and restore). Phases 0–19 fully archived. Next per the roadmap: Phase 20 (CSV/Excel import) — check `.atl/sdd/f-020*` and `git log --oneline` for any in-flight work before starting.
+- **Test count:** 2289/2289 passing (1725 unit + 564 integration) as of 2026-09-29, Phase 19 close (up from 1908 at Phase 18 close). Build 0 warnings/0 errors, `dotnet format style --verify-no-changes` exit 0, NetArchTest green (R-1..R-5 plus the Phase 19 `Microsoft.Data.Sqlite` guard for Application and UI), `ModelSnapshotConsistencyTests` green (no schema change in Phase 19).
+- **Phase 19 shipped backup and restore: a Settings "Backup" block (before "Acerca de") with "Export everything to a file" and "Restore from a file".** `CreateBackupUseCase` -> `SqliteBackupService.CreateAsync` copies the live database with `SqliteConnection.BackupDatabase` (own connection, `Pooling=False`) into a temp file, runs `PRAGMA integrity_check`, redacts the `ai.apiKey` row (`secure_delete=ON`, `DELETE`, `VACUUM`, so no key bytes remain, even in free pages) and zips exactly `manifest.json` + `data.db` (SHA-256, `formatVersion`, `schemaVersion` = latest `MigrationId`); the destination is opened only after every check passes. Restore (`InspectBackupUseCase` feeds an inline confirmation panel with the backup date and a destructive warning; `RestoreBackupUseCase` re-validates everything) runs a fixed pipeline: ZIP shape, zip-slip guard, size caps (manifest 64 KiB, `data.db` 1 GiB, enforced on bytes actually read), SHA-256, `integrity_check`, `foreign_key_check`, migration-history comparison by `MigrationId` set (unknown id = `NewerSchema` showing both versions; older is accepted and migrated at next start), then a free-space check (3x, reported as `IoError` with reason `insufficientSpace`), a pre-restore safety ZIP under `<DataDir>\backups\pre-restore-*.zip` (keeps 3; safety ZIPs KEEP the API key and never leave the data dir, user exports redact it), and a WAL-aware atomic swap (`ClearAllPools`, one `File.Replace`, retry 200/600/1800 ms, rollback to the original bytes on any post-safety failure). `data.db.pre-restore.bak` is kept until `CompletePendingRestore()` runs after a successful startup `ApplyMigrations`; if a rollback itself fails, a `.rollback-failed` marker in `backups\` keeps the `.bak` and logs a warning on every start. The local API key is carried into the restored file when the backup has none. Notifications are suspended (`INotificationCenter.SuspendAsync`) during restore and a restart is required afterwards (`IAppRestartService`, with a "close and reopen" fallback). Four error codes (`NotABackup`, `Corrupt`, `NewerSchema`, `IoError`). `CONTROLDEFINANZASIA_DATA_DIR` overrides the data directory for throwaway runs. No migration, no new package, no new setting. Verification history: exhaustive verification PASSED WITH WARNINGS, 0 critical, no data-loss path found (10 corruption cases rejected with the live DB byte-identical; a restore over a WAL database with a second open connection fails closed, then succeeds); it caught that the live database runs in WAL mode (the spec assumed DELETE) and four issues fixed in `f87be48`. Manual checks (real dialogs, real relaunch, es-DO/en visual pass) were NOT run by hand. See gotchas #34-#36 below.
 - **Phase 18 shipped PDF and Excel export: "Exportar PDF" / "Exportar Excel" buttons on the Dashboard (the displayed month summary) and on Expenses (the current filter, every page).** `ExportMonthSummaryReportUseCase` composes the existing `GetMonthSummaryQuery`, `GetCategoryBreakdownQuery` (unfolded, no "Otras") and `GetBudgetVsActualQuery` plus every expense and income of the month (paged at 200); `ExportExpenseListReportUseCase` reads the filter page by page until done. Both build a fully computed DTO (`Application/DTOs/Reports/`) and hand it to the `IReportWriter` whose `Format` matches; `ReportOutput` renders into a `MemoryStream` and copies to the `SaveTarget` only on success, so a failed render never creates or truncates the file. `QuestPdfReportWriter` (QuestPDF Community, text and tables only) and `ClosedXmlReportWriter` (two sheets: styled `Summary`, flat `Data` with stable English headers `Date, Type, Description, Category, Amount, Currency, AmountDOP` — the Phase 20 import contract) live in `Infrastructure/Reports/`, registered by `AddReportExporters()`. `IFileSaveDialog` (Application port) is implemented by `AvaloniaFileSaveDialog` over `TopLevel.StorageProvider`; cancel is silent. Totals are DOP-normalized, each line keeps its original amount + currency, and a missing rate leaves `AmountDOP` blank (em dash in the PDF), never 0, with a localized footer note. `ReportLabels` are built by the ViewModel from resx, so writers are locale-agnostic. No schema change, no migration, no new setting. Verification history: the first independent verify FAILED (the PDF `WriteExpenseListAsync` was a stub, fixed in `3515cb9`); the second, exhaustive one PASSED WITH WARNINGS, 0 critical; warning W1 was closed with `ReportExportEndToEndTests`. See gotchas #31-#33 below.
 - **Phase 17 shipped in-app notifications: a bell + unread badge + popup in a new header row of the shell, fed by a deterministic detection run.** `DetectNotificationsUseCase` reads four existing sources sequentially (debt installments in `[today-7, today+3]` with overdue derived at display time, recurring charges in `[today, today+3]`, current-month budget Near/Exceeded — highest tier only —, unacknowledged `AnomalyAlert` rows) plus a periodic digest (`Off`/`Daily`/`Weekly`, default Weekly), and hands candidates to `NotificationReconciler`, which persists them in a `Notification` table keyed by a single unique `DedupKey` string (idempotent; a dismissed key is never recreated; an undismissed row whose source stops qualifying is removed; facts on undismissed rows are refreshed without touching `Id`/`CreatedAt`/`ReadAt`; 60-day purge; one `SaveChangesAsync` per run). `ScopedNotificationCenter` gives every run its own DI scope, guards against concurrent runs (manual refresh is a no-op while one is in flight; startup/settings runs are queued), and swallows and logs every failure. Runs happen at app start (`mainWindow.Opened`), after saving the Settings "Notificaciones" section (4 per-kind toggles, default on, plus the digest frequency picker, via new `SettingKeys`/`ISettingsStore` — `AppSettings` untouched), and via the popup's refresh button. The badge shows the full unread count (`9+` above 9), the popup lists at most 20 rows unread-first and marks them read on open, per-row dismiss is permanent, and there is no click-through. `Notification` stores facts only; `NotificationTextFormatter` renders text at display time from resx. See gotchas #28-#30 below.
 - **Phase 16 shipped a "Pedir plan con IA" button on every goal row that asks the LLM for a short, motivational explanation of the exact deterministic figure `SavingsPlanCalculator` (Phase 11, unmodified) already computes.** A new `GenerateSavingsPlanUseCase` takes only `GoalId`, reloads the goal and its contributions server-side, recomputes via `Goal.CalculateProgress` + `SavingsPlanCalculator.Calculate`, and classifies the plan into exactly one state (`Live`/`AlreadyMet`/`TargetDateInPast`, `AlreadyMet` wins when both apply) so the prompt only ever receives that state's figures. A pure `SavingsPlanNarrationGuard` extracts every digit run from the model's cleaned output and drops the narration to `Unavailable` if any run isn't among the figures — plus the sanitized goal name — actually sent, closing the loop against invented numbers. `GoalRow` converted from an immutable record to an `ObservableObject` (keeping its exact 13-parameter PascalCase constructor via a scoped `IDE1006` suppression) so a per-row `IsGeneratingPlan` flag plus `[RelayCommand(AllowConcurrentExecutions = true)]` let one row's request run without disabling any other row's button. Not configured, a provider failure, or a guard rejection all leave the card's number untouched, showing only a localized fallback caption. See gotcha #26 below for the transient Dashboard test-run anomaly and gotcha #27 for the guard's documented membership-not-position limitation.
@@ -35,7 +36,7 @@
 | Type | Cross-platform desktop (Windows, macOS, Linux), single-user, local data only |
 | UI pattern | MVVM strict with **CommunityToolkit.Mvvm** (`[ObservableProperty]`, `[RelayCommand]`) |
 | Localization | `es-DO` default + `en` via `IStringLocalizer` / resx |
-| Status | Phases 0–18 ✅ archived; Phase 19 (backup and restore) next |
+| Status | Phases 0–19 ✅ archived; Phase 20 (CSV/Excel import) next |
 
 ---
 
@@ -64,6 +65,7 @@ Counts derived by globbing `spec/features/phase-NN/*.md` and splitting `.done.md
 | 16 | Plan de ahorro con IA para metas | 1 umbrella `F-016` covering 4 strictly-chained slices (guard+DTO+prompts/use case/row+ViewModel/view+docs) | 1 | 0 | 100% | `spec/phases/phase-16/features.md` + `spec/features/phase-16/F-016-ai-savings-plan.done.md` |
 | 17 | Notificaciones in-app | 1 umbrella `F-017` covering 9 strictly-chained slices (domain/persistence+migration/settings+reconciler/debt+recurring detection/budget+anomaly detection+read/dismiss/UI service+list VM/shell bell+startup trigger/settings section/digest) | 1 | 0 | 100% | `spec/phases/phase-17/features.md` + `spec/features/phase-17/F-017-notifications.done.md` |
 | 18 | Exportación a PDF y Excel | 1 umbrella `F-018` covering 7 strictly-chained slices (S1a ports+DTOs+paging / S1b month-summary use case / S2 PDF writer+packages+DI / S3 XLSX writer / S4 Dashboard export UI / S5 Expenses list export / S6 docs) plus one fix commit | 1 | 0 | 100% | `spec/phases/phase-18/features.md` + `spec/features/phase-18/F-018-export.done.md` |
+| 19 | Backup y restauración | 1 umbrella `F-019` covering 9 chained slices (S1 contracts / S2 create / S3 inspect / S4a-S4b restore + hardened swap / S5 use cases + DI + data-dir override / S6a strings + restart / S6b Settings block / S7 end-to-end + docs) plus one post-verify fix commit | 1 | 0 | 100% | `spec/phases/phase-19/features.md` + `spec/features/phase-19/F-019-backup-restore.done.md` |
 
 \* Phase 11's Acceptance Criteria checklist is 100% satisfied; one documented, non-blocking gap exists
 between the spec's R-1/S-2 prose (UI goal editing) and the shipped UI (create/contribute/view/delete
@@ -145,9 +147,14 @@ only) — see the TL;DR above.
   (S2 `b734fbd`), ClosedXML writer (S3 `825568d`), Dashboard export UI (S4 `61dee0e`), filtered Expenses
   export (S5 `e741559`), docs reconciliation (S6 `c01a732`), PDF expense-list writer fix (`3515cb9`).
 
+**Phase 19** — `spec/features/phase-19/` (1 done, archived 2026-09-29)
+- `F-019-backup-restore.done.md` (umbrella). Chained slices: planning `b10eb60`, S1 `ecdbfd7`, S2 `4959915`,
+  S3 `f0b42a1`, S4a `72c4f5d`, S4b `8b8a2ac` (plus a test flake fix `90f5719`), S5 `a7aed29`, data-dir
+  override `557b404`, S6a `f59dffe`, S6b `e1b6575`, S7 `9091332`, post-verify fixes `f87be48`.
+
 ---
 
-## 4. Phase 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 & 18 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20, 2026-09-20, 2026-09-21, 2026-09-23, 2026-09-23, 2026-09-23, 2026-09-26, 2026-09-28, 2026-09-29)
+## 4. Phase 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 & 19 — archived (2026-09-17, 2026-09-18, 2026-09-18, 2026-09-18, 2026-09-20, 2026-09-20, 2026-09-21, 2026-09-23, 2026-09-23, 2026-09-23, 2026-09-26, 2026-09-28, 2026-09-29, 2026-09-29)
 
 ### What's done (backend)
 
@@ -664,15 +671,63 @@ The full task breakdown is at `tasks/phase-18/F-018-export.tasks.md`. Tasks 8.2 
 opening the files in a PDF viewer and Excel/LibreOffice, both locales on screen) are deliberately left
 unchecked: they were not run by hand.
 
+### Phase 19 — what's done
+
+- Application: `Abstractions/{IBackupService,IFileOpenDialog,IMigrationCatalog}.cs` (+ `OpenTarget`,
+  `FileTypeFilter`), `IFileSaveDialog` generic `PickAsync(suggestedName, FileTypeFilter, title)` overload (the
+  `ReportFormat` overload delegates to it), `Backup/{BackupManifest,BackupInfo,BackupCreated,RestoreOutcome,
+  BackupErrorCodes,BackupFileName}.cs`, `UseCases/Backup/{CreateBackup,InspectBackup,RestoreBackup}/`. Error
+  codes: `NotABackup`, `Corrupt`, `NewerSchema`, `IoError` (insufficient space is `IoError` with
+  `Details["reason"] = "insufficientSpace"`). No use case throws except for cancellation.
+- Infrastructure (`Backup/`): `SqliteBackupService` (partial: `.cs`, `.Inspect.cs`, `.Restore.cs`),
+  `BackupZip(.Read)`, `EfMigrationCatalog` (from `Database.GetMigrations()`, opens no connection),
+  `IBackupFileSystem`/`PhysicalBackupFileSystem` (the seam for failure injection), `BackupOptions`,
+  `AddBackup()`. The service uses its own `Pooling=False` connections, never `AppDbContext`, and restore
+  never goes through `Bootstrap.ApplyMigrations`.
+- UI: `Services/{AvaloniaFileOpenDialog,IAppRestartService,AppRestartService}.cs`,
+  `ViewModels/BackupSettingsViewModel.cs` (states, inline confirmation panel, busy guards), a Backup block in
+  `SettingsView.axaml` before "Acerca de", `INotificationCenter.SuspendAsync`, and the backup resx keys
+  (neutral English `Strings.resx` + `Strings.es-DO.resx` + `Strings.Designer.cs`).
+  `App` calls `CompletePendingRestore()` only after `ApplyMigrations` succeeded.
+- Deliberate rules a future reader must not "fix": (a) the live file is written by exactly one
+  `File.Replace`; everything else happens in a `.work` directory on the data volume; (b) `Pooling=False`
+  plus `ClearAllPools()` before every swap attempt; (c) safety ZIPs keep the API key, user exports redact
+  it; (d) `SuspendAsync` is held until process exit after a successful restore (restart is terminal for the
+  Backup section); (e) `IAsyncRelayCommand.ExecuteAsync` bypasses `CanExecute`, hence the body guard;
+  (f) retention ranks safety ZIPs by write time first, name as tie-breaker (DST-safe); (g) the spec's
+  "three attempts" is really the initial attempt plus 3 retries.
+- Manual recovery: the safety ZIP under `<DataDir>\backups\` is a valid backup (restore it), or copy
+  `data.db.pre-restore.bak` over `data.db`. If `<DataDir>\backups\.rollback-failed` exists, the `.bak` is
+  kept and a warning is logged on every start; delete the marker by hand after recovering. Documented in
+  `docs/architecture.md` §11f and §12.
+- Smoke launches MUST set `CONTROLDEFINANZASIA_DATA_DIR` to a throwaway folder; never launch against the real
+  profile when exercising restore.
+- Verification: exhaustive verify PASS WITH WARNINGS, 0 critical, no data-loss path found. Fixed in
+  `f87be48`: a failed rollback no longer lets `CompletePendingRestore` delete the `.bak`; the notification
+  wait no longer hangs after a restore; orphan `pre-restore-*.zip.tmp` files are swept; DST-safe retention
+  order; spec wording. Accepted and documented: leftover `.pre-restore-<utc>.bak` / `.rollback-*` aside files
+  are never swept (they contain a full copy incl. the API key), `ClearAllPools` ordering is Windows-first,
+  `AppRestartService` could leave two instances if `Shutdown` fails after `Process.Start`, no
+  `trusted_schema=OFF` defense, other screens accept writes until restart (T14 banner is a follow-up).
+  See `.atl/sdd/f-019p19-backup/verify-report.md` and `archive-report.md`.
+- Gates: build clean, 2289/2289 tests (1725 unit + 564 integration, up from 1908 at Phase 18 close),
+  `dotnet format style` clean, NetArchTest green.
+- Spec archived to `spec/features/phase-19/F-019-backup-restore.done.md`; divergences from the design are in
+  its "Reconciliation with design", "Post-verify reconciliation" and "Post-apply reconciliation" sections.
+
+The full task breakdown is at `tasks/phase-19/F-019-backup-restore.tasks.md`. Tasks 6a.8, 6b.5 and 8.2-8.5
+(real native dialogs, real relaunch, locked-file manual check, es-DO/en visual pass) are deliberately left
+unchecked: they were not run by hand.
+
 ---
 
 ## 5. What's pending (next up)
 
 Ordered by priority. Each item references its source-of-truth spec/plan.
 
-1. **Phase 19 — Backup/restore** — `docs/roadmap.md` §Fase 19. Check `.atl/sdd/` and
-   `git log --oneline` for any in-flight work before planning from scratch. Phase 18 use cases are named
-   `Export*ReportUseCase`; the name `ExportDataUseCase` is reserved for the backup.
+1. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20 (consumes the Phase 18 `Data` sheet contract and
+   reuses `IFileOpenDialog` from Phase 19). Check `.atl/sdd/f-020*` and `git log --oneline` for any in-flight
+   work before planning from scratch.
 2. **Follow-up, not phase-blocking**: Phase 16's `SavingsPlanNarrationGuard.IsGrounded` is a
    membership check, not a positional one (documented, accepted design cost) — do not "fix" it into a
    positional check; the goal name's digit runs are deliberately included in the allowed set (Spec
@@ -757,11 +812,17 @@ Ordered by priority. Each item references its source-of-truth spec/plan.
     (tasks 8.2/8.3); Debts export (spec R-16, ~250 lines predicted) and CSV output are documented
     follow-ups; `QuestPdfConfiguration.Apply()` also runs from the writer constructor (allowed by the
     design; the scan test passes).
-18. **Phase 20 — CSV/Excel import** — `docs/roadmap.md` §Fase 20 (consumes the Phase 18 `Data` sheet contract)
+18. **Follow-up, not phase-blocking**: Phase 19 verify suggestions. Shell-wide "restart required" banner (T14:
+    other screens accept writes between restore and restart); aside files `data.db.pre-restore-<utc>.bak` and
+    `data.db.rollback-*` are never swept and hold a full copy incl. the API key; consider
+    `PRAGMA trusted_schema=OFF` when opening a restored file; `AppRestartService` could leave two instances
+    if `Shutdown` fails after `Process.Start`; automatic revert after a failed post-restore migration and a
+    migration-failure startup dialog; the manual checks (real dialogs, relaunch, locked file, es-DO/en visual
+    pass; tasks 6a.8, 6b.5, 8.2-8.5) were NOT run by hand.
 19. **Phase 21 — Packaging + accessibility** — `docs/roadmap.md` §Fase 21
 
 **MVP (no IA) = phases 0–12, fully complete. Phases 13–16 = first four shipped AI features. Phase 17
-(notifications) and Phase 18 (export) are deterministic and AI-free.** Phase 19+ continues the roadmap.
+(notifications), Phase 18 (export) and Phase 19 (backup and restore) are deterministic and AI-free.** Phase 20+ continues the roadmap.
 
 ---
 
@@ -1035,8 +1096,8 @@ dotnet ef migrations add <Name> `
 
 ### Where to start
 
-1. **Read `spec/` first.** Phase 18 (PDF/Excel export) is archived at `spec/features/phase-18/F-018-export.done.md`. Phase 19 (backup and restore) is next per the roadmap — check `.atl/sdd/` and `git log --oneline` for in-flight work before planning from scratch.
-2. **Check tasks:** `tasks/phase-17/F-017-notifications.tasks.md` is the closed checklist for the last fully completed phase (9 strictly chained slices; only the manual task 10.2 is deliberately unchecked) — use it as the pattern reference for a multi-slice breakdown.
+1. **Read `spec/` first.** Phase 19 (backup and restore) is archived at `spec/features/phase-19/F-019-backup-restore.done.md`. Phase 20 (CSV/Excel import) is next per the roadmap — check `.atl/sdd/f-020*` and `git log --oneline` for in-flight work before planning from scratch.
+2. **Check tasks:** `tasks/phase-19/F-019-backup-restore.tasks.md` is the closed checklist for the last fully completed phase (chained slices; only the manual checks are deliberately unchecked); `tasks/phase-17/F-017-notifications.tasks.md` is the closed checklist for an earlier phase (9 strictly chained slices; only the manual task 10.2 is deliberately unchecked) — use it as the pattern reference for a multi-slice breakdown.
 3. **Read constitution** if touching architecture or stack: `spec/constitution/mission.md`, `spec/constitution/tech-stack.md`.
 4. **Check the SDD working dir** for any in-flight change: `.atl/sdd/<change-id>/`.
 
@@ -1256,6 +1317,22 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
     verify FAILED on exactly that: `QuestPdfReportWriter.WriteExpenseListAsync` did not render the rows,
     and only shape-level checks existed. The fix (`3515cb9`) implemented it, and `ReportExportEndToEndTests`
     now exercises real use cases with real writers. Keep verifying against source, not against the task list.
+34. **The live database runs in WAL mode; the spec said DELETE.** The Phase 19 spec's grounding claimed "Journal
+    mode is DELETE (no WAL)". Wrong for the file the app actually uses. Verification caught the consequence:
+    restoring over a WAL database while a pooled connection holds pending frames must not mix old frames into
+    the restored file. The swap therefore releases pooled connections, folds the WAL into the file, keeps the
+    old frames inside the `.bak`, deletes stale `-wal`/`-shm` sidecars after the swap (or rolls back), and the
+    exported copy is always DELETE mode. Tests: `Restore_LiveInWalMode*`, `Restore_LeftoverWal*`,
+    `Restore_StaleSidecar*`.
+35. **Backup traps.** Safety ZIPs keep the API key on purpose (they never leave `<DataDir>`), user exports
+    redact it; do not unify. A failed rollback writes `<DataDir>\backups\.rollback-failed`, and while it exists
+    `CompletePendingRestore` never deletes the `.bak`; code never deletes the marker. Retention orders by write
+    time first. The spec's "three attempts" is 4 total (initial + 200/600/1800 ms retries). Resource layout is
+    neutral English `Strings.resx` + `Strings.es-DO.resx` (not `Strings.en.resx`).
+36. **Verify again, again.** Phase 19's verify was run skeptically against source and with failure-injection
+    tests instead of trusting the checklist; it found the WAL assumption and four smaller defects. Some slices
+    (notably S6b ViewModel tests) were not literal strict TDD, and no manual UI check was performed. Keep
+    verifying against source, not against the task list.
 
 ---
 
@@ -1267,7 +1344,7 @@ Per `spec/constitution/tech-stack.md`: invoke Context7 whenever introducing or u
 # 1. Confirm the build is clean before you do anything
 dotnet build -c Release
 
-# 2. Confirm the existing 1908 tests still pass
+# 2. Confirm the existing 2289 tests still pass
 dotnet test -c Release --no-build
 
 # 3. Confirm CI's format gate is green
@@ -1276,7 +1353,7 @@ dotnet format style --verify-no-changes
 # 4. Confirm the architecture rules still hold
 dotnet test --no-build -c Release --filter "FullyQualifiedName~Architecture"
 
-# 5. Phase 18 is archived; Phase 19 (backup/restore) is next. Check for in-flight work first.
+# 5. Phase 19 is archived; Phase 20 (CSV/Excel import) is next. Check for in-flight work first.
 Get-ChildItem .\.atl\sdd; git log --oneline -10
 ```
 

@@ -1,6 +1,6 @@
 # Tasks — F-019 Backup and Restore
 
-> Governing inputs: `spec/features/phase-19/F-019-backup-restore.spec.md` (its final "Reconciliation with design"
+> Governing inputs: `spec/features/phase-19/F-019-backup-restore.done.md` (its final "Reconciliation with design"
 > section governs where wording differs) and `.atl/sdd/f-019p19-backup/design.md` (per-slice sections binding;
 > design notes S4 needed splitting and S6 is split as well). Requirement ids (R-n) and scenario ids (S-n) below
 > refer to the spec. Design decisions are cited as DD-n (design) and D-n (proposal). Slice names S1..S7 follow the
@@ -680,44 +680,44 @@ Depends on 6b. Goal: the roadmap completion criterion is proven through real DI,
 
 ## 8. Cierre
 
-- [ ] 8.1 Run the full gate suite across the whole phase: `dotnet build -c Release` (0 warnings/errors),
+- [x] 8.1 (2026-09-29, HEAD f87be48: build 0 warnings/0 errors; 1725 unit + 564 integration = 2289 green, 0 failed; `dotnet format style --verify-no-changes` exit 0; NetArchTest R-1..R-5 and the Sqlite guard green in the unit project; `BackupResourcesTests` green) Run the full gate suite across the whole phase: `dotnet build -c Release` (0 warnings/errors),
   `dotnet test -c Release --no-build` (unit + integration; record counts and confirm Backup tests executed, none
   skipped except Windows-only tests on non-Windows), `dotnet format style --verify-no-changes` exit 0, NetArchTest
   R-1..R-5 plus the D20 Sqlite guard, resx completeness. Record final counts. (R-22, R-24, S-31, S-32)
-- [ ] 8.2 Manual check on Windows with the REAL native dialogs, both locales, recording screenshots (cannot be
+- [ ] 8.2 (NOT RUN BY HAND: the native save/open dialogs were never driven by an agent or by hand; only ViewModel tests with fake dialogs exist) Manual check on Windows with the REAL native dialogs, both locales, recording screenshots (cannot be
   automated, no headless Avalonia harness): Export opens the native save dialog with the suggested
   `ControlDeFinanzasIA-backup-yyyyMMdd-HHmm.zip` in local time and the ZIP filter; cancel writes nothing and shows no
   message; the exported file opens in Explorer as a ZIP with exactly two entries; Restore opens the native open
   dialog, cancel is silent; picking a non-backup file shows the localized `NotABackup` message and changes nothing.
   Mark "NOT RUN BY HAND" if not performed. (R-19, R-20, S-26..S-28)
-- [ ] 8.3 Manual check of a REAL restore with relaunch, on a COPY of the data only: copy
+- [ ] 8.3 (NOT RUN BY HAND: no real restore with relaunch was performed; the relaunch is covered only by `AppRestartServiceTests` and the end-to-end test with a fake restart service) Manual check of a REAL restore with relaunch, on a COPY of the data only: copy
   `%APPDATA%\ControlDeFinanzasIA` to a throwaway folder, run the app pointed at the copy (data-dir override from
   5.9), restore an older backup, confirm the panel shows date and destructive warning, confirm; verify "Restart
   now" relaunches and the app reopens with the restored data and `data.db.pre-restore.bak` gone; then a second
   attempt in a `dotnet run` host to observe either the relaunch or the "close and reopen" fallback text; verify a
   safety ZIP appeared under `<copy>\backups\`. NEVER run this against the real profile. Mark "NOT RUN BY HAND" if
   not performed. (R-14, R-19, S-25, S-30)
-- [ ] 8.4 Manual check of a locked file: with the throwaway copy, hold `data.db` open from another process (Explorer
+- [ ] 8.4 (NOT RUN BY HAND: file-lock behavior is covered only by `SqliteBackupServiceRealLockTests`, an automated real-lock test, not by a second-process manual check) Manual check of a locked file: with the throwaway copy, hold `data.db` open from another process (Explorer
   preview or a `FileStream` script) and attempt a restore: `IoError` message, data intact, safety ZIP kept; then
   release and retry successfully. Mark "NOT RUN BY HAND" if not performed. (R-13, S-21)
-- [ ] 8.5 Manual visual check of the Settings Backup block in es-DO and en (spacing, contrast, destructive panel
+- [ ] 8.5 (NOT RUN BY HAND: no screenshots or visual pass of the Backup block in es-DO and en; S6b was launch-smoked in the default locale only) Manual visual check of the Settings Backup block in es-DO and en (spacing, contrast, destructive panel
   emphasis, indeterminate progress, restart panel), recorded with screenshots. Mark "NOT RUN BY HAND" if not
   performed. (R-22, R-23)
-- [ ] 8.6 Update `docs/AI_HANDOFF.md` with the Phase 19 summary, including: the live file is written by exactly one
+- [x] 8.6 (`docs/AI_HANDOFF.md`: TL;DR, status, phase table, "Phase 19 - what's done", pending list, gotchas) Update `docs/AI_HANDOFF.md` with the Phase 19 summary, including: the live file is written by exactly one
   `File.Replace`; the pipeline order and `.work` directory on the data volume; `Pooling=False` plus
   `ClearAllPools()`; safety backups keep the API key while user exports redact it; four error codes with
   `insufficientSpace` as a detail; `SuspendAsync` is held until process exit on success; `IAsyncRelayCommand
   .ExecuteAsync` bypasses `CanExecute`, hence the body guard; manual recovery paths; smoke launches must use a
   throwaway data dir; and any gotchas hit during apply. (Reconciliation #3, #4, #7, #8)
-- [ ] 8.7 Update `AGENTS.md` project status: Phase 19 shipped (backup ZIP with manifest, restore pipeline, safety
+- [x] 8.7 (`AGENTS.md` status line: Phases 0-19 archived, Phase 20 next) Update `AGENTS.md` project status: Phase 19 shipped (backup ZIP with manifest, restore pipeline, safety
   backup retention 3, confirmation panel, restart flow, test counts) and Phase 20 (CSV import) as next; remove the
   "Phase 18 is next" wording if present. Edited in place without restructuring. (R-25)
-- [ ] 8.8 Write `verify-report.md` in `.atl/sdd/f-019p19-backup/`, independently re-verifying every Acceptance
+- [x] 8.8 (`.atl/sdd/f-019p19-backup/verify-report.md`; manual checks 8.2-8.5 recorded as not run by hand) Write `verify-report.md` in `.atl/sdd/f-019p19-backup/`, independently re-verifying every Acceptance
   Criteria checklist line against source and tests (read the code, not the checklists), including all 12
   Reconciliation points, the anti-stub grep over the whole phase diff, the data-loss invariants (S-33) by running the
   failure-injection and real-lock tests, and the manual checks 8.2 through 8.5 (mark honestly any that were not run
   by hand). (Acceptance Criteria)
-- [ ] 8.9 Archive the spec (`F-019-backup-restore.spec.md` → `.done.md` with `git mv`, acceptance criteria checked
+- [x] 8.9 (`git mv` to `F-019-backup-restore.done.md`; `archive-report.md` written) Archive the spec (`F-019-backup-restore.spec.md` → `.done.md` with `git mv`, acceptance criteria checked
   with evidence) and write `archive-report.md` in `.atl/sdd/f-019p19-backup/`. Only after 8.1 and 8.8 pass.
   (Acceptance Criteria)
 

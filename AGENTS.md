@@ -11,9 +11,39 @@ the project state changes, update this file.
   **Entity Framework Core** (Code First, versioned migrations),
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
-- **Status (today):** Phases 0–18 fully archived. Phase 19 (backup and
-  restore) is next per the roadmap — check `.atl/sdd/` and
-  `git log --oneline` for in-flight work before planning. Phase 18
+- **Status (today):** Phases 0–19 fully archived. Phase 20 (CSV/Excel
+  import) is next per the roadmap — check `.atl/sdd/f-020*` and
+  `git log --oneline` for in-flight work before planning. Phase 19
+  (backup and restore) shipped a Settings "Backup" block (before "Acerca
+  de") with "export everything" and "restore from a file". A backup is a
+  ZIP with exactly `manifest.json` + `data.db` (SHA-256, schema version),
+  taken through `SqliteConnection.BackupDatabase` into a temp copy that
+  passes `integrity_check`; the API key is redacted in user exports
+  (`secure_delete` + `VACUUM`, so no key bytes remain) but kept in the
+  pre-restore safety ZIPs. Restore runs a fixed validation pipeline (ZIP
+  shape, zip-slip, size caps, hash, `integrity_check`, `foreign_key_check`,
+  migration-history set comparison: unknown migration = rejected showing
+  both versions, older = accepted), then a free-space check, a safety ZIP
+  in `<DataDir>\backups\` (keep 3), and a WAL-aware atomic swap
+  (`ClearAllPools` + one `File.Replace`, retry 200/600/1800 ms, rollback to
+  the original bytes on failure; `data.db.pre-restore.bak` kept until the
+  next successful start, and a `.rollback-failed` marker keeps it if a
+  rollback itself fails). Notifications are suspended during restore, the
+  local API key is carried into the restored file, and a restart is required
+  (`IAppRestartService`, with a "close and reopen" fallback).
+  `CONTROLDEFINANZASIA_DATA_DIR` overrides the data directory for
+  throwaway runs. No migration, no new package, no new setting. 2289/2289
+  tests green (1725 unit + 564 integration), build 0/0, format exit 0.
+  Verify history: exhaustive verification PASSED WITH WARNINGS, 0
+  critical, no data-loss path found; it caught that the live database
+  runs in WAL mode (the spec assumed DELETE) and four smaller defects,
+  fixed in `f87be48`. Not done by hand: the real native save/open dialogs,
+  the real relaunch, and the es-DO/en visual pass (tasks 6a.8, 6b.5,
+  8.2-8.5). Accepted follow-ups: leftover aside `.bak` files are never
+  swept, shell-wide restart-required banner, `trusted_schema=OFF`. See
+  `spec/features/phase-19/F-019-backup-restore.done.md`, `tasks/phase-19/`,
+  and `.atl/sdd/f-019p19-backup/`.
+  Phase 18
   (PDF/Excel export) shipped "Exportar PDF" / "Exportar Excel" buttons on
   the Dashboard (the displayed month summary) and on Expenses (the current
   filter, every page, not just the visible one). QuestPDF Community and

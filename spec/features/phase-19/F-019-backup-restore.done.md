@@ -1,7 +1,7 @@
 # F-019 — Backup and Restore
 
 > **Phase:** 19 — Backup and restore
-> **Status:** Active spec (2026-09-29). Rename to `.done.md` only after archive.
+> **Status:** Completed and archived (2026-09-29). Verify: PASS WITH WARNINGS, 0 critical. Manual native-dialog and relaunch checks NOT run by hand (see Acceptance Criteria).
 > **SDD:** `.atl/sdd/f-019p19-backup/`
 > **Input:** `.atl/sdd/f-019p19-backup/proposal.md` (D1-D21, S1-S7 binding), `.atl/sdd/f-019p19-backup/exploration.md`
 > **Depends on:** Phases 0-18 archived (Settings table and `ai.apiKey`, migrations, `IFileSaveDialog` stream-based dialog precedent from Phase 18).
@@ -352,24 +352,26 @@ See R-26. Additionally: percentage progress, a generic dialog service, and chang
 
 ## Acceptance Criteria
 
-- [ ] Backup ZIP contains exactly `manifest.json` + `data.db`; manifest fields per R-2; SHA-256 verified (S-3, S-12).
-- [ ] Copy taken via `BackupDatabase`, integrity-checked, consistent under a concurrent writer (S-6, S-7).
-- [ ] API key absent from exported bytes incl. free pages (`secure_delete` + `VACUUM`) (S-5).
-- [ ] Restore pipeline runs in the R-8 order; every rejection leaves the live DB byte-identical (S-8..S-16, S-33).
-- [ ] Newer schema rejected showing both versions; older accepted (S-2, S-15).
-- [ ] Safety backup precedes every swap; retention keeps 3 (S-17, S-18).
-- [ ] Free-space pre-check (S-19).
-- [ ] Release/swap/retry/rollback, no swap over a journal (S-20..S-22).
-- [ ] `.bak` kept until the next successful start (S-25).
-- [ ] Local API key kept; pre-Settings backup handled (S-23, S-24).
-- [ ] Confirmation panel with date and destructive warning; restart flow with fallback (S-26, S-30).
-- [ ] Cancelled dialogs silent; busy guards (S-28, S-29).
-- [ ] Codes mapped to localized messages; resx es-DO + en + Designer complete (S-27, S-31).
-- [ ] Roundtrip identity (S-1) and end-to-end test (slice S7).
-- [ ] No new package; architecture rules and D20 guard green (S-32).
-- [ ] Docs reconciled (R-25); `AGENTS.md` updated.
-- [ ] Gates: `dotnet build` clean, `dotnet test` green, `dotnet format style --verify-no-changes` exit 0, NetArchTest R-1..R-5 green, spec renamed to `.done.md` after archive.
-- [ ] Manual check of the real open/save dialogs and the relaunch on Windows recorded (cannot be automated; no headless Avalonia harness).
+Evidence paths: test classes are under `tests/ControlDeFinanzasIA.Tests.Integration/Backup/` unless stated (`Tests.Unit/...` otherwise). Gates at close (2026-09-29, HEAD f87be48): build 0 warnings / 0 errors; 1725 unit + 564 integration = 2289 green; `dotnet format style --verify-no-changes` exit 0.
+
+- [x] Backup ZIP contains exactly `manifest.json` + `data.db`; manifest fields per R-2; SHA-256 verified (S-3, S-12). Evidence: `SqliteBackupServiceCreateTests` (`Create_ProducesAZipWithExactlyManifestAndDataDb`, `Create_ManifestCarriesTheDocumentedFields`, `Create_DbSha256MatchesTheZippedDataDbBytes`); `SqliteBackupServiceInspectTests.Inspect_FlippedByteInDatabase_IsCorruptByHash`.
+- [x] Copy taken via `BackupDatabase`, integrity-checked, consistent under a concurrent writer (S-6, S-7). Evidence: `Create_WhileAnotherConnectionIsWriting_YieldsAConsistentCopy`, `Create_WhenTheCopyFailsIntegrityCheck_ReturnsCorruptAndWritesZeroBytes`, `Create_LeavesNoTempFilesAfterSuccess`, `SqliteBehaviorAssumptionsTests`.
+- [x] API key absent from exported bytes incl. free pages (`secure_delete` + `VACUUM`) (S-5). Evidence: `Create_KeyBytesNeverAppearInTheZipOrTheDatabase_EvenWhenAPreviousKeyLingersInFreeSpace`, `Create_LeavesTheLiveDatabaseUntouchedAndKeepsItsKey`, `BackupRestoreEndToEndTests.Roundtrip_ExportNeverLeaksTheApiKeyIntoTheFile`.
+- [x] Restore pipeline runs in the R-8 order; every rejection leaves the live DB byte-identical (S-8..S-16, S-33). Evidence: `SqliteBackupServiceInspectTests` (garbage, empty, missing/extra entry, zip-slip, size caps, lying header, hash, damaged pages, FK violation, no migration history, `Inspect_OversizedAndWrongHash_ReportsTheSizeCapFirst`); `SqliteBackupServiceRestoreTests.Restore_RejectedBackups_ReturnTheSameCodeAndLeaveTheLiveDatabaseIdentical`, `Restore_ZipAlteredAfterInspect_IsRejectedBecauseItIsRevalidated`; failure-injection via `FaultyBackupFileSystem` and `RestoreHarness.AssertFailedClosed`.
+- [x] Newer schema rejected showing both versions; older accepted (S-2, S-15). Evidence: `Inspect_UnknownMigrationId_IsNewerSchemaWithBothVersions`, `BackupRestoreEndToEndTests.FutureSchemaBackup_IsRejectedAsNewerSchemaWithBothVersions_AndTheLiveDatabaseIsByteIdentical`, `SqliteBackupServiceOlderSchemaTests.Restore_OfABackupWithAProperSubsetOfTheMigrations_ThenMigrate_SucceedsAndKeepsEveryRow`, `BackupSettingsViewModelTests.NewerSchemaMessage_ContainsAllFourValues`.
+- [x] Safety backup precedes every swap; retention keeps 3 (S-17, S-18). Evidence: `Restore_WritesAValidSafetyBackupThatKeepsTheKeyAndEqualsThePreRestoreDatabase`, `Restore_Retention_KeepsTheThreeNewestSafetyZipsAndTouchesNothingElse`, `Restore_SafetyBackupCreateFails_IsIoErrorAndNeverSwaps`, `SafetyBackupRetentionOrderTests`.
+- [x] Free-space pre-check (S-19). Evidence: `Restore_FreeSpaceBoundary_IsThreeTimesTheLargerOfLiveAndIncoming` (surfaced as `IoError` with `Details["reason"] = "insufficientSpace"`, Reconciliation #3).
+- [x] Release/swap/retry/rollback, no swap over a journal (S-20..S-22). Evidence: `SqliteBackupServiceSwapFailureTests` (`Swap_TwoTransientLockFailures_ThenSucceeds_WithBackoffAndPoolsReleasedBeforeEveryAttempt`, `Swap_EveryAttemptFails_IsIoErrorAfterTheWholeScheduleWithTheLiveDatabaseByteIdentical`, `HotJournal_*`), `SqliteBackupServiceRealLockTests`, `Restore_InstalledFileDiffersFromTheValidatedOne_IsRolledBackToTheOriginal`, `Restore_LiveInWalModeWithPendingFramesHeldByAPooledConnection_RestoresExactlyTheBackupAndPreservesTheOldFramesInTheBak`.
+- [x] `.bak` kept until the next successful start (S-25). Evidence: `CompletePendingRestoreTests` (`AfterASuccessfulRestore_DeletesTheBakAndSweepsTheWorkDirectory_ButNeverTheSafetyZipOrOtherFiles`, `WhenTheLiveDatabaseDoesNotCarryEveryMigration_KeepsTheBak`, `WhenARollbackFailedEarlier_KeepsTheBakEvenIfTheLiveDatabaseIsHealthy_AndWarnsOnEveryStart`).
+- [x] Local API key kept; pre-Settings backup handled (S-23, S-24). Evidence: `Restore_BackupWithoutKey_CarriesTheLocalKeyIntoTheFileBeforeTheSwap_AndTheLiveFileChangesOnlyAtTheSwap`, `Restore_PreSettingsBackup_RestoresAndReportsTheKeyAsLost`, `BackupSettingsViewModelTests.ConfirmRestore_Success_ShowsSafetyFileName_AndKeyLostNotice`.
+- [x] Confirmation panel with date and destructive warning; restart flow with fallback (S-26, S-30). Evidence at ViewModel level: `BackupSettingsViewModelTests.ChooseRestoreFile_InspectSuccess_ShowsConfirmation_WithoutRestoring`, `CancelRestore_DisposesSource_ClearsPending_WritesNothing_ReturnsToIdle`, `RestartNow_WhenRestartFails_ShowsFallback`, `RestartNow_WhenRestartSucceeds_ShowsNoFallback`; `AppRestartServiceTests`. The rendered panel and the real relaunch were not observed (see the last criterion).
+- [x] Cancelled dialogs silent; busy guards (S-28, S-29). Evidence: `Export_Cancel_CallsNoUseCase_ShowsNoMessage_StaysIdle`, `ChooseRestoreFile_Cancel_CallsNoInspect_ShowsNoMessage_StaysIdle`, `Export_DoubleInvocation_OpensOneDialogAndRunsOneUseCase`, `ConfirmRestore_DoubleInvocation_SuspendsAndRestoresOnce`.
+- [x] Codes mapped to localized messages; resx es-DO + neutral English + Designer complete (S-27, S-31). Evidence: `BackupSettingsViewModelTests.ErrorMessage_MapsEveryErrorCodeAndReason_ToANonBlankLocalizedMessage`, `BackupResourcesTests` (`BothResources_DefineTheSameBackupKeySet`, `Key_IsDefinedAndNonEmpty_InBothLocales_AndInTheDesigner`). Layout note in Post-apply reconciliation.
+- [x] Roundtrip identity (S-1) and end-to-end test (slice S7). Evidence: `BackupRestoreEndToEndTests.Roundtrip_ExportFromA_RestoreIntoAFreshInstall_ReproducesEveryTableExceptTheApiKey`, `SettingsViewModel_ExportThenRestore_DrivesTheRealPipelineEndToEnd`.
+- [x] No new package; architecture rules and D20 guard green (S-32). Evidence: the phase did not change `Directory.Packages.props` or any `.csproj`; `ArchitectureTests` forbid `Microsoft.Data.Sqlite` in Application and UI; suite green.
+- [x] Docs reconciled (R-25); `AGENTS.md` updated. Evidence: `docs/architecture.md` §11f and §12, `docs/roadmap.md` §Fase 19, `docs/AI_HANDOFF.md`, `AGENTS.md` status line, `spec/phases/phase-19/features.md`.
+- [x] Gates: `dotnet build` clean, `dotnet test` green, `dotnet format style --verify-no-changes` exit 0, NetArchTest R-1..R-5 green, spec renamed to `.done.md` after archive. Evidence: closing run above (0/0, 2289 green, format exit 0); this file was renamed with `git mv`.
+- [ ] Manual check of the real open/save dialogs and the relaunch on Windows recorded (cannot be automated; no headless Avalonia harness). **NOT RUN BY HAND.** No session drove the native save/open dialogs, the real relaunch through `IAppRestartService`, or the Backup section visually in es-DO and en (tasks 6a.8, 6b.5, 8.2 to 8.5). Only automated coverage exists (ViewModel tests with fake dialogs and restart service, `AppRestartServiceTests`, `SettingsViewBackupBlockTests`).
 
 ## Reconciliation with design (2026-09-29, orchestrator)
 
@@ -399,3 +401,13 @@ Appended after the Phase 19 verify (PASS WITH WARNINGS). Earlier sections are hi
 - Fix 2 (no hung notification calls): `ScopedNotificationCenter` callers queued on the gate when `SuspendAsync` raises the flag are released as no-ops, and the flag is re-checked right after the gate is acquired. An in-flight run is still awaited by `SuspendAsync`; new calls while suspended stay no-ops; a cancelled suspend leaves the center usable.
 - Fix 3 (orphan temp sweep): `CompletePendingRestore` also deletes `backups\pre-restore-*.zip.tmp` (a crash mid safety-backup leaves one holding the API key in clear), only while the service gate is free. Finished `pre-restore-*.zip`, `.bak`, rollback files and any other file are never touched.
 - Fix 4 (retention order): safety ZIP retention ranks by file system write time (`LastWriteTimeUtc`) first, with the name stamp and `-N` suffix as the deterministic tie-breaker, so a DST fall-back hour cannot prune a newer ZIP. Only `pre-restore-yyyyMMdd-HHmmss[-N].zip` names remain eligible.
+
+## Post-apply reconciliation (2026-09-29)
+
+Items not already recorded above (Reconciliation with design, Post-verify reconciliation):
+
+- The grounding fact "Journal mode is DELETE (no WAL)" was wrong for the live database: it runs in WAL mode (`SqliteBackupService.Restore.cs` documents this). Verification caught that a restore over a WAL database with a pooled connection holding pending frames had to be handled. The shipped swap releases pooled connections, folds the WAL into the file, keeps old frames in the `.bak`, deletes stale sidecars after the swap or rolls back. Evidence: `Restore_LiveInWalModeWithPendingFramesHeldByAPooledConnection_*`, `Restore_LeftoverWalFromACrashedProcess_*`, `Restore_StaleSidecar*`, `Create_FromTheWalModeLiveDatabaseEfCreates_ProducesADeleteModeCopyAndLeavesTheLiveModeAlone`. The exported copy is always DELETE mode.
+- Resource layout: R-22 names `Strings.resx` (es-DO default) plus `Strings.en.resx`. The repo convention is a neutral English `Strings.resx` plus `Strings.es-DO.resx`; the phase follows it. Completeness is asserted in both cultures by `BackupResourcesTests`.
+- Accepted, not fixed: leftover `data.db.pre-restore-<utc>.bak` and `data.db.rollback-*` aside files are never swept (safe clutter, but each holds a full copy including the API key; documented); the `ClearAllPools` ordering guarantee is Windows-only (Unix file handle semantics differ; Windows-first target); `AppRestartService` could leave two instances if `Shutdown` fails after `Process.Start` succeeded; no `PRAGMA trusted_schema=OFF` defense against hand-crafted triggers or views in a restored file (suggestion, follow-up candidate); other screens accept writes between restore and restart (T14, shell-wide restart-required banner is a documented follow-up).
+- Process note: strict TDD was not literal for the S6b ViewModel tests and some earlier slices (recorded in the tasks apply notes).
+- Manual checks (tasks 6a.8, 6b.5, 8.2 to 8.5) were NOT run by hand and stay unchecked.
