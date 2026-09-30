@@ -75,6 +75,7 @@ using ControlDeFinanzasIA.Infrastructure.Import;
 using ControlDeFinanzasIA.Infrastructure.Llm;
 using ControlDeFinanzasIA.Infrastructure.Persistence;
 using ControlDeFinanzasIA.Infrastructure.Reports;
+using ControlDeFinanzasIA.UI.Diagnostics;
 using ControlDeFinanzasIA.UI.Formatting;
 using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.Services;
@@ -278,7 +279,7 @@ public static class Bootstrap
 
         // Fase 19: respaldo y restauracion (F-019). Servicio de respaldo (singleton, sin
         // dependencias scoped), casos de uso transitorios y dialogo de apertura de Avalonia.
-        services.AddBackup(ReadAppVersion());
+        services.AddBackup(AppVersionInfo.Current);
         services.AddTransient<CreateBackupUseCase>();
         services.AddTransient<InspectBackupUseCase>();
         services.AddTransient<RestoreBackupUseCase>();
@@ -403,10 +404,4 @@ public static class Bootstrap
 
         services.GetRequiredService<IBackupService>().CompletePendingRestore();
     }
-
-    private static string ReadAppVersion()
-        => typeof(Bootstrap).Assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-            ?.InformationalVersion
-            ?? "0.0.0";
 }

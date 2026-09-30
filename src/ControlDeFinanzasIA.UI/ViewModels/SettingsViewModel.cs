@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ControlDeFinanzasIA.Application.Common;
@@ -13,6 +12,7 @@ using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateAiSettings;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateLocale;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateTheme;
 using ControlDeFinanzasIA.Domain.Notifications;
+using ControlDeFinanzasIA.UI.Diagnostics;
 using ControlDeFinanzasIA.UI.Resources;
 using ControlDeFinanzasIA.UI.Services;
 using Microsoft.Extensions.Logging;
@@ -87,7 +87,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
         Themes = Enum.GetValues<AppTheme>();
         AiProviders = Enum.GetValues<AiProvider>();
         Locales = SupportedLocales.All;
-        AppVersion = ReadInformationalVersion();
+        AppVersion = AppVersionInfo.Current;
 
         // Display-projection records for the pickers (D-12): the raw
         // Themes/Locales collections stay enum/string-typed for callers
@@ -493,12 +493,6 @@ public sealed partial class SettingsViewModel : ViewModelBase
             IsLoading = false;
         }
     }
-
-    private static string ReadInformationalVersion()
-        => typeof(SettingsViewModel).Assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-            ?.InformationalVersion
-            ?? "0.0.0";
 
     private static string DisplayNameForTheme(AppTheme theme)
         => theme switch

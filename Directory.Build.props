@@ -36,6 +36,14 @@
     <AnalysisLevel>latest</AnalysisLevel>
 
     <!--
+      The one and only application version (F-021 R-1). No .csproj may declare its own.
+      The source-revision suffix is disabled so the informational version is exactly
+      "1.0.0" (About label, backup manifests, archive names).
+    -->
+    <Version>1.0.0</Version>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+
+    <!--
       Package metadata. Placeholders, can be adjusted in a later feature.
       These only matter for `dotnet pack`; the app does not require them.
     -->

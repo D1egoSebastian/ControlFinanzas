@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ControlDeFinanzasIA.Application.Abstractions;
@@ -8,6 +7,7 @@ using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Application.UseCases.Backup.CreateBackup;
 using ControlDeFinanzasIA.Application.UseCases.Backup.InspectBackup;
 using ControlDeFinanzasIA.Application.UseCases.Backup.RestoreBackup;
+using ControlDeFinanzasIA.UI.Diagnostics;
 using ControlDeFinanzasIA.UI.Resources;
 using ControlDeFinanzasIA.UI.Services;
 using Microsoft.Extensions.Logging;
@@ -101,7 +101,7 @@ public sealed partial class BackupSettingsViewModel : ViewModelBase
         _restartService = restartService;
         _clock = clock;
         _logger = logger;
-        _appVersion = appVersion ?? ReadAppVersion();
+        _appVersion = appVersion ?? AppVersionInfo.Current;
     }
 
     /// <summary>Gets or sets the current phase of the section.</summary>
@@ -416,12 +416,6 @@ public sealed partial class BackupSettingsViewModel : ViewModelBase
                 : _unknownValue;
 
     private static FileTypeFilter BackupFilter() => new(Strings.BackupFileTypeName, _zipExtension, _zipMimeType);
-
-    private static string ReadAppVersion()
-        => typeof(BackupSettingsViewModel).Assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-            ?.InformationalVersion
-            ?? "0.0.0";
 
     private bool CanStart() => State == BackupPanelState.Idle;
 

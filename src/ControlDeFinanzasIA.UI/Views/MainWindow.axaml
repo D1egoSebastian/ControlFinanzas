@@ -8,6 +8,7 @@
         x:Name="ShellRoot"
         x:DataType="vm:ShellViewModel"
         Title="{x:Static resources:Strings.WindowTitle}"
+        Icon="/Assets/Icon/app-icon.ico"
         MinWidth="800"
         MinHeight="600">
     <Window.Styles>

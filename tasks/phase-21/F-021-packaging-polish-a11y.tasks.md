@@ -151,39 +151,40 @@ re-checks README against the final catalog.
 Depends on nothing (Phases 0-20 archived). Goal: `1.0.0` from exactly one place, one version reader, the icon set with
 `Window.Icon`, and the three repo documents. Size note: binary assets and prose are not counted in the line budget.
 
-- [ ] 1.1 Write failing `tests/…Unit/Packaging/AppVersionTests.cs` against the REAL built UI assembly and the REAL
+- [x] 1.1 Write failing `tests/…Unit/Packaging/AppVersionTests.cs` against the REAL built UI assembly and the REAL
   props files: (a) `AppVersionInfo.Current` equals exactly `1.0.0` (no `+sha`); (b) exactly one `<Version>` element across
   `Directory.Build.props`, every `*.props` and every `*.csproj` under the repo (parsed as XML; locate the repo root by
   walking up to `ControlDeFinanzasIA.sln`); (c) `IncludeSourceRevisionInInformationalVersion` is `false` in the props;
   (d) `SettingsViewModel.AppVersion` and the backup manifest version source both return `AppVersionInfo.Current`
   (real VMs/ports, existing fakes only for collaborators). (R-1, S-1, DD-12)
-- [ ] 1.2 Edit `Directory.Build.props` (additive): `<Version>1.0.0</Version>` and
+- [x] 1.2 Edit `Directory.Build.props` (additive): `<Version>1.0.0</Version>` and
   `<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>`. Create
   `src/…UI/Diagnostics/AppVersionInfo.cs` (`Current`, reads `AssemblyInformationalVersionAttribute`, strips nothing
   because the revision suffix is disabled) and switch the three reflection copies (`SettingsViewModel`,
   `BackupSettingsViewModel`, `Bootstrap.ReadAppVersion`) to it. Run 1.1 green. (R-1, DD-12 Version row)
-- [ ] 1.3 Write failing `tests/…Unit/Packaging/IconAssetTests.cs`: `Assets/Icon/app-icon.svg`, `app-icon.png`, `app-icon.ico`,
+- [x] 1.3 Write failing `tests/…Unit/Packaging/IconAssetTests.cs`: `Assets/Icon/app-icon.svg`, `app-icon.png`, `app-icon.ico`,
   `app-icon.icns` exist; the SVG contains only `<rect>`/`<path d fill>` elements (renderer subset); PNG header + 1024/512
   dimensions read from the IHDR; ICO header reports the 6 expected entries (16/24/32/48/64/256); ICNS magic `icns`,
   declared length equals file length, contains the `ic07`..`ic10` chunks; `UI.csproj` sets `ApplicationIcon` and an
   `AvaloniaResource` for `Assets\Icon\*.ico;*.png`; the REAL headless `MainWindow` (via `HeadlessUi`) has a non-null
   `Icon`. (R-2, S-3, DD-12 Icon row)
-- [ ] 1.4 Invoke `frontend-design`, then author `src/…UI/Assets/Icon/app-icon.svg` (Ink rounded tile, three Paper
+- [x] 1.4 Invoke `frontend-design`, then author `src/…UI/Assets/Icon/app-icon.svg` (Ink rounded tile, three Paper
   ledger rules, one Amber rising tick; 16/24 px variants drop to two rules). Create `tools/IconRenderer/` (outside the
   `.sln`; Avalonia + Skia already in CPM, NO new package; parses the SVG subset into `Geometry.Parse`, renders PNGs
   16…1024 via `RenderTargetBitmap`, packs ICO and ICNS byte-for-byte) and `scripts/render-icon.ps1`. Run the renderer
   once and COMMIT the outputs. Edit `UI.csproj` and `MainWindow.axaml` (`Icon="/Assets/Icon/app-icon.ico"`). Run 1.3
   green; open the PNG and look at it once (a rendered glyph that is blank is a stub). (R-2, DD-12)
-- [ ] 1.5 Write failing `tests/…Unit/Packaging/RepoDocsTests.cs` (reads repo files): `CHANGELOG.md` has `## [Unreleased]`
+- [x] 1.5 Write failing `tests/…Unit/Packaging/RepoDocsTests.cs` (reads repo files): `CHANGELOG.md` has `## [Unreleased]`
   and `## [1.0.0]` with Keep-a-Changelog category headings and entries for every feature area Phases 0-21;
   `LICENSE` exists and contains "All rights reserved"; `README.md` contains headings for: what the app is, download and
   run per OS (names the file to run, `ControlDeFinanzasIA.UI`), build from source, data directory and
   `CONTROLDEFINANZASIA_DATA_DIR`, keyboard shortcuts, SmartScreen workaround, Gatekeeper workaround, and the literal
   statement that macOS and Linux builds are "provided, untested"; README states the ICU prerequisite for Linux (T14).
   (R-1, S-2, T14, T15)
-- [ ] 1.6 Write `CHANGELOG.md`, `LICENSE`, and rewrite `README.md` (English). The shortcut summary lists exactly the
+- [x] 1.6 Write `CHANGELOG.md`, `LICENSE`, and rewrite `README.md` (English). The shortcut summary lists exactly the
   spec R-12 gestures. The annotated tag `v1.0.0` is NOT created (owner request only). Run 1.5 green. (R-1, D-28)
-- [ ] 1.7 **Run gate block G** (grep files: `AppVersionInfo.cs`, edited VMs, `Bootstrap.cs`, the two test files, the
+- [x] 1.7 **Run gate block G** (grep files: `AppVersionInfo.cs`, edited VMs, `Bootstrap.cs`, the two test files, the
+  _Apply notes S1 (Strict TDD): tests written first; red = compile failure (AppVersionInfo missing) before implementation, then green. 18 new tests (AppVersionTests 6, IconAssetTests 8, RepoDocsTests 4) all executed. Gate G: build 0/0; full suite x3 = 2569 unit + 772 integration (baseline 2551 + 772, +18), no intermittents; format exit 0; Architecture filter green; footprint clean (no Packages.props, Migrations, snapshot, SettingKeys change). No-stub grep: only a pre-existing comment in Bootstrap.cs:224 ("provider stub", Phase 5). Icon rendered once with tools/IconRenderer (SkiaSharp via Avalonia.Desktop, outside the .sln, no package added) and viewed. pwsh is not installed on this machine, so scripts/render-icon.ps1 is authored but unexecuted (the renderer was run with dotnet run directly). Tag v1.0.0 not created._
   renderer). Also record `git status` showing the binary assets and the renderer outside the `.sln`.
 
 ## 2. Rolling file logger (S2)

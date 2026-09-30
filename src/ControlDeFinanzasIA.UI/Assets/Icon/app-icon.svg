@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>ControlDeFinanzasIA</title>
+  <!-- Ink tile: the night-ledger ground (token InkColor #16181D). -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="#16181D"/>
+  <!-- Three Paper ledger rules (token PaperColor #E8E4D9); the last one is short, like an unfinished entry. -->
+  <rect x="112" y="168" width="288" height="20" rx="10" fill="#E8E4D9"/>
+  <rect x="112" y="246" width="288" height="20" rx="10" fill="#E8E4D9"/>
+  <rect x="112" y="324" width="150" height="20" rx="10" fill="#E8E4D9"/>
+  <!-- One Amber rising tick (token AmberColor #E8A33D): the balance moving the right way. -->
+  <path d="M278 372 L306 344 L334 372 L416 268 L448 294 L336 428 Z" fill="#E8A33D"/>
+</svg>

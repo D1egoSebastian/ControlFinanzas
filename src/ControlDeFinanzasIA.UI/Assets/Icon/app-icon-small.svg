@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>ControlDeFinanzasIA (16 and 24 px)</title>
+  <!-- Reduced variant: two heavier rules so the ledger still reads at 16 px. -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="#16181D"/>
+  <rect x="84" y="136" width="344" height="52" rx="26" fill="#E8E4D9"/>
+  <rect x="84" y="250" width="200" height="52" rx="26" fill="#E8E4D9"/>
+  <path d="M250 384 L290 344 L322 376 L402 272 L446 306 L324 448 Z" fill="#E8A33D"/>
+</svg>
