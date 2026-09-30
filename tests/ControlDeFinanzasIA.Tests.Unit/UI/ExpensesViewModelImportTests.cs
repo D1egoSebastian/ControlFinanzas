@@ -63,7 +63,7 @@ public sealed class ExpensesViewModelImportTests
         Assert.True(condition(), "Condition was not reached in time.");
     }
 
-    private sealed class Rig
+    internal sealed class Rig
     {
         public Rig(bool withImport = true)
         {

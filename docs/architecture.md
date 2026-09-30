@@ -199,7 +199,7 @@ La solución `ControlDeFinanzasIA.sln` contiene **seis proyectos** C#:
 - **`IPathResolver`** — devuelve la ruta del directorio de datos según el SO.
 - **`ISettingsStore`** — lectura/escritura tipada de settings (envuelve `ISettingRepository` con helpers).
 - **`IBackupService`** — respaldo y restauración de la base completa (Fase 19): `CreateAsync`, `InspectAsync`, `RestoreAsync` y `CompletePendingRestore()`. Recibe delegados que abren el stream (`Func<CancellationToken, Task<Stream>>`), nunca rutas ni tipos de SQLite/ZIP. Lo acompañan **`IMigrationCatalog`** (ids de migración conocidos por este build), **`IFileOpenDialog`** (selector de archivo que devuelve un `OpenTarget?`) y las clases `OpenTarget`/`FileTypeFilter`. `IAppRestartService` vive en UI (`UI/Services`), no en Application.
-- **`ICsvImporter`** — importación con perfil configurable.
+- **`ITabularReader`**, **`IImportLookup`**, **`IImportWriter`** — importación CSV / Excel (Fase 20, ver §11g): lectura de bytes a una tabla tipada (`RawTable`), consulta del catálogo y de las transacciones ya guardadas en el rango de fechas del archivo, y escritura atómica de un `ImportBatch`. Ninguno expone tipos de ClosedXML, EF Core, `System.IO.Compression` ni Avalonia. `ITabularReader` recibe `ReadOnlyMemory<byte>` y `TabularReadOptions`; no recibe el nombre del archivo.
 
 ### Use cases (uno por intención de usuario)
 
@@ -241,7 +241,7 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 - `GetAnomalyNarrativeUseCase` (toma un AnomalyAlert base y devuelve explicación en lenguaje natural)
 
 **Imports / Exports**
-- `ImportCsvUseCase` (con perfil de columnas reutilizable)
+- `PreviewImportUseCase`, `CommitImportUseCase` (`Application/UseCases/Import/`, Fase 20; ver §11g). Sin perfiles de mapeo guardados: seguimiento documentado
 - `CreateBackupUseCase`, `InspectBackupUseCase`, `RestoreBackupUseCase` (`Application/UseCases/Backup/`, Fase 19; respaldo completo y restauración; no son exportación de reportes, ver §11e)
 
 **Settings**
@@ -293,7 +293,7 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 
 - **`PathResolver`** (implementa `IPathResolver`) devuelve el directorio de datos según el SO, definido en `tech-stack.md`.
 - **`SqliteBackupService`** (`Infrastructure/Backup/`, implementa `IBackupService`; Fase 19, implementado) exporta la base a un `.zip` con `manifest.json` + `data.db`. La restauración valida todo el archivo antes de tocar la base viva. Detalle en §11f y §12 «Backup».
-- **`CsvImporter`** lee un CSV, aplica un `CsvImportProfile` (mapeo de columnas + formato de fecha + separador decimal), devuelve las entidades detectadas, las pasa por validación y las inserta en una transacción. Perfil guardable.
+- **Importación CSV / Excel (Fase 20, implementado):** `Infrastructure/Import/` contiene `CsvTableReader` (con `CsvRecordParser`), `ClosedXmlTableReader`, `SniffingTabularReader` (el único `ITabularReader` registrado; elige el lector por el contenido), `EfImportLookup` y `EfImportWriter`, más `AddImport()`. La lógica de interpretación (parsers, validación, categorías, duplicados, plan) es pura y vive en Application; ver §11g. No existen `ICsvImporter`, `CsvImporter`, `ImportCsvUseCase` ni `CsvImportProfile`.
 - **Reportes PDF / XLSX (Fase 18, implementado):** `QuestPdfReportWriter` y `ClosedXmlReportWriter` en `Infrastructure/Reports/` implementan `IReportWriter`; ver §11e. No existe `CsvExporter`: la Fase 18 no produce CSV (el backup completo es la Fase 19, distinto de un reporte).
 
 ### LLM clients
@@ -320,7 +320,7 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 ### Composition root
 
 - En `App.axaml.cs` (o un `Bootstrapper` aparte) se hace **toda** la registración de servicios. Aquí es el único lugar donde UI referencia a Infrastructure:
-  - Se registra `AppDbContext`, repos, `ILLMClient` con su factory por proveedor, `IClock`, `IPathResolver`, `ISettingsStore`, `IBackupService`, `ICsvImporter`.
+  - Se registra `AppDbContext`, repos, `ILLMClient` con su factory por proveedor, `IClock`, `IPathResolver`, `ISettingsStore`, `IBackupService`, y los puertos de importación (`AddImport()`: `ITabularReader`, `IImportLookup`, `IImportWriter`).
   - Se registran los use cases y los ViewModels (transient por defecto; los ViewModels con estado scoped, scoped).
 
 ### Patrón MVVM en la práctica
@@ -791,6 +791,128 @@ error de migración al arrancar, y las comprobaciones manuales con los diálogos
 
 ---
 
+## 11g. Importación CSV / Excel (Fase 20)
+
+**Fase 20, implementado (2026-09-30; verificación y archivo pendientes en el Cierre).** Como las Fases 17 a 19, no usa
+`ILLMClient`: es una canalización determinista sin migración, sin paquete nuevo y sin claves de configuración nuevas
+(ClosedXML ya estaba fijado por la Fase 18; `CodePagesEncodingProvider` y `System.IO.Compression` son BCL). La prioridad
+de diseño es **no corromper datos en silencio**: no se adivinan el separador decimal ni el orden día/mes, y una
+importación escribe todo o nada.
+
+### Piezas
+
+| Capa | Tipos |
+|---|---|
+| Application/Abstractions | `ITabularReader`, `IImportLookup`, `IImportWriter`, `TabularReadOptions`; `IFileOpenDialog` gana una sobrecarga con varios filtros |
+| Application/UseCases/Import/Common | `RawCell` (`Text`/`Number`/`Date`/`Error`), `RawRow`, `RawTable`, `ImportOptions`, `ColumnMapping`, `ImportPreview`, `ImportRowResult`, `ImportCommitResult`, `ImportBatch`, `ImportSource`, `ImportSourceLoader`, `ImportErrorCodes`, `ImportReason`, `ImportLimits` |
+| Application/UseCases/Import/Parsing | `HeaderMapper`, `AmountParser`, `DateParser`, `ImportRowValidator`, `CategoryMatcher`, `CategoryResolver`, `DuplicateDetector`, `ImportText` (puros: sin reloj, cultura ni E/S) |
+| Application/UseCases/Import | `ImportPipeline`, `ImportPlanner`, `ImportPlan`, `ImportMaterializer`, `PreviewImport/PreviewImportUseCase`, `CommitImport/CommitImportUseCase` |
+| Infrastructure/Import | `CsvTableReader` (+ `CsvRecordParser`), `ClosedXmlTableReader`, `SniffingTabularReader`, `EfImportLookup`, `EfImportWriter`, `AddImport()` |
+| UI | `ImportViewModel` (Transient), `ImportView`, alojados dentro de `ExpensesView` (sin ruta); `AvaloniaFileOpenDialog` con filtros CSV/TXT/XLSX |
+
+`NetArchTest` exige que `CsvTableReader`, `ClosedXmlTableReader`, `SniffingTabularReader`, `EfImportLookup` y
+`EfImportWriter` residan en `ControlDeFinanzasIA.Infrastructure.Import`, que nadie dependa de ese namespace salvo la
+composición, y que Domain, Application y UI no referencien ClosedXML, EF Core ni SQLite. `System.IO.Compression` no
+figura en esa lista: que Application no lo use se comprobó con una búsqueda de pureza en la Fase 20 (tarea 1.12), no con
+una regla permanente.
+
+### Canalización
+
+`leer → interpretar → consultar → planificar → hash del plan → confirmar`
+
+1. **Leer.** `ImportSourceLoader` copia el archivo elegido a memoria con tope de `MaxFileBytes` (10 MiB) más un byte,
+   sin confiar en `Stream.Length`. `SniffingTabularReader` decide por el contenido, nunca por el nombre: `PK\x03\x04` →
+   `ClosedXmlTableReader`; `D0 CF 11 E0` (`.xls` antiguo) → `UnreadableFile/legacyXls`; el resto → `CsvTableReader`.
+   Límites aplicados durante la lectura: 50 000 filas de datos, 50 columnas, 32 768 caracteres por campo, y para XLSX
+   100 MiB descomprimidos y 1 000 entradas (el ZIP se inspecciona con un flujo contador antes de abrir el libro).
+   - CSV: decodificación UTF-8 estricta, con BOM UTF-8/UTF-16 respetado y **Windows-1252 como respaldo** (el respaldo
+     se informa con un aviso y una muestra del texto); un NUL sin BOM se rechaza como binario. El delimitador (`,` `;`
+     tab) se detecta sobre los primeros 20 registros ignorando las comillas y puede forzarse. Máquina de estados
+     RFC 4180 (comillas dobladas, saltos de línea dentro de comillas); comilla sin cerrar → `UnreadableFile/malformedCsv`
+     con la línea física.
+   - XLSX: hoja `Data` (sin distinguir mayúsculas) o, si no existe, la primera; las celdas son tipadas (`Number`
+     redondeado a 4 decimales, `Date`, `Text`; una fórmula usa su valor en caché y nunca se evalúa; un error de Excel
+     es una celda `Error`).
+2. **Interpretar.** `HeaderMapper` mapea por igualdad exacta de encabezados normalizados (sinónimos en inglés y
+   español; `AmountDOP` se ignora a propósito). El paso de mapeo solo aparece si faltan Date, Description o Amount.
+   `ImportRowValidator` recoge **todos** los motivos de una fila (no solo el primero) y produce un estado
+   `Valid`/`Rejected`; los avisos (`FutureDate`, `AmbiguousAmount`, `CategoryFallback`, `TypeDefaulted`...) no rechazan.
+3. **Consultar.** `IImportLookup` devuelve categorías, métodos de pago y las claves de gastos e ingresos ya guardados
+   en el rango de fechas de las filas no rechazadas.
+4. **Planificar.** `ImportPlanner` resuelve categorías, aplica el tope de categorías nuevas y marca duplicados.
+5. **Hash del plan.** SHA-256 en minúsculas sobre `fila#:estado:huella|motivos` más los nombres de categorías nuevas,
+   en orden. Vista previa y confirmación ejecutan el mismo `ImportPipeline`.
+6. **Confirmar.** `CommitImportUseCase` relee los bytes retenidos con las opciones confirmadas, reconstruye el plan y,
+   si su hash difiere del de la vista previa, devuelve `PreviewStale` sin escribir nada.
+
+### Reglas de interpretación
+
+- **Importes (texto).** Gramática fija y `decimal`, nunca la cultura actual: signo inicial o paréntesis, dígitos,
+  un único separador decimal y agrupación de miles coherente. Se rechazan símbolos o letras (`$`, `RD$`, `DOP`),
+  notación científica, más de 4 decimales (`TooManyDecimals`; nada se redondea en silencio), cero, y valores sobre
+  `MaxAmount` (99 999 999 999 999,9999). Con estilo `Auto` se cuentan las pruebas de cada formato; `1.234,56` implica coma
+  y `1,234.56` implica punto; sin pruebas se asume punto. Un único separador seguido de exactamente tres dígitos
+  (`1,234`) es ambiguo: se lee como miles, con el aviso `AmbiguousAmount`, salvo que el usuario elija el estilo. Una
+  mezcla de estilos en el archivo muestra un aviso y rechaza cada valor contradictorio. Las celdas `Number` de XLSX
+  ignoran el estilo.
+- **Signo y tipo.** Con `Unsigned` un importe negativo es `NegativeAmount` (nunca se vuelve positivo). Con
+  `NegativeIsExpense` el signo decide el tipo e ignora la columna Type. Moneda: solo `DOP` y `USD`, por coincidencia
+  literal.
+- **Fechas.** ISO `yyyy-MM-dd` se acepta siempre (con hora o zona, la fecha se toma tal cual, sin desplazamiento). El
+  resto exige uno de tres formatos elegidos por el usuario (`d/M/yyyy`, `M/d/yyyy`, `d-M-yyyy`, separadores literales,
+  año de 4 dígitos); por defecto sigue la cultura de la UI. No existe «sin formato»: una fecha de texto que no coincide
+  con el formato elegido es `InvalidDate`. Un serial de Excel en una celda `Number` es `InvalidDate` (no se adivina);
+  una celda `Date` se lee exacta. Antes de 1900 se rechaza; una fecha futura se acepta con aviso. Si todas las fechas
+  de texto son ambiguas o alguna contradice el formato, la vista previa lo indica.
+- **Categorías.** Coincidencia ordinal, luego sin distinguir mayúsculas y por plegado de diacríticos; si varias
+  categorías del catálogo colisionan tras el plegado el nombre es `AmbiguousCategory` (rechazo). Un gasto sin
+  categoría, o sin coincidencia con creación desactivada, usa «Otros» por Id (`CategoryFallback`, aviso); un ingreso
+  sin categoría queda `null` sin aviso. Con creación activada se crean categorías nuevas (color `#95A5A6`, sin icono,
+  no sistema) con un tope de 50; la 51.ª se rechaza (`TooManyNewCategories`). Los nombres no se truncan. El método de
+  pago solo se enlaza si existe; nunca se crea.
+- **Duplicados.** Huella = fecha, tipo, importe (`0.0000`), moneda, descripción normalizada y categoría resuelta. Se
+  cuentan **ocurrencias**: dos filas idénticas en el archivo con una ya guardada → la primera es duplicado y la
+  segunda se importa. Reimportar el mismo archivo inserta 0. `SkipDuplicates = false` las importa con aviso.
+
+### Confirmación atómica en un ámbito nuevo
+
+`EfImportWriter` (Singleton que solo guarda `IServiceScopeFactory`) crea un `AsyncServiceScope` propio, agrega
+categorías nuevas, gastos e ingresos con `AutoDetectChangesEnabled = false` y llama **una sola vez** a
+`SaveChangesAsync(CancellationToken.None)`, dentro de `Task.Run`. EF envuelve ese único guardado en una transacción:
+todo se confirma o nada. El `AppDbContext` compartido de la UI nunca ve una entidad de la importación, así que un
+guardado posterior no relacionado no puede persistir un lote fallido. Cualquier excepción se convierte en
+`WriteFailed` (registrada, sin texto crudo hacia la UI); una cancelación se ignora una vez iniciada la escritura.
+`EfImportLookup` usa el mismo patrón de ámbito nuevo por llamada.
+
+**Compuerta de decisión de 50 000 filas (S5).** `ImportPerformanceTests` (Release, SQLite real en archivo temporal,
+lector CSV real, planificador y escritor reales) mide un único `SaveChangesAsync`: vista previa 0,43–0,54 s y
+confirmación (replanificar + construir + escribir) 6,33–6,75 s, con techo de 30 s. **Se mantiene un único
+`SaveChangesAsync`**; no hizo falta dividir en bloques ni abrir una transacción explícita. La prueba corre en una
+colección xUnit sin paralelismo (con la suite completa en paralelo llegó a 18–20 s por competencia de CPU y disco; el
+techo no se subió).
+
+### Superficie de UI
+
+`ExpensesView` añade el botón «Importar» junto a los de exportación; `ImportView` sustituye la lista de movimientos en
+el mismo lugar mientras `IsImportOpen` (no hay ruta). `ExpensesViewModel` recibe `ImportViewModel? import = null` como
+último parámetro opcional y lo cierra al salir de la pantalla (el historial de navegación conserva cada VM, y este
+retiene los bytes del archivo). Estados: `Idle`, `Loading`, `Mapping`, `Previewed`, `Importing`, `Done`; cada comando
+comprueba el estado de forma síncrona antes de su primer `await` (las guardas de doble ejecución no dependen de
+`CanExecute`). Cancelar el selector no escribe nada ni muestra mensaje. Tras un éxito se dispara `Completed` (el host
+recarga categorías y lista) y se refrescan las notificaciones sin esperar. Los errores de archivo se muestran con
+mensajes localizados (`es-DO`/`en`), nunca con texto de excepción ni rutas.
+
+### Decisiones y seguimientos
+
+- **Desviación documentada de la hoja de ruta:** los **perfiles de mapeo guardados** (`CsvImportProfile`) quedan
+  diferidos. El auto-mapeo por sinónimos y el paso de mapeo manual cubren el caso sin persistir nada (sin migración ni
+  clave de configuración nueva).
+- Fuera de esta fase: perfiles con nombre, formatos bancarios (OFX/QIF/MT940), importación de PDF, categorización con
+  IA al importar, deshacer una importación (hoy: restaurar un backup de la Fase 19) y una UI general de gestión de
+  categorías.
+
+---
+
 ## 12. Persistencia — detalles adicionales
 
 ### Ruta del archivo
@@ -825,15 +947,17 @@ Si una restauración falla de forma irrecuperable o la migración posterior a un
 5. Los archivos sueltos `data.db.pre-restore-<utc>.bak` y `data.db.rollback-*` nunca se barren y contienen una copia completa, incluida la API key; bórrelos a mano cuando ya no los necesite.
 3. Borre los archivos `data.db-wal` y `data.db-shm` si existen, y arranque de nuevo.
 
-### Import CSV
+### Import CSV / Excel (Fase 20)
 
-- Pantalla `ImportView` con:
-  1. Selección de archivo CSV/Excel.
-  2. Vista previa de las primeras N filas.
-  3. Mapeo de columnas (qué columna es fecha, monto, descripción, categoría, etc.) y formato (separador decimal, formato de fecha).
-  4. Guardar el mapeo como `CsvImportProfile` con nombre para reusar.
-  5. Confirmación y ejecución.
-- Toda la importación ocurre en una **transacción**; si falla, rollback.
+Detalle completo en §11g. Resumen de la persistencia:
+
+- `ImportView` (alojada dentro de `ExpensesView`, sin ruta) ofrece: selección de archivo CSV/TXT/XLSX, vista previa
+  de las primeras 50 filas más las primeras 50 filas con problemas, mapeo de columnas (solo cuando el automático es
+  incompleto, o a demanda), opciones de separador decimal, formato de fecha, tipo y moneda por defecto, y
+  confirmación con la recomendación de hacer un backup antes.
+- **No hay perfiles de mapeo guardados** (desviación documentada de la hoja de ruta, ver §11g).
+- Toda la importación ocurre en **una sola transacción** (un único `SaveChangesAsync` en un ámbito de DI propio); si
+  falla, no queda ninguna fila ni categoría nueva. No hay migración ni tabla nueva.
 
 ### Concurrencia
 
@@ -915,7 +1039,7 @@ Si una restauración falla de forma irrecuperable o la migración posterior a un
 ### Integration tests (`Tests.Integration`)
 
 - **EF Core**: repos contra un archivo SQLite temporal (no en memoria, para acercarse al comportamiento real). Patrón `IDbContextFactory` para paralelizar.
-- **CsvImporter**: roundtrip con archivos sintéticos.
+- **Importación (Fase 20)**: `CsvTableReader` con fixtures binarios reales (UTF-8, Windows-1252, UTF-16, `;`, tab), `ClosedXmlTableReader` con libros producidos por el `ClosedXmlReportWriter` real, `EfImportWriter` sobre SQLite temporal con un trigger que fuerza el fallo (0 filas nuevas), la prueba de 50 000 filas, y `ImportEndToEndTests`, que recorre exportación real (Fase 18) → importación en una base nueva → reimportación (inserta 0) por DI real (`AddPersistence` + `AddReportExporters` + `AddImport`).
 - **Backup (Fase 19)**: `SqliteBackupService` real sobre bases SQLite temporales creadas con las migraciones reales (creación, inspección, restauración, inyección de fallos con `FaultyBackupFileSystem`, bloqueo real de archivo solo en Windows) y `BackupRestoreEndToEndTests`, que recorre `CreateBackupUseCase` → `InspectBackupUseCase` → `RestoreBackupUseCase` por DI real (`AddPersistence` + `AddBackup`) y compara todas las tablas.
 - **Llm clients (marcados "external")**: solo se ejecutan si `CONTROL_FINANZAS_RUN_EXTERNAL_AI_TESTS=1` y hay API key. Hacen requests reales a OpenRouter con un modelo gratuito.
 

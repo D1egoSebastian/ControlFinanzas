@@ -105,9 +105,10 @@
             <StackPanel Spacing="16" IsVisible="{Binding IsWorkbenchVisible}">
 
                 <WrapPanel>
-                    <StackPanel Spacing="4" Width="200" Margin="0,0,16,12" IsVisible="{Binding IsDelimiterVisible}">
+                    <StackPanel Spacing="4" Width="260" Margin="0,0,16,12" IsVisible="{Binding IsDelimiterVisible}">
                         <TextBlock Text="{x:Static resources:Strings.ImportDelimiterLabel}" Classes="import-label" />
-                        <ComboBox ItemsSource="{Binding DelimiterChoices}"
+                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ImportDelimiterLabel}"
+                                  ItemsSource="{Binding DelimiterChoices}"
                                   SelectedValueBinding="{ReflectionBinding Value}"
                                   DisplayMemberBinding="{ReflectionBinding Label}"
                                   SelectedValue="{Binding SelectedDelimiter}"
@@ -117,9 +118,10 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                    <StackPanel Spacing="4" Width="260" Margin="0,0,16,12">
                         <TextBlock Text="{x:Static resources:Strings.ImportDecimalStyleLabel}" Classes="import-label" />
-                        <ComboBox ItemsSource="{Binding DecimalStyleChoices}"
+                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ImportDecimalStyleLabel}"
+                                  ItemsSource="{Binding DecimalStyleChoices}"
                                   SelectedValueBinding="{ReflectionBinding Value}"
                                   DisplayMemberBinding="{ReflectionBinding Label}"
                                   SelectedValue="{Binding DecimalStyle}"
@@ -128,9 +130,10 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                    <StackPanel Spacing="4" Width="260" Margin="0,0,16,12">
                         <TextBlock Text="{x:Static resources:Strings.ImportDateFormatLabel}" Classes="import-label" />
-                        <ComboBox ItemsSource="{Binding DateFormatChoices}"
+                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ImportDateFormatLabel}"
+                                  ItemsSource="{Binding DateFormatChoices}"
                                   SelectedValueBinding="{ReflectionBinding Value}"
                                   DisplayMemberBinding="{ReflectionBinding Label}"
                                   SelectedValue="{Binding DateFormat}"
@@ -139,9 +142,10 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                    <StackPanel Spacing="4" Width="260" Margin="0,0,16,12">
                         <TextBlock Text="{x:Static resources:Strings.ImportDefaultTypeLabel}" Classes="import-label" />
-                        <ComboBox ItemsSource="{Binding TypeChoices}"
+                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ImportDefaultTypeLabel}"
+                                  ItemsSource="{Binding TypeChoices}"
                                   SelectedValueBinding="{ReflectionBinding Value}"
                                   DisplayMemberBinding="{ReflectionBinding Label}"
                                   SelectedValue="{Binding DefaultType}"
@@ -150,9 +154,10 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                    <StackPanel Spacing="4" Width="260" Margin="0,0,16,12">
                         <TextBlock Text="{x:Static resources:Strings.ImportDefaultCurrencyLabel}" Classes="import-label" />
-                        <ComboBox ItemsSource="{Binding CurrencyChoices}"
+                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ImportDefaultCurrencyLabel}"
+                                  ItemsSource="{Binding CurrencyChoices}"
                                   SelectedValueBinding="{ReflectionBinding Value}"
                                   DisplayMemberBinding="{ReflectionBinding Label}"
                                   SelectedValue="{Binding DefaultCurrency}"
@@ -161,9 +166,10 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                    <StackPanel Spacing="4" Width="540" Margin="0,0,16,12">
                         <TextBlock Text="{x:Static resources:Strings.ImportSignModeLabel}" Classes="import-label" />
-                        <ComboBox ItemsSource="{Binding SignModeChoices}"
+                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ImportSignModeLabel}"
+                                  ItemsSource="{Binding SignModeChoices}"
                                   SelectedValueBinding="{ReflectionBinding Value}"
                                   DisplayMemberBinding="{ReflectionBinding Label}"
                                   SelectedValue="{Binding SignMode}"
@@ -200,7 +206,8 @@
                     <WrapPanel>
                         <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
                             <TextBlock Text="{x:Static resources:Strings.ImportFieldDate}" Classes="import-label" />
-                            <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedDateColumn}"
+                            <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ImportFieldDate}"
+                                  ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedDateColumn}"
                                       Classes="ledger-input" HorizontalAlignment="Stretch">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate x:DataType="vm:ColumnChoice">
@@ -211,7 +218,8 @@
                         </StackPanel>
                         <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
                             <TextBlock Text="{x:Static resources:Strings.ImportFieldType}" Classes="import-label" />
-                            <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedTypeColumn}"
+                            <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ImportFieldType}"
+                                  ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedTypeColumn}"
                                       Classes="ledger-input" HorizontalAlignment="Stretch">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate x:DataType="vm:ColumnChoice">
@@ -222,7 +230,8 @@
                         </StackPanel>
                         <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
                             <TextBlock Text="{x:Static resources:Strings.ImportFieldDescription}" Classes="import-label" />
-                            <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedDescriptionColumn}"
+                            <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ImportFieldDescription}"
+                                  ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedDescriptionColumn}"
                                       Classes="ledger-input" HorizontalAlignment="Stretch">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate x:DataType="vm:ColumnChoice">
@@ -233,7 +242,8 @@
                         </StackPanel>
                         <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
                             <TextBlock Text="{x:Static resources:Strings.ImportFieldCategory}" Classes="import-label" />
-                            <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedCategoryColumn}"
+                            <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ImportFieldCategory}"
+                                  ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedCategoryColumn}"
                                       Classes="ledger-input" HorizontalAlignment="Stretch">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate x:DataType="vm:ColumnChoice">
@@ -244,7 +254,8 @@
                         </StackPanel>
                         <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
                             <TextBlock Text="{x:Static resources:Strings.ImportFieldAmount}" Classes="import-label" />
-                            <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedAmountColumn}"
+                            <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ImportFieldAmount}"
+                                  ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedAmountColumn}"
                                       Classes="ledger-input" HorizontalAlignment="Stretch">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate x:DataType="vm:ColumnChoice">
@@ -255,7 +266,8 @@
                         </StackPanel>
                         <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
                             <TextBlock Text="{x:Static resources:Strings.ImportFieldCurrency}" Classes="import-label" />
-                            <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedCurrencyColumn}"
+                            <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ImportFieldCurrency}"
+                                  ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedCurrencyColumn}"
                                       Classes="ledger-input" HorizontalAlignment="Stretch">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate x:DataType="vm:ColumnChoice">
@@ -266,7 +278,8 @@
                         </StackPanel>
                         <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
                             <TextBlock Text="{x:Static resources:Strings.ImportFieldPaymentMethod}" Classes="import-label" />
-                            <ComboBox ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedPaymentMethodColumn}"
+                            <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ImportFieldPaymentMethod}"
+                                  ItemsSource="{Binding ColumnChoices}" SelectedItem="{Binding SelectedPaymentMethodColumn}"
                                       Classes="ledger-input" HorizontalAlignment="Stretch">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate x:DataType="vm:ColumnChoice">
@@ -322,7 +335,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:ImportRowItem">
                                 <Border BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,0,0,1" Padding="0,8">
-                                    <Grid ColumnDefinitions="88,96,120,*,Auto" RowDefinitions="Auto,Auto">
+                                    <Grid ColumnDefinitions="88,104,140,*,Auto" RowDefinitions="Auto,Auto">
                                         <TextBlock Grid.Column="0" Text="{Binding StatusText}"
                                                    Classes="import-badge"
                                                    Classes.duplicate="{Binding IsDuplicate}"
@@ -359,16 +372,24 @@
                                Foreground="{StaticResource PaperBrush}"
                                TextWrapping="Wrap" />
                 </Border>
-
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <Button Content="{x:Static resources:Strings.ImportCancelButton}"
-                            Command="{Binding CancelCommand}"
-                            Classes="ledger-btn" />
-                    <Button Content="{x:Static resources:Strings.ImportConfirmButton}"
-                            Command="{Binding ConfirmCommand}"
-                            Classes="ledger-btn-primary" />
-                </StackPanel>
             </StackPanel>
+
+            <!-- Actions: Cancel is reachable from the first moment of loading, before any preview exists -->
+            <StackPanel Orientation="Horizontal" Spacing="12" IsVisible="{Binding IsActionBarVisible}">
+                <Button Content="{x:Static resources:Strings.ImportCancelButton}"
+                        Command="{Binding CancelCommand}"
+                        Classes="ledger-btn" />
+                <Button Content="{x:Static resources:Strings.ImportConfirmButton}"
+                        Command="{Binding ConfirmCommand}"
+                        Classes="ledger-btn-primary" />
+            </StackPanel>
+
+            <!-- A failed load leaves the panel idle: offer another file in place instead of forcing a close and reopen -->
+            <Button Content="{x:Static resources:Strings.ImportChooseAnotherButton}"
+                    Command="{Binding ChooseFileCommand}"
+                    IsVisible="{Binding IsRetryVisible}"
+                    HorizontalAlignment="Left"
+                    Classes="ledger-btn-primary" />
 
             <!-- Result of the finished import -->
             <Border Classes="import-callout" IsVisible="{Binding IsDonePanelVisible}">

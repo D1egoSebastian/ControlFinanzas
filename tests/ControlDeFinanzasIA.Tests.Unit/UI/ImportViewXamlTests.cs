@@ -104,7 +104,8 @@ public sealed class ImportViewXamlTests
         foreach (string column in new[] { "Date", "Type", "Description", "Category", "Amount", "Currency", "PaymentMethod" })
         {
             Assert.Single(Regex.Matches(xaml, "SelectedItem=\"\\{Binding Selected" + column + "Column\\}\""));
-            Assert.Single(Regex.Matches(xaml, "Strings\\.ImportField" + column + "\\b"));
+            // One visible label and one automation name per column picker.
+            Assert.Equal(2, Regex.Matches(xaml, "Strings\\.ImportField" + column + "\\b").Count);
         }
 
         foreach (string option in new[] { "SelectedDelimiter", "DecimalStyle", "DateFormat", "DefaultType", "DefaultCurrency", "SignMode" })
@@ -136,6 +137,29 @@ public sealed class ImportViewXamlTests
         Assert.Contains("Text=\"{Binding DoneMessage}\"", xaml, StringComparison.Ordinal);
         Assert.Contains("IsVisible=\"{Binding IsConfirmVisible}\"", xaml, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding BackupRecommendation}\"", xaml, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ImportView_KeepsCancelOutsideTheWorkbench_OffersRetry_AndLabelsEveryPickerForAccessibility()
+    {
+        string xaml = ImportView();
+
+        // Cancel and Confirm live in their own action bar (visible while loading), not inside the workbench panel.
+        int workbench = xaml.IndexOf("IsVisible=\"{Binding IsWorkbenchVisible}\"", StringComparison.Ordinal);
+        int actionBar = xaml.IndexOf("IsVisible=\"{Binding IsActionBarVisible}\"", StringComparison.Ordinal);
+        int cancel = xaml.IndexOf("{Binding CancelCommand}", StringComparison.Ordinal);
+        int confirm = xaml.IndexOf("{Binding ConfirmCommand}", StringComparison.Ordinal);
+        Assert.True(workbench >= 0 && workbench < actionBar && actionBar < cancel && cancel < confirm);
+
+        // A failed load can be retried in place.
+        Assert.Single(Regex.Matches(xaml, "\\{Binding ChooseFileCommand\\}"));
+        Assert.Single(Regex.Matches(xaml, "IsVisible=\"\\{Binding IsRetryVisible\\}\""));
+        Assert.Contains("Strings.ImportChooseAnotherButton", xaml, StringComparison.Ordinal);
+
+        // Every ComboBox carries the label text as its automation name (6 options + 7 mapping columns).
+        int comboBoxes = Regex.Matches(xaml, "<ComboBox ").Count;
+        Assert.Equal(13, comboBoxes);
+        Assert.Equal(comboBoxes, Regex.Matches(xaml, "<ComboBox AutomationProperties\\.Name=\"\\{x:Static resources:Strings\\.Import\\w+\\}\"").Count);
     }
 
     [Fact]

@@ -136,6 +136,8 @@ public sealed partial class ImportViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsMappingVisible))]
     [NotifyPropertyChangedFor(nameof(IsConfirmVisible))]
     [NotifyPropertyChangedFor(nameof(IsDonePanelVisible))]
+    [NotifyPropertyChangedFor(nameof(IsActionBarVisible))]
+    [NotifyPropertyChangedFor(nameof(IsRetryVisible))]
     [NotifyCanExecuteChangedFor(nameof(ChooseFileCommand))]
     [NotifyCanExecuteChangedFor(nameof(ConfirmCommand))]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
@@ -148,6 +150,7 @@ public sealed partial class ImportViewModel : ViewModelBase
 
     /// <summary>Gets a value indicating whether <see cref="StatusMessage"/> describes a failure.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsRetryVisible))]
     private bool _isError;
 
     /// <summary>Gets the localized progress caption of the running operation; empty when nothing runs.</summary>
@@ -337,6 +340,12 @@ public sealed partial class ImportViewModel : ViewModelBase
 
     /// <summary>Gets a value indicating whether the result panel is shown.</summary>
     public bool IsDonePanelVisible => State == ImportPanelState.Done;
+
+    /// <summary>Gets a value indicating whether the Cancel and Confirm buttons are shown (loading, mapping or previewed).</summary>
+    public bool IsActionBarVisible => State is ImportPanelState.Loading or ImportPanelState.Mapping or ImportPanelState.Previewed;
+
+    /// <summary>Gets a value indicating whether the panel is idle after a failed load, so another file can be chosen in place.</summary>
+    public bool IsRetryVisible => State == ImportPanelState.Idle && IsError;
 
     /// <summary>Gets the rows the preview list shows.</summary>
     public IReadOnlyList<ImportRowItem> VisibleRows => OnlyProblems ? ProblemRows : SampleRows;

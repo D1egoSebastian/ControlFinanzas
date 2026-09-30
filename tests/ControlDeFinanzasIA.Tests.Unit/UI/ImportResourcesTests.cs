@@ -77,6 +77,7 @@ public sealed class ImportResourcesTests
         ["ImportConfirmButton"] = 0,
         ["ImportCancelButton"] = 0,
         ["ImportCloseButton"] = 0,
+        ["ImportChooseAnotherButton"] = 0,
         ["ImportWorkingRead"] = 0,
         ["ImportWorkingPreview"] = 0,
         ["ImportWorkingCommit"] = 0,

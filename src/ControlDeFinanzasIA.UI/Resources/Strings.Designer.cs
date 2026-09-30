@@ -1958,6 +1958,11 @@ public class Strings
     public static string ImportCloseButton => ResourceManager.GetString("ImportCloseButton", Culture)!;
 
     /// <summary>
+    /// Gets the label of the button that picks another file after a failed load (F-020).
+    /// </summary>
+    public static string ImportChooseAnotherButton => ResourceManager.GetString("ImportChooseAnotherButton", Culture)!;
+
+    /// <summary>
     /// Gets the reading progress caption (F-020).
     /// </summary>
     public static string ImportWorkingRead => ResourceManager.GetString("ImportWorkingRead", Culture)!;

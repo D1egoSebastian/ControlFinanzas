@@ -1048,6 +1048,95 @@ public sealed class ImportViewModelTests : IDisposable
         Assert.True(f.ViewModel.IsDonePanelVisible);
     }
 
+    // ---- S7 frontend-design review: action bar and retry visibility ----
+
+    [Fact]
+    public async Task ActionBar_IsVisibleOnlyWhileLoadingMappingOrPreviewed()
+    {
+        var mapping = new Fixture(TableWith(["When", "What", "How much"], null, ["2026-03-01", "Uno", "10"]));
+        var previewed = new Fixture();
+        var done = new Fixture();
+        var loading = new Fixture();
+        loading.Dialog.Gate = new TaskCompletionSource();
+
+        Assert.False(previewed.ViewModel.IsActionBarVisible);
+
+        Task pending = loading.ViewModel.ChooseFileCommand.ExecuteAsync(null);
+        Assert.Equal(ImportPanelState.Loading, loading.ViewModel.State);
+        Assert.True(loading.ViewModel.IsActionBarVisible);
+        loading.ViewModel.CancelCommand.Execute(null);
+        await Bounded(pending);
+        Assert.False(loading.ViewModel.IsActionBarVisible);
+
+        await Bounded(mapping.ChooseAsync());
+        Assert.True(mapping.ViewModel.IsActionBarVisible);
+
+        await Bounded(previewed.ChooseAsync());
+        Assert.True(previewed.ViewModel.IsActionBarVisible);
+
+        await Bounded(done.ChooseAsync());
+        await Bounded(done.ViewModel.ConfirmCommand.ExecuteAsync(null));
+        Assert.Equal(ImportPanelState.Done, done.ViewModel.State);
+        Assert.False(done.ViewModel.IsActionBarVisible);
+
+        var writer = new GatedWriter();
+        var importing = new Fixture(writer: writer);
+        await Bounded(importing.ChooseAsync());
+        Task confirm = importing.ViewModel.ConfirmCommand.ExecuteAsync(null);
+        await WaitUntilAsync(() => writer.Calls == 1);
+        Assert.False(importing.ViewModel.IsActionBarVisible);
+        writer.Gate.SetResult(Result.Success(new ImportCommitResult(2, 0, 0, 0, 0)));
+        await Bounded(confirm);
+    }
+
+    [Fact]
+    public async Task ActionBar_RaisesPropertyChangedWhenTheStateChanges()
+    {
+        var f = new Fixture();
+        var changed = new List<string?>();
+        f.ViewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        await Bounded(f.ChooseAsync());
+
+        Assert.Contains(nameof(ImportViewModel.IsActionBarVisible), changed);
+    }
+
+    [Fact]
+    public async Task Retry_IsVisibleOnlyInIdleAfterAFailure_AndChoosingAgainWorks()
+    {
+        var f = new Fixture(readerResult: Result.Failure(ImportErrorCodes.NoRows, "no rows"));
+        Assert.False(f.ViewModel.IsRetryVisible);
+
+        await Bounded(f.ChooseAsync());
+
+        Assert.Equal(ImportPanelState.Idle, f.ViewModel.State);
+        Assert.True(f.ViewModel.IsError);
+        Assert.True(f.ViewModel.IsRetryVisible);
+        Assert.True(f.ViewModel.ChooseFileCommand.CanExecute(null));
+
+        await Bounded(f.ChooseAsync());
+
+        Assert.Equal(2, f.Dialog.Calls);
+        Assert.True(f.ViewModel.IsRetryVisible);
+    }
+
+    [Fact]
+    public async Task Retry_IsHiddenAfterACancelledPicker_AndWhileLoading()
+    {
+        var f = new Fixture();
+        f.Dialog.Result = null;
+
+        await Bounded(f.ViewModel.ChooseFileCommand.ExecuteAsync(null));
+
+        Assert.False(f.ViewModel.IsRetryVisible);
+
+        f.Dialog.Gate = new TaskCompletionSource();
+        Task pending = f.ViewModel.ChooseFileCommand.ExecuteAsync(null);
+        Assert.False(f.ViewModel.IsRetryVisible);
+        f.ViewModel.CancelCommand.Execute(null);
+        await Bounded(pending);
+    }
+
     private static IEnumerable<(string Name, string Value)> ConstantsOf(Type type) =>
         type.GetFields(BindingFlags.Public | BindingFlags.Static)
             .Where(field => field.IsLiteral && field.FieldType == typeof(string))

@@ -1389,7 +1389,41 @@ la UX de "importar archivo".
 
 ---
 
-### Fase 20 — Importación CSV / Excel
+### Fase 20 — Importación CSV / Excel 🟡 IMPLEMENTADA (2026-09-30), verificación y archivo pendientes
+
+**Estado (2026-09-30):** slices S1–S7 implementadas (commits `aa36efa` a la S7; ver
+`spec/phases/phase-20/features.md`); `sdd-verify`, las comprobaciones manuales y el archivo (renombrar la spec a
+`.done.md`) corresponden al Cierre. Arquitectura en `docs/architecture.md` §11g.
+
+- ✅ Sin migración, sin paquete nuevo, sin clave de configuración nueva. ClosedXML (Fase 18) sigue solo en
+  Infrastructure.
+- ✅ Criterio «un CSV genérico con columnas configuradas produce gastos válidos, sin duplicar, en una transacción»:
+  evidencia `ImportEndToEndTests.GenericSpanishBankCsv_WithOptionsSet_ProducesTheExpectedRows` (`;`, Windows-1252,
+  `1.234,56`, `dd/MM/yyyy`), `CommitImportUseCaseTests` (reimportar inserta 0; dos filas idénticas legítimas se
+  conservan) y `EfImportWriterTests` (fallo forzado por trigger SQLite: 0 gastos, 0 ingresos y 0 categorías nuevas, y
+  el `AppDbContext` compartido no queda contaminado).
+- ✅ Contrato Fase 18 → Fase 20: un libro escrito por el `ClosedXmlReportWriter` real (lista de gastos y resumen del
+  mes, DOP y USD, decimales a 4 lugares, categoría vacía, `AmountDOP` en blanco) se importa en una base nueva con los
+  mismos campos y una segunda importación inserta 0. Evidencia: `ImportEndToEndTests` y `ImportRoundTripTests`.
+- ✅ Decisión de 50 000 filas: un único `SaveChangesAsync` (vista previa ≈0,5 s, confirmación ≈6,3–6,8 s en Release,
+  techo de prueba 30 s): `ImportPerformanceTests`.
+- ✅ Decodificación y delimitadores: fixtures binarios reales (UTF-8, Windows-1252, UTF-16, `,` `;` tab): 
+  `CsvTableReaderTests`, `FixturesAreByteExactTests`. Límites y ZIP bomb rechazados antes de parsear:
+  `CsvTableReaderTests`, `ClosedXmlZipGuardTests`.
+- ✅ Gates: build limpio (0 advertencias, 0 errores), 3263 pruebas verdes (2497 unit + 766 integration, desde
+  2289 al cierre de la Fase 19), `dotnet format style` limpio, NetArchTest verde, 3 ejecuciones consecutivas de la
+  suite completa sin intermitentes.
+- ⚠️ **Desviación documentada del entregable original:** los **perfiles de mapeo guardados** (`CsvImportProfile`,
+  «guardar el mapeo con nombre») quedan **diferidos**. El auto-mapeo por sinónimos (inglés y español) más el paso de
+  mapeo manual cubren el caso sin persistir nada. Los nombres del entregable (`CsvImporter`, `CsvImportProfile`)
+  fueron sustituidos por `ITabularReader`/`CsvTableReader`/`ClosedXmlTableReader`/`SniffingTabularReader`,
+  `IImportLookup`/`EfImportLookup`, `IImportWriter`/`EfImportWriter`, `PreviewImportUseCase`, `CommitImportUseCase` y
+  `ImportViewModel`.
+- ⚠️ Pendiente no bloqueante (Cierre): el diálogo nativo real de abrir archivo, importar un CSV bancario y un XLSX
+  reales sobre una copia de los datos, y la revisión visual del panel en es-DO y en NO se ejecutaron a mano.
+- 📌 Seguimientos documentados, no implementados: perfiles de mapeo con nombre, formatos OFX/QIF/MT940, importación
+  de PDF, categorización con IA al importar, deshacer una importación (hoy: restaurar un backup de la Fase 19) y una
+  UI general de gestión de categorías.
 
 **Objetivo**
 Wizard de import con mapeo configurable de columnas y perfiles

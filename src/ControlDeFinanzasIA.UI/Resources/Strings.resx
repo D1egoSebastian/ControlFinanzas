@@ -1207,6 +1207,9 @@ Showing approximate conversions only.
   <data name="ImportCloseButton" xml:space="preserve">
     <value>Close</value>
   </data>
+  <data name="ImportChooseAnotherButton" xml:space="preserve">
+    <value>Choose another file</value>
+  </data>
   <data name="ImportWorkingRead" xml:space="preserve">
     <value>Reading the file…</value>
   </data>

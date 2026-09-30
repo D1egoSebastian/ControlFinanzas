@@ -634,7 +634,7 @@ Depends on 6a. Goal: the Expenses screen can host the import flow with no change
 Depends on 6b. Goal: the user can import from the Expenses screen, and the roadmap criterion is proven through real DI
 with the REAL exporter.
 
-- [ ] 7.1 Write failing `tests/…Integration/Import/ImportEndToEndTests.cs` using real DI (`AddPersistence` + `AddImport`,
+- [x] 7.1 Write failing `tests/…Integration/Import/ImportEndToEndTests.cs` using real DI (`AddPersistence` + `AddImport`,
   real `ClosedXmlReportWriter`, real `PreviewImportUseCase`/`CommitImportUseCase`): (a) seed database A → real
   `ExportExpenseListReportUseCase` to XLSX bytes → fresh migrated DB B → preview then commit → rows are
   field-identical on Date, Type (Expense only), Amount (4-place `decimal`, no drift from the double), Currency
@@ -646,16 +646,16 @@ with the REAL exporter.
   produces the expected rows; the same file with `Auto` + no date format is rejected row by row with `InvalidDate`
   (S-11, S-10); (e) the tables outside expenses/incomes/categories are byte-identical before/after (no unintended
   writes). (R-17, R-21, S-19, S-23, C-18)
-- [ ] 7.2 Write failing `ImportViewModel` end-to-end test in the same file using the REAL use cases, real DB and real
+- [x] 7.2 Write failing `ImportViewModel` end-to-end test in the same file using the REAL use cases, real DB and real
   readers with only the picker faked: pick the real XLSX bytes → `Previewed` → Confirm → `Done`, `Completed` raised,
   row counts match, `TryRefreshAsync` (fake center) called once. (R-22, S-26)
-- [ ] 7.3 Write `ImportViewXamlTests` (string scan of `ImportView.axaml` and `ExpensesView.axaml`, precedent
+- [x] 7.3 Write `ImportViewXamlTests` (string scan of `ImportView.axaml` and `ExpensesView.axaml`, precedent
   `SettingsViewBackupBlockTests`): `ImportButton` exists once in the toolbar next to Export (`ColumnDefinitions=
   "*,Auto,Auto,Auto"`), the list block is wrapped so it hides while `IsImportOpen`, the `ImportView` sibling is bound
   to `Import`/`IsImportOpen`, `x:DataType="vm:ImportViewModel"`, all text via `Strings` bindings with zero hardcoded
   literals, no `Click=` handlers, and the code-behind (`ImportView.axaml.cs`) contains only `InitializeComponent`.
   (R-22, R-24)
-- [ ] 7.4 Create `src/…UI/Views/ImportView.axaml(.cs)` per DD-14 (header with file name and source facts, encoding
+- [x] 7.4 Create `src/…UI/Views/ImportView.axaml(.cs)` per DD-14 (header with file name and source facts, encoding
   fallback banner with `SampleText`, decimal/date banners, options grid, seven-ComboBox mapping grid expanded in
   `Mapping` and collapsible in `Previewed`, summary strip, categories-to-create chips, preview `ItemsControl` of 50
   rows with status badge, `dd MMM yyyy` date, amount + currency, description, category + "new" tag, reasons, an "Only
@@ -665,12 +665,12 @@ with the REAL exporter.
   `<views:ImportView DataContext="{Binding Import}" IsVisible="{Binding IsImportOpen}"/>`. No `ViewLocator` or route
   change. Invoke `.claude/skills/frontend-design` before finalizing; record what it changed (existing "Libro Mayor"
   tokens only). `dotnet build` shows no AVLN compiled-binding warnings. Run 7.3 green. (R-22, R-24)
-- [ ] 7.5 **Smoke launch in both locales on a throwaway data directory** (safety rule at the top): launch twice with
+- [x] 7.5 **Smoke launch in both locales on a throwaway data directory** (safety rule at the top): launch twice with
   `CONTROLDEFINANZASIA_DATA_DIR` pointing at a scratchpad copy/empty DB (es-DO, then en), open Expenses, confirm the
   Import button and empty panel render; it is permitted to import a small throwaway CSV into the throwaway DB only.
   Record screenshots or console output and the before/after listing of the real profile. If screenshot tooling is
   unavailable, record "NOT RUN BY HAND". (R-22, R-26)
-- [ ] 7.6 Docs: replace `ICsvImporter`/`CsvImporter`/`ImportCsvUseCase`/`CsvImportProfile` in `docs/architecture.md`
+- [x] 7.6 Docs: replace `ICsvImporter`/`CsvImporter`/`ImportCsvUseCase`/`CsvImportProfile` in `docs/architecture.md`
   §Import CSV with the shipped names (`ITabularReader`, `IImportLookup`, `IImportWriter`, `CsvTableReader`,
   `ClosedXmlTableReader`, `SniffingTabularReader`, `EfImportLookup`, `EfImportWriter`, `PreviewImportUseCase`,
   `CommitImportUseCase`, `ImportPipeline`, `ImportViewModel`), a NEW section describing the pipeline
@@ -679,13 +679,72 @@ with the REAL exporter.
   record the deferral of persisted mapping profiles as a documented roadmap deviation); create/update
   `spec/phases/phase-20/features.md` (the untracked folder already exists; read it first). Do not update `AGENTS.md`
   here: that is done in the Cierre after verify. (D-27, R-25)
-- [ ] 7.7 Confirm no new package, migration, setting or schema change across the WHOLE phase diff (`git diff
+- [x] 7.7 Confirm no new package, migration, setting or schema change across the WHOLE phase diff (`git diff
   --name-only <phase base>^ HEAD` filtered by `Directory.Packages.props`, `.csproj` (only the fixtures item),
   `Migrations/`, `SettingKeys`, `AppSettings` is empty otherwise). (R-25)
-- [ ] 7.8 Run all four gates plus the no-stubs grep across the ENTIRE phase diff (`rg -n
+- [x] 7.8 Run all four gates plus the no-stubs grep across the ENTIRE phase diff (`rg -n
   "NotImplemented|TODO|stub|Task\.FromResult\(Result\.Failure" -g "*.cs" -g "*.axaml"` limited to the files changed in
   phase 20 returns nothing). Confirm N > 0 for `ImportEndToEndTests`, `ImportViewXamlTests`. Run the FULL suite 3
   consecutive times and record intermittent failures by test name. (R-25)
+
+  > Apply notes (S7): red/green honesty (rule 6). `ImportEndToEndTests` (11 tests, real DI: `AddPersistence` + `AddReportExporters` +
+  > `AddImport`, real `ExportExpenseListReportUseCase`/`ExportMonthSummaryReportUseCase` over a seeded database A, real
+  > `ClosedXmlReportWriter`, fresh migrated database B; fakes only for clock, exchange-rate converter, picker, notification centre)
+  > were written after all production code existed, so they went green on the first run (no red observed; they are regression
+  > locks, not drivers). The four new `ImportViewModelTests` (`IsActionBarVisible`, `IsRetryVisible`) were red by compile failure
+  > first. The headless Avalonia tests were mutation-checked (removing `SelectedValueBinding` from the decimal-style ComboBox
+  > fails `ImportView_Previewed_OptionAndMappingComboBoxesResolveAndWriteBack` with `Expected: Auto / Actual: null`), and the
+  > `ExpensesView` row test was red first (see the bug below). Deviations: (1) a "null category" EXPENSE cannot be produced
+  > through the database (`Expense.CategoryId` is a non-null Guid), so the empty-category expense case feeds the REAL
+  > `ClosedXmlReportWriter` with report lines (`XlsxFixtures`), while everything after the file is real; the income with an
+  > empty category does come from the real use case on database A. (2) "Auto + no date format" does not exist: `ImportDateFormat`
+  > has no "none" value, so the equivalent case is `DecimalStyle.Auto` with `DayMonthYearDash` against a slash-dated file, which
+  > rejects both rows as `InvalidDate`, and a commit then writes nothing. (3) The Avalonia headless platform IS available
+  > (`Avalonia.Headless` is referenced by the UI project), so `ImportViewHeadlessTests` (4 tests, no new package) proves the
+  > `{ReflectionBinding}` ComboBoxes resolve and write back, the per-state button visibility, the host "Close" reaching an idle
+  > panel, and a rendered expense row. The native file dialog and the real relaunch are still only verified by the smoke below.
+  > 7.3/7.4 (frontend-design review against DD-14, item by item: header, encoding banner with `SampleText`, decimal/date banners,
+  > options grid, seven mapping ComboBoxes, summary, category chips, preview rows with badge, "Only problems", reason counts,
+  > backup recommendation, indeterminate `ProgressBar`, Done panel: all present) changed four things, using existing "Libro Mayor"
+  > tokens only: (a) Cancel/Confirm moved out of the workbench into an action bar (`IsActionBarVisible`) so Cancel is reachable
+  > while the first file is loading (it was hidden until a preview existed; seen in the live smoke: "Leyendo el archivo." with no
+  > way out); (b) a "Choose another file" button (`IsRetryVisible`, new resx key `ImportChooseAnotherButton` in both locales)
+  > after a failed load instead of forcing close and reopen; (c) `AutomationProperties.Name` on all 13 ComboBoxes (UI Automation
+  > then exposes them by label, which is what the smoke used); (d) wider option pickers (260 px; sign-mode 540 px) after the live
+  > screenshots showed "Día / mes / año (31/12/2" and the sign-mode caption clipped, and wider date/amount columns in the row
+  > grid. **Pre-existing bug found and fixed (outside the S7 text, needed for the import flow):** `ExpensesView.axaml` row
+  > template used `{Binding #Root.((vm:ExpensesViewModel)DataContext).BeginEditCommand}`, which throws `ArgumentException: Unable
+  > to resolve type vm:ExpensesViewModel` and KILLS THE APP as soon as one expense row renders. Reproduced on the Phase-19
+  > baseline (`a4b4f46^` built in a scratch copy), so it is not a Phase-20 regression, but every successful import ends by
+  > showing rows, so it is fixed to `{Binding #Root.DataContext.BeginEditCommand}` with a headless regression test. Not fixed
+  > (reported): the same `#Root.((vm:...)DataContext)` pattern appears in 7 other views (Income, Budgets, Debts, Goals, Chat,
+  > Dashboard, RecurringRules), untested; and the "Nuevo gasto" form shows `InvalidCastException: Could not convert '9/30/2026'
+  > (DateOnly) to DateTimeOffset?` in place of a date (pre-existing binding error, non-fatal).
+  > 7.5 smoke (REAL, driven through Windows UI Automation and `SendKeys` on the real native dialog; screenshots in the session
+  > scratchpad, not committed): fresh throwaway `CONTROLDEFINANZASIA_DATA_DIR` per run. es-DO: launched, opened Gastos, pressed
+  > Importar, typed a throwaway copy of `bank-es-semicolon-comma-1252.csv` in the native dialog, saw the Windows-1252 banner
+  > with the sample, the ambiguous-date banner, options with "Automático (detectado: 1.234,56)", 2 rows (one new category),
+  > confirmed, saw "Se importaron 2 transacciones y se crearon 1 categorías...", closed, and both rows appeared in the list.
+  > en (locale set by inserting `locale = en` into the throwaway DB's Settings row; the app reads the locale from that setting):
+  > same flow to the preview, dates read month-first ("03 Jan 2026") with the ambiguity banner; not confirmed. No unhandled
+  > exception and empty stderr in both final runs (the run that hit the crash above is the pre-existing bug). The real
+  > `%APPDATA%\ControlDeFinanzasIA` listing (`data.db`, `data.db-shm`, `data.db-wal`: sizes and timestamps) is identical before
+  > and after. Still NOT RUN BY HAND: a Phase-18 XLSX through the dialog, the es-DO/en comparison of long descriptions and error
+  > states, and re-import of the same file through the UI (covered by tests).
+  > 7.6 docs: `docs/architecture.md` (new §11g; `ICsvImporter`/`CsvImporter`/`ImportCsvUseCase`/`CsvImportProfile` replaced in
+  > the ports list, use-case list, filesystem, composition root, §12 "Import" and testing), `docs/roadmap.md` §Fase 20 (status,
+  > evidence pointers, deferral of persisted mapping profiles as a documented deviation), `spec/phases/phase-20/features.md`
+  > (slice table with the S6a/S6b re-cut and commits). Claims verified against code/tests while writing; corrections made:
+  > the NetArchTest list does NOT cover `System.IO.Compression` (only EF Core, ClosedXML, QuestPDF, OpenXml, SQLite), so the doc
+  > says it was checked by the S1 purity grep, not by a permanent rule; and the old "preview of the first N rows" became 50
+  > sample rows plus up to 50 problem rows. `AGENTS.md`, `docs/AI_HANDOFF.md` and the spec name were not touched (Cierre).
+  > 7.7: `git diff --name-only a4b4f46^` shows no `Directory.Packages.props`, `Migrations/`, `SettingKeys`, `AppSettings` or
+  > production `*Repository.cs` change; the only `.csproj` change is the integration fixtures item. 7.8: stub grep over every
+  > `.cs`/`.axaml` added or modified in the phase matches three lines, none a stub: the legitimate `Task.FromResult(Result.
+  > Failure(` for `legacyXls` in `SniffingTabularReader`, a pre-existing "provider stub" comment in `Bootstrap.cs`, and a
+  > pre-existing doc comment in `FakeCategoryRepository` ("remaining members are stubs"). Gates: build 0/0; unit 2486 -> 2497,
+  > integration 755 -> 766 (total 3263); `dotnet format style --verify-no-changes` exit 0; NetArchTest green; full suite 3x
+  > consecutive green with no intermittent failure (`ImportPerformanceTests` commit: 6.75 s in the isolated run).
 
 ## 8. Cierre
 
