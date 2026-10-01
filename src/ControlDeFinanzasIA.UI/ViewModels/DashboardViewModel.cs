@@ -301,7 +301,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
 
     private static MonthExpenseRow ToMonthExpenseRow(MonthExpenseItem item) =>
         new(
-            item.Date.ToString("d MMM", CultureInfo.CurrentCulture),
+            UiCulture.DayMonth(item.Date),
             item.Description,
             item.CategoryName,
             $"{item.Amount.Amount:N2} {item.Amount.Currency}",
@@ -776,7 +776,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
             item.CategoryName,
             item.Description,
             FormatDop(item.AmountDop),
-            item.Date.ToString("d MMM", CultureInfo.CurrentCulture),
+            UiCulture.DayMonth(item.Date),
             item.Severity,
             SeverityLabel(item.Severity),
             item.Message);
@@ -919,7 +919,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
             new Axis
             {
                 Labels = evolution.Points
-                    .Select(p => new DateOnly(p.Year, p.Month, 1).ToString("MMM", CultureInfo.CurrentCulture))
+                    .Select(p => UiCulture.MonthAbbreviated(new DateOnly(p.Year, p.Month, 1)))
                     .ToArray(),
                 LabelsPaint = new SolidColorPaint(ChartPalette.AxisText),
                 TextSize = 12,
@@ -1042,7 +1042,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
     }
 
     private static string FormatMonthLabel(DateOnly month)
-        => month.ToString("MMMM yyyy", CultureInfo.CurrentCulture);
+        => UiCulture.MonthYear(month);
 
     /// <summary>
     /// Formats a DOP amount with the app-wide "≈ {N2} {Currency}" pattern

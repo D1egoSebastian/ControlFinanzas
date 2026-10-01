@@ -10,6 +10,7 @@ using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetsForMonth;
 using ControlDeFinanzasIA.Domain.Budgets;
 using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Enums;
+using ControlDeFinanzasIA.UI.Formatting;
 using ControlDeFinanzasIA.UI.Resources;
 using Microsoft.Extensions.Logging;
 
@@ -290,5 +291,5 @@ public sealed partial class BudgetsViewModel : ViewModelBase
     }
 
     private static string FormatMonthLabel(DateOnly month)
-        => month.ToString("MMMM yyyy", CultureInfo.CurrentCulture);
+        => UiCulture.MonthYear(month);
 }

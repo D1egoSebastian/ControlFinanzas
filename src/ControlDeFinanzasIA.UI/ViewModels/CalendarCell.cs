@@ -33,6 +33,6 @@ public sealed record CalendarCell(
     /// </summary>
     public string AutomationName =>
         IsCurrentMonth && TotalDisplay.Length > 0
-            ? $"{Date.ToString("D", global::System.Globalization.CultureInfo.CurrentCulture)}, {TotalDisplay}"
-            : Date.ToString("D", global::System.Globalization.CultureInfo.CurrentCulture);
+            ? $"{ControlDeFinanzasIA.UI.Formatting.UiCulture.LongDate(Date)}, {TotalDisplay}"
+            : ControlDeFinanzasIA.UI.Formatting.UiCulture.LongDate(Date);
 }

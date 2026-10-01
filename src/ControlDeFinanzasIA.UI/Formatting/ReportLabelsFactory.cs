@@ -10,10 +10,10 @@ namespace ControlDeFinanzasIA.UI.Formatting;
 /// </summary>
 internal static class ReportLabelsFactory
 {
-    /// <summary>Creates labels for <see cref="CultureInfo.CurrentUICulture"/> with <see cref="CultureInfo.CurrentCulture"/> number/date formatting.</summary>
+    /// <summary>Creates labels for <see cref="CultureInfo.CurrentUICulture"/> with <see cref="CultureInfo.CurrentCulture"/> number formatting and <see cref="CultureInfo.CurrentUICulture"/> month and day names.</summary>
     public static ReportLabels Create() => new()
     {
-        Culture = CultureInfo.CurrentCulture,
+        Culture = ReportCulture(),
         ReportMonthSummaryTitle = Strings.ReportMonthSummaryTitle,
         ReportExpenseListTitle = Strings.ReportExpenseListTitle,
         ReportSummarySection = Strings.ReportSummarySection,
@@ -51,4 +51,22 @@ internal static class ReportLabelsFactory
         ReportMissingRatesNote = Strings.ReportMissingRatesNote,
         ReportPageLabel = Strings.ReportPageLabel,
     };
+
+    /// <summary>
+    /// The regional format for numbers (separators, grouping) with the app language's calendar names, so a Spanish
+    /// report never prints "October" because the operating system's region is English.
+    /// </summary>
+    private static CultureInfo ReportCulture()
+    {
+        CultureInfo regional = CultureInfo.CurrentCulture;
+        CultureInfo ui = CultureInfo.CurrentUICulture;
+        if (regional.DateTimeFormat.Equals(ui.DateTimeFormat) || string.Equals(regional.Name, ui.Name, StringComparison.Ordinal))
+        {
+            return regional;
+        }
+
+        var merged = (CultureInfo)regional.Clone();
+        merged.DateTimeFormat = (DateTimeFormatInfo)ui.DateTimeFormat.Clone();
+        return merged;
+    }
 }

@@ -34,6 +34,18 @@ public sealed class ReportLabelsFactoryTests
     }
 
     [Fact]
+    public void Create_MonthNamesFollowTheUiLanguage_WhileNumbersKeepTheRegionalFormat()
+    {
+        CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("es-DO");
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+
+        ReportLabels labels = ReportLabelsFactory.Create();
+
+        Assert.Equal("octubre 2026", new DateOnly(2026, 10, 1).ToString("MMMM yyyy", labels.Culture));
+        Assert.Equal(1234.5m.ToString("N2", CultureInfo.GetCultureInfo("en-US")), 1234.5m.ToString("N2", labels.Culture));
+    }
+
+    [Fact]
     public void Create_TitlesDifferBetweenEnglishAndSpanish()
     {
         UseCulture("es-DO");

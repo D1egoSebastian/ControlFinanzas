@@ -49,7 +49,7 @@ public sealed partial class CalendarViewModel : ViewModelBase
 
         _selectedMonth = MonthPeriod.Anchor(_clock.Today);
         _selectedMonthLabel = FormatMonthLabel(_selectedMonth);
-        WeekdayHeaders = BuildWeekdayHeaders(CultureInfo.CurrentCulture);
+        WeekdayHeaders = BuildWeekdayHeaders(UiCulture.Current);
 
         _ = LoadAsync();
     }
@@ -90,7 +90,7 @@ public sealed partial class CalendarViewModel : ViewModelBase
 
     /// <summary>
     /// Gets the 7 weekday headers, rotated to start at
-    /// <see cref="CultureInfo.CurrentCulture"/>'s
+    /// <see cref="CultureInfo.CurrentUICulture"/>'s
     /// <see cref="DateTimeFormatInfo.FirstDayOfWeek"/> (R-7). Computed once
     /// in the constructor: the week layout does not change across months.
     /// </summary>
@@ -151,7 +151,7 @@ public sealed partial class CalendarViewModel : ViewModelBase
         {
             Result result = await _getCalendarMonthQuery.ExecuteAsync(
                 SelectedMonth,
-                CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek);
+                UiCulture.Current.DateTimeFormat.FirstDayOfWeek);
 
             if (!result.IsSuccess)
             {
@@ -173,7 +173,7 @@ public sealed partial class CalendarViewModel : ViewModelBase
             {
                 Cells.Add(new CalendarCell(
                     day.Date,
-                    day.Date.Day.ToString(CultureInfo.CurrentCulture),
+                    day.Date.Day.ToString(UiCulture.Current),
                     day.TotalDop is decimal total ? MoneyFormat.ApproximateDop(total) : string.Empty,
                     day.IsCurrentMonth,
                     day.IsToday));
@@ -191,7 +191,7 @@ public sealed partial class CalendarViewModel : ViewModelBase
     }
 
     private static string FormatMonthLabel(DateOnly month)
-        => month.ToString("MMMM yyyy", CultureInfo.CurrentCulture);
+        => UiCulture.MonthYear(month);
 
     private static IReadOnlyList<string> BuildWeekdayHeaders(CultureInfo culture)
         => Enumerable.Range(0, 7)
