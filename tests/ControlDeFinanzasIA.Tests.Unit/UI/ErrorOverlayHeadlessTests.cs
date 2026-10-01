@@ -296,8 +296,8 @@ public sealed class ErrorOverlayHeadlessTests
 
         public ErrorOverlayView Overlay => Window.GetVisualDescendants().OfType<ErrorOverlayView>().Single();
 
-        /// <summary>Gets the shell grid (the window's first child) that holds the background content.</summary>
-        public Control Content => Window.GetVisualDescendants().OfType<ListBox>().First();
+        /// <summary>Gets a control inside the shell grid (the first sidebar item) that must be disabled while the overlay is open.</summary>
+        public Control Content => Window.GetVisualDescendants().OfType<Button>().First(b => b.Classes.Contains("sidebar-item"));
 
         /// <summary>Makes the real "register expense" button the window default button (Enter).</summary>
         public void ArmDefaultButton()

@@ -216,4 +216,106 @@
         <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
         <Setter Property="BorderThickness" Value="2" />
     </Style>
+
+    <!--
+        F-021 (DD-8, R-17): ONE keyboard focus style. A 2 px Amber ring on the template part that draws the control's
+        border, shown only for keyboard focus (:focus-visible, pinned by FocusStyleTests on Avalonia 11.2.7) so mouse
+        users see no change. The rules target the template part because Fluent paints those parts itself. The presenter
+        Padding is reduced by the border growth where a control already has a border, so focusing never moves content.
+    -->
+    <Style Selector="Button.ledger-btn:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="Padding" Value="10,4,10,6" />
+    </Style>
+    <Style Selector="Button.ledger-btn-primary:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="Padding" Value="11,5" />
+    </Style>
+    <Style Selector="Button.ledger-btn-danger:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="Padding" Value="10,4" />
+    </Style>
+    <Style Selector="Button.calendar-day:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="ListBoxItem:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="CheckBox:focus-visible /template/ Border#NormalRectangle">
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="ComboBox.ledger-combo:focus-visible /template/ Border#Background">
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <Style Selector="ComboBox.ledger-input:focus-visible /template/ Border#Background">
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    <!-- Text inputs show the amber border on any focus (the caret needs it for mouse users too); the same part Fluent paints. -->
+    <Style Selector="TextBox.ledger-input:focus /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+    </Style>
+
+    <!--
+        F-021 (DD-7): the sidebar rail. "Libro Mayor": each section is a ruled line of the ledger. The current one
+        carries the amber margin tick (the amber-tick motif of the rows) on a faint amber wash, in SemiBold Paper; every
+        item shows its Ctrl+digit as a mono folio number, which is how the shortcut teaches itself.
+    -->
+    <Style Selector="Button.sidebar-item">
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource PaperDimBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.sidebar-item /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="3,0,0,0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Padding" Value="13,0,14,0" />
+    </Style>
+    <Style Selector="Button.sidebar-item:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource PaperBrush}" />
+    </Style>
+    <Style Selector="Button.sidebar-item:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource AmberWashBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource PaperBrush}" />
+    </Style>
+    <Style Selector="Button.sidebar-item.current">
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.sidebar-item.current /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource AmberWashBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource PaperBrush}" />
+    </Style>
+    <Style Selector="Button.sidebar-item:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+        <Setter Property="BorderThickness" Value="3,2,2,2" />
+    </Style>
+    <Style Selector="TextBlock.sidebar-hint">
+        <Setter Property="FontFamily" Value="{StaticResource FontMono}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Foreground" Value="{StaticResource PaperDimBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="8,0,0,0" />
+    </Style>
+    <Style Selector="Button.sidebar-item.current TextBlock.sidebar-hint">
+        <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
+    </Style>
 </Styles>

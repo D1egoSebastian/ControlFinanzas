@@ -1681,4 +1681,22 @@ Mostrando conversiones aproximadas.
   <data name="ShortcutKeyShift" xml:space="preserve">
     <value>Shift</value>
   </data>
+  <data name="SidebarCurrentSection" xml:space="preserve">
+    <value>Sección actual</value>
+  </data>
+  <data name="ShortcutsSectionTitle" xml:space="preserve">
+    <value>Atajos de teclado</value>
+  </data>
+  <data name="ShortcutsSectionDescription" xml:space="preserve">
+    <value>Estos atajos son fijos y no se pueden cambiar.</value>
+  </data>
+  <data name="ShortcutGoToSectionNamed" xml:space="preserve">
+    <value>Ir a {0}</value>
+  </data>
+  <data name="ShortcutEnterSubmitsAction" xml:space="preserve">
+    <value>Enviar el formulario que está en pantalla</value>
+  </data>
+  <data name="ShortcutKeyEnter" xml:space="preserve">
+    <value>Enter</value>
+  </data>
 </root>

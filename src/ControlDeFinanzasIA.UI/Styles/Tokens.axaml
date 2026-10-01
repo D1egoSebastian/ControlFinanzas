@@ -28,6 +28,10 @@
     <SolidColorBrush x:Key="TerracottaBrush" Color="{StaticResource TerracottaColor}" />
     <SolidColorBrush x:Key="TerracottaTextBrush" Color="{StaticResource TerracottaTextColor}" />
 
+    <!-- Faint amber wash behind the current sidebar section (F-021, DD-7); a background only, never text. -->
+    <Color x:Key="AmberWashColor">#14E8A33D</Color>
+    <SolidColorBrush x:Key="AmberWashBrush" Color="{StaticResource AmberWashColor}" />
+
     <!-- Typography -->
     <!--
         The preferred families are the OFL fonts in Assets/Fonts.

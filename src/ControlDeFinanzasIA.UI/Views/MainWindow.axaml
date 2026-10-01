@@ -51,6 +51,11 @@
         <Style Selector="ToggleButton.bell:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="#33E8A33D" />
         </Style>
+        <!-- F-021 (DD-8): the shared keyboard focus ring (see LedgerStyles.axaml) on the borderless bell. -->
+        <Style Selector="ToggleButton.bell:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
     </Window.Styles>
 
     <!--
@@ -195,23 +200,48 @@
         </Border>
 
         <DockPanel Grid.Row="1">
-            <ListBox DockPanel.Dock="Left"
-                     ItemsSource="{Binding MenuItems}"
-                     MinWidth="180">
-                <ListBox.ItemTemplate>
-                    <DataTemplate x:DataType="nav:RouteMenuItem">
-                        <Button Command="{Binding #ShellRoot.DataContext.NavigateToCommand}"
-                                CommandParameter="{Binding .}"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Left"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Padding="12,8">
-                            <TextBlock Text="{Binding DisplayName}" />
-                        </Button>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+            <!--
+                F-021 (DD-7): a 200 px rail. One flat Button per section (single tab stop, Enter/Space activate,
+                arrow keys and Tab move between items); no ListBox, so no Button nested in a selectable item.
+            -->
+            <Border DockPanel.Dock="Left"
+                    Width="200"
+                    Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource HairlineBrush}"
+                    BorderThickness="0,0,1,0">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding SidebarItems}"
+                                  XYFocus.NavigationModes="Keyboard"
+                                  Margin="0,8">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SidebarItemViewModel">
+                                <Button Classes="sidebar-item"
+                                        Classes.current="{Binding IsCurrent}"
+                                        Command="{Binding #ShellRoot.DataContext.OpenSidebarItemCommand}"
+                                        CommandParameter="{Binding .}"
+                                        AutomationProperties.Name="{Binding Label}"
+                                        AutomationProperties.ItemStatus="{Binding ItemStatus}"
+                                        AutomationProperties.PositionInSet="{Binding PositionInSet}"
+                                        AutomationProperties.SizeOfSet="{Binding SizeOfSet}"
+                                        AutomationProperties.AcceleratorKey="{Binding ShortcutText}"
+                                        ToolTip.Tip="{Binding ShortcutText}">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{Binding Label}"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="1"
+                                                   Classes="sidebar-hint"
+                                                   Text="{Binding DigitHint}"
+                                                   IsHitTestVisible="False"
+                                                   AutomationProperties.AccessibilityView="Raw" />
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
 
             <ContentControl Content="{Binding Current, Converter={x:Static converters:CurrentViewConverter.Instance}}"
                             behaviors:FocusOnRequest.FirstFocusableToken="{Binding ContentFocusRequest}"

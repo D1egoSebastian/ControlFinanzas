@@ -2746,4 +2746,34 @@ public class Strings
     /// Gets the label of the Shift key used when a shortcut is formatted for Windows and Linux (F-021).
     /// </summary>
     public static string ShortcutKeyShift => ResourceManager.GetString("ShortcutKeyShift", Culture)!;
+
+    /// <summary>
+    /// Gets the automation status text of the sidebar item that is on screen (F-021).
+    /// </summary>
+    public static string SidebarCurrentSection => ResourceManager.GetString("SidebarCurrentSection", Culture)!;
+
+    /// <summary>
+    /// Gets the heading of the Settings keyboard shortcuts block (F-021).
+    /// </summary>
+    public static string ShortcutsSectionTitle => ResourceManager.GetString("ShortcutsSectionTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the note under the Settings shortcuts heading (F-021).
+    /// </summary>
+    public static string ShortcutsSectionDescription => ResourceManager.GetString("ShortcutsSectionDescription", Culture)!;
+
+    /// <summary>
+    /// Gets the format of a Settings shortcut row that opens a named section (F-021).
+    /// </summary>
+    public static string ShortcutGoToSectionNamed => ResourceManager.GetString("ShortcutGoToSectionNamed", Culture)!;
+
+    /// <summary>
+    /// Gets the action name of the Enter-submits-the-form row (F-021).
+    /// </summary>
+    public static string ShortcutEnterSubmitsAction => ResourceManager.GetString("ShortcutEnterSubmitsAction", Culture)!;
+
+    /// <summary>
+    /// Gets the label of the Enter key in the Settings shortcuts block (F-021).
+    /// </summary>
+    public static string ShortcutKeyEnter => ResourceManager.GetString("ShortcutKeyEnter", Culture)!;
 }

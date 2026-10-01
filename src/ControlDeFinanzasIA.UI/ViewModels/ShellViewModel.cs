@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -46,19 +47,71 @@ public sealed partial class ShellViewModel : ViewModelBase, IShortcutCommandSour
 
         _navService.CurrentChanged += OnNavigationCurrentChanged;
 
-        MenuItems =
-        [
-            new RouteMenuItem(RouteNames.Dashboard, _localizer["SidebarDashboard"]),
-            new RouteMenuItem(RouteNames.Expenses, _localizer["SidebarExpenses"]),
-            new RouteMenuItem(RouteNames.Incomes, _localizer["SidebarIncomes"])
-            ,new RouteMenuItem(RouteNames.Recurring, _localizer["SidebarRecurring"])
-            ,new RouteMenuItem(RouteNames.Debts, _localizer["SidebarDebts"])
-            ,new RouteMenuItem(RouteNames.Calendar, _localizer["SidebarCalendar"])
-            ,new RouteMenuItem(RouteNames.Budgets, _localizer["SidebarBudgets"])
-            ,new RouteMenuItem(RouteNames.Goals, _localizer["SidebarGoals"])
-            ,new RouteMenuItem(RouteNames.Chat, _localizer["SidebarChat"])
-            ,new RouteMenuItem(RouteNames.Settings, _localizer["SidebarSettings"])
-        ];
+        // F-021 (DD-7): the order and the labels come from NavigationSections, the single source of the sidebar.
+        MenuItems = [.. NavigationSections.All.Select(section => new RouteMenuItem(section.Route, _localizer[section.LabelKey]))];
+        SidebarItems = BuildSidebarItems();
+    }
+
+    /// <summary>
+    /// Gets the flat sidebar entries in <see cref="NavigationSections"/> order; exactly one is current when the
+    /// screen on display is a section.
+    /// </summary>
+    public IReadOnlyList<SidebarItemViewModel> SidebarItems { get; }
+
+    private List<SidebarItemViewModel> BuildSidebarItems()
+    {
+        bool isMacOS = OperatingSystem.IsMacOS();
+        string currentStatus = _localizer["SidebarCurrentSection"];
+        IReadOnlyList<NavigationSection> sections = NavigationSections.All;
+        var items = new List<SidebarItemViewModel>(sections.Count);
+        for (int i = 0; i < sections.Count; i++)
+        {
+            NavigationSection section = sections[i];
+
+            // Ctrl+1..Ctrl+9 open the first nine sections and Ctrl+0 the tenth (catalog SectionIndex 1..9, 0).
+            int digit = (i + 1) % 10;
+            KeyboardShortcut? sectionShortcut = i < 10
+                ? KeyboardShortcutCatalog.All.SingleOrDefault(s => s.Action == ShortcutAction.GoToSection && s.SectionIndex == digit)
+                : null;
+            var gestures = new List<string>(2);
+            if (sectionShortcut is not null)
+            {
+                gestures.Add(KeyboardShortcutCatalog.Format(sectionShortcut, isMacOS));
+            }
+
+            if (section.Route == RouteNames.Settings)
+            {
+                gestures.Add(KeyboardShortcutCatalog.Format(
+                    KeyboardShortcutCatalog.All.Single(s => s.Action == ShortcutAction.OpenSettings),
+                    isMacOS));
+            }
+
+            items.Add(new SidebarItemViewModel(
+                section,
+                _localizer[section.LabelKey],
+                sectionShortcut is null ? string.Empty : digit.ToString(CultureInfo.InvariantCulture),
+                string.Join(", ", gestures),
+                currentStatus,
+                i + 1,
+                sections.Count));
+        }
+
+        return items;
+    }
+
+    /// <summary>
+    /// Opens the section of a sidebar entry (mouse, Enter or Space on the focused entry).
+    /// </summary>
+    /// <param name="item">The entry; null is a no-op.</param>
+    [RelayCommand]
+    private void OpenSidebarItem(SidebarItemViewModel? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        _navService.NavigateTo(item.Route);
     }
 
     /// <summary>
@@ -288,15 +341,15 @@ public sealed partial class ShellViewModel : ViewModelBase, IShortcutCommandSour
     {
         Current = _navService.CurrentViewModel;
 
-        // Keep the sidebar selection in sync when navigation happens
-        // through other paths (e.g. GoBack, programmatic NavigateTo).
-        // MenuItem.Route is the short name (e.g. "Expenses"); the VM
-        // type is e.g. "ExpensesViewModel". We strip the "ViewModel" suffix
-        // to match them.
-        string? currentTypeName = _navService.CurrentViewModel?.GetType().Name;
-        string? currentRoute = currentTypeName?.Replace("ViewModel", string.Empty);
-        RouteMenuItem? matching = MenuItems
-            .FirstOrDefault(m => m.Route == currentRoute);
+        // F-021 (DD-7): compare the VIEW-MODEL TYPE with the section types. The old name-based match never found
+        // Incomes ("IncomeViewModel" vs "Incomes") or Recurring ("RecurringRulesViewModel" vs "Recurring").
+        Type? currentType = _navService.CurrentViewModel?.GetType();
+        foreach (SidebarItemViewModel item in SidebarItems)
+        {
+            item.IsCurrent = currentType is not null && item.Section.ViewModelType == currentType;
+        }
+
+        RouteMenuItem? matching = CurrentMenuItem;
         if (matching is not null)
         {
             SelectedMenuItem = matching;
@@ -315,8 +368,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IShortcutCommandSour
     {
         get
         {
-            string? currentTypeName = _navService.CurrentViewModel?.GetType().Name;
-            string? currentRoute = currentTypeName?.Replace("ViewModel", string.Empty);
+            Type? currentType = _navService.CurrentViewModel?.GetType();
+            string? currentRoute = NavigationSections.All.FirstOrDefault(s => s.ViewModelType == currentType)?.Route;
             return MenuItems.FirstOrDefault(m => m.Route == currentRoute);
         }
     }

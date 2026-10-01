@@ -108,7 +108,10 @@ public sealed class ShellSidebarLabelTests
             .. File.ReadAllLines(RepoRoot.Combine("src", "ControlDeFinanzasIA.UI", "ViewModels", "ShellViewModel.cs"))
                 .Select((line, index) => (line, number: index + 1))
                 .Where(x => x.line.Contains("new RouteMenuItem(", StringComparison.Ordinal))
-                .Where(x => !x.line.Contains("_localizer[\"", StringComparison.Ordinal))
+                // F-021 S7b: the labels are now resolved from NavigationSections (`_localizer[section.LabelKey]`), so a
+                // key can no longer be spelled in the shell. The guard keeps its intent: the label must go through the
+                // localizer and the line must carry no string literal of its own.
+                .Where(x => !x.line.Contains("_localizer[", StringComparison.Ordinal) || x.line.Contains('"'))
                 .Select(x => $"ShellViewModel.cs:{x.number} {x.line.Trim()}"),
         ];
 

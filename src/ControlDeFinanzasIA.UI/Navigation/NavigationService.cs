@@ -49,9 +49,9 @@ public sealed class NavigationService : ObservableObject, INavigationService
     }
 
     /// <summary>
-    /// Builds the fixed route name to view-model type map used by production code.
+    /// Builds the fixed route name to view-model type map used by production code (internal so the sidebar sections can be checked against it).
     /// </summary>
-    private static Dictionary<string, Type> BuildDefaultRoutes() => new(StringComparer.Ordinal)
+    internal static Dictionary<string, Type> BuildDefaultRoutes() => new(StringComparer.Ordinal)
     {
         { RouteNames.Dashboard, typeof(DashboardViewModel) },
         { RouteNames.Expenses, typeof(ExpensesViewModel) },
