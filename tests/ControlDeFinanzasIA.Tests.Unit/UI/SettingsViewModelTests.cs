@@ -421,7 +421,7 @@ public sealed class SettingsViewModelTests
         Assert.Same(backup, viewModel.Backup);
     }
 
-    private static SettingsViewModel CreateViewModel(
+    internal static SettingsViewModel CreateViewModel(
         ISettingsStore store,
         FakeNotificationCenter? center = null,
         BackupSettingsViewModel? backup = null)

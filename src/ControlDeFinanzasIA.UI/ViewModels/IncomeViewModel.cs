@@ -451,6 +451,9 @@ public sealed partial class IncomeViewModel : ViewModelBase
             ValidationErrors.Clear();
             FormError = null;
             StatusMessage = _localizer["IncomeRegisteredMessage"];
+
+            // F-021 (R-14): keyboard users keep typing the next entry without reaching for the mouse.
+            DescriptionFocusRequest = new FocusRequestToken();
             await RefreshAsync();
         }
         else if (result.Error?.Code == "Validation")

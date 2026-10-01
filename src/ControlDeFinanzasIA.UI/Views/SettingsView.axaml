@@ -252,6 +252,42 @@
                 </StackPanel>
             </Border>
 
+            <!--
+                Atajos de teclado (F-021, R-16): a read-only index generated from KeyboardShortcutCatalog, so this list,
+                the window key bindings and the tooltips cannot drift. Plain text only: no control, nothing to save.
+            -->
+            <Border Classes="ledger-row shortcuts-block" Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="{x:Static resources:Strings.ShortcutsSectionTitle}" Classes="ledger-title" />
+                    <TextBlock Text="{x:Static resources:Strings.ShortcutsSectionDescription}" Classes="ledger-status" />
+                    <ItemsControl ItemsSource="{Binding Shortcuts}"
+                                  AutomationProperties.AccessibilityView="Content">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ShortcutListItem">
+                                <Border BorderBrush="{StaticResource HairlineBrush}"
+                                        BorderThickness="0,0,0,1"
+                                        Padding="0,6">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{Binding ActionName}"
+                                                   FontFamily="{StaticResource FontBody}"
+                                                   Foreground="{StaticResource PaperBrush}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Gesture}"
+                                                   FontFamily="{StaticResource FontMono}"
+                                                   FontSize="13"
+                                                   Foreground="{StaticResource AmberBrush}"
+                                                   Margin="16,0,0,0"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
             <!-- Acerca de — no controls, no save (D-10) -->
             <Border Classes="ledger-row" Padding="16">
                 <StackPanel Spacing="10">

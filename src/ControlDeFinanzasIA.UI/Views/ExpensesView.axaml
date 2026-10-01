@@ -48,8 +48,8 @@
                         <TextBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Note}" Watermark="{x:Static resources:Strings.ExpensesNotePlaceholder}" AcceptsReturn="True" Height="70" />
                         <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
                         <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10">
-                            <Button Content="{x:Static resources:Strings.ExpensesRegisterButton}" Command="{Binding RegisterExpenseCommand}" Background="{StaticResource AmberBrush}" Foreground="{StaticResource InkBrush}" />
-                            <Button Content="{x:Static resources:Strings.ExpensesUpdateButton}" Command="{Binding UpdateExpenseCommand}" IsVisible="{Binding IsEditMode}" />
+                            <Button Content="{x:Static resources:Strings.ExpensesRegisterButton}" Command="{Binding RegisterExpenseCommand}" IsDefault="{Binding !IsEditMode}" Background="{StaticResource AmberBrush}" Foreground="{StaticResource InkBrush}" />
+                            <Button Content="{x:Static resources:Strings.ExpensesUpdateButton}" Command="{Binding UpdateExpenseCommand}" IsDefault="{Binding IsEditMode}" IsVisible="{Binding IsEditMode}" />
                             <Button Content="{x:Static resources:Strings.ExpensesCancelButton}" Command="{Binding CancelEditCommand}" IsVisible="{Binding IsEditMode}" />
                         </StackPanel>
                     </Grid>

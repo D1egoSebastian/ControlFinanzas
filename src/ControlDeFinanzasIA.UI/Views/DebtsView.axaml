@@ -27,7 +27,7 @@
                 <TextBox Text="{Binding CounterpartyName}" Watermark="{x:Static resources:Strings.DebtsCounterpartyPlaceholder}" Classes="ledger-input" />
                 <TextBox Text="{Binding Note}" Watermark="{x:Static resources:Strings.DebtsNotePlaceholder}" Classes="ledger-input" />
                 <TextBlock Text="{Binding FormError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
-                <Button Content="{x:Static resources:Strings.DebtsCreateButton}" Command="{Binding CreateCommand}" Classes="ledger-btn-primary" />
+                <Button Content="{x:Static resources:Strings.DebtsCreateButton}" Command="{Binding CreateCommand}" IsDefault="True" Classes="ledger-btn-primary" />
                 <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
             </StackPanel>
         </ScrollViewer>

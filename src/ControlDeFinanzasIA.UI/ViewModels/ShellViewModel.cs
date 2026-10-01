@@ -58,6 +58,14 @@ public sealed partial class ShellViewModel : ViewModelBase, IShortcutCommandSour
     /// </summary>
     public IReadOnlyList<SidebarItemViewModel> SidebarItems { get; }
 
+    /// <summary>Gets the bell tooltip: its title and the catalog gesture that toggles it.</summary>
+    public string BellToolTip => $"{_localizer["NotificationsTitle"]} ({BellAcceleratorKey})";
+
+    /// <summary>Gets the catalog gesture text that toggles the notifications, for the bell accelerator key.</summary>
+    public string BellAcceleratorKey => KeyboardShortcutCatalog.Format(
+        KeyboardShortcutCatalog.All.Single(s => s.Action == ShortcutAction.ToggleNotifications),
+        OperatingSystem.IsMacOS());
+
     private List<SidebarItemViewModel> BuildSidebarItems()
     {
         bool isMacOS = OperatingSystem.IsMacOS();

@@ -52,6 +52,8 @@
                 HorizontalAlignment="Left"
                 Margin="0,4,0,0"
                 Command="{Binding #Root.ActionCommand}"
+                ToolTip.Tip="{Binding #Root.ShortcutText}"
+                AutomationProperties.AcceleratorKey="{Binding #Root.ShortcutText}"
                 IsVisible="{Binding #Root.ActionText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <TextBlock Text="{Binding #Root.ActionText}" VerticalAlignment="Center" />

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using ControlDeFinanzasIA.Application.DTOs;
+using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Enums;
 using ControlDeFinanzasIA.Domain.Transactions;
 using ControlDeFinanzasIA.Domain.ValueObjects;
@@ -161,5 +162,36 @@ public sealed class IncomeViewModelEmptyStateTests
         vm.BeginNewEntryCommand.Execute(null);
 
         Assert.NotNull(vm.DescriptionFocusRequest);
+    }
+
+    [Fact]
+    public async Task ARegisteredIncome_RaisesTheDescriptionFocusRequest_SoTheNextEntryNeedsNoMouse()
+    {
+        var categoryId = Guid.NewGuid();
+        var categories = new FakeCategoryRepository();
+        categories.SetCategories([new Category { Id = categoryId, Name = "Salario", IsSystem = false }]);
+        IncomeViewModel vm = IncomeViewModelTests.CreateViewModel(categoryRepo: categories);
+        await WaitUntil(() => vm.HasLoaded);
+        vm.SelectedCategoryId = categoryId;
+        vm.Amount = 100m;
+        vm.Description = "Salario";
+        Assert.Null(vm.DescriptionFocusRequest);
+
+        await vm.RegisterIncomeCommand.ExecuteAsync(null);
+
+        Assert.NotNull(vm.DescriptionFocusRequest);
+        Assert.Null(vm.Description);
+    }
+
+    [Fact]
+    public async Task ARejectedIncome_DoesNotRaiseTheDescriptionFocusRequest()
+    {
+        IncomeViewModel vm = await Create(0);
+        vm.Description = "Sin monto";
+
+        await vm.RegisterIncomeCommand.ExecuteAsync(null);
+
+        Assert.Null(vm.DescriptionFocusRequest);
+        Assert.Equal("Sin monto", vm.Description);
     }
 }
