@@ -265,6 +265,23 @@ filtros y vistas se construye aquí, una sola vez y bien.
 - Filtros y vistas guardadas funcionan, persisten y se restauran.
 - Tests de integración cubren las queries más usadas.
 
+**Estado real de la UI (corregido 2026-10-01, cierre post-QA de 1.0)**
+- La capa de datos, los use cases y los view-models de esta fase se entregaron y
+  siguen verdes. La UI del capstone (F-008) NO sobrevivió a la Fase 6: la reescritura
+  de `ExpensesView`/`IncomeView` (`6caae70`) eliminó el filter rail, los tags, las
+  vistas guardadas, el borrado por fila y el paginador, y ningún test lo detectó
+  porque solo cubrían los view-models.
+- Restaurado en el cierre post-QA, en ambas listas: paginador (anterior / siguiente,
+  "Página X de Y", total), borrado con confirmación en línea, y panel de filtros
+  (texto, categoría, rango de fechas, limpiar). Solo Gastos tiene además vistas
+  guardadas. Con tests contra las vistas reales (headless) y un test de extremo a
+  extremo sobre el composition root real con SQLite temporal.
+- Sigue sin existir en la UI: crear/asignar tags (no hay forma de etiquetar un
+  gasto o ingreso, así que un filtro por tags sería un control muerto), vistas
+  guardadas en Ingresos y el filtro por método de pago. El criterio "Filtros y vistas
+  guardadas funcionan, persisten y se restauran" se cumple para categoría, fechas y
+  texto (y vistas guardadas en Gastos), no para tags.
+
 ---
 
 ### Fase 5 — Método de pago + multi-moneda DOP/USD ✅ COMPLETADA (2026-09-08)
@@ -314,8 +331,12 @@ historia sin moneda quedaría mal modelada).
 - ✅ 559/559 tests verdes.
 - ✅ Backend completo: entidad, migración no-destructiva, commands/validators,
   DTOs extendidos, repos con `Include`, filtros, query de catálogo.
-- ✅ UI completa: picker de método en formularios + segunda línea de conversión
-  (`≈ 1,500.00 DOP`) en la lista + filter rail multi-select.
+- ✅ UI: picker de método en formularios. La segunda línea de conversión
+  (`≈ 1,500.00 DOP`) en la lista y el filter rail dejaron de existir en las vistas
+  con la reescritura de la Fase 6 (`6caae70`) y no se detectó hasta la auditoría QA de
+  1.0 (2026-10-01). Corregido en el cierre post-QA: la línea de conversión volvió a
+  las filas y el filtro (categoría, fechas, texto) volvió a ambas listas. El filtro por
+  método de pago (multi-select) sigue sin exponerse en la UI (el view-model lo soporta).
 - ⏳ Provider de tasas real: pendiente hasta decidir API (OpenExchangeRates,
   banco central RD, etc.). El contrato `IExchangeRateProvider` está estable
   y permite enchufar el provider real sin tocar use cases ni UI.

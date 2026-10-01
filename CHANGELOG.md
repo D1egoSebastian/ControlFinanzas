@@ -17,6 +17,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Debt schedule: Pay and Skip are disabled for installments that are no longer pending, rejected actions show a
   localized message without internal ids, and the debt stays selected after a payment.
 - Frequency, rule type and status values in the Recurring and Debts screens are localized (es-DO / en).
+- Expense and income lists are no longer capped at the newest 20 rows: a pager (previous / next, "Page X of Y" and the
+  total count) reaches every record, and any record can be opened for editing.
+- Expenses and income can be deleted again: each row has a Delete button with an inline confirmation (the same button
+  turns into Confirm, with a Cancel next to it). The list refreshes, the total decrements and the page steps back when
+  the last row of the last page is deleted.
+- The filter panel of Phase 4 is back on both lists: category and from / to date range (the DatePicker pattern of the
+  entry form), Apply and Clear, an inline message for an inverted date range, and the existing empty states for "no
+  data yet" and "no results for this filter". Pressing Enter in the search box applies the filter instead of
+  registering the entry form above it.
+- Expense and income rows show the amount in the other currency again ("≈ 600.00 DOP" under a USD row), as Phase 5
+  documented.
+
+### Added
+
+- Text search on the Expenses and Income lists (partial, case-insensitive for ASCII, wildcard characters typed by the
+  user are searched literally). It is also part of the saved filter and of the filtered PDF / Excel export, whose
+  summary now echoes it.
+- Saved views on the Expenses list (save the current filter under a name, select it to apply it, delete with an inline
+  confirmation).
+
+### Known gaps (documented, not fixed here)
+
+- Tags have no UI: nothing in the app can assign a tag to an expense or income, so a tag filter or "new tag" form
+  would be dead controls. The view-models keep the tag members; the views do not expose them.
+- Saved views on the Income list and the payment-method filter are not exposed yet (the view-model supports them).
 
 ## [1.0.0]
 
@@ -27,8 +52,8 @@ Summary by feature area (Phases 0-21).
 
 - **Foundation (Phases 0-2):** .NET 8 solution with Domain, Application, Infrastructure and Avalonia UI layers,
   architecture rules enforced by tests, SQLite persistence through Entity Framework Core with versioned migrations.
-- **Expenses and income (Phases 3-4):** register, list, edit and delete expenses and income, categories, tags, filters
-  and saved views.
+- **Expenses and income (Phases 3-4):** register, list, edit and delete expenses and income, categories, filters and
+  saved views (the tag data model exists; there is no tag UI yet, see "Known gaps" under Unreleased).
 - **Payment methods and multi-currency (Phase 5):** payment methods and DOP/USD amounts with conversion to a single
   reporting currency.
 - **Recurring charges (Phase 6):** subscriptions and fixed expenses with due-date tracking.

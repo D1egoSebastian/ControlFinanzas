@@ -2163,3 +2163,14 @@ a cualquier revert de UI). Revertir **en orden inverso de la cadena**
 
 
 
+
+---
+
+## Post-QA addendum (2026-10-01)
+
+AC-8 (filter rail, tags, saved views, row delete, pagination) was NOT delivered in the UI that survived Phase 6: the
+view rewrite of commit `6caae70` dropped all of it from `ExpensesView.axaml` and `IncomeView.axaml`, while the
+view-models and their tests stayed (which is why every gate stayed green). The QA audit for 1.0 caught it. The 1.0
+blockers slice B restored, on both lists: the pager (with the total count), delete with an inline confirmation, and a
+filter panel (text, category, date range, clear); Expenses also got saved views. Tags remain without UI because nothing
+can assign a tag to a transaction. See `CHANGELOG.md` (Unreleased) and `docs/roadmap.md` (Phase 4, "Estado real de la UI").

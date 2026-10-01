@@ -245,6 +245,32 @@ the project state changes, update this file.
   `spec/phases/phase-14/features.md`, and `spec/phases/phase-13/features.md`
   for the full phase-13/14/15 detail and `spec/phases/phase-05/features.md`
   through `spec/phases/phase-12/features.md` for earlier phases.
+  **Post-QA fixes (1.0 blockers, after the QA audit of 2026-10-01).** Phases 20
+  and 21 are also archived (the "Phase 20 is next" wording above predates them;
+  see `docs/AI_HANDOFF.md`). The audit found that the Phase 6 view rewrite
+  (`6caae70`) had removed the pager, the per-row delete and the filter panel
+  from `ExpensesView` and `IncomeView` while the view-models kept them, so only
+  the newest 20 records were reachable and nothing could be deleted. Slice A
+  fixed the console-subsystem exe (`WinExe`), the blank recurring preview, the
+  currency on rows, the debt Pay/Skip state and the untranslated enum labels.
+  Slice B (`b2f96c5`) restored, on BOTH lists: a pager ("Page X of Y" plus the
+  total count; the page steps back after deleting the last row of the last
+  page), delete with an inline confirmation (the same button turns into
+  Confirm, with a Cancel), a filter panel (text search, category, from/to
+  dates, apply/clear, an inline message for an inverted range; Enter in the
+  search box applies the filter instead of triggering the form's default
+  button) and the "≈ other currency" line on each row. Text search is new end to
+  end (`ExpenseFilter.Text` / `IncomeFilter.Text`, escaped `LIKE`, echoed in the
+  PDF/XLSX export summary). Expenses also got saved views. Deliberately NOT
+  exposed: tags (nothing in the app can assign a tag, so a tag filter or a "new
+  tag" form would be dead controls), saved views on Income and the
+  payment-method filter. The new tests drive the real views (headless) and the
+  real composition root over a temp SQLite file; a guard test now fails if a
+  list view stops binding the pager, delete or filter commands. 3805/3805 tests
+  green (2955 unit + 850 integration), build 0/0, format exit 0, no migration,
+  no new package. Not done by hand: macOS/Linux, a screen reader, the
+  from/to date pickers in the real binary (covered headless only) and the real
+  save dialog with a text-filtered export.
 - **Roadmap / architecture / vision:** `docs/roadmap.md`,
   `docs/architecture.md`, `docs/vision.md`.
 - **Mission / stack constitution:** `spec/constitution/mission.md`,
