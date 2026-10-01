@@ -4,7 +4,7 @@ namespace ControlDeFinanzasIA.Tests.Integration.Packaging;
 
 /// <summary>
 /// F-021 S9 (R-21, S-43): runs <c>scripts/verify-layout.ps1</c> over the REAL publish output of each RID in
-/// <c>artifacts/publish/</c>. A missing folder fails loudly (see <see cref="PackagingSupport.RequireArtifacts"/>);
+/// <c>artifacts/publish/</c>. A missing <c>artifacts/</c> folder skips the real-output cases (see <see cref="PackagingSupport.SkipReason"/>);
 /// the Category trait lets a local run filter these out with <c>--filter "Category!=Packaging"</c>.
 /// </summary>
 [Trait("Category", "Packaging")]
@@ -21,15 +21,12 @@ public sealed class PublishLayoutTests
         return data;
     }
 
-    [Theory]
+    [PackagingTheory]
     [MemberData(nameof(AllRids))]
     public void RealPublishOutputHasTheExecutableAndEveryNativeLibrary(string rid)
     {
         string folder = Path.Combine(PackagingSupport.Artifacts, "publish", rid);
-        if (!PackagingSupport.RequireArtifacts(folder))
-        {
-            return;
-        }
+        PackagingSupport.RequireArtifacts(folder);
 
         (int exit, string output) = PackagingSupport.RunScript("verify-layout.ps1", "-Rid", rid);
 

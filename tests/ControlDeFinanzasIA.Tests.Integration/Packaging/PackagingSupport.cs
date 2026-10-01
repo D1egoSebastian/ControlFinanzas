@@ -13,26 +13,36 @@ internal static class PackagingSupport
 
     public static string Artifacts => Path.Combine(RepoRoot, "artifacts");
 
+    /// <summary>Name of the environment variable that turns a missing <c>artifacts/</c> folder from a skip into a failure.</summary>
+    public const string RequireVariable = "CONTROLDEFINANZASIA_REQUIRE_PACKAGING";
+
+    /// <summary>
+    /// Pure gate: the skip reason when the packaging output is absent and not required, otherwise <see langword="null"/>
+    /// (the test runs; with the variable set and no output it then fails in <see cref="RequireArtifacts"/>).
+    /// </summary>
+    public static string? SkipReason(bool artifactsExist, string? requireValue)
+    {
+        if (artifactsExist || string.Equals(requireValue, "1", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        return "Packaging artifacts are missing (artifacts/ not found). Run 'powershell -File scripts/publish.ps1 -Rid all' "
+            + "to exercise this test, or set " + RequireVariable + "=1 to make a missing folder a failure.";
+    }
+
     /// <summary>
     /// The packaging output is produced by <c>scripts/publish.ps1</c> and is git-ignored, so a fresh checkout does not
-    /// have it. Locally a missing folder is a loud failure with the command to run. On GitHub Actions the build
-    /// workflow runs the plain test suite without publishing; there the release workflow runs
-    /// <c>scripts/verify-layout.ps1</c> and the smoke test itself, so the test returns false and the caller exits.
+    /// have it. <see cref="PackagingFactAttribute"/> and <see cref="PackagingTheoryAttribute"/> skip the whole test when
+    /// <c>artifacts/</c> is absent. Once the folder exists (or the variable forces the run) a missing file is a loud failure.
     /// </summary>
-    public static bool RequireArtifacts(string path)
+    public static void RequireArtifacts(string path)
     {
-        if (Directory.Exists(path) || File.Exists(path))
+        if (!Directory.Exists(path) && !File.Exists(path))
         {
-            return true;
+            throw new Xunit.Sdk.XunitException(
+                "Packaging artifacts missing: " + path + ". Run 'powershell -File scripts/publish.ps1 -Rid all' first.");
         }
-
-        if (string.Equals(Environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        throw new Xunit.Sdk.XunitException(
-            "Packaging artifacts missing: " + path + ". Run 'powershell -File scripts/publish.ps1 -Rid all' first.");
     }
 
     public static string Version()

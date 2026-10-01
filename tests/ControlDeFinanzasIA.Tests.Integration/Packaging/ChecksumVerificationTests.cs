@@ -24,15 +24,10 @@ public sealed class ChecksumVerificationTests
         $"ControlDeFinanzasIA-{version}-osx-x64.app.zip",
     ];
 
-    private static bool Ready(string path) => PackagingSupport.RequireArtifacts(path);
-
-    [Fact]
+    [PackagingFact]
     public void ArchiveNamesCarryTheAppVersionForEveryRid()
     {
-        if (!Ready(PackagingSupport.Artifacts))
-        {
-            return;
-        }
+        PackagingSupport.RequireArtifacts(PackagingSupport.Artifacts);
 
         Assert.Equal(PackagingSupport.Version(), AppVersionInfo.Current);
         foreach (string name in ExpectedArchiveNames(AppVersionInfo.Current))
@@ -47,14 +42,11 @@ public sealed class ChecksumVerificationTests
         Assert.All(zipsAndTars, n => Assert.Matches(@"^ControlDeFinanzasIA-" + Regex.Escape(AppVersionInfo.Current) + @"-(win-x64|osx-arm64|osx-x64|linux-x64)(\.app)?\.(zip|tar\.gz)$", n));
     }
 
-    [Fact]
+    [PackagingFact]
     public void EveryLineOfSha256SumsVerifiesAgainstTheFileOnDisk()
     {
         string sums = Path.Combine(PackagingSupport.Artifacts, "SHA256SUMS.txt");
-        if (!Ready(sums))
-        {
-            return;
-        }
+        PackagingSupport.RequireArtifacts(sums);
 
         string text = File.ReadAllText(sums);
         Assert.DoesNotContain('\r', text);
@@ -79,17 +71,14 @@ public sealed class ChecksumVerificationTests
             listed.OrderBy(n => n, StringComparer.Ordinal));
     }
 
-    [Theory]
+    [PackagingTheory]
     [InlineData("osx-arm64")]
     [InlineData("osx-x64")]
     [InlineData("linux-x64")]
     public void TarArchivesKeepTheExecutableBitOnlyOnTheExecutables(string rid)
     {
         string path = Path.Combine(PackagingSupport.Artifacts, $"ControlDeFinanzasIA-{AppVersionInfo.Current}-{rid}.tar.gz");
-        if (!Ready(path))
-        {
-            return;
-        }
+        PackagingSupport.RequireArtifacts(path);
 
         Dictionary<string, int> modes = ReadTarModes(path);
         string root = $"ControlDeFinanzasIA-{AppVersionInfo.Current}-{rid}/";
@@ -103,16 +92,13 @@ public sealed class ChecksumVerificationTests
             kv => Assert.Equal(0, kv.Value & 0b001_001_001));
     }
 
-    [Theory]
+    [PackagingTheory]
     [InlineData("osx-arm64")]
     [InlineData("osx-x64")]
     public void AppZipRecordsUnixHostAndExecutableModeForTheBundleExecutable(string rid)
     {
         string path = Path.Combine(PackagingSupport.Artifacts, $"ControlDeFinanzasIA-{AppVersionInfo.Current}-{rid}.app.zip");
-        if (!Ready(path))
-        {
-            return;
-        }
+        PackagingSupport.RequireArtifacts(path);
 
         Dictionary<string, (byte Host, int Mode)> entries = ReadZipUnixModes(path);
         const string macos = "ControlDeFinanzasIA.app/Contents/MacOS/";
@@ -126,14 +112,11 @@ public sealed class ChecksumVerificationTests
         Assert.DoesNotContain(entries.Keys, k => k.Contains('\\'));
     }
 
-    [Fact]
+    [PackagingFact]
     public void WindowsZipUsesForwardSlashEntriesUnderTheVersionedFolder()
     {
         string path = Path.Combine(PackagingSupport.Artifacts, $"ControlDeFinanzasIA-{AppVersionInfo.Current}-win-x64.zip");
-        if (!Ready(path))
-        {
-            return;
-        }
+        PackagingSupport.RequireArtifacts(path);
 
         using ZipArchive zip = ZipFile.OpenRead(path);
         string root = $"ControlDeFinanzasIA-{AppVersionInfo.Current}-win-x64/";
