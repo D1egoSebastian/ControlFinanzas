@@ -33,7 +33,7 @@
             <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding LoadError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
 
             <!-- "Tasa no disponible" notice, same pattern as Dashboard (R-7) -->
-            <Border Background="#221F232B"
+            <Border Background="{StaticResource SurfaceTintBrush}"
                     BorderBrush="{StaticResource AmberBrush}"
                     BorderThickness="1"
                     CornerRadius="{StaticResource RadiusSmall}"

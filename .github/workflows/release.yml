@@ -2,6 +2,7 @@
 #
 # - Triggered ONLY by pushing a tag that starts with "v".
 # - The first job fails unless the tag equals "v" + the <Version> in Directory.Build.props.
+# - A `test` job (dotnet build + dotnet test, Release) gates every packaging job; nothing is drafted from untested code.
 # - Every build job has read-only contents access; only the last job can write contents, and it only creates a DRAFT
 #   release with the preinstalled GitHub CLI (no third-party release action, no custom secrets).
 # - Nothing here is signed or notarized: no certificates, no Apple ID, nothing to leak.
@@ -31,9 +32,27 @@ jobs:
             exit 1
           fi
 
+  test:
+    name: build and test (Release) before anything is packaged
+    needs: check-tag
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Build (Release)
+        shell: pwsh
+        run: dotnet build -c Release
+      - name: Test (Release)
+        shell: pwsh
+        run: dotnet test -c Release --no-build
+
   build-windows:
     name: win-x64 publish, layout check and smoke test
-    needs: check-tag
+    needs: [check-tag, test]
     runs-on: windows-latest
     permissions:
       contents: read
@@ -59,7 +78,7 @@ jobs:
 
   build-macos:
     name: osx-arm64 and osx-x64 publish, .app and DMG
-    needs: check-tag
+    needs: [check-tag, test]
     runs-on: macos-14
     permissions:
       contents: read
@@ -94,7 +113,7 @@ jobs:
 
   build-linux:
     name: linux-x64 publish and AppImage
-    needs: check-tag
+    needs: [check-tag, test]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -113,7 +132,12 @@ jobs:
         env:
           APPIMAGE_EXTRACT_AND_RUN: '1'
         run: |
+          # Pinned: release 1.9.0 of AppImage/appimagetool. The release publishes no checksum, so this SHA-256 was
+          # computed by us from that asset (two identical downloads) at pin time: a trust-on-first-use pin that detects
+          # a later swap of the asset, not an upstream-verified value. See docs/packaging-unverified.md.
+          appimagetool_sha256=46fdd785094c7f6e545b61afcfb0f3d98d8eab243f644b4b17698c01d06083d1
           curl -fsSL -o "$RUNNER_TEMP/appimagetool" https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-x86_64.AppImage
+          echo "$appimagetool_sha256  $RUNNER_TEMP/appimagetool" | sha256sum -c -
           chmod +x "$RUNNER_TEMP/appimagetool"
           APPIMAGETOOL="$RUNNER_TEMP/appimagetool" sh packaging/linux/build-appimage.sh
       - uses: actions/upload-artifact@v4

@@ -199,7 +199,7 @@
 
                     <!-- Inline destructive confirmation: backup facts, then the irreversible warning. -->
                     <Border IsVisible="{Binding IsConfirmVisible}"
-                            Background="#221F232B"
+                            Background="{StaticResource SurfaceTintBrush}"
                             BorderBrush="{StaticResource AmberBrush}"
                             BorderThickness="3,1,1,1"
                             CornerRadius="{StaticResource RadiusSmall}"
@@ -230,7 +230,7 @@
 
                     <!-- Restart panel: the restored data only loads after a restart (terminal state). -->
                     <Border IsVisible="{Binding IsRestartPanelVisible}"
-                            Background="#221F232B"
+                            Background="{StaticResource SurfaceTintBrush}"
                             BorderBrush="{StaticResource AmberBrush}"
                             BorderThickness="3,1,1,1"
                             CornerRadius="{StaticResource RadiusSmall}"

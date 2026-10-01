@@ -26,7 +26,7 @@
             <!-- "AI not configured" banner (D3, R-12) -->
             <Border Grid.Row="1"
                     IsVisible="{Binding ShowNotConfiguredBanner}"
-                    Background="#22E8A33D"
+                    Background="{StaticResource AmberTintBrush}"
                     BorderBrush="{StaticResource AmberBrush}"
                     BorderThickness="1"
                     CornerRadius="{StaticResource RadiusMedium}"

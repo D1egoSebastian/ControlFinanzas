@@ -40,7 +40,7 @@
             <Setter Property="Foreground" Value="{StaticResource PaperDimBrush}" />
         </Style>
         <Style Selector="Border.import-callout">
-            <Setter Property="Background" Value="#221F232B" />
+            <Setter Property="Background" Value="{StaticResource SurfaceTintBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
             <Setter Property="BorderThickness" Value="3,1,1,1" />
             <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />

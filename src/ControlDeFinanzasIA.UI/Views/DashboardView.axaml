@@ -54,7 +54,7 @@
                        Classes.export-error="{Binding IsExportError}" />
 
             <!-- "Tasa no disponible" notice (R-7, S-6) -->
-            <Border Background="#221F232B"
+            <Border Background="{StaticResource SurfaceTintBrush}"
                     BorderBrush="{StaticResource AmberBrush}"
                     BorderThickness="1"
                     CornerRadius="{StaticResource RadiusSmall}"

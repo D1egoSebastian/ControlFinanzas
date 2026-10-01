@@ -65,11 +65,18 @@ public sealed class LogPrivacyTests : IDisposable
     }
 
     [Fact]
-    public async Task ALlmCallThatFailsWith401_NeverLogsTheKeyOrTheAuthorizationValue()
+    public async Task ALlmCallThatFailsWith401_ThroughTheRealNamedHttpClientPipeline_NeverLogsTheKeyOrTheAuthorizationValue()
     {
-        using (ServiceProvider root = BuildRoot())
+        var fake = new FakeHttpMessageHandler(HttpStatusCode.Unauthorized, "{\"error\":\"bad key\"}");
+        using (ServiceProvider root = BuildRoot(services =>
         {
-            ILogger<OpenAICompatibleClient> logger = root.GetRequiredService<ILogger<OpenAICompatibleClient>>();
+            // Only the PRIMARY handler is stubbed: the real logging + resilience handlers stay in the chain.
+            foreach (string name in new[] { "llm-OpenAI", "llm-OpenAI-diagnostic" })
+            {
+                services.AddHttpClient(name).ConfigurePrimaryHttpMessageHandler(() => fake);
+            }
+        }))
+        {
             var settings = new AppSettings(
                 AppTheme.Dark,
                 SupportedLocales.Default,
@@ -79,8 +86,9 @@ public sealed class LogPrivacyTests : IDisposable
                 "https://api.openai.test/v1",
                 AppSettings.DefaultAiTemperature,
                 AppSettings.DefaultAiMaxTokensPerRequest);
-            using var http = new HttpClient(new FakeHttpMessageHandler(HttpStatusCode.Unauthorized, "{\"error\":\"bad key\"}"));
-            var client = new OpenAICompatibleClient(http, settings, "https://api.openai.test/v1", logger);
+            ILLMClientFactory factory = root.GetRequiredService<ILLMClientFactory>();
+            ILLMClient client = factory.Resolve(settings).Client!;
+            ILLMClient diagnostic = factory.ResolveDiagnostic(settings).Client!;
 
             _ = await Record.ExceptionAsync(() => client.CompleteAsync(new LlmRequest
             {
@@ -88,9 +96,13 @@ public sealed class LogPrivacyTests : IDisposable
                 Temperature = 0.0,
                 MaxTokens = 16,
             }));
-            _ = await Record.ExceptionAsync(() => client.TestConnectionAsync());
+            _ = await Record.ExceptionAsync(() => diagnostic.TestConnectionAsync());
         }
 
+        // Not vacuous: the stub was reached through the pipeline, and the built-in HttpClient logging handler ran.
+        Assert.NotEmpty(fake.Requests);
+        Assert.Contains(fake.Requests, r => r.Headers.Any(h => h.Value.Contains(_sentinel, StringComparison.Ordinal)));
+        Assert.Contains(_capture.Entries, e => e.Contains("System.Net.Http.HttpClient.llm-OpenAI", StringComparison.Ordinal));
         AssertNoSentinelAnywhere();
     }
 
@@ -114,7 +126,7 @@ public sealed class LogPrivacyTests : IDisposable
         AssertNoSentinelAnywhere();
     }
 
-    private ServiceProvider BuildRoot()
+    private ServiceProvider BuildRoot(Action<IServiceCollection>? configure = null)
     {
         var services = new ServiceCollection();
         services.AddLogging(b =>
@@ -124,6 +136,7 @@ public sealed class LogPrivacyTests : IDisposable
             b.AddProvider(_capture);
         });
         Bootstrap.ConfigureServices(services, new ConfigurationBuilder().Build());
+        configure?.Invoke(services);
         ServiceProvider root = services.BuildServiceProvider();
         Bootstrap.ApplyMigrations(root);
         return root;

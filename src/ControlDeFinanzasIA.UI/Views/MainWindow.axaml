@@ -40,16 +40,16 @@
             <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
         </Style>
         <Style Selector="ToggleButton.bell:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#22E8A33D" />
+            <Setter Property="Background" Value="{StaticResource AmberTintBrush}" />
         </Style>
         <Style Selector="ToggleButton.bell:checked">
             <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
         </Style>
         <Style Selector="ToggleButton.bell:checked /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#22E8A33D" />
+            <Setter Property="Background" Value="{StaticResource AmberTintBrush}" />
         </Style>
         <Style Selector="ToggleButton.bell:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#33E8A33D" />
+            <Setter Property="Background" Value="{StaticResource AmberTintStrongBrush}" />
         </Style>
         <!-- F-021 (DD-8): the shared keyboard focus ring (see LedgerStyles.axaml) on the borderless bell. -->
         <Style Selector="ToggleButton.bell:focus-visible /template/ ContentPresenter#PART_ContentPresenter">

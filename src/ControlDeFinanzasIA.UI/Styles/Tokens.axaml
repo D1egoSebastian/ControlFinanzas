@@ -32,6 +32,14 @@
     <Color x:Key="AmberWashColor">#14E8A33D</Color>
     <SolidColorBrush x:Key="AmberWashBrush" Color="{StaticResource AmberWashColor}" />
 
+    <!-- Translucent washes (F-021 verify W3): backgrounds only, never text. Same values the views used inline. -->
+    <Color x:Key="AmberTintColor">#22E8A33D</Color>
+    <Color x:Key="AmberTintStrongColor">#33E8A33D</Color>
+    <Color x:Key="SurfaceTintColor">#221F232B</Color>
+    <SolidColorBrush x:Key="AmberTintBrush" Color="{StaticResource AmberTintColor}" />
+    <SolidColorBrush x:Key="AmberTintStrongBrush" Color="{StaticResource AmberTintStrongColor}" />
+    <SolidColorBrush x:Key="SurfaceTintBrush" Color="{StaticResource SurfaceTintColor}" />
+
     <!-- Typography -->
     <!--
         The preferred families are the OFL fonts in Assets/Fonts.

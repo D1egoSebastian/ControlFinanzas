@@ -97,6 +97,58 @@ public sealed class ReleaseWorkflowTests
         Assert.Empty(Regex.Matches(text, @"(?m)^permissions:\s*\S"));
     }
 
+
+    [Fact]
+    public void ABuildAndTestJobGatesEveryPackagingJobAndTheDraft()
+    {
+        string text = Text();
+        int jobsAt = text.IndexOf("\njobs:", StringComparison.Ordinal);
+        string jobsText = text[jobsAt..];
+        MatchCollection jobs = Regex.Matches(jobsText, @"(?m)^ {2}([A-Za-z][\w-]*):\s*$");
+
+        string[] names = jobs.Select(m => m.Groups[1].Value).ToArray();
+        Assert.Contains("test", names);
+
+        string Body(string job)
+        {
+            int i = Array.IndexOf(names, job);
+            int start = jobs[i].Index;
+            int end = i + 1 < jobs.Count ? jobs[i + 1].Index : jobsText.Length;
+            return jobsText[start..end];
+        }
+
+        string testJob = Body("test");
+        Assert.Matches(@"(?m)^\s+run: dotnet build -c Release\s*$", testJob);
+        Assert.Matches(@"(?m)^\s+run: dotnet test -c Release --no-build\s*$", testJob);
+        Assert.Contains("contents: read", testJob, StringComparison.Ordinal);
+        Assert.DoesNotContain("contents: write", testJob, StringComparison.Ordinal);
+
+        foreach (string job in new[] { "build-windows", "build-macos", "build-linux" })
+        {
+            Assert.Matches(@"(?m)^\s+needs: \[[^\]]*\btest\b[^\]]*\]\s*$", Body(job));
+        }
+
+        // The draft needs every packaging job, so it transitively needs the test job.
+        Assert.Matches(@"(?m)^\s+needs: \[build-windows, build-macos, build-linux\]\s*$", Body("publish-draft"));
+    }
+
+    [Fact]
+    public void AppImageToolIsPinnedToASpecificReleaseAndChecksummed()
+    {
+        string text = Text();
+
+        Assert.Matches(@"https://github\.com/AppImage/appimagetool/releases/download/\d+\.\d+\.\d+/appimagetool-x86_64\.AppImage", text);
+        Assert.DoesNotContain("/releases/latest", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("/continuous/", text, StringComparison.Ordinal);
+        Assert.Matches(@"(?m)^\s+appimagetool_sha256=[0-9a-f]{64}\s*$", text);
+        Assert.Contains("sha256sum -c", text, StringComparison.Ordinal);
+
+        // The check must come after the download and before the tool is made executable.
+        int download = text.IndexOf("curl -fsSL -o", StringComparison.Ordinal);
+        int check = text.IndexOf("sha256sum -c", StringComparison.Ordinal);
+        int chmod = text.IndexOf("chmod +x", StringComparison.Ordinal);
+        Assert.True(download >= 0 && download < check && check < chmod, "download, then checksum, then chmod");
+    }
     [Fact]
     public void WorkflowCoversTheThreeRunnerFamilies()
     {

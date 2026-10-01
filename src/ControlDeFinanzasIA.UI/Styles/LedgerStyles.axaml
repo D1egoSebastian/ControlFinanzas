@@ -37,7 +37,7 @@
         <Setter Property="Cursor" Value="Hand" />
     </Style>
     <Style Selector="Button.ledger-btn-primary:pointerover">
-        <Setter Property="Background" Value="#22E8A33D" />
+        <Setter Property="Background" Value="{StaticResource AmberTintBrush}" />
     </Style>
 
     <!-- Danger / delete button -->

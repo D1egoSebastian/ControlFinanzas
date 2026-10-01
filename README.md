@@ -3,8 +3,7 @@
 ## What it is
 
 ControlDeFinanzasIA is a cross-platform desktop application (Windows, macOS, Linux) for personal finance control,
-assisted by AI. Your data lives in a single local SQLite file on your machine; nothing is uploaded and there is no
-telemetry. The AI features are optional and use your own provider key, stored only in the local data file.
+assisted by AI. Your data lives in a single local SQLite file on your machine and there is no telemetry; the app never uploads your data on its own. The AI features are optional and off until you add your own provider key (stored only in the local data file): when you use them, a summary of the relevant finance data (amounts, categories, descriptions) is sent to the provider you chose, and nothing is sent to anyone else.
 
 It covers expenses and income, categories, budgets, savings goals, debts with installment plans, recurring charges,
 a calendar, a dashboard, notifications, PDF/Excel export, backup and restore, and CSV/Excel import. The interface is

@@ -28,7 +28,7 @@ class in `scripts/lib/Archive.psm1` (not `System.Formats.Tar`, which needs .NET 
 | win-x64 archive runs | `scripts/smoke-win.ps1`: extracted zip, `DOTNET_ROOT` removed and no dotnet folder on `PATH`, temp data dir, `data.db` created, `Migrations applied` logged, `coreclr.dll` loaded from the extracted folder, window closed, exit code 0, no `startup-error-*.log`. The real `%APPDATA%\ControlDeFinanzasIA` listing was identical before and after |
 | `.app` folder structure and `Info.plist` | `AppBundleStructureTests` runs `scripts/package-macos-app.ps1` over a synthetic publish folder; the same script ran over the real osx outputs |
 | AppImage recipe files and shell syntax | `AppImageRecipeTests`; `sh -n` on `AppRun` and `build-appimage.sh` |
-| Workflow text rules | `ReleaseWorkflowTests` (tag trigger only, tag check job first, draft via `gh`, only the last job has `contents: write`, only first-party `actions/*`, `build.yml` unchanged) |
+| Workflow text rules | `ReleaseWorkflowTests` (tag trigger only, tag check job first, a `test` job running `dotnet build` and `dotnet test` in Release that every packaging job needs, appimagetool pinned by URL and SHA-256, draft via `gh`, only the last job has `contents: write`, only first-party `actions/*`, `build.yml` unchanged) |
 
 ## Authored but NOT verified
 
@@ -37,7 +37,7 @@ class in `scripts/lib/Archive.psm1` (not `System.Formats.Tar`, which needs .NET 
 - `LSMinimumSystemVersion` is `12.0`. Evidence: the `libe_sqlite3`, `libQuestPdfSkia` and `libqpdf` dylibs in both osx
   outputs declare a minimum OS of 12.0, the .NET runtime binaries declare 10.15 (x64) and 11.0 (arm64), and .NET 8
   documents macOS 12 as its supported minimum. Skia, HarfBuzz and AvaloniaNative dylibs were not parsed.
-- The AppImage build (`appimagetool` version 1.9.0 download in the workflow was not checked and has no pinned hash), the
+- The AppImage build (`appimagetool` is pinned to release 1.9.0 with a SHA-256 check, but that hash is UNVERIFIED against upstream: the release publishes no checksum, so the value in `release.yml` was computed by us from the downloaded asset, identical on two downloads, i.e. a trust-on-first-use pin that detects a later swap, not proof the first download was genuine; the AppImage itself was never built), the
   DMG creation (`hdiutil`), and the execution of `release.yml` on GitHub: none was run. The workflow was checked only with
   text rules: there is no YAML library in the test projects and no package may be added, so it was not parsed as YAML.
   The first real tag push is the first test of the workflow; it only creates a draft release.
@@ -54,8 +54,7 @@ class in `scripts/lib/Archive.psm1` (not `System.Formats.Tar`, which needs .NET 
 
 ## Observations
 
-- Output sizes: win-x64 148 MB (zip 62 MiB), osx-arm64 152 MB, osx-x64 146 MB, linux-x64 141 MB (before compression).
-  The folders include `Microsoft.EntityFrameworkCore.Design`, Roslyn and `Avalonia.Headless` assemblies because the
-  projects reference those packages for design time and tests; trimming them is a follow-up, not part of S9.
+- Output sizes (after the verify W4 fix): win-x64 133 MB (was 148), osx-arm64 137 MB (was 152), osx-x64 131 MB (was 146), linux-x64 126 MB (was 141), before compression. `Avalonia.Headless` now lives only in the unit test project, and `Microsoft.EntityFrameworkCore.Design` (with Roslyn and T4) is excluded from every publish; `PublishPayloadTests` fails if any of them reappears in a publish output. The `release.yml` `test` job runs on `windows-latest` only, the one platform where the suite has been run; running it on macOS and Linux runners is left for the first real tag push to show.
+- Follow-up (verify suggestion 2): log entries still write `exception.ToString()` (type, message and stack, DD-1). Exception messages can embed user data (format errors, paths). The log is local-only and never uploaded; scrubbing messages would remove the detail that makes the log useful, so it was left as a product decision rather than changed silently.
 - `DebugType=embedded` applies to the UI project only (the props file is imported there), so the Domain, Application and
   Infrastructure assemblies still ship a loose `.pdb`.
