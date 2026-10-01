@@ -17,37 +17,37 @@
             <StackPanel Spacing="10">
                 <TextBlock Text="{x:Static resources:Strings.RecurringTitle}" Classes="ledger-title" />
                 <TextBlock Text="{x:Static resources:Strings.RecurringSubtitle}" Foreground="{StaticResource PaperDimBrush}" />
-                <ComboBox ItemsSource="{Binding RuleTypes}" SelectedItem="{Binding RuleType}" Classes="ledger-input" />
-                <TextBox Text="{Binding Name}" Watermark="{x:Static resources:Strings.RecurringNamePlaceholder}" Classes="ledger-input" />
-                <TextBox Text="{Binding Amount}" Watermark="{x:Static resources:Strings.RecurringAmountPlaceholder}" Classes="ledger-input" />
-                <ComboBox ItemsSource="{Binding Currencies}" SelectedItem="{Binding Currency}" Classes="ledger-input" />
-                <ComboBox ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input" />
-                <DatePicker SelectedDate="{Binding StartDate, Converter={StaticResource DateOnlyConverter}}" Classes="ledger-input" />
-                <ComboBox ItemsSource="{Binding Categories}"
+                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yRuleType}" ItemsSource="{Binding RuleTypes}" SelectedItem="{Binding RuleType}" Classes="ledger-input" />
+                <TextBox AutomationProperties.Name="{x:Static resources:Strings.RecurringNamePlaceholder}" Text="{Binding Name}" Watermark="{x:Static resources:Strings.RecurringNamePlaceholder}" Classes="ledger-input" />
+                <TextBox AutomationProperties.Name="{x:Static resources:Strings.RecurringAmountPlaceholder}" Text="{Binding Amount}" Watermark="{x:Static resources:Strings.RecurringAmountPlaceholder}" Classes="ledger-input" />
+                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yCurrency}" ItemsSource="{Binding Currencies}" SelectedItem="{Binding Currency}" Classes="ledger-input" />
+                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yFrequency}" ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input" />
+                <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yStartDate}" SelectedDate="{Binding StartDate, Converter={StaticResource DateOnlyConverter}}" Classes="ledger-input" />
+                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.RecurringCategoryPlaceholder}" ItemsSource="{Binding Categories}"
                           DisplayMemberBinding="{Binding Name}"
                           SelectedItem="{Binding SelectedCategory}"
                           PlaceholderText="{x:Static resources:Strings.RecurringCategoryPlaceholder}"
                           Classes="ledger-input" />
-                <ComboBox ItemsSource="{Binding PaymentMethods}"
+                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.RecurringPaymentMethodPlaceholder}" ItemsSource="{Binding PaymentMethods}"
                           DisplayMemberBinding="{Binding Name}"
                           SelectedItem="{Binding SelectedPaymentMethod}"
                           PlaceholderText="{x:Static resources:Strings.RecurringPaymentMethodPlaceholder}"
                           Classes="ledger-input" />
-                <TextBlock Text="{Binding FormError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button Content="{x:Static resources:Strings.RecurringSaveButton}" Command="{Binding SaveCommand}" IsDefault="True" Classes="ledger-btn-primary" />
                     <Button Content="{x:Static resources:Strings.RecurringCancelButton}" Command="{Binding CancelEditCommand}" Classes="ledger-btn" />
                     <Button Content="{x:Static resources:Strings.RecurringDeactivateButton}" Command="{Binding DeactivateSelectedCommand}" Classes="ledger-btn" />
                     <Button Content="{x:Static resources:Strings.RecurringDeleteButton}" Command="{Binding DeleteSelectedCommand}" Classes="ledger-btn" />
                 </StackPanel>
-                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" />
                 <Separator Margin="0,12" />
                 <TextBlock Text="{x:Static resources:Strings.RecurringGenerateTitle}" Classes="ledger-section" />
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button Content="{x:Static resources:Strings.RecurringPreviewButton}" Command="{Binding PreviewGenerationCommand}" Classes="ledger-btn" />
                     <Button Content="{x:Static resources:Strings.RecurringConfirmButton}" Command="{Binding ConfirmGenerationCommand}" Classes="ledger-btn-primary" />
                 </StackPanel>
-                <TextBlock Text="{Binding GenerationError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding GenerationError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
                 <ItemsControl ItemsSource="{Binding PreviewItems}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>

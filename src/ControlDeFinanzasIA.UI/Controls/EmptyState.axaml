@@ -49,6 +49,7 @@
                    IsVisible="{Binding #Root.Hint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
         <Button Classes="ledger-btn-primary"
+                AutomationProperties.Name="{Binding #Root.ActionText}"
                 HorizontalAlignment="Left"
                 Margin="0,4,0,0"
                 Command="{Binding #Root.ActionCommand}"

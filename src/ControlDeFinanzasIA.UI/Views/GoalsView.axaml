@@ -16,38 +16,38 @@
             <StackPanel Spacing="10">
                 <TextBlock Text="{x:Static resources:Strings.GoalsFormTitle}" Classes="ledger-title" />
 
-                <TextBox Text="{Binding Name}"
+                <TextBox AutomationProperties.Name="{x:Static resources:Strings.GoalsNameWatermark}" Text="{Binding Name}"
                          Watermark="{x:Static resources:Strings.GoalsNameWatermark}"
                          Classes="ledger-input" />
-                <TextBox Text="{Binding TargetAmount}"
+                <TextBox AutomationProperties.Name="{x:Static resources:Strings.GoalsTargetAmountWatermark}" Text="{Binding TargetAmount}"
                          Watermark="{x:Static resources:Strings.GoalsTargetAmountWatermark}"
                          Classes="ledger-input" />
-                <ComboBox ItemsSource="{Binding Currencies}"
+                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.GoalsCurrencyPlaceholder}" ItemsSource="{Binding Currencies}"
                           SelectedItem="{Binding Currency}"
                           PlaceholderText="{x:Static resources:Strings.GoalsCurrencyPlaceholder}"
                           Classes="ledger-input"
                           HorizontalAlignment="Stretch" />
-                <DatePicker SelectedDate="{Binding TargetDate, Converter={StaticResource DateOnlyConverter}}"
+                <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yTargetDate}" SelectedDate="{Binding TargetDate, Converter={StaticResource DateOnlyConverter}}"
                             Classes="ledger-input" />
-                <TextBox Text="{Binding Note}"
+                <TextBox AutomationProperties.Name="{x:Static resources:Strings.GoalsNoteWatermark}" Text="{Binding Note}"
                          Watermark="{x:Static resources:Strings.GoalsNoteWatermark}"
                          Classes="ledger-input" />
 
-                <TextBlock Text="{Binding FormError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
                 <Button Content="{x:Static resources:Strings.GoalsCreateButton}"
                         Command="{Binding CreateCommand}"
                         Classes="ledger-btn-primary" />
-                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
 
                 <!-- Contribution sub-flow: inline panel revealed when a goal row is selected (D-10). -->
                 <StackPanel Spacing="10"
                             Margin="0,16,0,0"
                             IsVisible="{Binding SelectedGoal, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}">
                     <TextBlock Text="{x:Static resources:Strings.GoalsContributeFormTitle}" Classes="ledger-section" />
-                    <TextBox Text="{Binding ContributionAmount}"
+                    <TextBox AutomationProperties.Name="{x:Static resources:Strings.GoalsContributionAmountWatermark}" Text="{Binding ContributionAmount}"
                              Watermark="{x:Static resources:Strings.GoalsContributionAmountWatermark}"
                              Classes="ledger-input" />
-                    <DatePicker SelectedDate="{Binding ContributionDate, Converter={StaticResource DateOnlyConverter}}"
+                    <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yContributionDate}" SelectedDate="{Binding ContributionDate, Converter={StaticResource DateOnlyConverter}}"
                                 Classes="ledger-input" />
                     <TextBlock Text="{Binding ContributionCurrency, StringFormat={x:Static resources:Strings.GoalsContributionCurrencyLabel}}"
                                Foreground="{StaticResource PaperDimBrush}" />
@@ -94,7 +94,7 @@
                                                Foreground="{StaticResource SageBrush}" />
                                     <TextBlock Text="{x:Static resources:Strings.GoalsPastDateWarning}"
                                                IsVisible="{Binding ShowPastDateWarning}"
-                                               Foreground="{StaticResource TerracottaBrush}" />
+                                               Foreground="{StaticResource TerracottaTextBrush}" />
                                     <TextBlock IsVisible="{Binding ShowPlan}"
                                                Foreground="{StaticResource PaperDimBrush}"
                                                TextWrapping="Wrap">
@@ -117,7 +117,7 @@
                                                TextWrapping="Wrap"
                                                Foreground="{StaticResource PaperBrush}"
                                                IsVisible="{Binding PlanNarration, Converter={x:Static avaloniaConverters:StringConverters.IsNotNullOrEmpty}}" />
-                                    <TextBlock Text="{Binding PlanNarrationStatusText}"
+                                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding PlanNarrationStatusText}"
                                                TextWrapping="Wrap"
                                                FontStyle="Italic"
                                                Foreground="{StaticResource PaperDimBrush}"

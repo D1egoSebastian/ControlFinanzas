@@ -2776,4 +2776,54 @@ public class Strings
     /// Gets the label of the Enter key in the Settings shortcuts block (F-021).
     /// </summary>
     public static string ShortcutKeyEnter => ResourceManager.GetString("ShortcutKeyEnter", Culture)!;
+
+    /// <summary>
+    /// Gets the accessible name of a date picker with no visible label (F-021 S8).
+    /// </summary>
+    public static string A11yDate => ResourceManager.GetString("A11yDate", Culture)!;
+
+    /// <summary>
+    /// Gets the accessible name of the start date picker (F-021 S8).
+    /// </summary>
+    public static string A11yStartDate => ResourceManager.GetString("A11yStartDate", Culture)!;
+
+    /// <summary>
+    /// Gets the accessible name of the goal target date picker (F-021 S8).
+    /// </summary>
+    public static string A11yTargetDate => ResourceManager.GetString("A11yTargetDate", Culture)!;
+
+    /// <summary>
+    /// Gets the accessible name of the contribution date picker (F-021 S8).
+    /// </summary>
+    public static string A11yContributionDate => ResourceManager.GetString("A11yContributionDate", Culture)!;
+
+    /// <summary>
+    /// Gets the accessible name of a currency selector with no placeholder (F-021 S8).
+    /// </summary>
+    public static string A11yCurrency => ResourceManager.GetString("A11yCurrency", Culture)!;
+
+    /// <summary>
+    /// Gets the accessible name of a frequency selector (F-021 S8).
+    /// </summary>
+    public static string A11yFrequency => ResourceManager.GetString("A11yFrequency", Culture)!;
+
+    /// <summary>
+    /// Gets the accessible name of the recurring rule type selector (F-021 S8).
+    /// </summary>
+    public static string A11yRuleType => ResourceManager.GetString("A11yRuleType", Culture)!;
+
+    /// <summary>
+    /// Gets the accessible name of the glyph-only button that dismisses the AI category suggestion (F-021 S8).
+    /// </summary>
+    public static string A11yDismissSuggestion => ResourceManager.GetString("A11yDismissSuggestion", Culture)!;
+
+    /// <summary>
+    /// Gets the accessible name of the increase button of a numeric input (F-021 S8).
+    /// </summary>
+    public static string A11yIncreaseValue => ResourceManager.GetString("A11yIncreaseValue", Culture)!;
+
+    /// <summary>
+    /// Gets the accessible name of the decrease button of a numeric input (F-021 S8).
+    /// </summary>
+    public static string A11yDecreaseValue => ResourceManager.GetString("A11yDecreaseValue", Culture)!;
 }

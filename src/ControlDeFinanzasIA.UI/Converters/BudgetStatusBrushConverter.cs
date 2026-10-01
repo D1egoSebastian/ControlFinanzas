@@ -12,7 +12,7 @@ namespace ControlDeFinanzasIA.UI.Converters;
 /// classes already use, for the Dashboard's forecast-vs-budget line (F-014,
 /// S8c): <see cref="BudgetStatus.Ok"/> or <see langword="null"/> →
 /// SageBrush, <see cref="BudgetStatus.Near"/> → AmberBrush,
-/// <see cref="BudgetStatus.Exceeded"/> → TerracottaBrush.
+/// <see cref="BudgetStatus.Exceeded"/> → TerracottaTextBrush (text contrast, F-021 S8).
 /// </summary>
 public sealed class BudgetStatusBrushConverter : IValueConverter
 {
@@ -25,7 +25,7 @@ public sealed class BudgetStatusBrushConverter : IValueConverter
         string resourceKey = value switch
         {
             BudgetStatus.Near => "AmberBrush",
-            BudgetStatus.Exceeded => "TerracottaBrush",
+            BudgetStatus.Exceeded => "TerracottaTextBrush",
             _ => "SageBrush",
         };
 

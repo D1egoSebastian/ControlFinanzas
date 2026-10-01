@@ -20,7 +20,7 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:CalendarCell">
-                    <Button Command="{Binding #Root.DayCommand}"
+                    <Button AutomationProperties.Name="{Binding AutomationName}" Command="{Binding #Root.DayCommand}"
                             CommandParameter="{Binding}"
                             Classes="calendar-day"
                             Classes.adjacent="{Binding !IsCurrentMonth}"

@@ -557,40 +557,46 @@ Unverified: a human visual pass of the sidebar rail, the ring and the Settings b
 Depends on 7b. Goal: names on every textless interactive control, contrast proven on the real palette, live regions set,
 honest accessibility statement.
 
-- [ ] 8.1 Write failing `tests/…Unit/Accessibility/ContrastTests.cs` (REAL `Tokens.axaml` parsed; WCAG relative luminance):
+- [x] 8.1 Write failing `tests/…Unit/Accessibility/ContrastTests.cs` (REAL `Tokens.axaml` parsed; WCAG relative luminance):
   `Paper`, `PaperDim`, `Amber`, `Sage`, `TerracottaText` on `Ink` and on `Surface` >= 4.5:1; the button label on its fill
   (`ledger-btn-primary` label/fill pair resolved from `LedgerStyles.axaml`) >= 4.5:1; focus ring `Amber` on both backgrounds
   >= 3:1; error and warning text pairs >= 4.5:1; large-amount text >= 3:1. The test enumerates the pairs the app actually
   uses and MUST NOT exclude a failing pair; a failure is fixed in `Tokens.axaml` (test-first). The current
   `Terracotta`-on-`Surface` 4.43:1 is asserted as "only used for fills/large text" by a scan that no text `Foreground`
   binds to `TerracottaBrush`. (R-18, S-37, T12)
-- [ ] 8.2 Write failing `tests/…Unit/Accessibility/AccessibilityXamlScanTests.cs` (static, all `Views/**/*.axaml` and
+- [x] 8.2 Write failing `tests/…Unit/Accessibility/AccessibilityXamlScanTests.cs` (static, all `Views/**/*.axaml` and
   `Controls/*.axaml` parsed as XML): every `Button`/`ToggleButton`/`RepeatButton` whose content is not text (no text
   `Content`, no `x:Static`, no `TextBlock` child, or glyph-only such as `✕`) sets `AutomationProperties.Name`; every
   `TextBox`/`ComboBox`/`DatePicker`/`CheckBox` without text content sets `Name` or `LabeledBy` (placeholder text is not
   accepted). Extends `HardcodedStringsScanTests` file list to ALL views and `MainWindow`; pre-existing hits elsewhere go to
   an explicit allowlist with a comment (visible debt). (R-17, R-19, DD-11 scans 1 and 3)
-- [ ] 8.3 Write failing `tests/…Unit/Accessibility/AutomationNameScanTests.cs` (runtime, headless, es-DO): real
+- [x] 8.3 Write failing `tests/…Unit/Accessibility/AutomationNameScanTests.cs` (runtime, headless, es-DO): real
   `MainWindow` with real shell VM plus each main section (Dashboard, Expenses, Income, Budgets, Goals, Debts, Recurring,
   Calendar, Chat, Settings) through `NavigationService`; walk the visual tree and assert that every focusable, enabled,
   visible control that has no visible text has a non-empty `ControlAutomationPeer.CreatePeerForElement(c).GetName()`;
   assert the bell, sidebar items, pickers and toggles are included in the walk (count > 0 per category). Catches names lost
   through templates. (R-17, S-34, DD-11 scan 2)
-- [ ] 8.4 Write failing `tests/…Unit/Accessibility/LiveRegionSupportTests.cs`: `AutomationProperties.LiveSetting` is set
+- [x] 8.4 Write failing `tests/…Unit/Accessibility/LiveRegionSupportTests.cs`: `AutomationProperties.LiveSetting` is set
   to `Polite` on the status/error `TextBlock`s of the error overlay, the four views' status blocks, the import result and
   the AI fallback captions (assert by x:Name/class on the real visual tree), AND `docs/accessibility.md` contains the
   sentence that the property is set but peer event delivery is unverified until a manual Narrator run. (R-17, S-36,
   Reconciliation #8)
-- [ ] 8.5 Implement: add missing `AutomationProperties.Name` (localized resx, both cultures + Designer; accessor names
+- [x] 8.5 Implement: add missing `AutomationProperties.Name` (localized resx, both cultures + Designer; accessor names
   prefixed `A11y*`), `LiveSetting`, `TabIndex` only where visual order differs, tokens fixing any failing contrast pair, and
   create `docs/accessibility.md` (Windows UIA is the only platform claimed and tested; VoiceOver and Orca/AT-SPI best effort,
   untested; no high-contrast theme; no full WCAG audit; live-region limitation; manual Narrator check not run). Invoke
   `frontend-design` for any token change. Run 8.1-8.4 green. (R-17, R-18, DD-11)
-- [ ] 8.6 Write `tests/…Unit/Accessibility/TabOrderTests.cs` (headless): on the primary form of Expenses, Income, Debts and
+- [x] 8.6 Write `tests/…Unit/Accessibility/TabOrderTests.cs` (headless): on the primary form of Expenses, Income, Debts and
   Recurring, the first tab stop is the Description (or the first field) after navigation, and Tab order equals visual
   order (assert by control positions). Initial focus after navigation via `FocusOnRequest.FirstFocusableToken` lands in
   the new screen. (R-14, R-17)
-- [ ] 8.7 **Run gate block G** (grep files: touched views, `Tokens.axaml`, `docs/accessibility.md`, new tests).
+- [x] 8.7 **Run gate block G** (grep files: touched views, `Tokens.axaml`, `docs/accessibility.md`, new tests).
+
+_Apply notes S8 (Strict TDD, reds observed). One commit (production about +236/-99 outside resx/Designer, under the ~450 guideline). Reds: `ContrastTests` ran against the old tokens/styles: 4 failed / 21 passed (the Terracotta-text scan listed 26 real `Foreground="{StaticResource TerracottaBrush}"` uses, the danger label and expense amount styles, the palette scan, and the adjacent-month calendar days at 3.25:1 because of `Opacity 0.6`); the converter `BudgetStatusBrushConverter` was a real find (Exceeded returned the failing fill token for dashboard text). `AccessibilityXamlScanTests` ran red on ~50 unlabelled inputs (placeholder was the only "name") and 3 textless buttons (EmptyState action with element content, calendar day, the glyph dismiss). `AutomationNameScanTests` (runtime, real `Bootstrap` composition + migrated temp SQLite + real `MainWindow`, es-DO and en, all ten sections, one seeded debt with schedule and one seeded expense) failed on the old tree (git stash of `src`) listing empty names and type-name fallbacks (`Avalonia.Controls.Grid` on every date-picker flyout button, `Avalonia.Controls.StackPanel` on the calendar days and the empty-state action, nameless NumericUpDown parts); it then went green after the names, the `DatePicker`/`NumericUpDown`/`ButtonSpinner` template-part styles in `LedgerStyles.axaml` and `CalendarCell.AutomationName`. `LiveRegionSupportTests` ran red on the old tree (3 of 4 failed: 16+ status blocks without `LiveSetting`, the real Expenses view, the missing doc). The S7b findings: `ClosingTheOverlay_RestoresFocusToTheControlThatHadItBeforeItOpened` failed 2/2 (button and Escape) before the new `Behaviors/RestoreFocusOnClose` attached behavior; `WhileTheImportPanelIsOpen_NoButtonOfTheExpenseFormIsTheDefault...` and the pinned `TheImportButtons_AreNeverDefault_InAnyState` (now `TotalDefaults == 0`, was 1) failed before the `MultiBinding` (`!IsEditMode && !IsImportOpen`, `IsEditMode && !IsImportOpen`) on the Expenses register/update buttons. `TabOrderTests` was not red-first (the order already held); a mutation (`TabIndex="50"` on the Amount box) turned the Expenses case red, then was reverted. The `HardcodedStringsScanTests` extension to ALL views + `MainWindow` + `EmptyState` and the existing `StringsParityTests` were already green (guards, NOT red-first).
+Avalonia 11.2.7 findings: `AutomationProperties.LiveSetting` exists and is set (`Polite`) on 30 status/error/AI-fallback blocks in the views plus the 2 of the overlay; peer event delivery is unverifiable headlessly and `docs/accessibility.md` says so. `GetFocus` source and `IsVisible=false` layers: a hidden layer is NOT attached to the visual tree when its open flag flips, so `RestoreFocusOnClose` keeps process-wide state (one main window) instead of looking up the layer's `TopLevel` (first attempt failed on that). A style setter binding `{Binding $parent[DatePicker].(AutomationProperties.Name)}` works for template parts (reflection bindings; `AvaloniaUseCompiledBindingsByDefault` is false); the `RepeatButton` parts live in the `ButtonSpinner` template, not the `NumericUpDown` one.
+Gate G (final tree): build 0/0 (`--no-incremental`, Release); full suite x3 = 2842 unit + 815 integration each run (baseline 2797 + 815; +45 unit: Contrast 26, XamlScan 4, AutomationNameScan 2, LiveRegion 4, TabOrder 5, ErrorOverlay +3, DefaultButton +1), 0 skipped, no intermittents; `dotnet format style --verify-no-changes` exit 0 (IDE1006 const prefixes and `var`/expression-body fixes applied); Architecture filter 20/20; no-stub grep over the new/touched files empty; footprint clean (no Packages.props, csproj, Migrations, snapshot, SettingKeys/AppSettings); build servers shut down.
+Deviations: (1) The task names `ContrastTests`/`AutomationNameScanTests`/... (spec names) in `tests/…Unit/Accessibility/`; `AccessibilityXamlScanTests` extends the existing `HardcodedStringsScanTests` file list through a shared `AllAxaml()` helper (every `.axaml` under Views and Controls) instead of editing a list by hand. (2) No allowlist was needed in the XAML scan: every hit was fixed. (3) Names reuse the existing placeholder/watermark resx strings (`Name="{x:Static ...Placeholder}"`) wherever one exists; only 10 new `A11y*` keys were added (date pickers, currency/frequency/rule type selectors, dismiss suggestion, spin buttons). (4) No token was added or changed (S5a already added `TerracottaText`); the S8 contrast fixes are usage fixes (text foregrounds moved to `TerracottaTextBrush`, adjacent calendar days lost `Opacity 0.6`), so `frontend-design` was not invoked. (5) `TabIndex` was not needed anywhere. (6) The error-overlay body, "copied" caption and the four views' status blocks were already partly live regions from S4; S8 completed the set and pinned it with a scan. (7) The resting border of inputs (`Hairline` on `Ink`, 1.46:1) does not meet 3:1; it is not text or a focus ring so it is outside the thresholds given for S8, but it is listed as a known gap in `docs/accessibility.md` instead of being hidden. (8) The runtime scan counts a control as interactive when `Focusable && IsEnabled && IsEffectivelyVisible` (this includes template parts such as the date-picker flyout button), and requires the peer name to be non-empty and free of `Avalonia.` type-name fallbacks.
+Unverified: any real screen reader (Narrator/NVDA/JAWS/VoiceOver/Orca); live-region announcements through the Windows peer; the real focus ring and arrow navigation under a real window system; placeholder (watermark) colour and reduced-opacity states (chat note, loading suggestion, stale import preview) contrast; chart graphics. Windows UIA is the only platform claimed. Commit: see git log (slice S8/12)._
 
 ## 9. Packaging scripts and draft release workflow (S9)
 

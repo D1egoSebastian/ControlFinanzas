@@ -25,4 +25,14 @@ public sealed record CalendarCell(
     string DayNumber,
     string TotalDisplay,
     bool IsCurrentMonth,
-    bool IsToday);
+    bool IsToday)
+{
+    /// <summary>
+    /// Gets the accessible name of the day button: the full date in the current culture, followed by the day total when
+    /// the day belongs to the navigated month (the visible content is only a day number and an amount) (F-021 S8).
+    /// </summary>
+    public string AutomationName =>
+        IsCurrentMonth && TotalDisplay.Length > 0
+            ? $"{Date.ToString("D", global::System.Globalization.CultureInfo.CurrentCulture)}, {TotalDisplay}"
+            : Date.ToString("D", global::System.Globalization.CultureInfo.CurrentCulture);
+}

@@ -28,27 +28,27 @@
                             Margin="8,0,0,0" />
                 </Grid>
 
-                <ComboBox ItemsSource="{Binding Categories}"
+                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.BudgetsCategoryPlaceholder}" ItemsSource="{Binding Categories}"
                           DisplayMemberBinding="{Binding Name}"
                           SelectedValue="{Binding SelectedCategoryId}"
                           SelectedValueBinding="{Binding Id}"
                           PlaceholderText="{x:Static resources:Strings.BudgetsCategoryPlaceholder}"
                           Classes="ledger-input"
                           HorizontalAlignment="Stretch" />
-                <TextBox Text="{Binding Amount}"
+                <TextBox AutomationProperties.Name="{x:Static resources:Strings.BudgetsAmountWatermark}" Text="{Binding Amount}"
                          Watermark="{x:Static resources:Strings.BudgetsAmountWatermark}"
                          Classes="ledger-input" />
-                <ComboBox ItemsSource="{Binding Currencies}"
+                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.BudgetsCurrencyPlaceholder}" ItemsSource="{Binding Currencies}"
                           SelectedItem="{Binding Currency}"
                           PlaceholderText="{x:Static resources:Strings.BudgetsCurrencyPlaceholder}"
                           Classes="ledger-input"
                           HorizontalAlignment="Stretch" />
 
-                <TextBlock Text="{Binding FormError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
                 <Button Content="{x:Static resources:Strings.BudgetsSaveButton}"
                         Command="{Binding SaveCommand}"
                         Classes="ledger-btn-primary" />
-                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
             </StackPanel>
         </ScrollViewer>
 

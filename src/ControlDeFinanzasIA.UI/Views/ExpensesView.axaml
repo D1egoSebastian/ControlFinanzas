@@ -24,38 +24,53 @@
                 <StackPanel Spacing="10">
                     <TextBlock Text="{x:Static resources:Strings.ExpensesFormTitle}" Foreground="{StaticResource AmberBrush}" FontSize="18" FontWeight="Bold" />
                     <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
-                        <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding Description}" behaviors:FocusOnRequest.Token="{Binding DescriptionFocusRequest}" Watermark="{x:Static resources:Strings.ExpensesDescriptionPlaceholder}" />
-                        <TextBox Grid.Row="0" Grid.Column="1" Margin="12,0,0,0" Text="{Binding Amount}" Watermark="{x:Static resources:Strings.ExpensesAmountPlaceholder}" />
+                        <TextBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesDescriptionPlaceholder}" Grid.Row="0" Grid.Column="0" Text="{Binding Description}" behaviors:FocusOnRequest.Token="{Binding DescriptionFocusRequest}" Watermark="{x:Static resources:Strings.ExpensesDescriptionPlaceholder}" />
+                        <TextBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesAmountPlaceholder}" Grid.Row="0" Grid.Column="1" Margin="12,0,0,0" Text="{Binding Amount}" Watermark="{x:Static resources:Strings.ExpensesAmountPlaceholder}" />
                         <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4">
-                            <ComboBox ItemsSource="{Binding Categories}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedCategoryId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.ExpensesCategoryPlaceholder}" />
+                            <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesCategoryPlaceholder}" ItemsSource="{Binding Categories}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedCategoryId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.ExpensesCategoryPlaceholder}" />
                             <!-- F-013 slice 6 (R-5, D-13): AI suggestion chip. Accepting it is the ONLY code path that writes SelectedCategoryId from AI output. -->
                             <StackPanel Orientation="Horizontal" Spacing="6" Opacity="{Binding IsSuggestionLoading, Converter={x:Static converters:BoolToOpacityConverter.Instance}}" IsVisible="{Binding IsSuggestionVisible}">
                                 <Button Command="{Binding AcceptSuggestionCommand}"
                                         Content="{Binding SuggestedCategoryChipLabel}"
                                         ToolTip.Tip="{Binding SuggestedCategoryAcceptHint}"
                                         Background="{StaticResource SurfaceBrush}" Foreground="{StaticResource AmberBrush}" Padding="8,2" CornerRadius="10" FontSize="12" />
-                                <Button Command="{Binding DismissSuggestionCommand}" Content="✕"
+                                <Button AutomationProperties.Name="{x:Static resources:Strings.A11yDismissSuggestion}" Command="{Binding DismissSuggestionCommand}" Content="✕"
                                         ToolTip.Tip="{Binding SuggestedCategoryDismissHint}"
                                         Background="Transparent" Foreground="{StaticResource PaperDimBrush}" Padding="4,2" FontSize="12" />
                             </StackPanel>
                             <TextBlock Text="{Binding SuggestionLoadingLabel}" Foreground="{StaticResource PaperDimBrush}" FontSize="11" IsVisible="{Binding IsSuggestionLoading}" />
-                            <TextBlock Text="{Binding AiStatusMessage}" Foreground="{StaticResource PaperDimBrush}" FontSize="11" TextWrapping="Wrap"
+                            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding AiStatusMessage}" Foreground="{StaticResource PaperDimBrush}" FontSize="11" TextWrapping="Wrap"
                                        IsVisible="{Binding AiStatusMessage, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
                         </StackPanel>
-                        <ComboBox Grid.Row="1" Grid.Column="1" Margin="12,0,0,0" ItemsSource="{Binding PaymentMethods}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedPaymentMethodId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.ExpensesPaymentMethodPlaceholder}" />
-                        <ComboBox Grid.Row="2" Grid.Column="0" ItemsSource="{x:Static converters:EnumValues.Currencies}" SelectedItem="{Binding Currency}" PlaceholderText="{x:Static resources:Strings.ExpensesCurrencyPlaceholder}" />
-                        <DatePicker Grid.Row="2" Grid.Column="1" Margin="12,0,0,0" SelectedDate="{Binding Date, Converter={StaticResource DateOnlyConverter}}" />
-                        <TextBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Note}" Watermark="{x:Static resources:Strings.ExpensesNotePlaceholder}" AcceptsReturn="True" Height="70" />
-                        <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
+                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesPaymentMethodPlaceholder}" Grid.Row="1" Grid.Column="1" Margin="12,0,0,0" ItemsSource="{Binding PaymentMethods}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedPaymentMethodId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.ExpensesPaymentMethodPlaceholder}" />
+                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesCurrencyPlaceholder}" Grid.Row="2" Grid.Column="0" ItemsSource="{x:Static converters:EnumValues.Currencies}" SelectedItem="{Binding Currency}" PlaceholderText="{x:Static resources:Strings.ExpensesCurrencyPlaceholder}" />
+                        <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yDate}" Grid.Row="2" Grid.Column="1" Margin="12,0,0,0" SelectedDate="{Binding Date, Converter={StaticResource DateOnlyConverter}}" />
+                        <TextBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesNotePlaceholder}" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Note}" Watermark="{x:Static resources:Strings.ExpensesNotePlaceholder}" AcceptsReturn="True" Height="70" />
+                        <TextBlock AutomationProperties.LiveSetting="Polite" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
                         <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10">
-                            <Button Content="{x:Static resources:Strings.ExpensesRegisterButton}" Command="{Binding RegisterExpenseCommand}" IsDefault="{Binding !IsEditMode}" Background="{StaticResource AmberBrush}" Foreground="{StaticResource InkBrush}" />
-                            <Button Content="{x:Static resources:Strings.ExpensesUpdateButton}" Command="{Binding UpdateExpenseCommand}" IsDefault="{Binding IsEditMode}" IsVisible="{Binding IsEditMode}" />
+                            <!-- Default (Enter) only in register mode and never while the import panel replaces the list (F-021 S8). -->
+                            <Button Content="{x:Static resources:Strings.ExpensesRegisterButton}" Command="{Binding RegisterExpenseCommand}" Background="{StaticResource AmberBrush}" Foreground="{StaticResource InkBrush}">
+                                <Button.IsDefault>
+                                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                        <Binding Path="!IsEditMode" />
+                                        <Binding Path="!IsImportOpen" />
+                                    </MultiBinding>
+                                </Button.IsDefault>
+                            </Button>
+                            <Button Content="{x:Static resources:Strings.ExpensesUpdateButton}" Command="{Binding UpdateExpenseCommand}" IsVisible="{Binding IsEditMode}">
+                                <Button.IsDefault>
+                                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                        <Binding Path="IsEditMode" />
+                                        <Binding Path="!IsImportOpen" />
+                                    </MultiBinding>
+                                </Button.IsDefault>
+                            </Button>
                             <Button Content="{x:Static resources:Strings.ExpensesCancelButton}" Command="{Binding CancelEditCommand}" IsVisible="{Binding IsEditMode}" />
                         </StackPanel>
                     </Grid>
                 </StackPanel>
             </Border>
-            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
             <!-- Report export (F-018) and import (F-020): secondary buttons beside the list title; outcome shows via StatusMessage/FormError. -->
             <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                 <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ExpensesListTitle}" Foreground="{StaticResource PaperBrush}" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" />

@@ -24,7 +24,7 @@
             <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
         </Style>
         <Style Selector="TextBlock.import-badge.rejected">
-            <Setter Property="Foreground" Value="{StaticResource TerracottaBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource TerracottaTextBrush}" />
         </Style>
         <Style Selector="TextBlock.import-reason">
             <Setter Property="FontSize" Value="12" />
@@ -32,7 +32,7 @@
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
         <Style Selector="TextBlock.import-reason.rejected">
-            <Setter Property="Foreground" Value="{StaticResource TerracottaBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource TerracottaTextBrush}" />
         </Style>
         <Style Selector="TextBlock.import-label">
             <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
@@ -79,11 +79,11 @@
                              Height="3"
                              Foreground="{StaticResource AmberBrush}"
                              Background="{StaticResource HairlineBrush}" />
-                <TextBlock Text="{Binding WorkingMessage}" Classes="ledger-status" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding WorkingMessage}" Classes="ledger-status" />
             </StackPanel>
 
             <!-- Outcome of the last operation: terracotta on failure -->
-            <TextBlock Text="{Binding StatusMessage}"
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}"
                        IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                        Classes="ledger-status"
                        Classes.export-error="{Binding IsError}" />
@@ -404,7 +404,7 @@
             <!-- Result of the finished import -->
             <Border Classes="import-callout" IsVisible="{Binding IsDonePanelVisible}">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="{Binding DoneMessage}"
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding DoneMessage}"
                                Foreground="{StaticResource SageBrush}"
                                TextWrapping="Wrap" />
                     <Button Content="{x:Static resources:Strings.ImportCloseButton}"

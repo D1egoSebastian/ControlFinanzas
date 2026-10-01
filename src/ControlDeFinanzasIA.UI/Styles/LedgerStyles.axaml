@@ -1,5 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:resources="using:ControlDeFinanzasIA.UI.Resources">
     <!--
         BOLD "Libro Mayor" control styles.
         Classes are explicit so these styles never leak to the shell or dashboard.
@@ -42,7 +43,7 @@
     <!-- Danger / delete button -->
     <Style Selector="Button.ledger-btn-danger">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource TerracottaBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TerracottaTextBrush}" />
         <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
         <Setter Property="FontSize" Value="14" />
         <Setter Property="Padding" Value="12,6" />
@@ -143,7 +144,7 @@
         <Setter Property="Foreground" Value="{StaticResource SageBrush}" />
     </Style>
     <Style Selector="TextBlock.ledger-amount.expense">
-        <Setter Property="Foreground" Value="{StaticResource TerracottaBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TerracottaTextBrush}" />
     </Style>
 
     <!-- Budget-progress bars (F-010, R-6, D-11): color-coded by BudgetStatus -->
@@ -210,7 +211,6 @@
     </Style>
     <Style Selector="Button.calendar-day.adjacent">
         <Setter Property="Foreground" Value="{StaticResource PaperDimBrush}" />
-        <Setter Property="Opacity" Value="0.6" />
     </Style>
     <Style Selector="Button.calendar-day.today">
         <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
@@ -317,5 +317,27 @@
     </Style>
     <Style Selector="Button.sidebar-item.current TextBlock.sidebar-hint">
         <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
+    </Style>
+
+    <!--
+        F-021 S8 (R-17, DD-11): names for the template parts of composite inputs. The template parts that take focus
+        (the date picker's flyout button, the numeric input's text box and spin buttons) would otherwise be announced
+        by their content type ("Avalonia.Controls.Grid") or not at all, so they repeat the name the view gives the
+        composite control.
+    -->
+    <Style Selector="DatePicker /template/ Button#PART_FlyoutButton">
+        <Setter Property="AutomationProperties.Name" Value="{Binding $parent[DatePicker].(AutomationProperties.Name)}" />
+    </Style>
+    <Style Selector="NumericUpDown /template/ TextBox#PART_TextBox">
+        <Setter Property="AutomationProperties.Name" Value="{Binding $parent[NumericUpDown].(AutomationProperties.Name)}" />
+    </Style>
+    <Style Selector="NumericUpDown /template/ ButtonSpinner#PART_Spinner">
+        <Setter Property="AutomationProperties.Name" Value="{Binding $parent[NumericUpDown].(AutomationProperties.Name)}" />
+    </Style>
+    <Style Selector="ButtonSpinner /template/ RepeatButton#PART_IncreaseButton">
+        <Setter Property="AutomationProperties.Name" Value="{x:Static resources:Strings.A11yIncreaseValue}" />
+    </Style>
+    <Style Selector="ButtonSpinner /template/ RepeatButton#PART_DecreaseButton">
+        <Setter Property="AutomationProperties.Name" Value="{x:Static resources:Strings.A11yDecreaseValue}" />
     </Style>
 </Styles>

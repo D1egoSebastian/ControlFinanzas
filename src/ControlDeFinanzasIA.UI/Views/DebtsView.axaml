@@ -17,18 +17,18 @@
             <StackPanel Spacing="10">
                 <TextBlock Text="{x:Static resources:Strings.DebtsNewTitle}" Classes="ledger-title" />
                 <TextBlock Text="{x:Static resources:Strings.DebtsNewSubtitle}" Foreground="{StaticResource PaperDimBrush}" />
-                <TextBox Text="{Binding Description}" Watermark="{x:Static resources:Strings.DebtsDescriptionPlaceholder}" Classes="ledger-input" />
-                <TextBox Text="{Binding OriginalAmount}" Watermark="{x:Static resources:Strings.DebtsOriginalAmountPlaceholder}" Classes="ledger-input" />
-                <ComboBox ItemsSource="{Binding Currencies}" SelectedItem="{Binding Currency}" Classes="ledger-input" />
-                <TextBox Text="{Binding TotalInstallments}" Watermark="{x:Static resources:Strings.DebtsInstallmentsPlaceholder}" Classes="ledger-input" />
-                <TextBox Text="{Binding InstallmentAmount}" Watermark="{x:Static resources:Strings.DebtsInstallmentAmountPlaceholder}" Classes="ledger-input" />
-                <ComboBox ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input" />
-                <DatePicker SelectedDate="{Binding StartDate, Converter={StaticResource DateOnlyConverter}}" Classes="ledger-input" />
-                <TextBox Text="{Binding CounterpartyName}" Watermark="{x:Static resources:Strings.DebtsCounterpartyPlaceholder}" Classes="ledger-input" />
-                <TextBox Text="{Binding Note}" Watermark="{x:Static resources:Strings.DebtsNotePlaceholder}" Classes="ledger-input" />
-                <TextBlock Text="{Binding FormError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+                <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsDescriptionPlaceholder}" Text="{Binding Description}" Watermark="{x:Static resources:Strings.DebtsDescriptionPlaceholder}" Classes="ledger-input" />
+                <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsOriginalAmountPlaceholder}" Text="{Binding OriginalAmount}" Watermark="{x:Static resources:Strings.DebtsOriginalAmountPlaceholder}" Classes="ledger-input" />
+                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yCurrency}" ItemsSource="{Binding Currencies}" SelectedItem="{Binding Currency}" Classes="ledger-input" />
+                <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsInstallmentsPlaceholder}" Text="{Binding TotalInstallments}" Watermark="{x:Static resources:Strings.DebtsInstallmentsPlaceholder}" Classes="ledger-input" />
+                <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsInstallmentAmountPlaceholder}" Text="{Binding InstallmentAmount}" Watermark="{x:Static resources:Strings.DebtsInstallmentAmountPlaceholder}" Classes="ledger-input" />
+                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yFrequency}" ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input" />
+                <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yStartDate}" SelectedDate="{Binding StartDate, Converter={StaticResource DateOnlyConverter}}" Classes="ledger-input" />
+                <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsCounterpartyPlaceholder}" Text="{Binding CounterpartyName}" Watermark="{x:Static resources:Strings.DebtsCounterpartyPlaceholder}" Classes="ledger-input" />
+                <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsNotePlaceholder}" Text="{Binding Note}" Watermark="{x:Static resources:Strings.DebtsNotePlaceholder}" Classes="ledger-input" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
                 <Button Content="{x:Static resources:Strings.DebtsCreateButton}" Command="{Binding CreateCommand}" IsDefault="True" Classes="ledger-btn-primary" />
-                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
             </StackPanel>
         </ScrollViewer>
         <ScrollViewer Grid.Column="1" Margin="24,0,0,0">
@@ -70,7 +70,7 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
                 <TextBlock Text="{Binding PendingBalance, StringFormat={x:Static resources:Strings.DebtsPendingBalanceFormat}}" Classes="ledger-section" />
-                <TextBlock Text="{Binding ScheduleError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding ScheduleError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
                 <ItemsControl ItemsSource="{Binding Schedule}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="domain:DebtPayment">

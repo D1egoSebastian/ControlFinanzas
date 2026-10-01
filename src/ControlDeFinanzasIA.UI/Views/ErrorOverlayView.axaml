@@ -35,7 +35,7 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid>
+    <Grid behaviors:RestoreFocusOnClose.IsOpen="{Binding IsOpen}">
         <!-- Scrim: Ink at 80 %; opaque to hit testing so nothing behind it is clickable. -->
         <Border Classes="error-scrim"
                 Classes.open="{Binding IsOpen}"

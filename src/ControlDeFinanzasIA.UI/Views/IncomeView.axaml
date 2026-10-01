@@ -22,14 +22,14 @@
                 <StackPanel Spacing="10">
                     <TextBlock Text="{x:Static resources:Strings.IncomeFormTitle}" Foreground="{StaticResource SageBrush}" FontSize="18" FontWeight="Bold" />
                     <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
-                        <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding Description}" behaviors:FocusOnRequest.Token="{Binding DescriptionFocusRequest}" Watermark="{x:Static resources:Strings.IncomeDescriptionPlaceholder}" />
-                        <TextBox Grid.Row="0" Grid.Column="1" Margin="12,0,0,0" Text="{Binding Amount}" Watermark="{x:Static resources:Strings.IncomeAmountPlaceholder}" />
-                        <ComboBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Categories}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedCategoryId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.IncomeCategoryPlaceholder}" />
-                        <ComboBox Grid.Row="1" Grid.Column="1" Margin="12,0,0,0" ItemsSource="{Binding PaymentMethods}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedPaymentMethodId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.IncomePaymentMethodPlaceholder}" />
-                        <ComboBox Grid.Row="2" Grid.Column="0" ItemsSource="{x:Static converters:EnumValues.Currencies}" SelectedItem="{Binding Currency}" PlaceholderText="{x:Static resources:Strings.IncomeCurrencyPlaceholder}" />
-                        <DatePicker Grid.Row="2" Grid.Column="1" Margin="12,0,0,0" SelectedDate="{Binding Date, Converter={StaticResource DateOnlyConverter}}" />
-                        <TextBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Note}" Watermark="{x:Static resources:Strings.IncomeNotePlaceholder}" AcceptsReturn="True" Height="70" />
-                        <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
+                        <TextBox AutomationProperties.Name="{x:Static resources:Strings.IncomeDescriptionPlaceholder}" Grid.Row="0" Grid.Column="0" Text="{Binding Description}" behaviors:FocusOnRequest.Token="{Binding DescriptionFocusRequest}" Watermark="{x:Static resources:Strings.IncomeDescriptionPlaceholder}" />
+                        <TextBox AutomationProperties.Name="{x:Static resources:Strings.IncomeAmountPlaceholder}" Grid.Row="0" Grid.Column="1" Margin="12,0,0,0" Text="{Binding Amount}" Watermark="{x:Static resources:Strings.IncomeAmountPlaceholder}" />
+                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.IncomeCategoryPlaceholder}" Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Categories}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedCategoryId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.IncomeCategoryPlaceholder}" />
+                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.IncomePaymentMethodPlaceholder}" Grid.Row="1" Grid.Column="1" Margin="12,0,0,0" ItemsSource="{Binding PaymentMethods}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedPaymentMethodId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.IncomePaymentMethodPlaceholder}" />
+                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.IncomeCurrencyPlaceholder}" Grid.Row="2" Grid.Column="0" ItemsSource="{x:Static converters:EnumValues.Currencies}" SelectedItem="{Binding Currency}" PlaceholderText="{x:Static resources:Strings.IncomeCurrencyPlaceholder}" />
+                        <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yDate}" Grid.Row="2" Grid.Column="1" Margin="12,0,0,0" SelectedDate="{Binding Date, Converter={StaticResource DateOnlyConverter}}" />
+                        <TextBox AutomationProperties.Name="{x:Static resources:Strings.IncomeNotePlaceholder}" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Note}" Watermark="{x:Static resources:Strings.IncomeNotePlaceholder}" AcceptsReturn="True" Height="70" />
+                        <TextBlock AutomationProperties.LiveSetting="Polite" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
                         <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10">
                             <Button Content="{x:Static resources:Strings.IncomeRegisterButton}" Command="{Binding RegisterIncomeCommand}" IsDefault="{Binding !IsEditMode}" Background="{StaticResource SageBrush}" Foreground="{StaticResource InkBrush}" />
                             <Button Content="{x:Static resources:Strings.IncomeUpdateButton}" Command="{Binding UpdateIncomeCommand}" IsDefault="{Binding IsEditMode}" IsVisible="{Binding IsEditMode}" />
@@ -38,7 +38,7 @@
                     </Grid>
                 </StackPanel>
             </Border>
-            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
             <TextBlock Text="{x:Static resources:Strings.IncomeListTitle}" Foreground="{StaticResource PaperBrush}" FontSize="20" FontWeight="Bold" />
             <ItemsControl ItemsSource="{Binding Incomes}">
                 <ItemsControl.ItemTemplate>

@@ -270,8 +270,58 @@ public sealed class DefaultButtonTests
 
         Assert.True(result.Visible >= 2, "The previewed import panel shows its buttons (including Confirm), so the check is not vacuous.");
         Assert.Equal(0, result.ImportDefaults);
-        Assert.Equal(1, result.TotalDefaults);
+        Assert.Equal(0, result.TotalDefaults);
         Assert.DoesNotContain("IsDefault", File.ReadAllText(Packaging.RepoRoot.Combine("src", "ControlDeFinanzasIA.UI", "Views", "ImportView.axaml")), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task WhileTheImportPanelIsOpen_NoButtonOfTheExpenseFormIsTheDefault_AndEnterDoesNotValidateTheForm()
+    {
+        // S7b finding: the Register button stayed the window default while the import panel replaced the list, so
+        // Enter would have validated (and possibly submitted) a form the user was not looking at.
+        (int DefaultsBefore, int DefaultsWhileOpen, bool FormErrorWhileOpen, int DefaultsAfterClose, bool UpdateDefaultWhileOpen, bool UpdateDefaultAfterClose) result =
+            await HeadlessUi.OnUiThread(async () =>
+            {
+                var rig = new ExpensesViewModelImportTests.Rig();
+                var view = new ExpensesView();
+                Window window = HeadlessUi.Show(view, rig.ViewModel);
+                try
+                {
+                    await WaitUntil(() => rig.ViewModel.HasLoaded);
+                    int before = view.GetVisualDescendants().OfType<Button>().Count(b => b.IsDefault);
+
+                    rig.ViewModel.OpenImportCommand.Execute(null);
+                    HeadlessUi.Flush();
+                    int whileOpen = view.GetVisualDescendants().OfType<Button>().Count(b => b.IsDefault);
+                    Box(view, Strings.ExpensesDescriptionPlaceholder).Focus();
+                    HeadlessUi.Flush();
+                    PressEnter(window);
+                    await Task.Delay(50);
+                    HeadlessUi.Flush();
+                    bool formError = !string.IsNullOrEmpty(rig.ViewModel.FormError);
+
+                    // The (hidden) update button must not be a default in register mode either.
+                    Button update = ButtonFor(view, rig.ViewModel.UpdateExpenseCommand);
+                    bool updateWhileOpen = update.IsDefault;
+
+                    rig.ViewModel.CloseImportCommand.Execute(null);
+                    HeadlessUi.Flush();
+                    int afterClose = view.GetVisualDescendants().OfType<Button>().Count(b => b.IsDefault);
+                    return (before, whileOpen, formError, afterClose, updateWhileOpen, update.IsDefault);
+                }
+                finally
+                {
+                    window.Close();
+                    HeadlessUi.Flush();
+                }
+            });
+
+        Assert.Equal(1, result.DefaultsBefore);
+        Assert.Equal(0, result.DefaultsWhileOpen);
+        Assert.False(result.FormErrorWhileOpen, "Enter must not validate the form behind the import panel.");
+        Assert.Equal(1, result.DefaultsAfterClose);
+        Assert.False(result.UpdateDefaultWhileOpen);
+        Assert.False(result.UpdateDefaultAfterClose);
     }
 
     [Fact]

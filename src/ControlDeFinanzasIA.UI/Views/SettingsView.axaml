@@ -14,7 +14,7 @@
                 <StackPanel Spacing="10">
                     <TextBlock Text="{x:Static resources:Strings.SettingsAppearanceTitle}" Classes="ledger-title" />
 
-                    <ComboBox ItemsSource="{Binding ThemeOptions}"
+                    <ComboBox AutomationProperties.Name="{x:Static resources:Strings.SettingsThemeLabel}" ItemsSource="{Binding ThemeOptions}"
                               DisplayMemberBinding="{Binding Label}"
                               SelectedValue="{Binding Theme}"
                               SelectedValueBinding="{Binding Value}"
@@ -43,7 +43,7 @@
                 <StackPanel Spacing="10">
                     <TextBlock Text="{x:Static resources:Strings.SettingsLanguageTitle}" Classes="ledger-title" />
 
-                    <ComboBox ItemsSource="{Binding LocaleOptions}"
+                    <ComboBox AutomationProperties.Name="{x:Static resources:Strings.SettingsLanguageLabel}" ItemsSource="{Binding LocaleOptions}"
                               DisplayMemberBinding="{Binding Label}"
                               SelectedValue="{Binding Locale}"
                               SelectedValueBinding="{Binding Value}"
@@ -73,30 +73,30 @@
                         risk exists either way.
                     -->
                     <TextBlock Text="{x:Static resources:Strings.SettingsAiApiKeyWarning}"
-                               Foreground="{StaticResource TerracottaBrush}"
+                               Foreground="{StaticResource TerracottaTextBrush}"
                                TextWrapping="Wrap" />
 
-                    <ComboBox ItemsSource="{Binding AiProviders}"
+                    <ComboBox AutomationProperties.Name="{x:Static resources:Strings.SettingsAiProviderLabel}" ItemsSource="{Binding AiProviders}"
                               SelectedItem="{Binding AiProvider}"
                               PlaceholderText="{x:Static resources:Strings.SettingsAiProviderLabel}"
                               Classes="ledger-input"
                               HorizontalAlignment="Stretch" />
 
-                    <TextBox Text="{Binding AiModel}"
+                    <TextBox AutomationProperties.Name="{x:Static resources:Strings.SettingsAiModelWatermark}" Text="{Binding AiModel}"
                              Watermark="{x:Static resources:Strings.SettingsAiModelWatermark}"
                              Classes="ledger-input" />
 
-                    <TextBox Text="{Binding AiApiKey}"
+                    <TextBox AutomationProperties.Name="{x:Static resources:Strings.SettingsAiApiKeyWatermark}" Text="{Binding AiApiKey}"
                              Watermark="{x:Static resources:Strings.SettingsAiApiKeyWatermark}"
                              PasswordChar="●"
                              Classes="ledger-input" />
 
-                    <TextBox Text="{Binding AiBaseUrl}"
+                    <TextBox AutomationProperties.Name="{x:Static resources:Strings.SettingsAiBaseUrlWatermark}" Text="{Binding AiBaseUrl}"
                              Watermark="{x:Static resources:Strings.SettingsAiBaseUrlWatermark}"
                              Classes="ledger-input" />
 
                     <TextBlock Text="{x:Static resources:Strings.SettingsAiTemperatureLabel}" />
-                    <NumericUpDown Value="{Binding AiTemperature}"
+                    <NumericUpDown AutomationProperties.Name="{x:Static resources:Strings.SettingsAiTemperatureLabel}" Value="{Binding AiTemperature}"
                                    Minimum="0"
                                    Maximum="2"
                                    Increment="0.1"
@@ -104,7 +104,7 @@
                                    HorizontalAlignment="Stretch" />
 
                     <TextBlock Text="{x:Static resources:Strings.SettingsAiMaxTokensLabel}" />
-                    <NumericUpDown Value="{Binding AiMaxTokensPerRequest}"
+                    <NumericUpDown AutomationProperties.Name="{x:Static resources:Strings.SettingsAiMaxTokensLabel}" Value="{Binding AiMaxTokensPerRequest}"
                                    Minimum="1"
                                    Maximum="128000"
                                    Classes="ledger-input"
@@ -120,7 +120,7 @@
                             IsEnabled="{Binding CanTestConnection}"
                             Classes="ledger-btn" />
 
-                    <TextBlock Text="{Binding AiTestConnectionMessage}"
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding AiTestConnectionMessage}"
                                Foreground="{StaticResource SageBrush}"
                                TextWrapping="Wrap"
                                IsVisible="{Binding AiTestConnectionMessage, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
@@ -142,7 +142,7 @@
                               Content="{x:Static resources:Strings.SettingsNotificationsAnomaly}" />
 
                     <TextBlock Text="{x:Static resources:Strings.SettingsNotificationsDigestLabel}" />
-                    <ComboBox ItemsSource="{Binding DigestFrequencyOptions}"
+                    <ComboBox AutomationProperties.Name="{x:Static resources:Strings.SettingsNotificationsDigestLabel}" ItemsSource="{Binding DigestFrequencyOptions}"
                               DisplayMemberBinding="{Binding Label}"
                               SelectedValue="{Binding DigestFrequency}"
                               SelectedValueBinding="{Binding Value}"
@@ -188,11 +188,11 @@
                                      Height="3"
                                      Foreground="{StaticResource AmberBrush}"
                                      Background="{StaticResource HairlineBrush}" />
-                        <TextBlock Text="{Binding WorkingMessage}" Classes="ledger-status" />
+                        <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding WorkingMessage}" Classes="ledger-status" />
                     </StackPanel>
 
                     <!-- Outcome of the last operation: empty after a cancel, terracotta on failure. -->
-                    <TextBlock Text="{Binding StatusMessage}"
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}"
                                IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                Classes="ledger-status"
                                Classes.export-error="{Binding IsError}" />
@@ -245,7 +245,7 @@
                                     Classes="ledger-btn-primary" />
                             <TextBlock Text="{x:Static resources:Strings.BackupRestartFallback}"
                                        IsVisible="{Binding RestartFailed}"
-                                       Foreground="{StaticResource TerracottaBrush}"
+                                       Foreground="{StaticResource TerracottaTextBrush}"
                                        TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
@@ -298,8 +298,8 @@
                 </StackPanel>
             </Border>
 
-            <TextBlock Text="{Binding FormError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
-            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

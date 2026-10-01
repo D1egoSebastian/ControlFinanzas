@@ -1699,4 +1699,34 @@ Mostrando conversiones aproximadas.
   <data name="ShortcutKeyEnter" xml:space="preserve">
     <value>Enter</value>
   </data>
+  <data name="A11yDate" xml:space="preserve">
+    <value>Fecha</value>
+  </data>
+  <data name="A11yStartDate" xml:space="preserve">
+    <value>Fecha de inicio</value>
+  </data>
+  <data name="A11yTargetDate" xml:space="preserve">
+    <value>Fecha objetivo</value>
+  </data>
+  <data name="A11yContributionDate" xml:space="preserve">
+    <value>Fecha del aporte</value>
+  </data>
+  <data name="A11yCurrency" xml:space="preserve">
+    <value>Moneda</value>
+  </data>
+  <data name="A11yFrequency" xml:space="preserve">
+    <value>Frecuencia</value>
+  </data>
+  <data name="A11yRuleType" xml:space="preserve">
+    <value>Tipo de regla</value>
+  </data>
+  <data name="A11yDismissSuggestion" xml:space="preserve">
+    <value>Descartar sugerencia</value>
+  </data>
+  <data name="A11yIncreaseValue" xml:space="preserve">
+    <value>Aumentar</value>
+  </data>
+  <data name="A11yDecreaseValue" xml:space="preserve">
+    <value>Disminuir</value>
+  </data>
 </root>

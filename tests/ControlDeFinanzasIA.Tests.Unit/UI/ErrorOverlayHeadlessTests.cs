@@ -161,6 +161,66 @@ public sealed class ErrorOverlayHeadlessTests
         Assert.False(result.Open4);
     }
 
+    [Theory]
+    [InlineData("button")]
+    [InlineData("escape")]
+    public async Task ClosingTheOverlay_RestoresFocusToTheControlThatHadItBeforeItOpened(string how)
+    {
+        // S7b finding: the overlay moved focus to Close on open, then left it on a hidden button after closing.
+        (bool BeforeOpen, bool OnClose, bool Restored, bool OverlayGone) result = await OnUi("en", rig =>
+        {
+            TextBox description = rig.Window.GetVisualDescendants().OfType<TextBox>()
+                .Single(t => t.Watermark == Strings.ExpensesDescriptionPlaceholder);
+            description.Focus();
+            Settle();
+            bool before = ReferenceEquals(rig.Window.FocusManager!.GetFocusedElement(), description);
+
+            rig.Vm.Present(_firstId, _at);
+            Settle();
+            bool onClose = ButtonNamed(rig.Overlay, Strings.ErrorOverlayClose).IsFocused;
+
+            if (how == "escape")
+            {
+                rig.Window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+            }
+            else
+            {
+                ButtonNamed(rig.Overlay, Strings.ErrorOverlayClose).Command!.Execute(null);
+            }
+
+            Settle();
+            return (before, onClose, ReferenceEquals(rig.Window.FocusManager!.GetFocusedElement(), description), !rig.Overlay.IsEffectivelyVisible);
+        });
+
+        Assert.True(result.BeforeOpen);
+        Assert.True(result.OnClose);
+        Assert.True(result.OverlayGone);
+        Assert.True(result.Restored, "Focus must return to the control that had it before the overlay opened.");
+    }
+
+    [Fact]
+    public async Task ClosingTheOverlay_WhenTheOldFocusIsGone_LeavesFocusAloneWithoutThrowing()
+    {
+        (bool Closed, bool Hidden) result = await OnUi("en", rig =>
+        {
+            TextBox description = rig.Window.GetVisualDescendants().OfType<TextBox>()
+                .Single(t => t.Watermark == Strings.ExpensesDescriptionPlaceholder);
+            description.Focus();
+            Settle();
+            rig.Vm.Present(_firstId, _at);
+            Settle();
+            description.IsVisible = false;
+            Settle();
+
+            rig.Vm.Close();
+            Settle();
+            return (!rig.Vm.IsOpen, !rig.Overlay.IsEffectivelyVisible);
+        });
+
+        Assert.True(result.Closed);
+        Assert.True(result.Hidden);
+    }
+
     [Fact]
     public async Task CopyUsesTheClipboard_AndShowsTheCopiedCaption()
     {

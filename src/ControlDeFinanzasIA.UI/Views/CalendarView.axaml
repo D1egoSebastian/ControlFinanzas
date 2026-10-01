@@ -30,7 +30,7 @@
 
             <TextBlock Text="{Binding MonthTotalDisplay}" Classes="ledger-amount" HorizontalAlignment="Left" />
 
-            <TextBlock Text="{Binding LoadError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding LoadError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
 
             <!-- "Tasa no disponible" notice, same pattern as Dashboard (R-7) -->
             <Border Background="#221F232B"

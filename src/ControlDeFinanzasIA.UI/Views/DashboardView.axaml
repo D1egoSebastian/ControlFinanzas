@@ -45,10 +45,10 @@
                         Margin="8,0,0,0" />
             </Grid>
 
-            <TextBlock Text="{Binding LoadError}" Foreground="{StaticResource TerracottaBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding LoadError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
 
             <!-- Export outcome (F-018): empty after a cancel, file name on success, terracotta on error. -->
-            <TextBlock Text="{Binding ExportStatusMessage}"
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding ExportStatusMessage}"
                        IsVisible="{Binding ExportStatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                        Classes="ledger-status"
                        Classes.export-error="{Binding IsExportError}" />
@@ -203,7 +203,7 @@
                     </Grid>
                     <TextBlock Text="{Binding ForecastBudgetDisplay}"
                                Foreground="{Binding ForecastBudgetStatus, Converter={x:Static converters:BudgetStatusBrushConverter.Instance}}" />
-                    <TextBlock Text="{Binding ForecastStateMessage}"
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding ForecastStateMessage}"
                                Foreground="{StaticResource PaperDimBrush}"
                                TextWrapping="Wrap" />
                 </StackPanel>
@@ -254,7 +254,7 @@
                     <TextBlock Text="{x:Static resources:Strings.DashboardEmptyAnomaliesMessage}"
                                IsVisible="{Binding !Anomalies.Count}"
                                Foreground="{StaticResource PaperDimBrush}" />
-                    <TextBlock Text="{Binding AnomalyNarrationStatusText}"
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding AnomalyNarrationStatusText}"
                                Foreground="{StaticResource AmberBrush}"
                                TextWrapping="Wrap" />
                 </StackPanel>
@@ -272,7 +272,7 @@
                     <TextBlock Text="{Binding InsightsText}"
                                IsVisible="{Binding !IsInsightsLoading}"
                                TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding InsightsStatusText}"
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding InsightsStatusText}"
                                IsVisible="{Binding !IsInsightsLoading}"
                                Foreground="{StaticResource AmberBrush}"
                                TextWrapping="Wrap" />

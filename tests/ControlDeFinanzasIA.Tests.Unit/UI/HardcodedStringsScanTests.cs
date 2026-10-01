@@ -9,15 +9,8 @@ namespace ControlDeFinanzasIA.Tests.Unit.UI;
 /// </summary>
 public sealed class HardcodedStringsScanTests
 {
-    /// <summary>Views converted so far, relative to <c>src/ControlDeFinanzasIA.UI</c>.</summary>
-    private static readonly string[] _scannedViews =
-    [
-        Path.Combine("Views", "ExpensesView.axaml"),
-        Path.Combine("Views", "IncomeView.axaml"),
-        Path.Combine("Views", "DebtsView.axaml"),
-        Path.Combine("Views", "RecurringRulesView.axaml"),
-        Path.Combine("Controls", "EmptyState.axaml"),
-    ];
+    /// <summary>Every view, control and the main window, relative to <c>src/ControlDeFinanzasIA.UI</c> (F-021 S8: all of them).</summary>
+    private static readonly string[] _scannedViews = AllAxaml();
 
     /// <summary>Attribute local names that render text or a name to the user (union of spec and design lists).</summary>
     private static readonly string[] _textAttributes =
@@ -30,6 +23,19 @@ public sealed class HardcodedStringsScanTests
         "ToolTip.Tip",
         "AutomationProperties.Name",
     ];
+
+    /// <summary>Gets every <c>.axaml</c> under Views and Controls (App.axaml and styles carry no user text).</summary>
+    internal static string[] AllAxaml()
+    {
+        string root = RepoRoot.Combine("src", "ControlDeFinanzasIA.UI");
+        return
+        [
+            .. new[] { "Views", "Controls" }
+                .SelectMany(folder => Directory.EnumerateFiles(Path.Combine(root, folder), "*.axaml", SearchOption.AllDirectories))
+                .Select(file => Path.GetRelativePath(root, file))
+                .Order(StringComparer.Ordinal),
+        ];
+    }
 
     /// <summary>Finds every literal user-visible attribute value (contains a letter, is not a binding or resource).</summary>
     internal static IReadOnlyList<string> FindLiterals(IEnumerable<string> relativeFiles)
