@@ -381,6 +381,27 @@ public sealed class ExpensesViewModelTests
     }
 
     [Fact]
+    public async Task ApplyDateRangeFilter_SetsTheWholeRange_AndRefreshesTheListForIt()
+    {
+        FakeExpenseRepository expenseRepo = new();
+        expenseRepo.SetFilterResult(CreateExpenses(3), 3, 1, 20);
+        ExpensesViewModel viewModel = CreateViewModel(expenseRepo: expenseRepo);
+        DateOnly from = new(2026, 3, 1);
+        DateOnly to = new(2026, 3, 31);
+
+        viewModel.ApplyDateRangeFilter(from, to);
+        await viewModel.RefreshCommand.ExecuteAsync(null);
+
+        Assert.Equal(from, viewModel.FilterDateFrom);
+        Assert.Equal(to, viewModel.FilterDateTo);
+        Assert.Equal(from, viewModel.CurrentFilter.DateFrom);
+        Assert.Equal(to, viewModel.CurrentFilter.DateTo);
+        Assert.Equal(1, viewModel.CurrentFilter.Page);
+        Assert.Equal(from, expenseRepo.LastExpenseFilter!.DateFrom);
+        Assert.Equal(to, expenseRepo.LastExpenseFilter.DateTo);
+    }
+
+    [Fact]
     public void ApplyDayFilter_SetsCurrentFilterToSingleDay_Synchronously()
     {
         // Arrange

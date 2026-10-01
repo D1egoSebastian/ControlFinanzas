@@ -3,6 +3,7 @@ using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
 using ControlDeFinanzasIA.Application.UseCases.Chat.AskFinanceChat;
 using ControlDeFinanzasIA.Application.UseCases.Chat.BuildChatContext;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthExpenses;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
@@ -212,6 +213,8 @@ public sealed class ShellViewModelTests
             clock,
             NullLogger<DashboardViewModel>.Instance,
             ExportFixtures.Create(expenseRepo, incomeRepo, converter).UseCase,
-            new FakeFileSaveDialog());
+            new FakeFileSaveDialog(),
+            new GetMonthExpensesQuery(expenseRepo, categoryRepo, converter),
+            new FakeNavigationService());
     }
 }

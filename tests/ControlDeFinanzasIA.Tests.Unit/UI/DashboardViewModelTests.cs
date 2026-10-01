@@ -12,6 +12,7 @@ using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetDashboardInsights;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetInsights;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthEndForecast;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthExpenses;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
@@ -487,7 +488,8 @@ public sealed class DashboardViewModelTests
         DashboardViewModel viewModel = new(
             summaryQuery, breakdownQuery, evolutionQuery, upcomingPaymentsQuery, budgetVsActualQuery,
             insightsQuery, clock, NullLogger<DashboardViewModel>.Instance,
-            ExportFixtures.Create().UseCase, new FakeFileSaveDialog());
+            ExportFixtures.Create().UseCase, new FakeFileSaveDialog(),
+            new GetMonthExpensesQuery(expenseRepo, categoryRepo, converter), new FakeNavigationService());
 
         // Act: a stale (March) reload starts first but is controlled to finish LAST.
         TaskCompletionSource<IReadOnlyList<ExpenseAmountRow>> staleTcs = expenseRepo.EnqueueControlledCall();
@@ -780,7 +782,8 @@ public sealed class DashboardViewModelTests
         FakeCategoryRepository? categoryRepo = null,
         FakeAnomalyAlertRepository? alertRepo = null,
         FakeLlmClientFactory? llmFactory = null,
-        ExportFixtures? export = null)
+        ExportFixtures? export = null,
+        FakeNavigationService? navigation = null)
     {
         converter ??= new FakeCurrencyConverter();
         export ??= ExportFixtures.Create(expenseRepo, incomeRepo, converter);
@@ -818,7 +821,9 @@ public sealed class DashboardViewModelTests
             clock,
             NullLogger<DashboardViewModel>.Instance,
             export.UseCase,
-            export.Dialog);
+            export.Dialog,
+            new GetMonthExpensesQuery(expenseRepo, categoryRepo, converter),
+            navigation ?? new FakeNavigationService());
     }
 
     private static Expense CreateExpense(DateOnly date, decimal amount, Currency currency = Currency.DOP)

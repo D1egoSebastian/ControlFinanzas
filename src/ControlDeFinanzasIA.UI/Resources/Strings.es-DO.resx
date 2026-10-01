@@ -1837,4 +1837,28 @@ Mostrando conversiones aproximadas.
   <data name="RecurringScheduleRequired" xml:space="preserve">
     <value>Elige el día del mes en que se hace el cobro.</value>
   </data>
+  <data name="DashboardMonthExpensesTitle" xml:space="preserve">
+    <value>Gastos del mes</value>
+  </data>
+  <data name="DashboardMonthExpensesCountFormat" xml:space="preserve">
+    <value>{0} gastos en {1}</value>
+  </data>
+  <data name="DashboardMonthExpensesCountOneFormat" xml:space="preserve">
+    <value>1 gasto en {0}</value>
+  </data>
+  <data name="DashboardMonthExpensesShowingFormat" xml:space="preserve">
+    <value>Mostrando los últimos {0}</value>
+  </data>
+  <data name="DashboardMonthExpensesViewAllButton" xml:space="preserve">
+    <value>Ver todos</value>
+  </data>
+  <data name="DashboardMonthExpensesViewAllAutomationName" xml:space="preserve">
+    <value>Ver todos los gastos del mes mostrado</value>
+  </data>
+  <data name="DashboardMonthExpensesEmptyTitle" xml:space="preserve">
+    <value>Sin gastos en este mes</value>
+  </data>
+  <data name="DashboardMonthExpensesEmptyHint" xml:space="preserve">
+    <value>Los gastos que registres en este mes aparecerán aquí.</value>
+  </data>
 </root>

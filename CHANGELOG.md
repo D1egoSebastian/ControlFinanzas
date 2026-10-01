@@ -44,6 +44,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Dashboard: an "Expenses this month" card right under the summary cards (before the charts) lists the latest expenses
+  of the displayed month, newest first (date, description, category, exact amount with its currency, and the DOP
+  equivalent for foreign-currency rows; at most 8 rows), with an "N expenses in <month>" line, a "Showing the latest 8"
+  note when there are more, a "View all" button that opens Expenses filtered to that month, and an empty state when the
+  month has none. It follows the previous / next month buttons. No schema change, no migration, no new package.
 - Text search on the Expenses and Income lists (partial, case-insensitive for ASCII, wildcard characters typed by the
   user are searched literally). It is also part of the saved filter and of the filtered PDF / Excel export, whose
   summary now echoes it.

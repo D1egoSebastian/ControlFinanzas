@@ -3006,4 +3006,44 @@ public class Strings
     /// Gets the localized text for RecurringScheduleRequired (pre-1.0 slice C).
     /// </summary>
     public static string RecurringScheduleRequired => ResourceManager.GetString("RecurringScheduleRequired", Culture)!;
+
+    /// <summary>
+    /// Gets the localized title of the Dashboard "expenses of the month" card.
+    /// </summary>
+    public static string DashboardMonthExpensesTitle => ResourceManager.GetString("DashboardMonthExpensesTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the count line format ({0} expenses, {1} month label) of the Dashboard month-expenses card.
+    /// </summary>
+    public static string DashboardMonthExpensesCountFormat => ResourceManager.GetString("DashboardMonthExpensesCountFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the singular count line format ({0} month label) of the Dashboard month-expenses card.
+    /// </summary>
+    public static string DashboardMonthExpensesCountOneFormat => ResourceManager.GetString("DashboardMonthExpensesCountOneFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the "showing the latest N" note format of the Dashboard month-expenses card.
+    /// </summary>
+    public static string DashboardMonthExpensesShowingFormat => ResourceManager.GetString("DashboardMonthExpensesShowingFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the caption of the Dashboard month-expenses "view all" button.
+    /// </summary>
+    public static string DashboardMonthExpensesViewAllButton => ResourceManager.GetString("DashboardMonthExpensesViewAllButton", Culture)!;
+
+    /// <summary>
+    /// Gets the accessible name of the Dashboard month-expenses "view all" button.
+    /// </summary>
+    public static string DashboardMonthExpensesViewAllAutomationName => ResourceManager.GetString("DashboardMonthExpensesViewAllAutomationName", Culture)!;
+
+    /// <summary>
+    /// Gets the empty-state title of the Dashboard month-expenses card.
+    /// </summary>
+    public static string DashboardMonthExpensesEmptyTitle => ResourceManager.GetString("DashboardMonthExpensesEmptyTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the empty-state hint of the Dashboard month-expenses card.
+    /// </summary>
+    public static string DashboardMonthExpensesEmptyHint => ResourceManager.GetString("DashboardMonthExpensesEmptyHint", Culture)!;
 }

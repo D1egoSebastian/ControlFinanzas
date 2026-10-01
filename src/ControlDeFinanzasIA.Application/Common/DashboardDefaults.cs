@@ -33,4 +33,9 @@ public static class DashboardDefaults
     /// Máximo de elementos mostrados en la tarjeta "Próximos pagos" (R-6).
     /// </summary>
     public const int UpcomingMaxItems = 10;
+
+    /// <summary>
+    /// Maximum number of rows in the "expenses of the month" list.
+    /// </summary>
+    public const int MonthExpensesLimit = 8;
 }

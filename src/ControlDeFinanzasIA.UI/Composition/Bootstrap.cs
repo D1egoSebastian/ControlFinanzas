@@ -20,6 +20,7 @@ using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetDashboardInsights;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetInsights;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthEndForecast;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthExpenses;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
@@ -208,6 +209,7 @@ public static class Bootstrap
         services.AddTransient<GetCategoryBreakdownQuery>();
         services.AddTransient<GetMonthlyEvolutionQuery>();
         services.AddTransient<GetUpcomingPaymentsQuery>();
+        services.AddTransient<GetMonthExpensesQuery>();
 
         // Calendario de gastos (F-009 Phase 9): grilla mensual + drill-down.
         services.AddTransient<GetCalendarMonthQuery>();

@@ -1118,10 +1118,21 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
     /// must be invoked explicitly.
     /// </remarks>
     /// <param name="day">The exact day to filter by; used for both <c>DateFrom</c> and <c>DateTo</c>.</param>
-    public void ApplyDayFilter(DateOnly day)
+    public void ApplyDayFilter(DateOnly day) => ApplyDateRangeFilter(day, day);
+
+    /// <summary>
+    /// Sets the expense filter to an inclusive date range and applies it, refreshing the list from page 1.
+    /// </summary>
+    /// <remarks>
+    /// Same drill-down contract as <see cref="ApplyDayFilter"/>; used by the Dashboard's "view all"
+    /// action to open this list on the displayed month.
+    /// </remarks>
+    /// <param name="from">The first day of the range.</param>
+    /// <param name="to">The last day of the range.</param>
+    public void ApplyDateRangeFilter(DateOnly from, DateOnly to)
     {
-        FilterDateFrom = day;
-        FilterDateTo = day;
+        FilterDateFrom = from;
+        FilterDateTo = to;
         _ = ApplyFilterCommand.ExecuteAsync(null);
     }
 

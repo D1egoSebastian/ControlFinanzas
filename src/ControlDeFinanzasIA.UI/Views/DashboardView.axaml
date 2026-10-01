@@ -4,6 +4,7 @@
              xmlns:charts="using:ControlDeFinanzasIA.UI.Views.Charts"
              xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
              xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
+             xmlns:controls="using:ControlDeFinanzasIA.UI.Controls"
              xmlns:dashboard="using:ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments"
              x:Class="ControlDeFinanzasIA.UI.Views.DashboardView"
              x:DataType="vm:DashboardViewModel"
@@ -87,6 +88,65 @@
                     </StackPanel>
                 </Border>
             </Grid>
+
+            <!-- Expenses of the month (pre-1.0 slice D): the latest rows of SelectedMonth, right under the summary. -->
+            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20">
+                <StackPanel Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                            <TextBlock Text="{x:Static resources:Strings.DashboardMonthExpensesTitle}" Classes="ledger-section" />
+                            <TextBlock Text="{Binding MonthExpensesCountText}"
+                                       IsVisible="{Binding MonthExpensesCountText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                       Foreground="{StaticResource PaperDimBrush}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Content="{x:Static resources:Strings.DashboardMonthExpensesViewAllButton}"
+                                AutomationProperties.Name="{x:Static resources:Strings.DashboardMonthExpensesViewAllAutomationName}"
+                                Command="{Binding ViewAllExpensesCommand}"
+                                IsVisible="{Binding HasMonthExpenses}"
+                                Classes="ledger-btn"
+                                Margin="12,0,0,0"
+                                VerticalAlignment="Center" />
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding MonthExpenses}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:MonthExpenseRow">
+                                <Border Classes="ledger-row" Padding="12">
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding DateDisplay}"
+                                                   Foreground="{StaticResource PaperDimBrush}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,12,0" />
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding CategoryName}"
+                                                       IsVisible="{Binding CategoryName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                       Foreground="{StaticResource PaperDimBrush}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding AmountDisplay}"
+                                                       Classes="ledger-amount expense"
+                                                       HorizontalAlignment="Right" />
+                                            <TextBlock Text="{Binding DopDisplay}"
+                                                       IsVisible="{Binding DopDisplay, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                       Foreground="{StaticResource PaperDimBrush}"
+                                                       HorizontalAlignment="Right" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{Binding MonthExpensesShowingText}"
+                               IsVisible="{Binding MonthExpensesShowingText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                               Foreground="{StaticResource PaperDimBrush}" />
+                    <controls:EmptyState Title="{x:Static resources:Strings.DashboardMonthExpensesEmptyTitle}"
+                                         Hint="{x:Static resources:Strings.DashboardMonthExpensesEmptyHint}"
+                                         IsVisible="{Binding IsMonthExpensesEmpty}" />
+                </StackPanel>
+            </Border>
 
             <!-- Charts (R-4, R-5) -->
             <Grid ColumnDefinitions="*,*">

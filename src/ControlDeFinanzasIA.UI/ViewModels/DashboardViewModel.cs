@@ -11,6 +11,7 @@ using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetCategoryBreakdown;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetDashboardInsights;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetInsights;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthEndForecast;
+using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthExpenses;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthlyEvolution;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetMonthSummary;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments;
@@ -19,7 +20,9 @@ using ControlDeFinanzasIA.Application.UseCases.Exports.ExportMonthSummaryReport;
 using ControlDeFinanzasIA.Domain.Alerts;
 using ControlDeFinanzasIA.Domain.Budgets;
 using ControlDeFinanzasIA.Domain.Forecasting;
+using ControlDeFinanzasIA.Domain.ValueObjects;
 using ControlDeFinanzasIA.UI.Formatting;
+using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.Resources;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
@@ -45,6 +48,8 @@ public sealed partial class DashboardViewModel : ViewModelBase
     private readonly ILogger<DashboardViewModel> _logger;
     private readonly ExportMonthSummaryReportUseCase _exportMonthSummary;
     private readonly IFileSaveDialog _fileSaveDialog;
+    private readonly GetMonthExpensesQuery _getMonthExpensesQuery;
+    private readonly INavigationService _navigation;
 
     private int _loadGeneration;
     private CancellationTokenSource? _narrationCts;
@@ -68,7 +73,9 @@ public sealed partial class DashboardViewModel : ViewModelBase
         IClock clock,
         ILogger<DashboardViewModel> logger,
         ExportMonthSummaryReportUseCase exportMonthSummary,
-        IFileSaveDialog fileSaveDialog)
+        IFileSaveDialog fileSaveDialog,
+        GetMonthExpensesQuery getMonthExpensesQuery,
+        INavigationService navigation)
     {
         ArgumentNullException.ThrowIfNull(getMonthSummaryQuery);
         ArgumentNullException.ThrowIfNull(getCategoryBreakdownQuery);
@@ -80,7 +87,11 @@ public sealed partial class DashboardViewModel : ViewModelBase
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(exportMonthSummary);
         ArgumentNullException.ThrowIfNull(fileSaveDialog);
+        ArgumentNullException.ThrowIfNull(getMonthExpensesQuery);
+        ArgumentNullException.ThrowIfNull(navigation);
 
+        _getMonthExpensesQuery = getMonthExpensesQuery;
+        _navigation = navigation;
         _exportMonthSummary = exportMonthSummary;
         _fileSaveDialog = fileSaveDialog;
         _getMonthSummaryQuery = getMonthSummaryQuery;
@@ -192,6 +203,96 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// </summary>
     public ObservableCollection<BudgetProgressItem> BudgetProgress { get; } = [];
 
+    /// <summary>
+    /// Gets the latest expenses of <see cref="SelectedMonth"/>, most recent first, capped at
+    /// <see cref="DashboardDefaults.MonthExpensesLimit"/>. Rebuilt on every <see cref="LoadAsync"/>, so
+    /// it follows the month navigation.
+    /// </summary>
+    public ObservableCollection<MonthExpenseRow> MonthExpenses { get; } = [];
+
+    /// <summary>Gets or sets the "N expenses in {month}" line, or empty when the list is not loaded.</summary>
+    [ObservableProperty]
+    private string _monthExpensesCountText = string.Empty;
+
+    /// <summary>Gets or sets the "showing the latest N" note, or empty when every expense of the month is listed.</summary>
+    [ObservableProperty]
+    private string _monthExpensesShowingText = string.Empty;
+
+    /// <summary>Gets or sets a value indicating whether the list loaded and has at least one expense.</summary>
+    [ObservableProperty]
+    private bool _hasMonthExpenses;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the list loaded successfully and the month has no expenses.
+    /// It is <see langword="false"/> before the first load and after a failed load, so a failure never
+    /// reads as "no expenses".
+    /// </summary>
+    [ObservableProperty]
+    private bool _isMonthExpensesEmpty;
+
+    /// <summary>Opens the Expenses screen filtered to the displayed month.</summary>
+    [RelayCommand]
+    private void ViewAllExpenses()
+    {
+        DateRange range = MonthPeriod.Range(SelectedMonth);
+        _navigation.NavigateTo<ExpensesViewModel>(
+            RouteNames.Expenses,
+            vm => vm.ApplyDateRangeFilter(range.Start, range.End));
+    }
+
+    private void ApplyMonthExpenses(Result result)
+    {
+        ClearMonthExpenses();
+
+        if (!result.IsSuccess)
+        {
+            LoadError = Strings.DashboardLoadErrorMessage;
+            _logger.LogWarning(
+                "Unable to load the month's expenses for {Month}: {ErrorCode} {ErrorMessage}",
+                SelectedMonth,
+                result.Error?.Code,
+                result.Error?.Message);
+            return;
+        }
+
+        var month = (MonthExpensesResult)result.Value!;
+        foreach (MonthExpenseItem item in month.Items)
+        {
+            MonthExpenses.Add(ToMonthExpenseRow(item));
+        }
+
+        HasMissingRates |= month.HasMissingRates;
+        HasMonthExpenses = month.Items.Count > 0;
+        IsMonthExpensesEmpty = month.TotalCount == 0;
+        MonthExpensesCountText = month.TotalCount switch
+        {
+            0 => string.Empty,
+            1 => string.Format(CultureInfo.CurrentCulture, Strings.DashboardMonthExpensesCountOneFormat, SelectedMonthLabel),
+            _ => string.Format(CultureInfo.CurrentCulture, Strings.DashboardMonthExpensesCountFormat, month.TotalCount, SelectedMonthLabel),
+        };
+        MonthExpensesShowingText = month.TotalCount > month.Items.Count
+            ? string.Format(CultureInfo.CurrentCulture, Strings.DashboardMonthExpensesShowingFormat, month.Items.Count)
+            : string.Empty;
+    }
+
+    private void ClearMonthExpenses()
+    {
+        MonthExpenses.Clear();
+        HasMonthExpenses = false;
+        IsMonthExpensesEmpty = false;
+        MonthExpensesCountText = string.Empty;
+        MonthExpensesShowingText = string.Empty;
+    }
+
+    private static MonthExpenseRow ToMonthExpenseRow(MonthExpenseItem item) =>
+        new(
+            item.Date.ToString("d MMM", CultureInfo.CurrentCulture),
+            item.Description,
+            item.CategoryName,
+            $"{item.Amount.Amount:N2} {item.Amount.Currency}",
+            item.Amount.Currency != Domain.Enums.Currency.DOP && item.AmountDop is decimal dop
+                ? FormatDop(dop)
+                : string.Empty);
     /// <summary>Gets or sets a value indicating whether a month-end forecast was computed for <see cref="SelectedMonth"/>.</summary>
     [ObservableProperty]
     private bool _hasForecast;
@@ -403,18 +504,21 @@ public sealed partial class DashboardViewModel : ViewModelBase
             Task<Result> breakdownTask = _getCategoryBreakdownQuery.ExecuteAsync(SelectedMonth);
             Task<Result> evolutionTask = _getMonthlyEvolutionQuery.ExecuteAsync(SelectedMonth);
             Task<Result> budgetVsActualTask = _getBudgetVsActualQuery.ExecuteAsync(SelectedMonth);
+            Task<Result> monthExpensesTask = _getMonthExpensesQuery.ExecuteAsync(SelectedMonth);
 
-            await Task.WhenAll(summaryTask, breakdownTask, evolutionTask, budgetVsActualTask);
+            await Task.WhenAll(summaryTask, breakdownTask, evolutionTask, budgetVsActualTask, monthExpensesTask);
 
             ApplySummary(summaryTask.Result);
             ApplyCategoryBreakdown(breakdownTask.Result);
             ApplyMonthlyEvolution(evolutionTask.Result);
             ApplyBudgetVsActual(budgetVsActualTask.Result);
+            ApplyMonthExpenses(monthExpensesTask.Result);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unable to load the dashboard for {Month}.", SelectedMonth);
             LoadError = Strings.DashboardLoadErrorMessage;
+            ClearMonthExpenses();
         }
 
         DashboardInsightsSnapshot? snapshot = await LoadDeterministicInsightsAsync(generation);

@@ -1837,4 +1837,28 @@ Showing approximate conversions only.
   <data name="RecurringScheduleRequired" xml:space="preserve">
     <value>Choose the day of the month the charge is made.</value>
   </data>
+  <data name="DashboardMonthExpensesTitle" xml:space="preserve">
+    <value>Expenses this month</value>
+  </data>
+  <data name="DashboardMonthExpensesCountFormat" xml:space="preserve">
+    <value>{0} expenses in {1}</value>
+  </data>
+  <data name="DashboardMonthExpensesCountOneFormat" xml:space="preserve">
+    <value>1 expense in {0}</value>
+  </data>
+  <data name="DashboardMonthExpensesShowingFormat" xml:space="preserve">
+    <value>Showing the latest {0}</value>
+  </data>
+  <data name="DashboardMonthExpensesViewAllButton" xml:space="preserve">
+    <value>View all</value>
+  </data>
+  <data name="DashboardMonthExpensesViewAllAutomationName" xml:space="preserve">
+    <value>View all expenses of the displayed month</value>
+  </data>
+  <data name="DashboardMonthExpensesEmptyTitle" xml:space="preserve">
+    <value>No expenses in this month</value>
+  </data>
+  <data name="DashboardMonthExpensesEmptyHint" xml:space="preserve">
+    <value>Expenses you register for this month will appear here.</value>
+  </data>
 </root>

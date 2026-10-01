@@ -283,6 +283,18 @@ the project state changes, update this file.
   frequency changed; the row "Skip" skips its own rule. The repository update
   now also copies the owned `Amount`. No migration. 3883/3883 tests green
   (3028 unit + 855 integration), build 0/0, format exit 0.
+- **Dashboard month expenses (pre-1.0 slice D):** a "Gastos del mes" card
+  sits right under the Dashboard summary cards and lists the displayed
+  month's latest expenses (cap `DashboardDefaults.MonthExpensesLimit` = 8,
+  newest first) through the new `GetMonthExpensesQuery` (reuses
+  `IExpenseRepository.GetByFilterAsync` with the month range, plus category
+  names and the per-row DOP equivalent). A failed load is a `Result.Failure`
+  shown as the usual localized load error, never as the empty state.
+  `DashboardViewModel` now also takes `INavigationService`;
+  `ViewAllExpensesCommand` opens Expenses through
+  `ExpensesViewModel.ApplyDateRangeFilter` (`ApplyDayFilter` delegates to
+  it). No migration, no new package. 3912/3912 tests green (3056 unit + 856
+  integration).
 - **Roadmap / architecture / vision:** `docs/roadmap.md`,
   `docs/architecture.md`, `docs/vision.md`.
 - **Mission / stack constitution:** `spec/constitution/mission.md`,
