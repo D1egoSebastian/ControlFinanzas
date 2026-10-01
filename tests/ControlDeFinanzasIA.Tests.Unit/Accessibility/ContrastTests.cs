@@ -154,6 +154,7 @@ public sealed class ContrastTests
                 .Where(v => !v.Value.Contains("BudgetStatusBrushConverter", StringComparison.Ordinal))
                 .Where(v => !v.Value.Contains("ChatMessageStateBrushConverter", StringComparison.Ordinal))
                 .Where(v => !v.Value.Contains("AnomalySeverityBrushConverter", StringComparison.Ordinal))
+                .Where(v => !v.Value.Contains("StatusToneConverter", StringComparison.Ordinal))
                 .Select(v => $"{v.Where}: {v.Value}"),
         ];
 
@@ -168,6 +169,33 @@ public sealed class ContrastTests
         string[] keys = [.. System.Text.RegularExpressions.Regex.Matches(source, "=> \"(?<key>\\w+Brush)\"").Select(m => m.Groups["key"].Value)];
 
         Assert.Equal(new[] { "WarningBrush", "ExpenseBrush", "IncomeBrush" }, keys);
+    }
+
+    [Fact]
+    public void TheStatusChipConverter_OnlyReturnsAssertedTextOnWashPairs()
+    {
+        // DebtsView binds a chip's text and fill through StatusToneConverter, so every (text, fill) pair it can return must be
+        // one the token pairs above already measure at 4.5:1.
+        Dictionary<string, Rgb> palette = Palette();
+        (string Background, string Foreground)[] returned =
+        [
+            .. new object?[]
+            {
+                ControlDeFinanzasIA.Domain.Debts.DebtPaymentStatus.Pending,
+                ControlDeFinanzasIA.Domain.Debts.DebtPaymentStatus.Paid,
+                ControlDeFinanzasIA.Domain.Debts.DebtPaymentStatus.Skipped,
+                ControlDeFinanzasIA.Domain.Debts.DebtStatus.Active,
+                ControlDeFinanzasIA.Domain.Debts.DebtStatus.Closed,
+                null,
+            }.Select(ControlDeFinanzasIA.UI.Converters.StatusToneConverter.ToneKeys),
+        ];
+
+        Assert.All(returned, pair =>
+        {
+            Assert.Contains(pair.Foreground, _textBrushes);
+            double ratio = Ratio(palette[pair.Foreground.Replace("Brush", string.Empty, StringComparison.Ordinal)], palette[pair.Background.Replace("Brush", string.Empty, StringComparison.Ordinal)]);
+            Assert.True(ratio >= _textMinimum, $"{pair.Foreground} on {pair.Background}: {ratio:0.00}:1.");
+        });
     }
 
     [Fact]

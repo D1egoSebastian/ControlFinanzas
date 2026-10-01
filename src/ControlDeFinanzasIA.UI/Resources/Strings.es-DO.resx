@@ -1864,4 +1864,19 @@ Mostrando conversiones aproximadas.
   <data name="DashboardMonthExpensesEmptyHint" xml:space="preserve">
     <value>Los gastos que registres en este mes aparecerán aquí.</value>
   </data>
+  <data name="BudgetsSubtitle" xml:space="preserve">
+    <value>Define un límite mensual para cada categoría.</value>
+  </data>
+  <data name="GoalsSubtitle" xml:space="preserve">
+    <value>Ahorra para lo que importa y sigue tu progreso.</value>
+  </data>
+  <data name="DebtsSubtitle" xml:space="preserve">
+    <value>Lleva el control de tus deudas y paga sus cuotas.</value>
+  </data>
+  <data name="CalendarSubtitle" xml:space="preserve">
+    <value>Mira cuánto gastaste cada día del mes.</value>
+  </data>
+  <data name="RecurringFormTitle" xml:space="preserve">
+    <value>Cobro recurrente</value>
+  </data>
 </root>

@@ -210,6 +210,20 @@
     <SolidColorBrush x:Key="CheckBoxForegroundChecked" Color="{StaticResource TextColor}" />
     <SolidColorBrush x:Key="CheckBoxForegroundCheckedPointerOver" Color="{StaticResource TextColor}" />
 
+    <!-- List items (the debt picker): a soft wash on hover, the cobalt wash while selected, text stays near-ink. -->
+    <SolidColorBrush x:Key="ListBoxItemBackground" Color="Transparent" />
+    <SolidColorBrush x:Key="ListBoxItemBackgroundPointerOver" Color="{StaticResource SurfaceMutedColor}" />
+    <SolidColorBrush x:Key="ListBoxItemBackgroundPressed" Color="{StaticResource DividerColor}" />
+    <SolidColorBrush x:Key="ListBoxItemBackgroundSelected" Color="{StaticResource AccentSoftColor}" />
+    <SolidColorBrush x:Key="ListBoxItemBackgroundSelectedPointerOver" Color="{StaticResource AccentSoftColor}" />
+    <SolidColorBrush x:Key="ListBoxItemBackgroundSelectedPressed" Color="{StaticResource AccentSoftColor}" />
+    <SolidColorBrush x:Key="ListBoxItemForeground" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="ListBoxItemForegroundPointerOver" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="ListBoxItemForegroundPressed" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="ListBoxItemForegroundSelected" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="ListBoxItemForegroundSelectedPointerOver" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="ListBoxItemForegroundSelectedPressed" Color="{StaticResource TextColor}" />
+
     <SolidColorBrush x:Key="ProgressBarBackground" Color="{StaticResource SurfaceMutedColor}" />
     <SolidColorBrush x:Key="ProgressBarForeground" Color="{StaticResource AccentColor}" />
     <SolidColorBrush x:Key="ScrollBarThumbFill" Color="#59858B99" />

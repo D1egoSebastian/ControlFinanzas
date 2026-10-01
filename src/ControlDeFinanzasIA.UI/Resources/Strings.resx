@@ -1864,4 +1864,19 @@ Showing approximate conversions only.
   <data name="DashboardMonthExpensesEmptyHint" xml:space="preserve">
     <value>Expenses you register for this month will appear here.</value>
   </data>
+  <data name="BudgetsSubtitle" xml:space="preserve">
+    <value>Set a monthly limit for each category.</value>
+  </data>
+  <data name="GoalsSubtitle" xml:space="preserve">
+    <value>Save toward what matters and follow your progress.</value>
+  </data>
+  <data name="DebtsSubtitle" xml:space="preserve">
+    <value>Keep track of your debts and pay their installments.</value>
+  </data>
+  <data name="CalendarSubtitle" xml:space="preserve">
+    <value>See how much you spent on each day of the month.</value>
+  </data>
+  <data name="RecurringFormTitle" xml:space="preserve">
+    <value>Recurring charge</value>
+  </data>
 </root>

@@ -475,6 +475,62 @@
         <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
     </Style>
 
+    <!-- A selectable list inside a card (the debt picker): rounded rows, no outer frame, 2 px focus ring. -->
+    <Style Selector="ListBox.pick-list">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="ListBox.pick-list ListBoxItem">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <!-- Goal progress: cobalt while saving, income green once the target is met. Same slim rounded track as the budgets. -->
+    <Style Selector="ProgressBar.goal-progress">
+        <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+        <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
+        <Setter Property="MinHeight" Value="10" />
+        <Setter Property="Height" Value="10" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Style Selector="^ /template/ Border#PART_Indicator">
+            <Setter Property="CornerRadius" Value="5" />
+        </Style>
+    </Style>
+    <Style Selector="ProgressBar.goal-progress.met">
+        <Setter Property="Foreground" Value="{StaticResource IncomeBrush}" />
+    </Style>
+
+    <!-- The text of a status chip (Border.chip carries the fill; the colour is set by the view from the status). -->
+    <Style Selector="TextBlock.chip-text">
+        <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Border.chip.status">
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- The small spent total inside a calendar day cell. -->
+    <Style Selector="TextBlock.calendar-amount">
+        <Setter Property="FontFamily" Value="{StaticResource FontMono}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontFeatures" Value="+tnum" />
+        <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="TextBlock.calendar-weekday">
+        <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+
     <!-- ===== Calendar day cell (a Button per grid cell), dimmed for adjacent-month filler ===== -->
     <Style Selector="Button.calendar-day">
         <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
@@ -482,7 +538,7 @@
         <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}" />
-        <Setter Property="MinHeight" Value="56" />
+        <Setter Property="MinHeight" Value="64" />
         <Setter Property="Cursor" Value="Hand" />
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />

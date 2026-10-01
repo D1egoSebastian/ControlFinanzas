@@ -12,98 +12,162 @@
     <UserControl.Resources>
         <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
     </UserControl.Resources>
-    <Grid ColumnDefinitions="320,*,320" Margin="24">
-        <ScrollViewer Grid.Column="0">
-            <StackPanel Spacing="10">
-                <TextBlock Text="{x:Static resources:Strings.DebtsNewTitle}" Classes="ledger-title" />
-                <TextBlock Text="{x:Static resources:Strings.DebtsNewSubtitle}" Foreground="{StaticResource TextSecondaryBrush}" />
-                <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsDescriptionPlaceholder}" Text="{Binding Description}" Watermark="{x:Static resources:Strings.DebtsDescriptionPlaceholder}" Classes="ledger-input" />
-                <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsOriginalAmountPlaceholder}" Text="{Binding OriginalAmount}" Watermark="{x:Static resources:Strings.DebtsOriginalAmountPlaceholder}" Classes="ledger-input" />
-                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yCurrency}" ItemsSource="{Binding Currencies}" SelectedItem="{Binding Currency}" Classes="ledger-input" />
-                <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsInstallmentsPlaceholder}" Text="{Binding TotalInstallments}" Watermark="{x:Static resources:Strings.DebtsInstallmentsPlaceholder}" Classes="ledger-input" />
-                <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsInstallmentAmountPlaceholder}" Text="{Binding InstallmentAmount}" Watermark="{x:Static resources:Strings.DebtsInstallmentAmountPlaceholder}" Classes="ledger-input" />
-                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yFrequency}" ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="x:String">
-                            <TextBlock Text="{Binding ., Converter={x:Static converters:EnumLabelConverter.Instance}}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yStartDate}" SelectedDate="{Binding StartDate, Converter={StaticResource DateOnlyConverter}}" Classes="ledger-input" />
-                <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsCounterpartyPlaceholder}" Text="{Binding CounterpartyName}" Watermark="{x:Static resources:Strings.DebtsCounterpartyPlaceholder}" Classes="ledger-input" />
-                <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsNotePlaceholder}" Text="{Binding Note}" Watermark="{x:Static resources:Strings.DebtsNotePlaceholder}" Classes="ledger-input" />
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
-                <Button Content="{x:Static resources:Strings.DebtsCreateButton}" Command="{Binding CreateCommand}" IsDefault="True" Classes="ledger-btn-primary" />
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
+    <ScrollViewer>
+        <StackPanel Margin="32" Spacing="20">
+            <!-- Page header -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="{x:Static resources:Strings.SidebarDebts}" Classes="page-title" />
+                <TextBlock Text="{x:Static resources:Strings.DebtsSubtitle}" Classes="page-subtitle" />
             </StackPanel>
-        </ScrollViewer>
-        <ScrollViewer Grid.Column="1" Margin="24,0,0,0">
-            <StackPanel Spacing="12">
-                <TextBlock Text="{x:Static resources:Strings.DebtsListTitle}" Classes="ledger-title" />
-                <ItemsControl ItemsSource="{Binding Debts}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="domain:Debt">
-                            <Border Classes="ledger-row" Padding="12">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding Description}" Classes="ledger-section" />
-                                        <TextBlock Text="{Binding CounterpartyName}" Foreground="{StaticResource TextSecondaryBrush}" />
-                                        <TextBlock Text="{Binding TotalInstallments, StringFormat={x:Static resources:Strings.DebtsInstallmentsFormat}}" Foreground="{StaticResource TextSecondaryBrush}" />
-                                        <TextBlock Text="{Binding Status, Converter={x:Static converters:EnumLabelConverter.Instance}}" Foreground="{StaticResource TextSecondaryBrush}" />
-                                    </StackPanel>
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding OriginalAmount.Amount, StringFormat={}{0:N2}}"
-                                               Classes="ledger-amount" />
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                <!-- F-021 (DD-9): shown only after a successful first load; there is no filter, so no filtered state. -->
-                <controls:EmptyState Title="{x:Static resources:Strings.EmptyStateDebtsTitle}"
-                                     Hint="{x:Static resources:Strings.EmptyStateDebtsHint}"
-                                     IsVisible="{Binding IsEmptyNoData}" />
-            </StackPanel>
-        </ScrollViewer>
-        <ScrollViewer Grid.Column="2" Margin="24,0,0,0">
-            <StackPanel Spacing="10">
-                <TextBlock Text="{x:Static resources:Strings.DebtsScheduleTitle}" Classes="ledger-title" />
-                <ListBox ItemsSource="{Binding Debts}" SelectedItem="{Binding SelectedDebt}">
+
+            <!-- New debt: one compact card, wrapping fields, Create is the one primary action. -->
+            <Border Classes="card">
+                <StackPanel Spacing="14">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border Classes="icon-chip expense" AutomationProperties.AccessibilityView="Raw">
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconDebts}" Foreground="{StaticResource ExpenseBrush}" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{x:Static resources:Strings.DebtsNewTitle}" Classes="card-title" />
+                            <TextBlock Text="{x:Static resources:Strings.DebtsNewSubtitle}" Classes="caption" />
+                        </StackPanel>
+                    </StackPanel>
+                    <WrapPanel Orientation="Horizontal">
+                        <StackPanel Spacing="4" Width="300" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.DebtsDescriptionPlaceholder}" Classes="field-label" />
+                            <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsDescriptionPlaceholder}" Text="{Binding Description}" Watermark="{x:Static resources:Strings.DebtsDescriptionPlaceholder}" Classes="ledger-input" />
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="170" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.DebtsOriginalAmountPlaceholder}" Classes="field-label" />
+                            <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsOriginalAmountPlaceholder}" Text="{Binding OriginalAmount}" Watermark="{x:Static resources:Strings.DebtsOriginalAmountPlaceholder}" Classes="ledger-input" />
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="120" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.A11yCurrency}" Classes="field-label" />
+                            <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yCurrency}" ItemsSource="{Binding Currencies}" SelectedItem="{Binding Currency}" Classes="ledger-input" />
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="150" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.DebtsInstallmentsPlaceholder}" Classes="field-label" />
+                            <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsInstallmentsPlaceholder}" Text="{Binding TotalInstallments}" Watermark="{x:Static resources:Strings.DebtsInstallmentsPlaceholder}" Classes="ledger-input" />
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="170" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.DebtsInstallmentAmountPlaceholder}" Classes="field-label" />
+                            <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsInstallmentAmountPlaceholder}" Text="{Binding InstallmentAmount}" Watermark="{x:Static resources:Strings.DebtsInstallmentAmountPlaceholder}" Classes="ledger-input" />
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="180" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.A11yFrequency}" Classes="field-label" />
+                            <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yFrequency}" ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <TextBlock Text="{Binding ., Converter={x:Static converters:EnumLabelConverter.Instance}}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="220" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.A11yStartDate}" Classes="field-label" />
+                            <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yStartDate}" SelectedDate="{Binding StartDate, Converter={StaticResource DateOnlyConverter}}" Classes="ledger-input" />
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="240" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.DebtsCounterpartyPlaceholder}" Classes="field-label" />
+                            <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsCounterpartyPlaceholder}" Text="{Binding CounterpartyName}" Watermark="{x:Static resources:Strings.DebtsCounterpartyPlaceholder}" Classes="ledger-input" />
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="300" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.DebtsNotePlaceholder}" Classes="field-label" />
+                            <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsNotePlaceholder}" Text="{Binding Note}" Watermark="{x:Static resources:Strings.DebtsNotePlaceholder}" Classes="ledger-input" />
+                        </StackPanel>
+                    </WrapPanel>
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Content="{x:Static resources:Strings.DebtsCreateButton}" Command="{Binding CreateCommand}" IsDefault="True" Classes="ledger-btn-primary" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
+
+            <!-- Debts: picking one shows its installment schedule right below. -->
+            <TextBlock Text="{x:Static resources:Strings.DebtsListTitle}" Classes="card-title" FontSize="20" />
+            <Border Classes="card" Padding="12" IsVisible="{Binding !!Debts.Count}">
+                <ListBox Classes="pick-list" ItemsSource="{Binding Debts}" SelectedItem="{Binding SelectedDebt}">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="domain:Debt">
-                            <TextBlock Text="{Binding Description}" />
+                            <Grid ColumnDefinitions="*,Auto,Auto" Margin="12,10">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Description}" Classes="strong" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding CounterpartyName}" Classes="caption" />
+                                    <TextBlock Text="{Binding TotalInstallments, StringFormat={x:Static resources:Strings.DebtsInstallmentsFormat}}" Classes="caption" />
+                                </StackPanel>
+                                <Border Grid.Column="1" Classes="chip status" Margin="12,0"
+                                        Background="{Binding Status, Converter={x:Static converters:StatusToneConverter.Instance}, ConverterParameter=bg}">
+                                    <TextBlock Classes="chip-text"
+                                               Text="{Binding Status, Converter={x:Static converters:EnumLabelConverter.Instance}}"
+                                               Foreground="{Binding Status, Converter={x:Static converters:StatusToneConverter.Instance}, ConverterParameter=fg}" />
+                                </Border>
+                                <TextBlock Grid.Column="2" VerticalAlignment="Center" Classes="ledger-amount">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{x:Static resources:Strings.RowAmountWithCurrencyFormat}">
+                                            <Binding Path="OriginalAmount.Amount" />
+                                            <Binding Path="OriginalAmount.Currency" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <TextBlock Text="{Binding PendingBalance, StringFormat={x:Static resources:Strings.DebtsPendingBalanceFormat}}" Classes="ledger-section" />
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding ScheduleError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
-                <ItemsControl ItemsSource="{Binding Schedule}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="domain:DebtPayment">
-                            <Border Classes="ledger-row" Padding="8">
-                                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                                    <TextBlock Text="{Binding InstallmentNumber}" />
-                                    <StackPanel Grid.Column="1" Margin="8,0">
-                                        <TextBlock Text="{Binding ScheduledDate}" />
-                                        <TextBlock Text="{Binding Status, Converter={x:Static converters:EnumLabelConverter.Instance}}" Foreground="{StaticResource TextSecondaryBrush}" />
-                                    </StackPanel>
-                                    <Button Grid.Column="2" Content="{x:Static resources:Strings.DebtsPayButton}"
-                                            Command="{Binding #Root.DataContext.RegisterPaymentCommand}"
-                                            CommandParameter="{Binding}"
-                                            Classes="ledger-btn-primary" />
-                                    <Button Grid.Column="3" Content="{x:Static resources:Strings.DebtsSkipButton}"
-                                            Command="{Binding #Root.DataContext.SkipPaymentCommand}"
-                                            CommandParameter="{Binding}"
-                                            Classes="ledger-btn"
-                                            Margin="4,0,0,0" />
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                <TextBlock Text="{x:Static resources:Strings.DebtsSelectHint}" IsVisible="{Binding !Schedule.Count}"
-                           Foreground="{StaticResource TextSecondaryBrush}" />
-            </StackPanel>
-        </ScrollViewer>
-    </Grid>
+            </Border>
+            <!-- F-021 (DD-9): shown only after a successful first load; there is no filter, so no filtered state. -->
+            <controls:EmptyState Title="{x:Static resources:Strings.EmptyStateDebtsTitle}"
+                                 Hint="{x:Static resources:Strings.EmptyStateDebtsHint}"
+                                 IsVisible="{Binding IsEmptyNoData}" />
+
+            <!-- Installment schedule of the selected debt. -->
+            <Border Classes="card">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="{x:Static resources:Strings.DebtsScheduleTitle}" Classes="card-title" VerticalAlignment="Center" />
+                        <Border Grid.Column="1" Classes="chip" IsVisible="{Binding !!Schedule.Count}">
+                            <TextBlock Text="{Binding PendingBalance, StringFormat={x:Static resources:Strings.DebtsPendingBalanceFormat}}" Classes="chip-text" Foreground="{StaticResource AccentBrush}" />
+                        </Border>
+                    </Grid>
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding ScheduleError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+                    <ItemsControl ItemsSource="{Binding Schedule}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="domain:DebtPayment">
+                                <Border Classes="ledger-row" Padding="8,8">
+                                    <Grid ColumnDefinitions="40,*,Auto,Auto,Auto,Auto">
+                                        <TextBlock Text="{Binding InstallmentNumber}" Classes="strong" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Text="{Binding ScheduledDate}" Classes="secondary" VerticalAlignment="Center" />
+                                        <Border Grid.Column="2" Classes="chip status" Margin="12,0"
+                                                Background="{Binding Status, Converter={x:Static converters:StatusToneConverter.Instance}, ConverterParameter=bg}">
+                                            <TextBlock Classes="chip-text"
+                                                       Text="{Binding Status, Converter={x:Static converters:EnumLabelConverter.Instance}}"
+                                                       Foreground="{Binding Status, Converter={x:Static converters:StatusToneConverter.Instance}, ConverterParameter=fg}" />
+                                        </Border>
+                                        <TextBlock Grid.Column="3" VerticalAlignment="Center" Margin="0,0,12,0" Classes="ledger-amount">
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{x:Static resources:Strings.RowAmountWithCurrencyFormat}">
+                                                    <Binding Path="Amount.Amount" />
+                                                    <Binding Path="Amount.Currency" />
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                        <Button Grid.Column="4" Content="{x:Static resources:Strings.DebtsPayButton}"
+                                                Command="{Binding #Root.DataContext.RegisterPaymentCommand}"
+                                                CommandParameter="{Binding}"
+                                                Classes="ledger-btn" />
+                                        <Button Grid.Column="5" Content="{x:Static resources:Strings.DebtsSkipButton}"
+                                                Command="{Binding #Root.DataContext.SkipPaymentCommand}"
+                                                CommandParameter="{Binding}"
+                                                Classes="ledger-btn ghost"
+                                                Margin="4,0,0,0" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{x:Static resources:Strings.DebtsSelectHint}" IsVisible="{Binding !Schedule.Count}" Classes="secondary" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

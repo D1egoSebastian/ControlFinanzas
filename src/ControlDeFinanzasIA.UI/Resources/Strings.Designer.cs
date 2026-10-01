@@ -3051,4 +3051,29 @@ public class Strings
     /// Gets the empty-state hint of the Dashboard month-expenses card.
     /// </summary>
     public static string DashboardMonthExpensesEmptyHint => ResourceManager.GetString("DashboardMonthExpensesEmptyHint", Culture)!;
+
+    /// <summary>
+    /// Gets the Budgets page subtitle.
+    /// </summary>
+    public static string BudgetsSubtitle => ResourceManager.GetString("BudgetsSubtitle", Culture)!;
+
+    /// <summary>
+    /// Gets the Goals page subtitle.
+    /// </summary>
+    public static string GoalsSubtitle => ResourceManager.GetString("GoalsSubtitle", Culture)!;
+
+    /// <summary>
+    /// Gets the Debts page subtitle.
+    /// </summary>
+    public static string DebtsSubtitle => ResourceManager.GetString("DebtsSubtitle", Culture)!;
+
+    /// <summary>
+    /// Gets the Calendar page subtitle.
+    /// </summary>
+    public static string CalendarSubtitle => ResourceManager.GetString("CalendarSubtitle", Culture)!;
+
+    /// <summary>
+    /// Gets the recurring charge form heading.
+    /// </summary>
+    public static string RecurringFormTitle => ResourceManager.GetString("RecurringFormTitle", Culture)!;
 }
