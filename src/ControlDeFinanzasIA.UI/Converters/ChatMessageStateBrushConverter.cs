@@ -7,13 +7,13 @@ using ControlDeFinanzasIA.UI.ViewModels;
 namespace ControlDeFinanzasIA.UI.Converters;
 
 /// <summary>
-/// Maps a <see cref="ChatMessageState"/> to its design-token accent brush (F-015, D-10):
+/// Maps a <see cref="ChatMessageState"/> to its design-token text brush (F-015, D-10):
 /// <see cref="ChatMessageState.Unavailable"/>/<see cref="ChatMessageState.Rejected"/> (something
-/// failed or the input was invalid) → TerracottaBrush; <see cref="ChatMessageState.Cancelled"/>/
+/// failed or the input was invalid) → ExpenseBrush; <see cref="ChatMessageState.Cancelled"/>/
 /// <see cref="ChatMessageState.NotConfigured"/> (a benign, user- or settings-driven note, not a
-/// failure) → SageBrush; <see cref="ChatMessageState.Pending"/> → PaperDimBrush;
-/// <see cref="ChatMessageState.Answered"/> (a real reply, not a muted note) → PaperBrush. No new
-/// colors — the same tokens the budget-progress bar and anomaly chips already use.
+/// failure) → WarningBrush; <see cref="ChatMessageState.Pending"/> → TextMutedBrush;
+/// <see cref="ChatMessageState.Answered"/> (a real reply, not a muted note) → TextBrush. All four are
+/// text-safe tokens measured by <c>ContrastTests</c>; no new colors.
 /// </summary>
 public sealed class ChatMessageStateBrushConverter : IValueConverter
 {
@@ -25,10 +25,10 @@ public sealed class ChatMessageStateBrushConverter : IValueConverter
     {
         string resourceKey = value switch
         {
-            ChatMessageState.Unavailable or ChatMessageState.Rejected => "TerracottaBrush",
-            ChatMessageState.Cancelled or ChatMessageState.NotConfigured => "SageBrush",
-            ChatMessageState.Pending => "PaperDimBrush",
-            _ => "PaperBrush",
+            ChatMessageState.Unavailable or ChatMessageState.Rejected => "ExpenseBrush",
+            ChatMessageState.Cancelled or ChatMessageState.NotConfigured => "WarningBrush",
+            ChatMessageState.Pending => "TextMutedBrush",
+            _ => "TextBrush",
         };
 
         if (Avalonia.Application.Current is { } app

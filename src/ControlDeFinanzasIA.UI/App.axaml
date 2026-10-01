@@ -3,13 +3,14 @@
              xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
              xmlns:views="using:ControlDeFinanzasIA.UI.Views"
              x:Class="ControlDeFinanzasIA.UI.App"
-             RequestedThemeVariant="Dark">
-             <!-- Dark is the single supported theme for the BOLD "Libro Mayor" design pass (F-008 P4). -->
+             RequestedThemeVariant="Light">
+             <!-- Light is the single supported theme of the "Sand and Cobalt" design (pre-1.0 slice E); the Settings picker is honest about it. -->
 
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://ControlDeFinanzasIA.UI/Styles/Tokens.axaml" />
+                <ResourceInclude Source="avares://ControlDeFinanzasIA.UI/Styles/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

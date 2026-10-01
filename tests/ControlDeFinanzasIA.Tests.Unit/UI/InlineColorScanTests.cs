@@ -12,10 +12,8 @@ public sealed class InlineColorScanTests
     private static readonly Regex _hex = new(@"#[0-9A-Fa-f]{8}\b|#[0-9A-Fa-f]{6}\b|#[0-9A-Fa-f]{3,4}\b", RegexOptions.Compiled);
 
     /// <summary>file (relative to the UI project) -> literal that is accepted, with the reason.</summary>
-    private static readonly (string File, string Literal, string Reason)[] _allowlist =
-    [
-        (Path.Combine("Views", "MainWindow.axaml"), "#99000000", "BoxShadow takes a literal color, not a brush resource; a pure black drop shadow, not a palette color."),
-    ];
+    /// <remarks>Empty since slice E: the one former exception (the popup drop shadow) is now the ShadowPopup BoxShadows token.</remarks>
+    private static readonly (string File, string Literal, string Reason)[] _allowlist = [];
 
     [Fact]
     public void TheScan_CoversTheViewsAndTheControls()

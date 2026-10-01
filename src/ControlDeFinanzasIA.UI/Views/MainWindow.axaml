@@ -7,72 +7,33 @@
         xmlns:views="using:ControlDeFinanzasIA.UI.Views"
         xmlns:input="using:ControlDeFinanzasIA.UI.Input"
         xmlns:behaviors="using:ControlDeFinanzasIA.UI.Behaviors"
+        xmlns:controls="using:ControlDeFinanzasIA.UI.Controls"
         x:Class="ControlDeFinanzasIA.UI.Views.MainWindow"
         x:Name="ShellRoot"
         input:KeyboardShortcuts.Enabled="True"
         x:DataType="vm:ShellViewModel"
         Title="{x:Static resources:Strings.WindowTitle}"
         Icon="/Assets/Icon/app-icon.ico"
+        Background="{StaticResource CanvasBrush}"
+        Foreground="{StaticResource TextBrush}"
+        FontFamily="{StaticResource FontBody}"
+        FontSize="14"
         MinWidth="800"
         MinHeight="600">
-    <Window.Styles>
-        <!--
-            F-017 bell: a flat, borderless toggle that dims to paper-grey at rest and
-            lights amber on hover or while the notification flyout is open. Fluent's
-            ToggleButton template paints its own background per pseudo-class, so the
-            overrides target the template's ContentPresenter.
-        -->
-        <Style Selector="ToggleButton.bell">
-            <Setter Property="Width" Value="32" />
-            <Setter Property="Height" Value="32" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Foreground" Value="{StaticResource PaperDimBrush}" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-        </Style>
-        <Style Selector="ToggleButton.bell /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
-        </Style>
-        <Style Selector="ToggleButton.bell:pointerover">
-            <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
-        </Style>
-        <Style Selector="ToggleButton.bell:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AmberTintBrush}" />
-        </Style>
-        <Style Selector="ToggleButton.bell:checked">
-            <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
-        </Style>
-        <Style Selector="ToggleButton.bell:checked /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AmberTintBrush}" />
-        </Style>
-        <Style Selector="ToggleButton.bell:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AmberTintStrongBrush}" />
-        </Style>
-        <!-- F-021 (DD-8): the shared keyboard focus ring (see LedgerStyles.axaml) on the borderless bell. -->
-        <Style Selector="ToggleButton.bell:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
-            <Setter Property="BorderThickness" Value="2" />
-        </Style>
-    </Window.Styles>
-
     <!--
         F-021 (DD-4): the root is a Panel so the error overlay sits over the whole shell. While it is open
         the shell Grid is disabled: it leaves the tab order, ignores pointer input and cannot fire an
         IsDefault button behind the overlay.
+
+        Layout (pre-1.0 slice E): a light 216 px sidebar on the left for the full height, and on the right a slim
+        header (the notification bell) above the content. The XAML order stays bell, sidebar, content, which is the
+        tab order the accessibility tests pin.
     -->
     <Panel>
-    <Grid RowDefinitions="Auto,*" IsEnabled="{Binding !IsModalOpen}">
-        <!-- Header row (F-017 D-10): owns the notification bell; fixed 44px ledger rule below. -->
-        <Border Grid.Row="0"
-                Height="44"
-                Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource HairlineBrush}"
-                BorderThickness="0,0,0,1">
-            <Grid Margin="0,0,12,0"
-                  HorizontalAlignment="Right"
+    <Grid ColumnDefinitions="216,*" RowDefinitions="Auto,*" IsEnabled="{Binding !IsModalOpen}">
+        <!-- Header (F-017 D-10): owns the notification bell; no rule, no fill, just room to breathe. -->
+        <Grid Grid.Row="0" Grid.Column="1" Height="64" Margin="0,0,24,0">
+            <Grid HorizontalAlignment="Right"
                   VerticalAlignment="Center">
                 <ToggleButton x:Name="BellToggle"
                               Classes="bell"
@@ -80,27 +41,24 @@
                               AutomationProperties.Name="{Binding Notifications.BellAutomationName}"
                               AutomationProperties.AcceleratorKey="{Binding BellAcceleratorKey}"
                               ToolTip.Tip="{Binding BellToolTip}">
-                    <PathIcon Width="18"
-                              Height="18"
-                              Data="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+                    <controls:Icon Size="20" Data="{StaticResource IconBell}" />
                 </ToggleButton>
 
-                <!-- Unread badge: amber pill pinned to the bell's top-right corner. -->
+                <!-- Unread badge: a rose pill pinned to the bell's top-right corner. -->
                 <Border IsVisible="{Binding Notifications.HasUnread}"
                         IsHitTestVisible="False"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Top"
                         Margin="0,-2,-4,0"
-                        MinWidth="16"
-                        Height="16"
-                        Padding="4,0"
-                        CornerRadius="8"
-                        Background="{StaticResource AmberBrush}">
+                        MinWidth="18"
+                        Height="18"
+                        Padding="5,0"
+                        CornerRadius="9"
+                        Background="{StaticResource ExpenseBrush}">
                     <TextBlock Text="{Binding Notifications.BadgeText}"
-                               FontFamily="{StaticResource FontMono}"
-                               FontSize="10"
+                               FontSize="11"
                                FontWeight="Bold"
-                               Foreground="{StaticResource InkBrush}"
+                               Foreground="{StaticResource OnAccentBrush}"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center" />
                 </Border>
@@ -117,31 +75,29 @@
                        VerticalOffset="8"
                        IsLightDismissEnabled="True"
                        OverlayInputPassThroughElement="{Binding #BellToggle}">
-                    <Border Width="360"
+                    <Border Width="380"
+                            Margin="24"
                             Background="{StaticResource SurfaceBrush}"
-                            BorderBrush="{StaticResource HairlineBrush}"
+                            BorderBrush="{StaticResource DividerBrush}"
                             BorderThickness="1"
-                            CornerRadius="{StaticResource RadiusMedium}"
-                            BoxShadow="0 10 28 0 #99000000"
+                            CornerRadius="{StaticResource RadiusLarge}"
+                            BoxShadow="{StaticResource ShadowPopup}"
                             input:KeyboardShortcuts.Source="{Binding #ShellRoot.DataContext}"
                             input:KeyboardShortcuts.EscapeOnly="True"
                             input:KeyboardShortcuts.Enabled="True"
                             DataContext="{Binding Notifications}">
                         <StackPanel>
-                            <!-- Popup header: title + refresh, closed by an amber rule. -->
-                            <Border BorderBrush="{StaticResource AmberBrush}"
-                                    BorderThickness="0,0,0,2"
-                                    Padding="16,10,8,8">
+                            <!-- Popup header: title + refresh. -->
+                            <Border BorderBrush="{StaticResource DividerBrush}"
+                                    BorderThickness="0,0,0,1"
+                                    Padding="20,12,12,12">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Grid.Column="0"
                                                Text="{x:Static resources:Strings.NotificationsTitle}"
-                                               FontFamily="{StaticResource FontDisplay}"
-                                               FontSize="18"
-                                               FontWeight="SemiBold"
-                                               Foreground="{StaticResource PaperBrush}"
+                                               Classes="card-title"
                                                VerticalAlignment="Center" />
                                     <Button Grid.Column="1"
-                                            Classes="ledger-btn"
+                                            Classes="ledger-btn ghost"
                                             Content="{x:Static resources:Strings.NotificationsRefreshButton}"
                                             Command="{Binding RefreshCommand}"
                                             FontSize="13"
@@ -155,32 +111,34 @@
                                 <ItemsControl ItemsSource="{Binding Items}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:NotificationItemViewModel">
-                                            <Border BorderBrush="{StaticResource HairlineBrush}"
+                                            <Border BorderBrush="{StaticResource DividerBrush}"
                                                     BorderThickness="0,0,0,1">
-                                                <Grid ColumnDefinitions="3,*,Auto">
-                                                    <!-- Unread accent (R-16: rows are informational, not clickable). -->
-                                                    <Border Grid.Column="0"
-                                                            IsVisible="{Binding IsUnread}"
-                                                            Background="{StaticResource AmberBrush}" />
+                                                <Grid ColumnDefinitions="28,*,Auto">
+                                                    <!-- Unread accent dot (R-16: rows are informational, not clickable). -->
+                                                    <Ellipse Grid.Column="0"
+                                                             IsVisible="{Binding IsUnread}"
+                                                             Width="8"
+                                                             Height="8"
+                                                             Margin="14,18,0,0"
+                                                             VerticalAlignment="Top"
+                                                             HorizontalAlignment="Left"
+                                                             Fill="{StaticResource AccentBrush}" />
                                                     <StackPanel Grid.Column="1"
-                                                                Margin="13,10,8,10"
+                                                                Margin="0,12,8,12"
                                                                 Spacing="2">
                                                         <TextBlock Text="{Binding Title}"
-                                                                   FontFamily="{StaticResource FontBody}"
-                                                                   FontSize="14"
-                                                                   FontWeight="SemiBold"
-                                                                   Foreground="{StaticResource PaperBrush}"
+                                                                   Classes="strong"
                                                                    TextWrapping="Wrap" />
                                                         <TextBlock Text="{Binding Body}"
                                                                    Classes="ledger-status" />
                                                     </StackPanel>
                                                     <Button Grid.Column="2"
-                                                            Classes="ledger-btn"
+                                                            Classes="ledger-btn ghost"
                                                             Content="{x:Static resources:Strings.NotificationsDismissButton}"
                                                             Command="{Binding $parent[ItemsControl].DataContext.DismissCommand}"
                                                             CommandParameter="{Binding .}"
                                                             FontSize="12"
-                                                            Margin="0,4,8,0"
+                                                            Margin="0,8,8,0"
                                                             VerticalAlignment="Top" />
                                                 </Grid>
                                             </Border>
@@ -193,28 +151,50 @@
                                        Text="{x:Static resources:Strings.NotificationsEmpty}"
                                        Classes="ledger-status"
                                        HorizontalAlignment="Center"
-                                       Margin="16,24" />
+                                       Margin="16,28" />
                         </StackPanel>
                     </Border>
                 </Popup>
             </Grid>
-        </Border>
+        </Grid>
 
-        <DockPanel Grid.Row="1">
-            <!--
-                F-021 (DD-7): a 200 px rail. One flat Button per section (single tab stop, Enter/Space activate,
-                arrow keys and Tab move between items); no ListBox, so no Button nested in a selectable item.
-            -->
-            <Border DockPanel.Dock="Left"
-                    Width="200"
-                    Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource HairlineBrush}"
-                    BorderThickness="0,0,1,0">
+        <!--
+            F-021 (DD-7): the rail. One flat Button per section (single tab stop, Enter/Space activate,
+            arrow keys and Tab move between items); no ListBox, so no Button nested in a selectable item.
+        -->
+        <Border Grid.Row="0"
+                Grid.RowSpan="2"
+                Grid.Column="0"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource DividerBrush}"
+                BorderThickness="0,0,1,0">
+            <DockPanel>
+                <!-- Brand: a cobalt tile with a rising-bars mark, then the product name. -->
+                <StackPanel DockPanel.Dock="Top"
+                            Orientation="Horizontal"
+                            Spacing="10"
+                            Margin="16,22,16,14"
+                            AutomationProperties.AccessibilityView="Raw">
+                    <Border Width="32"
+                            Height="32"
+                            CornerRadius="10"
+                            Background="{StaticResource AccentBrush}">
+                        <controls:Icon Size="20" Thickness="2.4" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBrand}" Foreground="{StaticResource OnAccentBrush}" />
+                    </Border>
+                    <TextBlock Text="{x:Static resources:Strings.WindowTitle}"
+                               FontFamily="{StaticResource FontDisplay}"
+                               FontSize="13.5"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource TextBrush}"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               MaxWidth="148" />
+                </StackPanel>
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                               VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding SidebarItems}"
                                   XYFocus.NavigationModes="Keyboard"
-                                  Margin="0,8">
+                                  Margin="12,4,12,12">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:SidebarItemViewModel">
                                 <Button Classes="sidebar-item"
@@ -227,11 +207,13 @@
                                         AutomationProperties.SizeOfSet="{Binding SizeOfSet}"
                                         AutomationProperties.AcceleratorKey="{Binding ShortcutText}"
                                         ToolTip.Tip="{Binding ShortcutText}">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <TextBlock Text="{Binding Label}"
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <controls:Icon Grid.Column="0" Size="18" Margin="0,0,12,0" Data="{Binding Route, Converter={x:Static converters:RouteIconConverter.Instance}}" />
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Label}"
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="1"
+                                        <TextBlock Grid.Column="2"
                                                    Classes="sidebar-hint"
                                                    Text="{Binding DigitHint}"
                                                    IsHitTestVisible="False"
@@ -242,14 +224,16 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
-            </Border>
+            </DockPanel>
+        </Border>
 
-            <ContentControl Content="{Binding Current, Converter={x:Static converters:CurrentViewConverter.Instance}}"
-                            behaviors:FocusOnRequest.FirstFocusableToken="{Binding ContentFocusRequest}"
-                            HorizontalContentAlignment="Stretch"
-                            VerticalContentAlignment="Stretch"
-                            MinHeight="400" />
-        </DockPanel>
+        <ContentControl Grid.Row="1"
+                        Grid.Column="1"
+                        Content="{Binding Current, Converter={x:Static converters:CurrentViewConverter.Instance}}"
+                        behaviors:FocusOnRequest.FirstFocusableToken="{Binding ContentFocusRequest}"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        MinHeight="400" />
     </Grid>
 
     <views:ErrorOverlayView DataContext="{Binding ErrorOverlay}"

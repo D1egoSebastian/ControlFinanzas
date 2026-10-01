@@ -2,54 +2,90 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="using:System">
     <!--
-        BOLD "Libro Mayor" design tokens.
-        See spec/features/phase-04/F-008-ui-capstone.spec.md §4.
+        "Sand and Cobalt" design tokens (pre-1.0 slice E). One light theme: a warm sand canvas, white cards, near-ink
+        text and ONE confident accent (cobalt). Income, expense and warning get their own semantic colours.
+        Every text/background pair and the focus ring are measured by ContrastTests (4.5:1 text, 3:1 graphics); change
+        a value here and that test tells you whether the pair still holds. The tests read the *Color elements below.
     -->
 
-    <!-- Palette -->
-    <Color x:Key="InkColor">#16181D</Color>
-    <Color x:Key="SurfaceColor">#1F232B</Color>
-    <Color x:Key="HairlineColor">#31363F</Color>
-    <Color x:Key="PaperColor">#E8E4D9</Color>
-    <Color x:Key="PaperDimColor">#9BA0A8</Color>
-    <Color x:Key="AmberColor">#E8A33D</Color>
-    <Color x:Key="SageColor">#7FB069</Color>
-    <Color x:Key="TerracottaColor">#D96459</Color>
-    <!-- Lighter terracotta for error TEXT: Terracotta on Surface is 4.43:1 (fails 4.5:1), this is ~6.5:1 (F-021, D-12). -->
-    <Color x:Key="TerracottaTextColor">#F08A82</Color>
+    <!-- Surfaces -->
+    <Color x:Key="CanvasColor">#F6F4EF</Color>
+    <Color x:Key="SurfaceColor">#FFFFFF</Color>
+    <Color x:Key="SurfaceMutedColor">#EFEDE6</Color>
+    <!-- Decorative hairline between rows and around cards; it carries no information, so it is not a contrast pair. -->
+    <Color x:Key="DividerColor">#E6E2D8</Color>
+    <!-- The resting boundary of an input must reach 3:1 (WCAG 1.4.11), which Divider does not. -->
+    <Color x:Key="InputBorderColor">#858B99</Color>
 
-    <SolidColorBrush x:Key="InkBrush" Color="{StaticResource InkColor}" />
+    <!-- Text -->
+    <Color x:Key="TextColor">#14192B</Color>
+    <Color x:Key="TextSecondaryColor">#444B5C</Color>
+    <Color x:Key="TextMutedColor">#5B6272</Color>
+
+    <!-- The one accent: cobalt. Soft is a wash behind selected/active things; OnAccent is the label on an Accent fill. -->
+    <Color x:Key="AccentColor">#3459E6</Color>
+    <Color x:Key="AccentHoverColor">#2B49C2</Color>
+    <Color x:Key="AccentPressedColor">#223A9E</Color>
+    <Color x:Key="AccentSoftColor">#E8EDFD</Color>
+    <Color x:Key="OnAccentColor">#FFFFFF</Color>
+    <!-- The keyboard focus ring: near-ink, so it stays visible on the canvas, on cards AND on the cobalt primary fill. -->
+    <Color x:Key="FocusRingColor">#14192B</Color>
+
+    <!-- Semantics: income (green), expense (rose), warning (amber). The base colour is text-safe; Soft is its wash. -->
+    <Color x:Key="IncomeColor">#0B7048</Color>
+    <Color x:Key="IncomeSoftColor">#E2F3EA</Color>
+    <Color x:Key="ExpenseColor">#B82A44</Color>
+    <Color x:Key="ExpenseSoftColor">#FBE7EB</Color>
+    <Color x:Key="WarningColor">#8F5400</Color>
+    <!-- A lighter amber that is still 3:1 on a card: the warning progress fill (never used for text). -->
+    <Color x:Key="WarningFillColor">#C77B00</Color>
+    <Color x:Key="WarningSoftColor">#FCF0D9</Color>
+
+    <SolidColorBrush x:Key="CanvasBrush" Color="{StaticResource CanvasColor}" />
     <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
-    <SolidColorBrush x:Key="HairlineBrush" Color="{StaticResource HairlineColor}" />
-    <SolidColorBrush x:Key="PaperBrush" Color="{StaticResource PaperColor}" />
-    <SolidColorBrush x:Key="PaperDimBrush" Color="{StaticResource PaperDimColor}" />
-    <SolidColorBrush x:Key="AmberBrush" Color="{StaticResource AmberColor}" />
-    <SolidColorBrush x:Key="SageBrush" Color="{StaticResource SageColor}" />
-    <SolidColorBrush x:Key="TerracottaBrush" Color="{StaticResource TerracottaColor}" />
-    <SolidColorBrush x:Key="TerracottaTextBrush" Color="{StaticResource TerracottaTextColor}" />
+    <SolidColorBrush x:Key="SurfaceMutedBrush" Color="{StaticResource SurfaceMutedColor}" />
+    <SolidColorBrush x:Key="DividerBrush" Color="{StaticResource DividerColor}" />
+    <SolidColorBrush x:Key="InputBorderBrush" Color="{StaticResource InputBorderColor}" />
+    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="{StaticResource AccentHoverColor}" />
+    <SolidColorBrush x:Key="AccentPressedBrush" Color="{StaticResource AccentPressedColor}" />
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="{StaticResource AccentSoftColor}" />
+    <SolidColorBrush x:Key="OnAccentBrush" Color="{StaticResource OnAccentColor}" />
+    <SolidColorBrush x:Key="FocusRingBrush" Color="{StaticResource FocusRingColor}" />
+    <SolidColorBrush x:Key="IncomeBrush" Color="{StaticResource IncomeColor}" />
+    <SolidColorBrush x:Key="IncomeSoftBrush" Color="{StaticResource IncomeSoftColor}" />
+    <SolidColorBrush x:Key="ExpenseBrush" Color="{StaticResource ExpenseColor}" />
+    <SolidColorBrush x:Key="ExpenseSoftBrush" Color="{StaticResource ExpenseSoftColor}" />
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
+    <SolidColorBrush x:Key="WarningFillBrush" Color="{StaticResource WarningFillColor}" />
+    <SolidColorBrush x:Key="WarningSoftBrush" Color="{StaticResource WarningSoftColor}" />
 
-    <!-- Faint amber wash behind the current sidebar section (F-021, DD-7); a background only, never text. -->
-    <Color x:Key="AmberWashColor">#14E8A33D</Color>
-    <SolidColorBrush x:Key="AmberWashBrush" Color="{StaticResource AmberWashColor}" />
+    <!-- Translucent washes: hover / pressed overlays on a white card. Backgrounds only, never text. -->
+    <Color x:Key="HoverWashColor">#0A14192B</Color>
+    <Color x:Key="PressedWashColor">#1214192B</Color>
+    <SolidColorBrush x:Key="HoverWashBrush" Color="{StaticResource HoverWashColor}" />
+    <SolidColorBrush x:Key="PressedWashBrush" Color="{StaticResource PressedWashColor}" />
+    <!-- A white veil on the cobalt fill: the shortcut chip inside a primary button. -->
+    <Color x:Key="OnAccentWashColor">#33FFFFFF</Color>
+    <SolidColorBrush x:Key="OnAccentWashBrush" Color="{StaticResource OnAccentWashColor}" />
 
-    <!-- Translucent washes (F-021 verify W3): backgrounds only, never text. Same values the views used inline. -->
-    <Color x:Key="AmberTintColor">#22E8A33D</Color>
-    <Color x:Key="AmberTintStrongColor">#33E8A33D</Color>
-    <Color x:Key="SurfaceTintColor">#221F232B</Color>
-    <SolidColorBrush x:Key="AmberTintBrush" Color="{StaticResource AmberTintColor}" />
-    <SolidColorBrush x:Key="AmberTintStrongBrush" Color="{StaticResource AmberTintStrongColor}" />
-    <SolidColorBrush x:Key="SurfaceTintBrush" Color="{StaticResource SurfaceTintColor}" />
+    <!-- Typography: system fonts only (no bundled font files), each list ends in a font every platform has. -->
+    <FontFamily x:Key="FontBody">Segoe UI Variable Text, Segoe UI, SF Pro Text, Helvetica Neue, Noto Sans, Arial</FontFamily>
+    <FontFamily x:Key="FontDisplay">Segoe UI Variable Display, Segoe UI Semibold, SF Pro Display, Helvetica Neue, Noto Sans, Arial</FontFamily>
+    <!-- Figures: the same sans with tabular numerals (set on the ledger-amount style) so columns of money line up. -->
+    <FontFamily x:Key="FontMono">Segoe UI Variable Display, Segoe UI, SF Pro Display, Helvetica Neue, Noto Sans, Arial</FontFamily>
 
-    <!-- Typography -->
-    <!--
-        The preferred families are the OFL fonts in Assets/Fonts.
-        System fonts are listed as fallbacks until the TTF files are added.
-    -->
-    <FontFamily x:Key="FontDisplay">Fraunces, Times New Roman</FontFamily>
-    <FontFamily x:Key="FontBody">Instrument Sans, Segoe UI</FontFamily>
-    <FontFamily x:Key="FontMono">Spline Sans Mono, Consolas</FontFamily>
+    <sys:Double x:Key="FontSizeCaption">12</sys:Double>
+    <sys:Double x:Key="FontSizeBody">14</sys:Double>
+    <sys:Double x:Key="FontSizeLead">16</sys:Double>
+    <sys:Double x:Key="FontSizeTitle">20</sys:Double>
+    <sys:Double x:Key="FontSizePage">28</sys:Double>
+    <sys:Double x:Key="FontSizeMetric">30</sys:Double>
 
-    <!-- Spacing -->
+    <!-- Spacing scale (4 px base) -->
     <sys:Double x:Key="Space1">4</sys:Double>
     <sys:Double x:Key="Space2">8</sys:Double>
     <sys:Double x:Key="Space3">12</sys:Double>
@@ -58,13 +94,125 @@
     <sys:Double x:Key="Space6">24</sys:Double>
     <sys:Double x:Key="Space7">28</sys:Double>
     <sys:Double x:Key="Space8">32</sys:Double>
+    <sys:Double x:Key="Space10">40</sys:Double>
+    <sys:Double x:Key="Space12">48</sys:Double>
 
     <!-- Motion durations -->
     <sys:TimeSpan x:Key="MotionFast">0:0:0.15</sys:TimeSpan>
     <sys:TimeSpan x:Key="MotionNormal">0:0:0.2</sys:TimeSpan>
     <sys:TimeSpan x:Key="MotionSlow">0:0:0.25</sys:TimeSpan>
 
-    <!-- Corner radii -->
-    <CornerRadius x:Key="RadiusSmall">4</CornerRadius>
-    <CornerRadius x:Key="RadiusMedium">6</CornerRadius>
+    <!-- Corner radii: Small 6 (chips, tags), Medium 10 (inputs, sidebar items), Large 16 (cards), Pill (buttons, badges). -->
+    <CornerRadius x:Key="RadiusSmall">6</CornerRadius>
+    <CornerRadius x:Key="RadiusMedium">10</CornerRadius>
+    <CornerRadius x:Key="RadiusLarge">16</CornerRadius>
+    <CornerRadius x:Key="RadiusPill">999</CornerRadius>
+
+    <!-- Elevation: soft, low-contrast shadows instead of hard rules. -->
+    <BoxShadows x:Key="ShadowCard">0 1 2 0 #0F14192B, 0 6 20 -6 #1214192B</BoxShadows>
+    <BoxShadows x:Key="ShadowPopup">0 4 12 0 #1414192B, 0 16 40 -8 #2E14192B</BoxShadows>
+
+    <!--
+        Fluent control-resource overrides. Application.Resources is searched before the FluentTheme's own theme
+        dictionaries, so these re-skin the stock controls (text boxes, combo boxes, check boxes, date pickers, scroll
+        bars...) with the tokens above without touching their templates.
+    -->
+    <FontFamily x:Key="ContentControlThemeFontFamily">Segoe UI Variable Text, Segoe UI, SF Pro Text, Helvetica Neue, Noto Sans, Arial</FontFamily>
+
+    <Color x:Key="SystemAccentColor">#3459E6</Color>
+    <Color x:Key="SystemAccentColorDark1">#2B49C2</Color>
+    <Color x:Key="SystemAccentColorDark2">#223A9E</Color>
+    <Color x:Key="SystemAccentColorDark3">#142570</Color>
+    <Color x:Key="SystemAccentColorLight1">#5472E8</Color>
+    <Color x:Key="SystemAccentColorLight2">#8099F0</Color>
+    <Color x:Key="SystemAccentColorLight3">#B5C3F6</Color>
+
+    <SolidColorBrush x:Key="TextControlBackground" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="{StaticResource SurfaceMutedColor}" />
+    <SolidColorBrush x:Key="TextControlForeground" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="TextControlForegroundFocused" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="TextControlForegroundDisabled" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="TextControlBorderBrush" Color="{StaticResource InputBorderColor}" />
+    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="{StaticResource DividerColor}" />
+    <Thickness x:Key="TextControlBorderThemeThickness">1</Thickness>
+    <Thickness x:Key="TextControlBorderThemeThicknessFocused">2</Thickness>
+
+    <SolidColorBrush x:Key="ComboBoxBackground" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="ComboBoxBackgroundFocused" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="ComboBoxBackgroundDisabled" Color="{StaticResource SurfaceMutedColor}" />
+    <SolidColorBrush x:Key="ComboBoxBackgroundUnfocused" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="{StaticResource InputBorderColor}" />
+    <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="ComboBoxBorderBrushFocused" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushFocused" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushUnfocused" Color="{StaticResource InputBorderColor}" />
+    <SolidColorBrush x:Key="ComboBoxForeground" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="ComboBoxForegroundDisabled" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="ComboBoxPlaceHolderForeground" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground" Color="{StaticResource TextSecondaryColor}" />
+    <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="{StaticResource DividerColor}" />
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="{StaticResource SurfaceMutedColor}" />
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="{StaticResource SurfaceMutedColor}" />
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="{StaticResource AccentSoftColor}" />
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="{StaticResource AccentSoftColor}" />
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPressed" Color="{StaticResource AccentSoftColor}" />
+    <SolidColorBrush x:Key="ComboBoxItemForeground" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPointerOver" Color="{StaticResource AccentColor}" />
+
+    <SolidColorBrush x:Key="DatePickerButtonBackground" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="DatePickerButtonBackgroundPointerOver" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="DatePickerButtonBackgroundPressed" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="DatePickerButtonBackgroundFocused" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="DatePickerButtonBorderBrush" Color="{StaticResource InputBorderColor}" />
+    <SolidColorBrush x:Key="DatePickerButtonBorderBrushPointerOver" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="DatePickerButtonBorderBrushPressed" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="DatePickerButtonBorderBrushFocused" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="DatePickerSpacerFill" Color="{StaticResource DividerColor}" />
+    <SolidColorBrush x:Key="DatePickerFlyoutPresenterBackground" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="DatePickerFlyoutPresenterBorderBrush" Color="{StaticResource DividerColor}" />
+    <SolidColorBrush x:Key="DatePickerFlyoutPresenterSpacerFill" Color="{StaticResource DividerColor}" />
+    <SolidColorBrush x:Key="DatePickerFlyoutPresenterHighlightFill" Color="{StaticResource AccentSoftColor}" />
+
+    <sys:Double x:Key="DatePickerThemeMinWidth">120</sys:Double>
+    <sys:Double x:Key="DatePickerThemeMaxWidth">10000</sys:Double>
+
+    <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="FlyoutBorderThemeBrush" Color="{StaticResource DividerColor}" />
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="{StaticResource DividerColor}" />
+
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="{StaticResource InputBorderColor}" />
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUnchecked" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="{StaticResource AccentHoverColor}" />
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeChecked" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" Color="{StaticResource AccentHoverColor}" />
+    <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="{StaticResource OnAccentColor}" />
+    <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver" Color="{StaticResource OnAccentColor}" />
+    <SolidColorBrush x:Key="CheckBoxForegroundUnchecked" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPointerOver" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="CheckBoxForegroundChecked" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="CheckBoxForegroundCheckedPointerOver" Color="{StaticResource TextColor}" />
+
+    <SolidColorBrush x:Key="ProgressBarBackground" Color="{StaticResource SurfaceMutedColor}" />
+    <SolidColorBrush x:Key="ProgressBarForeground" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="ScrollBarThumbFill" Color="#59858B99" />
+    <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="#99858B99" />
+    <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="#CC858B99" />
 </ResourceDictionary>

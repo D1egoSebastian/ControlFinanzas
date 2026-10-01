@@ -7,7 +7,7 @@
              x:Class="ControlDeFinanzasIA.UI.Views.ChatView"
              x:DataType="vm:ChatViewModel"
              x:Name="Root"
-             Background="{StaticResource InkBrush}">
+             Background="{StaticResource CanvasBrush}">
     <Grid ColumnDefinitions="*,320" Margin="24">
 
         <!-- Left column: conversation (F-015, R-1, R-9, D-10) -->
@@ -26,14 +26,14 @@
             <!-- "AI not configured" banner (D3, R-12) -->
             <Border Grid.Row="1"
                     IsVisible="{Binding ShowNotConfiguredBanner}"
-                    Background="{StaticResource AmberTintBrush}"
-                    BorderBrush="{StaticResource AmberBrush}"
+                    Background="{StaticResource AccentSoftBrush}"
+                    BorderBrush="{StaticResource AccentBrush}"
                     BorderThickness="1"
                     CornerRadius="{StaticResource RadiusMedium}"
                     Padding="12"
                     Margin="0,0,0,12">
                 <TextBlock Text="{x:Static resources:Strings.ChatAiNotConfiguredBanner}"
-                           Foreground="{StaticResource AmberBrush}"
+                           Foreground="{StaticResource AccentBrush}"
                            TextWrapping="Wrap" />
             </Border>
 
@@ -42,7 +42,7 @@
                 <StackPanel Spacing="10">
                     <TextBlock Text="{x:Static resources:Strings.ChatEmptyState}"
                                IsVisible="{Binding !Messages.Count}"
-                               Foreground="{StaticResource PaperDimBrush}" />
+                               Foreground="{StaticResource TextSecondaryBrush}" />
 
                     <ItemsControl ItemsSource="{Binding Messages}">
                         <ItemsControl.ItemTemplate>
@@ -79,7 +79,7 @@
                                         </Grid>
                                         <TextBlock Text="{Binding Text}"
                                                    TextWrapping="Wrap"
-                                                   Foreground="{StaticResource PaperBrush}" />
+                                                   Foreground="{StaticResource TextBrush}" />
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>
@@ -125,7 +125,7 @@
             <Border Classes="ledger-row" Padding="16">
                 <StackPanel Spacing="10">
                     <TextBlock Text="{x:Static resources:Strings.ChatFiguresTitle}" Classes="ledger-section" />
-                    <TextBlock Text="{Binding FiguresMonthLabel}" Foreground="{StaticResource PaperDimBrush}" />
+                    <TextBlock Text="{Binding FiguresMonthLabel}" Foreground="{StaticResource TextSecondaryBrush}" />
 
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ChatFiguresExpensesLabel}" />
@@ -144,7 +144,7 @@
 
                     <TextBlock Text="{x:Static resources:Strings.ChatFiguresEmpty}"
                                IsVisible="{Binding !FigureLines.Count}"
-                               Foreground="{StaticResource PaperDimBrush}" />
+                               Foreground="{StaticResource TextSecondaryBrush}" />
 
                     <ItemsControl ItemsSource="{Binding FigureLines}">
                         <ItemsControl.ItemTemplate>
@@ -152,7 +152,7 @@
                                 <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
                                     <TextBlock Grid.Column="0"
                                                Text="{Binding Name}"
-                                               Foreground="{StaticResource PaperBrush}"
+                                               Foreground="{StaticResource TextBrush}"
                                                TextWrapping="Wrap" />
                                     <TextBlock Grid.Column="1" Text="{Binding AmountDisplay}" Classes="ledger-amount" />
                                 </Grid>
@@ -162,7 +162,7 @@
 
                     <TextBlock Text="{x:Static resources:Strings.ChatFiguresMissingRates}"
                                IsVisible="{Binding FiguresHaveMissingRates}"
-                               Foreground="{StaticResource TerracottaTextBrush}"
+                               Foreground="{StaticResource ExpenseBrush}"
                                TextWrapping="Wrap" />
                 </StackPanel>
             </Border>

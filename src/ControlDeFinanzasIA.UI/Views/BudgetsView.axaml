@@ -5,7 +5,7 @@
              x:Class="ControlDeFinanzasIA.UI.Views.BudgetsView"
              x:DataType="vm:BudgetsViewModel"
              x:Name="Root"
-             Background="{StaticResource InkBrush}">
+             Background="{StaticResource CanvasBrush}">
     <Grid ColumnDefinitions="360,*" Margin="24">
         <ScrollViewer Grid.Column="0">
             <StackPanel Spacing="10">
@@ -44,11 +44,11 @@
                           Classes="ledger-input"
                           HorizontalAlignment="Stretch" />
 
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
                 <Button Content="{x:Static resources:Strings.BudgetsSaveButton}"
                         Command="{Binding SaveCommand}"
                         Classes="ledger-btn-primary" />
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
             </StackPanel>
         </ScrollViewer>
 
@@ -87,7 +87,7 @@
                 </ItemsControl>
                 <TextBlock Text="{x:Static resources:Strings.BudgetsEmptyMessage}"
                            IsVisible="{Binding !Budgets.Count}"
-                           Foreground="{StaticResource PaperDimBrush}" />
+                           Foreground="{StaticResource TextSecondaryBrush}" />
             </StackPanel>
         </ScrollViewer>
     </Grid>

@@ -8,11 +8,11 @@ using ControlDeFinanzasIA.Domain.Alerts;
 namespace ControlDeFinanzasIA.UI.Converters;
 
 /// <summary>
-/// Maps an <see cref="AnomalySeverity"/> to its design-token severity-chip
-/// brush (F-014, S8c): <see cref="AnomalySeverity.Info"/> → SageBrush,
-/// <see cref="AnomalySeverity.Warning"/> → AmberBrush,
-/// <see cref="AnomalySeverity.Critical"/> → TerracottaBrush. No new colors —
-/// the same three tokens the budget-progress bar already uses.
+/// Maps an <see cref="AnomalySeverity"/> to its design-token severity-chip brush (F-014, S8c). By default it returns
+/// the chip WASH (background): <see cref="AnomalySeverity.Info"/> → AccentSoftBrush,
+/// <see cref="AnomalySeverity.Warning"/> → WarningSoftBrush, <see cref="AnomalySeverity.Critical"/> →
+/// ExpenseSoftBrush. With the converter parameter <c>text</c> it returns the matching text-safe token
+/// (AccentBrush, WarningBrush, ExpenseBrush), each measured against its wash by <c>ContrastTests</c>. No new colors.
 /// </summary>
 public sealed class AnomalySeverityBrushConverter : IValueConverter
 {
@@ -22,11 +22,12 @@ public sealed class AnomalySeverityBrushConverter : IValueConverter
     /// <inheritdoc />
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
+        bool text = string.Equals(parameter as string, "text", StringComparison.Ordinal);
         string resourceKey = value switch
         {
-            AnomalySeverity.Info => "SageBrush",
-            AnomalySeverity.Warning => "AmberBrush",
-            AnomalySeverity.Critical => "TerracottaBrush",
+            AnomalySeverity.Info => text ? "AccentBrush" : "AccentSoftBrush",
+            AnomalySeverity.Warning => text ? "WarningBrush" : "WarningSoftBrush",
+            AnomalySeverity.Critical => text ? "ExpenseBrush" : "ExpenseSoftBrush",
             _ => null!,
         };
 

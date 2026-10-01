@@ -21,7 +21,9 @@ namespace ControlDeFinanzasIA.Tests.Unit.UI;
 [Collection(HeadlessUi.CollectionName)]
 public sealed class FocusStyleTests
 {
-    private static readonly Color _amber = Color.Parse("#E8A33D");
+    // The shared focus ring is the cobalt accent; on the cobalt primary fill it is the near-ink FocusRing token.
+    private static readonly Color _accent = Color.Parse("#3459E6");
+    private static readonly Color _focusRing = Color.Parse("#14192B");
 
     /// <summary>Gets the case names of the style theory.</summary>
     public static IEnumerable<object[]> Cases =>
@@ -67,10 +69,10 @@ public sealed class FocusStyleTests
         };
     }
 
-    private static bool ShowsAmberRing(Control control)
+    private static bool ShowsAmberRing(Control control, Color? expected = null)
     {
         (Color? color, Thickness thickness) = Ring(control);
-        return color == _amber && thickness.Left >= 1.99 && thickness.Top >= 1.99 && thickness.Right >= 1.99 && thickness.Bottom >= 1.99;
+        return color == (expected ?? _accent) && thickness.Left >= 1.99 && thickness.Top >= 1.99 && thickness.Right >= 1.99 && thickness.Bottom >= 1.99;
     }
 
     [Fact]
@@ -114,7 +116,7 @@ public sealed class FocusStyleTests
 
     [Theory]
     [MemberData(nameof(Cases))]
-    public async Task KeyboardFocus_ShowsTheSharedAmberRing_AndPointerFocusDoesNot(string name)
+    public async Task KeyboardFocus_ShowsTheSharedFocusRing_AndPointerFocusDoesNot(string name)
     {
         (bool Before, bool AfterTab, bool AfterPointer) result = await HeadlessUi.OnUiThread(() =>
         {
@@ -123,16 +125,17 @@ public sealed class FocusStyleTests
             Window window = HeadlessUi.Show(new StackPanel { Children = { control, other } }, null!);
             try
             {
-                bool before = ShowsAmberRing(control);
+                Color ring = name == "ledger-btn-primary" ? _focusRing : _accent;
+                bool before = ShowsAmberRing(control, ring);
 
                 control.Focus(NavigationMethod.Tab);
                 HeadlessUi.Flush();
-                bool afterTab = ShowsAmberRing(control);
+                bool afterTab = ShowsAmberRing(control, ring);
 
                 other.Focus(NavigationMethod.Pointer);
                 control.Focus(NavigationMethod.Pointer);
                 HeadlessUi.Flush();
-                bool afterPointer = ShowsAmberRing(control);
+                bool afterPointer = ShowsAmberRing(control, ring);
 
                 return Task.FromResult((before, afterTab, afterPointer));
             }
@@ -143,7 +146,7 @@ public sealed class FocusStyleTests
         });
 
         Assert.False(result.Before, $"{name} shows the ring while unfocused.");
-        Assert.True(result.AfterTab, $"{name} does not show the amber ring after keyboard focus.");
+        Assert.True(result.AfterTab, $"{name} does not show the focus ring after keyboard focus.");
         Assert.False(result.AfterPointer, $"{name} shows the ring after a mouse focus.");
     }
 
@@ -160,7 +163,7 @@ public sealed class FocusStyleTests
             {
                 input.Focus(method);
                 HeadlessUi.Flush();
-                return Task.FromResult(Ring(input).Color == _amber);
+                return Task.FromResult(Ring(input).Color == _accent);
             }
             finally
             {

@@ -1,13 +1,15 @@
 using System.Globalization;
 using System.Xml.Linq;
 using ControlDeFinanzasIA.Tests.Unit.Packaging;
+using ControlDeFinanzasIA.UI.Views.Charts;
 
 namespace ControlDeFinanzasIA.Tests.Unit.Accessibility;
 
 /// <summary>
-/// F-021 S8 (R-18, S-37, T12): WCAG 2.x contrast of the REAL palette (<c>Tokens.axaml</c> parsed) and of the pairs the
-/// REAL styles and views use. Thresholds: 4.5:1 for text, 3:1 for focus rings and graphical fills. No failing pair is
-/// excluded: a failure is fixed in the tokens or the style, not in this list.
+/// WCAG 2.x contrast of the REAL palette (<c>Tokens.axaml</c> parsed) and of the pairs the REAL styles and views use.
+/// Thresholds: 4.5:1 for text, 3:1 for focus rings, input boundaries and graphical fills. No failing pair is excluded:
+/// a failure is fixed in the tokens or the style, not in this list. Pre-1.0 slice E replaced the dark "Libro Mayor"
+/// palette with the light "Sand and Cobalt" palette; the thresholds did not move.
 /// </summary>
 public sealed class ContrastTests
 {
@@ -19,30 +21,52 @@ public sealed class ContrastTests
     private static readonly XNamespace _xaml = "http://schemas.microsoft.com/winfx/2006/xaml";
 
     /// <summary>Foreground resources a view or style may use for text; every one has its pairs asserted below.</summary>
-    private static readonly string[] _textBrushes = ["PaperBrush", "PaperDimBrush", "AmberBrush", "SageBrush", "TerracottaTextBrush", "InkBrush"];
+    private static readonly string[] _textBrushes =
+    [
+        "TextBrush", "TextSecondaryBrush", "TextMutedBrush", "AccentBrush", "OnAccentBrush", "IncomeBrush", "ExpenseBrush", "WarningBrush",
+    ];
+
+    /// <summary>Surfaces that text can sit on.</summary>
+    private static readonly string[] _surfaces = ["Canvas", "Surface", "SurfaceMuted"];
 
     public static TheoryData<string, string, string, double> TokenPairs()
     {
         var data = new TheoryData<string, string, string, double>();
-        foreach (string foreground in new[] { "Paper", "PaperDim", "Amber", "Sage", "TerracottaText" })
+        foreach (string foreground in new[] { "Text", "TextSecondary", "TextMuted", "Accent", "Income", "Expense", "Warning" })
         {
-            foreach (string background in new[] { "Ink", "Surface" })
+            foreach (string background in _surfaces)
             {
                 data.Add($"{foreground} text on {background}", foreground, background, _textMinimum);
             }
         }
 
-        // Filled buttons: Ink label on the Amber (Expenses register) and Sage (Income register) fills.
-        data.Add("Ink label on the Amber button fill", "Ink", "Amber", _textMinimum);
-        data.Add("Ink label on the Sage button fill", "Ink", "Sage", _textMinimum);
+        // Soft semantic washes (chips, notices, selected sidebar item) carry their own text colour.
+        data.Add("Text on AccentSoft", "Text", "AccentSoft", _textMinimum);
+        data.Add("Accent text on AccentSoft", "Accent", "AccentSoft", _textMinimum);
+        data.Add("Income text on IncomeSoft", "Income", "IncomeSoft", _textMinimum);
+        data.Add("Expense text on ExpenseSoft", "Expense", "ExpenseSoft", _textMinimum);
+        data.Add("Warning text on WarningSoft", "Warning", "WarningSoft", _textMinimum);
+        data.Add("TextSecondary on AccentSoft", "TextSecondary", "AccentSoft", _textMinimum);
 
-        // Focus ring and graphical objects (3:1).
-        data.Add("Amber focus ring on Ink", "Amber", "Ink", _graphicMinimum);
-        data.Add("Amber focus ring on Surface", "Amber", "Surface", _graphicMinimum);
-        data.Add("Terracotta fill/rule on Ink", "Terracotta", "Ink", _graphicMinimum);
-        data.Add("Terracotta fill/rule on Surface (4.43:1, fills and rules only)", "Terracotta", "Surface", _graphicMinimum);
-        data.Add("Sage progress fill on Surface", "Sage", "Surface", _graphicMinimum);
-        data.Add("Amber progress fill on Surface", "Amber", "Surface", _graphicMinimum);
+        // Filled buttons: the label on the Accent fill and on its hover fill.
+        data.Add("OnAccent label on the Accent button fill", "OnAccent", "Accent", _textMinimum);
+        data.Add("OnAccent label on the AccentHover button fill", "OnAccent", "AccentHover", _textMinimum);
+        data.Add("OnAccent label on the AccentPressed button fill", "OnAccent", "AccentPressed", _textMinimum);
+        data.Add("OnAccent count on the Expense notification badge", "OnAccent", "Expense", _textMinimum);
+
+        // Focus ring (3:1) against every surface it can touch, including the primary fill it is drawn over.
+        foreach (string background in new[] { "Canvas", "Surface", "SurfaceMuted", "Accent", "AccentSoft" })
+        {
+            data.Add($"Focus ring on {background}", "FocusRing", background, _graphicMinimum);
+        }
+
+        // Input boundaries and graphical objects (3:1).
+        data.Add("Input border on Surface", "InputBorder", "Surface", _graphicMinimum);
+        data.Add("Input border on Canvas", "InputBorder", "Canvas", _graphicMinimum);
+        data.Add("Accent focus border on Surface", "Accent", "Surface", _graphicMinimum);
+        data.Add("Income progress/amount fill on Surface", "Income", "Surface", _graphicMinimum);
+        data.Add("Expense progress/amount fill on Surface", "Expense", "Surface", _graphicMinimum);
+        data.Add("Warning progress fill on Surface", "WarningFill", "Surface", _graphicMinimum);
         return data;
     }
 
@@ -58,51 +82,48 @@ public sealed class ContrastTests
     }
 
     [Fact]
-    public void TheDangerButtonHover_MeetsTextContrast_OnBothBackgrounds()
+    public void TheNewPalette_IsLight_AndTheCanvasIsNotPlainWhite()
     {
         Dictionary<string, Rgb> palette = Palette();
-        var hover = Rgb.Parse(StyleSetter("Button.ledger-btn-danger:pointerover", "Foreground"));
 
-        foreach (string background in new[] { "Ink", "Surface" })
-        {
-            double ratio = Ratio(hover, palette[background]);
-            Assert.True(ratio >= _textMinimum, $"Danger hover on {background}: {ratio:0.00}:1.");
-        }
+        Assert.True(palette["Canvas"].Luminance > 0.8, "The canvas is a light surface.");
+        Assert.True(palette["Surface"].Luminance > palette["Canvas"].Luminance, "Cards sit above the canvas (lighter).");
+        Assert.True(palette["Text"].Luminance < 0.05, "Body text is near-ink.");
     }
 
     [Fact]
-    public void TheDangerLabelAndTheExpenseAmount_UseTheTerracottaTextToken_NotTheFillToken()
+    public void TheDangerLabelAndTheExpenseAmount_UseTheExpenseTextToken()
     {
-        Assert.Equal("{StaticResource TerracottaTextBrush}", StyleSetter("Button.ledger-btn-danger", "Foreground"));
-        Assert.Equal("{StaticResource TerracottaTextBrush}", StyleSetter("TextBlock.ledger-amount.expense", "Foreground"));
+        string styles = File.ReadAllText(Path.Combine(_uiRoot, "Styles", "LedgerStyles.axaml"));
+
+        Assert.Equal("{StaticResource ExpenseBrush}", StyleSetter("Button.ledger-btn-danger", "Foreground"));
+        Assert.Equal("{StaticResource ExpenseBrush}", StyleSetter("TextBlock.ledger-amount.expense", "Foreground"));
+        Assert.DoesNotContain("TerracottaBrush", styles, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void TheAdjacentMonthCalendarDays_StayReadable_AfterTheirOpacity()
+    public void TheAdjacentMonthCalendarDays_StayReadable_WithoutOpacity()
     {
         Dictionary<string, Rgb> palette = Palette();
-        string opacity = StyleSetterOrNull("Button.calendar-day.adjacent", "Opacity") ?? "1";
-        double alpha = double.Parse(opacity, CultureInfo.InvariantCulture);
+        string? opacity = StyleSetterOrNull("Button.calendar-day.adjacent", "Opacity");
 
-        Rgb effective = palette["PaperDim"].Over(palette["Ink"], alpha);
-
-        double ratio = Ratio(effective, palette["Ink"]);
-        Assert.True(ratio >= _textMinimum, $"Adjacent-month day number: {ratio:0.00}:1 at opacity {alpha}.");
+        Assert.Null(opacity);
+        Assert.Equal("{StaticResource TextMutedBrush}", StyleSetter("Button.calendar-day.adjacent", "Foreground"));
+        Assert.True(Ratio(palette["TextMuted"], palette["Surface"]) >= _textMinimum);
     }
 
     [Fact]
     public void TheSidebarPairs_MeetTextContrast_IncludingTheDigitHintAndTheCurrentWash()
     {
         Dictionary<string, Rgb> palette = Palette();
-        Rgb washedSurface = palette["AmberWash"].Over(palette["Surface"]);
 
         (string Name, double Ratio)[] pairs =
         [
-            ("digit hint (PaperDim) on Surface", Ratio(palette["PaperDim"], palette["Surface"])),
-            ("inactive label (PaperDim) on Surface", Ratio(palette["PaperDim"], palette["Surface"])),
-            ("current label (Paper) on the amber wash", Ratio(palette["Paper"], washedSurface)),
-            ("current digit hint (Amber) on the amber wash", Ratio(palette["Amber"], washedSurface)),
-            ("hover label (Paper) on Surface", Ratio(palette["Paper"], palette["Surface"])),
+            ("digit hint (TextMuted) on Surface", Ratio(palette["TextMuted"], palette["Surface"])),
+            ("inactive label (TextSecondary) on Surface", Ratio(palette["TextSecondary"], palette["Surface"])),
+            ("current label (Accent) on AccentSoft", Ratio(palette["Accent"], palette["AccentSoft"])),
+            ("current digit hint (Accent) on AccentSoft", Ratio(palette["Accent"], palette["AccentSoft"])),
+            ("hover label (Text) on SurfaceMuted", Ratio(palette["Text"], palette["SurfaceMuted"])),
         ];
 
         foreach ((string name, double ratio) in pairs)
@@ -110,16 +131,17 @@ public sealed class ContrastTests
             Assert.True(ratio >= _textMinimum, $"{name}: {ratio:0.00}:1.");
         }
 
-        Assert.Equal("{StaticResource PaperDimBrush}", StyleSetter("TextBlock.sidebar-hint", "Foreground"));
+        Assert.Equal("{StaticResource TextMutedBrush}", StyleSetter("TextBlock.sidebar-hint", "Foreground"));
         Assert.Null(StyleSetterOrNull("TextBlock.sidebar-hint", "Opacity"));
     }
 
     [Fact]
-    public void NoTextForeground_BindsToTheTerracottaFillToken()
+    public void NoTextForeground_BindsToAFillOnlyToken()
     {
-        string[] hits = [.. ForegroundValues().Where(v => v.Value.Contains("TerracottaBrush", StringComparison.Ordinal)).Select(v => $"{v.Where}: {v.Value}")];
+        string[] fillOnly = ["WarningFillBrush", "InputBorderBrush", "DividerBrush", "AccentSoftBrush", "IncomeSoftBrush", "ExpenseSoftBrush", "WarningSoftBrush"];
+        string[] hits = [.. ForegroundValues().Where(v => fillOnly.Any(f => v.Value.Contains(f, StringComparison.Ordinal))).Select(v => $"{v.Where}: {v.Value}")];
 
-        Assert.True(hits.Length == 0, "Terracotta (4.43:1 on Surface) is reserved for fills and rules; use TerracottaTextBrush for text:" + Environment.NewLine + string.Join(Environment.NewLine, hits));
+        Assert.True(hits.Length == 0, "Fill-only tokens must not be used for text:" + Environment.NewLine + string.Join(Environment.NewLine, hits));
     }
 
     [Fact]
@@ -129,8 +151,9 @@ public sealed class ContrastTests
         [
             .. ForegroundValues()
                 .Where(v => !_textBrushes.Any(b => v.Value == "{StaticResource " + b + "}"))
-                .Where(v => v.Value != "#F5A9A3")
                 .Where(v => !v.Value.Contains("BudgetStatusBrushConverter", StringComparison.Ordinal))
+                .Where(v => !v.Value.Contains("ChatMessageStateBrushConverter", StringComparison.Ordinal))
+                .Where(v => !v.Value.Contains("AnomalySeverityBrushConverter", StringComparison.Ordinal))
                 .Select(v => $"{v.Where}: {v.Value}"),
         ];
 
@@ -144,18 +167,49 @@ public sealed class ContrastTests
         string source = File.ReadAllText(Path.Combine(_uiRoot, "Converters", "BudgetStatusBrushConverter.cs"));
         string[] keys = [.. System.Text.RegularExpressions.Regex.Matches(source, "=> \"(?<key>\\w+Brush)\"").Select(m => m.Groups["key"].Value)];
 
-        Assert.Equal(new[] { "AmberBrush", "TerracottaTextBrush", "SageBrush" }, keys);
+        Assert.Equal(new[] { "WarningBrush", "ExpenseBrush", "IncomeBrush" }, keys);
     }
 
     [Fact]
-    public void TheMeasurement_CanFail_OnTheKnownBadPair()
+    public void TheChatAndAnomalyConverters_OnlyReturnAssertedTokens()
     {
-        // Control case: the Terracotta fill token on Surface is a real, measured failure for text.
+        string chat = File.ReadAllText(Path.Combine(_uiRoot, "Converters", "ChatMessageStateBrushConverter.cs"));
+        string[] chatKeys = [.. System.Text.RegularExpressions.Regex.Matches(chat, "\"(?<key>\\w+Brush)\"").Select(m => m.Groups["key"].Value).Distinct()];
+        Assert.All(chatKeys, key => Assert.Contains(key, _textBrushes));
+
+        string anomaly = File.ReadAllText(Path.Combine(_uiRoot, "Converters", "AnomalySeverityBrushConverter.cs"));
+        string[] anomalyKeys = [.. System.Text.RegularExpressions.Regex.Matches(anomaly, "\"(?<key>\\w+Brush)\"").Select(m => m.Groups["key"].Value).Distinct()];
+        string[] allowed = ["AccentBrush", "WarningBrush", "ExpenseBrush", "AccentSoftBrush", "WarningSoftBrush", "ExpenseSoftBrush"];
+        Assert.All(anomalyKeys, key => Assert.Contains(key, allowed));
+    }
+
+    [Fact]
+    public void TheChartPalette_MatchesTheTokens_AndEverySliceIsReadableOnTheCard()
+    {
         Dictionary<string, Rgb> palette = Palette();
 
-        Assert.True(Ratio(palette["Terracotta"], palette["Surface"]) < _textMinimum);
-        Assert.True(Ratio(palette["TerracottaText"], palette["Surface"]) >= _textMinimum);
+        Assert.Equal(Hex(palette["Income"]), ChartPalette.IncomeHex, ignoreCase: true);
+        Assert.Equal(Hex(palette["Expense"]), ChartPalette.ExpenseHex, ignoreCase: true);
+        Assert.Equal(Hex(palette["TextSecondary"]), ChartPalette.AxisTextHex, ignoreCase: true);
+        Assert.True(ChartPalette.SliceHexes.Count >= 8);
+        Assert.Equal(ChartPalette.SliceHexes.Count, ChartPalette.SliceHexes.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+
+        foreach (string hex in ChartPalette.SliceHexes)
+        {
+            double ratio = Ratio(Rgb.Parse(hex), palette["Surface"]);
+            Assert.True(ratio >= _graphicMinimum, $"Chart slice {hex} on Surface: {ratio:0.00}:1.");
+        }
     }
+
+    [Fact]
+    public void TheMeasurement_CanFail_OnAKnownBadPair()
+    {
+        // Control case: a light grey on white really fails, so the assertions above can fail.
+        Assert.True(Ratio(Rgb.Parse("#B0B4BE"), Rgb.Parse("#FFFFFF")) < _textMinimum);
+        Assert.True(Ratio(Rgb.Parse("#14192B"), Rgb.Parse("#FFFFFF")) >= _textMinimum);
+    }
+
+    private static string Hex(Rgb c) => $"#{(int)Math.Round(c.R * 255):X2}{(int)Math.Round(c.G * 255):X2}{(int)Math.Round(c.B * 255):X2}";
 
     private static IEnumerable<(string Where, string Value)> ForegroundValues()
     {
@@ -177,7 +231,7 @@ public sealed class ContrastTests
                 }
 
                 XAttribute? attribute = element.Attribute("Foreground");
-                if (attribute is not null)
+                if (attribute is not null && element.Name.LocalName != "ProgressBar")
                 {
                     yield return ($"{relative}:{((System.Xml.IXmlLineInfo)attribute).LineNumber}", attribute.Value);
                 }
@@ -186,8 +240,11 @@ public sealed class ContrastTests
     }
 
     /// <summary>A ProgressBar's Foreground is its fill (a graphic object asserted at 3:1 above), not text.</summary>
-    private static bool IsProgressBarFill(XElement setter) =>
-        ((string?)setter.Parent?.Attribute("Selector"))?.StartsWith("ProgressBar", StringComparison.Ordinal) == true;
+    private static bool IsProgressBarFill(XElement setter)
+    {
+        string? selector = (string?)setter.Parent?.Attribute("Selector");
+        return selector is not null && selector.Contains("ProgressBar", StringComparison.Ordinal);
+    }
 
     private static string StyleSetter(string selector, string property) =>
         StyleSetterOrNull(selector, property) ?? throw new InvalidOperationException($"No setter {property} on {selector}.");
@@ -245,15 +302,6 @@ public sealed class ContrastTests
                 int.Parse(value[2..4], NumberStyles.HexNumber, CultureInfo.InvariantCulture) / 255.0,
                 int.Parse(value[4..], NumberStyles.HexNumber, CultureInfo.InvariantCulture) / 255.0,
                 alpha);
-        }
-
-        /// <summary>Composites this colour (its alpha times <paramref name="opacity"/>) over an opaque background.</summary>
-        /// <param name="background">The opaque background.</param>
-        /// <param name="opacity">Extra element opacity.</param>
-        public Rgb Over(Rgb background, double opacity = 1)
-        {
-            double a = Alpha * opacity;
-            return new Rgb((R * a) + (background.R * (1 - a)), (G * a) + (background.G * (1 - a)), (B * a) + (background.B * (1 - a)), 1);
         }
 
         private static double Linear(double c) => c <= 0.03928 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4);

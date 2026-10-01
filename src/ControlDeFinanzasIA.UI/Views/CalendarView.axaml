@@ -5,7 +5,7 @@
              xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
              x:Class="ControlDeFinanzasIA.UI.Views.CalendarView"
              x:DataType="vm:CalendarViewModel"
-             Background="{StaticResource InkBrush}">
+             Background="{StaticResource CanvasBrush}">
     <ScrollViewer>
         <StackPanel Margin="32" Spacing="20">
 
@@ -30,17 +30,17 @@
 
             <TextBlock Text="{Binding MonthTotalDisplay}" Classes="ledger-amount" HorizontalAlignment="Left" />
 
-            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding LoadError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding LoadError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
 
             <!-- "Tasa no disponible" notice, same pattern as Dashboard (R-7) -->
-            <Border Background="{StaticResource SurfaceTintBrush}"
-                    BorderBrush="{StaticResource AmberBrush}"
+            <Border Background="{StaticResource SurfaceMutedBrush}"
+                    BorderBrush="{StaticResource AccentBrush}"
                     BorderThickness="1"
                     CornerRadius="{StaticResource RadiusSmall}"
                     Padding="12,8"
                     IsVisible="{Binding HasMissingRates}">
                 <TextBlock Text="{x:Static resources:Strings.DashboardMissingRatesNotice}"
-                           Foreground="{StaticResource AmberBrush}"
+                           Foreground="{StaticResource AccentBrush}"
                            TextWrapping="Wrap" />
             </Border>
 

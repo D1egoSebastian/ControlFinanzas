@@ -7,7 +7,7 @@
              x:Class="ControlDeFinanzasIA.UI.Views.GoalsView"
              x:DataType="vm:GoalsViewModel"
              x:Name="Root"
-             Background="{StaticResource InkBrush}">
+             Background="{StaticResource CanvasBrush}">
     <UserControl.Resources>
         <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
     </UserControl.Resources>
@@ -33,11 +33,11 @@
                          Watermark="{x:Static resources:Strings.GoalsNoteWatermark}"
                          Classes="ledger-input" />
 
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
                 <Button Content="{x:Static resources:Strings.GoalsCreateButton}"
                         Command="{Binding CreateCommand}"
                         Classes="ledger-btn-primary" />
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
 
                 <!-- Contribution sub-flow: inline panel revealed when a goal row is selected (D-10). -->
                 <StackPanel Spacing="10"
@@ -50,7 +50,7 @@
                     <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yContributionDate}" SelectedDate="{Binding ContributionDate, Converter={StaticResource DateOnlyConverter}}"
                                 Classes="ledger-input" />
                     <TextBlock Text="{Binding ContributionCurrency, StringFormat={x:Static resources:Strings.GoalsContributionCurrencyLabel}}"
-                               Foreground="{StaticResource PaperDimBrush}" />
+                               Foreground="{StaticResource TextSecondaryBrush}" />
                     <Button Content="{x:Static resources:Strings.GoalsContributeButton}"
                             Command="{Binding ContributeCommand}"
                             Classes="ledger-btn-primary" />
@@ -77,26 +77,26 @@
                                                    VerticalAlignment="Center" />
                                     </Grid>
                                     <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressValue}" />
-                                    <TextBlock Foreground="{StaticResource PaperDimBrush}">
+                                    <TextBlock Foreground="{StaticResource TextSecondaryBrush}">
                                         <Run Text="{x:Static resources:Strings.GoalsProgressLabel}" />
                                         <Run Text="{Binding ContributedAmount, StringFormat={}{0:N2}}" />
                                         <Run Text="/" />
                                         <Run Text="{Binding TargetAmount, StringFormat={}{0:N2}}" />
                                         <Run Text="{Binding Currency}" />
                                     </TextBlock>
-                                    <TextBlock Foreground="{StaticResource PaperDimBrush}">
+                                    <TextBlock Foreground="{StaticResource TextSecondaryBrush}">
                                         <Run Text="{x:Static resources:Strings.GoalsRemainingLabel}" />
                                         <Run Text="{Binding RemainingAmount, StringFormat={}{0:N2}}" />
                                     </TextBlock>
 
                                     <TextBlock Text="{x:Static resources:Strings.GoalsAlreadyMetMessage}"
                                                IsVisible="{Binding ShowAlreadyMetMessage}"
-                                               Foreground="{StaticResource SageBrush}" />
+                                               Foreground="{StaticResource IncomeBrush}" />
                                     <TextBlock Text="{x:Static resources:Strings.GoalsPastDateWarning}"
                                                IsVisible="{Binding ShowPastDateWarning}"
-                                               Foreground="{StaticResource TerracottaTextBrush}" />
+                                               Foreground="{StaticResource ExpenseBrush}" />
                                     <TextBlock IsVisible="{Binding ShowPlan}"
-                                               Foreground="{StaticResource PaperDimBrush}"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
                                                TextWrapping="Wrap">
                                         <TextBlock.Text>
                                             <MultiBinding StringFormat="{x:Static resources:Strings.GoalsPlanMessage}">
@@ -115,12 +115,12 @@
                                             HorizontalAlignment="Left" />
                                     <TextBlock Text="{Binding PlanNarration}"
                                                TextWrapping="Wrap"
-                                               Foreground="{StaticResource PaperBrush}"
+                                               Foreground="{StaticResource TextBrush}"
                                                IsVisible="{Binding PlanNarration, Converter={x:Static avaloniaConverters:StringConverters.IsNotNullOrEmpty}}" />
                                     <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding PlanNarrationStatusText}"
                                                TextWrapping="Wrap"
                                                FontStyle="Italic"
-                                               Foreground="{StaticResource PaperDimBrush}"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
                                                IsVisible="{Binding PlanNarrationStatusText, Converter={x:Static avaloniaConverters:StringConverters.IsNotNullOrEmpty}}" />
 
                                     <StackPanel Orientation="Horizontal" Spacing="8">
@@ -140,7 +140,7 @@
                 </ItemsControl>
                 <TextBlock Text="{x:Static resources:Strings.GoalsEmptyMessage}"
                            IsVisible="{Binding !Goals.Count}"
-                           Foreground="{StaticResource PaperDimBrush}" />
+                           Foreground="{StaticResource TextSecondaryBrush}" />
             </StackPanel>
         </ScrollViewer>
     </Grid>

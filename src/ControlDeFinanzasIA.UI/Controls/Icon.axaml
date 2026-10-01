@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="ControlDeFinanzasIA.UI.Controls.Icon"
+             x:Name="Root"
+             IsHitTestVisible="False"
+             Focusable="False"
+             IsTabStop="False"
+             AutomationProperties.AccessibilityView="Raw">
+    <!--
+        A line icon from Styles/Icons.axaml on its 24x24 grid, scaled to Size. The stroke is the inherited Foreground,
+        so an icon takes the colour of the button, row or card it sits in (hover, selected and pressed states included).
+        Purely decorative: hidden from assistive technology, never takes input.
+    -->
+    <Viewbox Width="{Binding #Root.Size}" Height="{Binding #Root.Size}">
+        <Canvas Width="24" Height="24">
+            <Path Data="{Binding #Root.Data}"
+                  Stroke="{Binding #Root.Foreground}"
+                  StrokeThickness="{Binding #Root.Thickness}"
+                  StrokeLineCap="Round"
+                  StrokeJoin="Round" />
+        </Canvas>
+    </Viewbox>
+</UserControl>

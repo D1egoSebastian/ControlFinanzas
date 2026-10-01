@@ -30,7 +30,7 @@
         </Style>
         <Style Selector="TextBlock.error-mono">
             <Setter Property="FontFamily" Value="{StaticResource FontMono}" />
-            <Setter Property="Foreground" Value="{StaticResource PaperDimBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
             <Setter Property="FontSize" Value="12" />
         </Style>
     </UserControl.Styles>
@@ -39,7 +39,7 @@
         <!-- Scrim: Ink at 80 %; opaque to hit testing so nothing behind it is clickable. -->
         <Border Classes="error-scrim"
                 Classes.open="{Binding IsOpen}"
-                Background="{StaticResource InkBrush}"
+                Background="{StaticResource CanvasBrush}"
                 Opacity="0.8" />
 
         <Border Classes="error-card"
@@ -48,7 +48,7 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource HairlineBrush}"
+                BorderBrush="{StaticResource DividerBrush}"
                 BorderThickness="1"
                 CornerRadius="{StaticResource RadiusMedium}"
                 ClipToBounds="True"
@@ -56,25 +56,25 @@
                 AutomationProperties.Name="{x:Static resources:Strings.ErrorOverlayTitle}">
             <StackPanel>
                 <!-- Red-ink rule: the exception entry of the ledger. -->
-                <Border Height="2" Background="{StaticResource TerracottaBrush}" />
+                <Border Height="2" Background="{StaticResource ExpenseBrush}" />
 
                 <StackPanel Margin="28,24,28,24" Spacing="16">
                     <TextBlock Text="{x:Static resources:Strings.ErrorOverlayTitle}"
                                FontFamily="{StaticResource FontDisplay}"
                                FontSize="22"
                                FontWeight="SemiBold"
-                               Foreground="{StaticResource PaperBrush}"
+                               Foreground="{StaticResource TextBrush}"
                                TextWrapping="Wrap" />
 
                     <TextBlock Text="{x:Static resources:Strings.ErrorOverlayBody}"
                                AutomationProperties.LiveSetting="Polite"
                                FontFamily="{StaticResource FontBody}"
                                FontSize="14"
-                               Foreground="{StaticResource PaperDimBrush}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
                                TextWrapping="Wrap" />
 
                     <!-- Ledger reference line: hairline rules above and below, the id in mono. -->
-                    <Border BorderBrush="{StaticResource HairlineBrush}"
+                    <Border BorderBrush="{StaticResource DividerBrush}"
                             BorderThickness="0,1,0,1"
                             Padding="0,12">
                         <StackPanel Spacing="4">
@@ -87,7 +87,7 @@
                                            FontFamily="{StaticResource FontMono}"
                                            FontSize="20"
                                            LetterSpacing="2"
-                                           Foreground="{StaticResource PaperBrush}"
+                                           Foreground="{StaticResource TextBrush}"
                                            VerticalAlignment="Center"
                                            IsTabStop="False" />
                             </StackPanel>
@@ -100,7 +100,7 @@
                     <TextBlock Text="{x:Static resources:Strings.ErrorOverlayRestartHint}"
                                FontFamily="{StaticResource FontBody}"
                                FontSize="13"
-                               Foreground="{StaticResource PaperDimBrush}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
                                TextWrapping="Wrap" />
 
                     <DockPanel LastChildFill="False">
@@ -117,7 +117,7 @@
                                    Classes="error-mono"
                                    Text="{x:Static resources:Strings.ErrorOverlayCopied}"
                                    IsVisible="{Binding IsCopied}"
-                                   Foreground="{StaticResource SageBrush}"
+                                   Foreground="{StaticResource IncomeBrush}"
                                    VerticalAlignment="Center"
                                    AutomationProperties.LiveSetting="Polite" />
                     </DockPanel>

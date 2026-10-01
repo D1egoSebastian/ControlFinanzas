@@ -1,75 +1,62 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:ControlDeFinanzasIA.UI.Controls"
              x:Class="ControlDeFinanzasIA.UI.Controls.EmptyState"
              x:Name="Root">
     <!--
-        F-021 (DD-9) empty state, "Libro Mayor": a blank ledger page. Left-aligned and editorial on purpose (no
-        centered card): three hairline rules ruled on the page, one amber tick in the margin where the first entry
-        will go, then the headline in the display serif, a quiet hint and a single action that teaches its shortcut.
-        Tokens only. The glyph is decorative and hidden from assistive technology.
+        F-021 (DD-9) empty state, "Sand and Cobalt": a calm, centered invitation. A soft cobalt disc with a glyph, the
+        headline, a quiet hint and a single primary action that teaches its shortcut. Tokens only. The glyph is
+        decorative and hidden from assistive technology.
     -->
-    <StackPanel MaxWidth="420"
-                HorizontalAlignment="Left"
-                Margin="0,32,0,0"
-                Spacing="12">
-        <!-- Blank ledger page: three 48 px rules and the amber margin tick. -->
-        <Grid Width="48"
-              Height="26"
-              HorizontalAlignment="Left"
-              AutomationProperties.AccessibilityView="Raw">
-            <Border Width="3"
-                    HorizontalAlignment="Left"
-                    Background="{StaticResource AmberBrush}" />
-            <Border Height="2"
-                    Margin="9,0,0,0"
-                    VerticalAlignment="Top"
-                    Background="{StaticResource HairlineBrush}" />
-            <Border Height="2"
-                    Margin="9,0,0,0"
-                    VerticalAlignment="Center"
-                    Background="{StaticResource HairlineBrush}" />
-            <Border Height="2"
-                    Margin="9,0,0,0"
-                    VerticalAlignment="Bottom"
-                    Background="{StaticResource HairlineBrush}" />
-        </Grid>
+    <Border Background="{StaticResource SurfaceMutedBrush}"
+            CornerRadius="{StaticResource RadiusLarge}"
+            Padding="24,32">
+        <StackPanel MaxWidth="440"
+                    HorizontalAlignment="Center"
+                    Spacing="10">
+            <Border Width="56"
+                    Height="56"
+                    CornerRadius="28"
+                    HorizontalAlignment="Center"
+                    Background="{StaticResource AccentSoftBrush}"
+                    AutomationProperties.AccessibilityView="Raw">
+                <local:Icon Size="26" Thickness="2" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBrand}" Foreground="{StaticResource AccentBrush}" />
+            </Border>
 
-        <TextBlock Text="{Binding #Root.Title}"
-                   FontFamily="{StaticResource FontDisplay}"
-                   FontStyle="Italic"
-                   FontSize="20"
-                   Foreground="{StaticResource PaperBrush}"
-                   TextWrapping="Wrap" />
+            <TextBlock Text="{Binding #Root.Title}"
+                       Classes="card-title"
+                       FontSize="18"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap" />
 
-        <TextBlock Text="{Binding #Root.Hint}"
-                   FontFamily="{StaticResource FontBody}"
-                   FontSize="13"
-                   Foreground="{StaticResource PaperDimBrush}"
-                   TextWrapping="Wrap"
-                   IsVisible="{Binding #Root.Hint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <TextBlock Text="{Binding #Root.Hint}"
+                       Classes="ledger-status"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       IsVisible="{Binding #Root.Hint, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
-        <Button Classes="ledger-btn-primary"
-                AutomationProperties.Name="{Binding #Root.ActionText}"
-                HorizontalAlignment="Left"
-                Margin="0,4,0,0"
-                Command="{Binding #Root.ActionCommand}"
-                ToolTip.Tip="{Binding #Root.ShortcutText}"
-                AutomationProperties.AcceleratorKey="{Binding #Root.ShortcutText}"
-                IsVisible="{Binding #Root.ActionText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-                <TextBlock Text="{Binding #Root.ActionText}" VerticalAlignment="Center" />
-                <Border BorderBrush="{StaticResource HairlineBrush}"
-                        BorderThickness="1"
-                        CornerRadius="{StaticResource RadiusSmall}"
-                        Padding="6,1"
-                        IsVisible="{Binding #Root.ShortcutText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                    <TextBlock Text="{Binding #Root.ShortcutText}"
-                               FontFamily="{StaticResource FontMono}"
-                               FontSize="11"
-                               Foreground="{StaticResource PaperDimBrush}"
-                               VerticalAlignment="Center" />
-                </Border>
-            </StackPanel>
-        </Button>
-    </StackPanel>
+            <Button Classes="ledger-btn-primary"
+                    AutomationProperties.Name="{Binding #Root.ActionText}"
+                    HorizontalAlignment="Center"
+                    Margin="0,6,0,0"
+                    Command="{Binding #Root.ActionCommand}"
+                    ToolTip.Tip="{Binding #Root.ShortcutText}"
+                    AutomationProperties.AcceleratorKey="{Binding #Root.ShortcutText}"
+                    IsVisible="{Binding #Root.ActionText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="{Binding #Root.ActionText}" VerticalAlignment="Center" />
+                    <Border Background="{StaticResource OnAccentWashBrush}"
+                            CornerRadius="{StaticResource RadiusSmall}"
+                            Padding="6,1"
+                            IsVisible="{Binding #Root.ShortcutText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <TextBlock Text="{Binding #Root.ShortcutText}"
+                                   FontSize="11"
+                                   Foreground="{StaticResource OnAccentBrush}"
+                                   VerticalAlignment="Center" />
+                    </Border>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Border>
 </UserControl>

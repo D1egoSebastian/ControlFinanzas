@@ -5,7 +5,7 @@
              xmlns:avaloniaConverters="using:Avalonia.Data.Converters"
              x:Class="ControlDeFinanzasIA.UI.Views.SettingsView"
              x:DataType="vm:SettingsViewModel"
-             Background="{StaticResource InkBrush}">
+             Background="{StaticResource CanvasBrush}">
     <ScrollViewer>
         <StackPanel Spacing="24" Margin="24" MaxWidth="720">
 
@@ -29,7 +29,7 @@
                         not an acceptable v1 cut.
                     -->
                     <TextBlock Text="{x:Static resources:Strings.SettingsThemeLightNotice}"
-                               Foreground="{StaticResource AmberBrush}"
+                               Foreground="{StaticResource AccentBrush}"
                                TextWrapping="Wrap" />
 
                     <Button Content="{x:Static resources:Strings.SettingsSaveButton}"
@@ -57,7 +57,7 @@
 
                     <TextBlock Text="{x:Static resources:Strings.SettingsRestartRequiredNotice}"
                                IsVisible="{Binding IsRestartRequired}"
-                               Foreground="{StaticResource AmberBrush}"
+                               Foreground="{StaticResource AccentBrush}"
                                TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
@@ -73,7 +73,7 @@
                         risk exists either way.
                     -->
                     <TextBlock Text="{x:Static resources:Strings.SettingsAiApiKeyWarning}"
-                               Foreground="{StaticResource TerracottaTextBrush}"
+                               Foreground="{StaticResource ExpenseBrush}"
                                TextWrapping="Wrap" />
 
                     <ComboBox AutomationProperties.Name="{x:Static resources:Strings.SettingsAiProviderLabel}" ItemsSource="{Binding AiProviders}"
@@ -121,7 +121,7 @@
                             Classes="ledger-btn" />
 
                     <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding AiTestConnectionMessage}"
-                               Foreground="{StaticResource SageBrush}"
+                               Foreground="{StaticResource IncomeBrush}"
                                TextWrapping="Wrap"
                                IsVisible="{Binding AiTestConnectionMessage, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
                 </StackPanel>
@@ -186,8 +186,8 @@
                     <StackPanel Spacing="6" IsVisible="{Binding IsBusy}">
                         <ProgressBar IsIndeterminate="True"
                                      Height="3"
-                                     Foreground="{StaticResource AmberBrush}"
-                                     Background="{StaticResource HairlineBrush}" />
+                                     Foreground="{StaticResource AccentBrush}"
+                                     Background="{StaticResource DividerBrush}" />
                         <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding WorkingMessage}" Classes="ledger-status" />
                     </StackPanel>
 
@@ -199,8 +199,8 @@
 
                     <!-- Inline destructive confirmation: backup facts, then the irreversible warning. -->
                     <Border IsVisible="{Binding IsConfirmVisible}"
-                            Background="{StaticResource SurfaceTintBrush}"
-                            BorderBrush="{StaticResource AmberBrush}"
+                            Background="{StaticResource SurfaceMutedBrush}"
+                            BorderBrush="{StaticResource AccentBrush}"
                             BorderThickness="3,1,1,1"
                             CornerRadius="{StaticResource RadiusSmall}"
                             Padding="16">
@@ -208,10 +208,10 @@
                             <TextBlock Text="{x:Static resources:Strings.BackupConfirmTitle}"
                                        Classes="ledger-section" />
                             <TextBlock Text="{Binding PendingSummary}"
-                                       Foreground="{StaticResource PaperBrush}"
+                                       Foreground="{StaticResource TextBrush}"
                                        TextWrapping="Wrap" />
                             <TextBlock Text="{x:Static resources:Strings.BackupConfirmWarning}"
-                                       Foreground="{StaticResource AmberBrush}"
+                                       Foreground="{StaticResource AccentBrush}"
                                        FontWeight="SemiBold"
                                        TextWrapping="Wrap" />
                             <StackPanel Orientation="Horizontal" Spacing="12">
@@ -221,7 +221,7 @@
                                 <Button Content="{x:Static resources:Strings.BackupConfirmButton}"
                                         Command="{Binding ConfirmRestoreCommand}"
                                         Classes="ledger-btn-danger"
-                                        BorderBrush="{StaticResource TerracottaBrush}"
+                                        BorderBrush="{StaticResource ExpenseBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{StaticResource RadiusSmall}" />
                             </StackPanel>
@@ -230,14 +230,14 @@
 
                     <!-- Restart panel: the restored data only loads after a restart (terminal state). -->
                     <Border IsVisible="{Binding IsRestartPanelVisible}"
-                            Background="{StaticResource SurfaceTintBrush}"
-                            BorderBrush="{StaticResource AmberBrush}"
+                            Background="{StaticResource SurfaceMutedBrush}"
+                            BorderBrush="{StaticResource AccentBrush}"
                             BorderThickness="3,1,1,1"
                             CornerRadius="{StaticResource RadiusSmall}"
                             Padding="16">
                         <StackPanel Spacing="10">
                             <TextBlock Text="{x:Static resources:Strings.BackupRestartRequiredNotice}"
-                                       Foreground="{StaticResource AmberBrush}"
+                                       Foreground="{StaticResource AccentBrush}"
                                        TextWrapping="Wrap" />
                             <Button Content="{x:Static resources:Strings.BackupRestartNowButton}"
                                     Command="{Binding RestartNowCommand}"
@@ -245,7 +245,7 @@
                                     Classes="ledger-btn-primary" />
                             <TextBlock Text="{x:Static resources:Strings.BackupRestartFallback}"
                                        IsVisible="{Binding RestartFailed}"
-                                       Foreground="{StaticResource TerracottaTextBrush}"
+                                       Foreground="{StaticResource ExpenseBrush}"
                                        TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
@@ -264,20 +264,20 @@
                                   AutomationProperties.AccessibilityView="Content">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:ShortcutListItem">
-                                <Border BorderBrush="{StaticResource HairlineBrush}"
+                                <Border BorderBrush="{StaticResource DividerBrush}"
                                         BorderThickness="0,0,0,1"
                                         Padding="0,6">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBlock Text="{Binding ActionName}"
                                                    FontFamily="{StaticResource FontBody}"
-                                                   Foreground="{StaticResource PaperBrush}"
+                                                   Foreground="{StaticResource TextBrush}"
                                                    TextWrapping="Wrap"
                                                    VerticalAlignment="Center" />
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Gesture}"
                                                    FontFamily="{StaticResource FontMono}"
                                                    FontSize="13"
-                                                   Foreground="{StaticResource AmberBrush}"
+                                                   Foreground="{StaticResource AccentBrush}"
                                                    Margin="16,0,0,0"
                                                    VerticalAlignment="Center" />
                                     </Grid>
@@ -298,8 +298,8 @@
                 </StackPanel>
             </Border>
 
-            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
-            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

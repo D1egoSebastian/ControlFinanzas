@@ -11,8 +11,8 @@ namespace ControlDeFinanzasIA.UI.Converters;
 /// the Phase 10 <c>budget-progress</c>/<c>.near</c>/<c>.exceeded</c> bar
 /// classes already use, for the Dashboard's forecast-vs-budget line (F-014,
 /// S8c): <see cref="BudgetStatus.Ok"/> or <see langword="null"/> →
-/// SageBrush, <see cref="BudgetStatus.Near"/> → AmberBrush,
-/// <see cref="BudgetStatus.Exceeded"/> → TerracottaTextBrush (text contrast, F-021 S8).
+/// IncomeBrush, <see cref="BudgetStatus.Near"/> → WarningBrush,
+/// <see cref="BudgetStatus.Exceeded"/> → ExpenseBrush (text-safe tokens, measured by ContrastTests).
 /// </summary>
 public sealed class BudgetStatusBrushConverter : IValueConverter
 {
@@ -24,9 +24,9 @@ public sealed class BudgetStatusBrushConverter : IValueConverter
     {
         string resourceKey = value switch
         {
-            BudgetStatus.Near => "AmberBrush",
-            BudgetStatus.Exceeded => "TerracottaTextBrush",
-            _ => "SageBrush",
+            BudgetStatus.Near => "WarningBrush",
+            BudgetStatus.Exceeded => "ExpenseBrush",
+            _ => "IncomeBrush",
         };
 
         if (Avalonia.Application.Current is { } app

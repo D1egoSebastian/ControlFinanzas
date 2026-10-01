@@ -1,0 +1,41 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Vector icons as StreamGeometry resources on a 24x24 grid, drawn as 1.75 px round-capped LINES (never filled), the
+        light, modern counterpart of a heavy glyph set. Draw them with a Path carrying the "icon" class, which takes the
+        stroke colour of the control the icon sits in:
+            <Path Classes="icon" Data="{StaticResource IconDashboard}" />
+        The sidebar maps a route to its icon with RouteIconConverter (key = "Icon" + route name).
+
+        The shapes follow the Lucide icon set (ISC License, https://lucide.dev/license); they are inline path strings, no
+        icon package is referenced.
+    -->
+
+    <!-- Sidebar sections: key = "Icon" + route -->
+    <StreamGeometry x:Key="IconDashboard">M3 3h7v9H3z M14 3h7v5h-7z M14 12h7v9h-7z M3 16h7v5H3z</StreamGeometry>
+    <StreamGeometry x:Key="IconExpenses">M22 17l-8.5-8.5-5 5L2 7 M16 17h6v-6</StreamGeometry>
+    <StreamGeometry x:Key="IconIncomes">M22 7l-8.5 8.5-5-5L2 17 M16 7h6v6</StreamGeometry>
+    <StreamGeometry x:Key="IconRecurring">M17 2l4 4-4 4 M3 11V9a4 4 0 0 1 4-4h14 M7 22l-4-4 4-4 M21 13v2a4 4 0 0 1-4 4H3</StreamGeometry>
+    <StreamGeometry x:Key="IconDebts">M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z M2 10h20</StreamGeometry>
+    <StreamGeometry x:Key="IconCalendar">M8 2v4 M16 2v4 M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M3 10h18</StreamGeometry>
+    <StreamGeometry x:Key="IconBudgets">M21.21 15.89A10 10 0 1 1 8 2.83 M22 12A10 10 0 0 0 12 2v10z</StreamGeometry>
+    <StreamGeometry x:Key="IconGoals">M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z M4 22v-7</StreamGeometry>
+    <StreamGeometry x:Key="IconChat">M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z</StreamGeometry>
+    <StreamGeometry x:Key="IconSettings">M21 4h-7 M10 4H3 M21 12h-9 M8 12H3 M21 20h-5 M12 20H3 M14 2v4 M8 10v4 M16 18v4</StreamGeometry>
+
+    <!-- Actions and chrome -->
+    <StreamGeometry x:Key="IconBell">M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9 M10.3 21a1.94 1.94 0 0 0 3.4 0</StreamGeometry>
+    <StreamGeometry x:Key="IconFilter">M22 3H2l8 9.46V19l4 2v-8.54z</StreamGeometry>
+    <StreamGeometry x:Key="IconAdd">M12 5v14 M5 12h14</StreamGeometry>
+    <StreamGeometry x:Key="IconClose">M18 6L6 18 M6 6l12 12</StreamGeometry>
+    <StreamGeometry x:Key="IconChevronDown">M6 9l6 6 6-6</StreamGeometry>
+    <StreamGeometry x:Key="IconChevronUp">M18 15l-6-6-6 6</StreamGeometry>
+    <StreamGeometry x:Key="IconChevronLeft">M15 18l-6-6 6-6</StreamGeometry>
+    <StreamGeometry x:Key="IconChevronRight">M9 18l6-6-6-6</StreamGeometry>
+    <StreamGeometry x:Key="IconSearch">M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16z M21 21l-4.3-4.3</StreamGeometry>
+    <StreamGeometry x:Key="IconDownload">M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3</StreamGeometry>
+    <StreamGeometry x:Key="IconUpload">M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M17 8l-5-5-5 5 M12 3v12</StreamGeometry>
+    <StreamGeometry x:Key="IconRefresh">M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8 M21 3v5h-5 M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16 M8 16H3v5</StreamGeometry>
+    <!-- Brand mark: three rising bars. -->
+    <StreamGeometry x:Key="IconBrand">M6 20v-8 M12 20V5 M18 20v-5</StreamGeometry>
+</ResourceDictionary>

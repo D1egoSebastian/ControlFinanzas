@@ -8,12 +8,12 @@
              x:Class="ControlDeFinanzasIA.UI.Views.RecurringRulesView"
              x:DataType="vm:RecurringRulesViewModel"
              x:Name="Root"
-             Background="{StaticResource InkBrush}">
+             Background="{StaticResource CanvasBrush}">
     <Grid ColumnDefinitions="320,*" Margin="24">
         <ScrollViewer Grid.Column="0">
             <StackPanel Spacing="10">
                 <TextBlock Text="{x:Static resources:Strings.RecurringTitle}" Classes="ledger-title" />
-                <TextBlock Text="{x:Static resources:Strings.RecurringSubtitle}" Foreground="{StaticResource PaperDimBrush}" />
+                <TextBlock Text="{x:Static resources:Strings.RecurringSubtitle}" Foreground="{StaticResource TextSecondaryBrush}" />
                 <TextBlock Text="{x:Static resources:Strings.RecurringFieldType}" Classes="ledger-section" />
                 <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yRuleType}" ItemsSource="{Binding RuleTypes}" SelectedItem="{Binding RuleType}" Classes="ledger-input">
                     <ComboBox.ItemTemplate>
@@ -22,7 +22,7 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <TextBlock Text="{Binding RuleTypeHelp}" Foreground="{StaticResource PaperDimBrush}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding RuleTypeHelp}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
                 <TextBox AutomationProperties.Name="{x:Static resources:Strings.RecurringNamePlaceholder}" Text="{Binding Name}" Watermark="{x:Static resources:Strings.RecurringNamePlaceholder}" Classes="ledger-input" />
                 <TextBox AutomationProperties.Name="{x:Static resources:Strings.RecurringAmountPlaceholder}" Text="{Binding Amount}" Watermark="{x:Static resources:Strings.RecurringAmountPlaceholder}" Classes="ledger-input" />
                 <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yCurrency}" ItemsSource="{Binding Currencies}" SelectedItem="{Binding Currency}" Classes="ledger-input" />
@@ -49,8 +49,8 @@
                               SelectedItem="{Binding DayOfMonth}"
                               Classes="ledger-input" />
                 </StackPanel>
-                <TextBlock Text="{x:Static resources:Strings.RecurringDayOfMonthHelp}" Foreground="{StaticResource PaperDimBrush}" TextWrapping="Wrap" />
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding NextChargeText}" Foreground="{StaticResource PaperBrush}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <TextBlock Text="{x:Static resources:Strings.RecurringDayOfMonthHelp}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding NextChargeText}" Foreground="{StaticResource TextBrush}" FontWeight="SemiBold" TextWrapping="Wrap" />
                 <ComboBox AutomationProperties.Name="{x:Static resources:Strings.RecurringCategoryPlaceholder}" ItemsSource="{Binding Categories}"
                           DisplayMemberBinding="{Binding Name}"
                           SelectedItem="{Binding SelectedCategory}"
@@ -61,7 +61,7 @@
                           SelectedItem="{Binding SelectedPaymentMethod}"
                           PlaceholderText="{x:Static resources:Strings.RecurringPaymentMethodPlaceholder}"
                           Classes="ledger-input" />
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
                 <WrapPanel Orientation="Horizontal">
                     <WrapPanel.Styles>
                         <Style Selector="Button">
@@ -73,18 +73,18 @@
                     <Button Content="{x:Static resources:Strings.RecurringDeactivateButton}" Command="{Binding DeactivateSelectedCommand}" IsVisible="{Binding IsEditing}" Classes="ledger-btn" />
                     <Button Content="{x:Static resources:Strings.RecurringDeleteButton}" Command="{Binding DeleteSelectedCommand}" IsVisible="{Binding IsEditing}" Classes="ledger-btn" />
                 </WrapPanel>
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
                 <Separator Margin="0,12" />
                 <TextBlock Text="{x:Static resources:Strings.RecurringGenerateTitle}" Classes="ledger-section" />
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button Content="{x:Static resources:Strings.RecurringPreviewButton}" Command="{Binding PreviewGenerationCommand}" Classes="ledger-btn" />
                     <Button Content="{x:Static resources:Strings.RecurringConfirmButton}" Command="{Binding ConfirmGenerationCommand}" Classes="ledger-btn-primary" />
                 </StackPanel>
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding GenerationError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding GenerationError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
                 <ItemsControl ItemsSource="{Binding PreviewItems}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Foreground="{StaticResource PaperDimBrush}">
+                            <TextBlock Foreground="{StaticResource TextSecondaryBrush}">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{x:Static resources:Strings.RecurringPreviewItemFormat}">
                                         <Binding Path="RuleName" />
@@ -109,8 +109,8 @@
                                 <Grid ColumnDefinitions="*,Auto,Auto">
                                     <StackPanel>
                                         <TextBlock Text="{Binding Name}" Classes="ledger-section" />
-                                        <TextBlock Text="{Binding Frequency, Converter={x:Static converters:EnumLabelConverter.Instance}}" Foreground="{StaticResource PaperDimBrush}" />
-                                        <TextBlock Text="{Binding NextGenerationDate, Converter={x:Static converters:NextChargeTextConverter.Instance}}" Foreground="{StaticResource PaperDimBrush}" />
+                                        <TextBlock Text="{Binding Frequency, Converter={x:Static converters:EnumLabelConverter.Instance}}" Foreground="{StaticResource TextSecondaryBrush}" />
+                                        <TextBlock Text="{Binding NextGenerationDate, Converter={x:Static converters:NextChargeTextConverter.Instance}}" Foreground="{StaticResource TextSecondaryBrush}" />
                                     </StackPanel>
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding Amount.Amount, StringFormat={}{0:N2}}"

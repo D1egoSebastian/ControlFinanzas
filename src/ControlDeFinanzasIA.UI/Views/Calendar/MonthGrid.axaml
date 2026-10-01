@@ -43,7 +43,7 @@
                    IsVisible="{Binding !#Root.Cells.Count}"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
-                   Foreground="{StaticResource PaperDimBrush}"
+                   Foreground="{StaticResource TextSecondaryBrush}"
                    TextWrapping="Wrap" />
     </Grid>
 </UserControl>

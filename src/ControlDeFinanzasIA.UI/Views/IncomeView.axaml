@@ -11,17 +11,17 @@
              x:Class="ControlDeFinanzasIA.UI.Views.IncomeView"
              x:DataType="vm:IncomeViewModel"
              x:Name="Root"
-             Background="{StaticResource InkBrush}">
+             Background="{StaticResource CanvasBrush}">
     <UserControl.Resources>
         <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
     </UserControl.Resources>
     <ScrollViewer>
         <StackPanel Margin="28" Spacing="16">
-            <TextBlock Text="{x:Static resources:Strings.IncomeTitle}" Foreground="{StaticResource PaperBrush}" FontSize="28" FontWeight="Bold" />
-            <TextBlock Text="{x:Static resources:Strings.IncomeSubtitle}" Foreground="{StaticResource PaperDimBrush}" />
+            <TextBlock Text="{x:Static resources:Strings.IncomeTitle}" Foreground="{StaticResource TextBrush}" FontSize="28" FontWeight="Bold" />
+            <TextBlock Text="{x:Static resources:Strings.IncomeSubtitle}" Foreground="{StaticResource TextSecondaryBrush}" />
             <Border Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="20">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="{x:Static resources:Strings.IncomeFormTitle}" Foreground="{StaticResource SageBrush}" FontSize="18" FontWeight="Bold" />
+                    <TextBlock Text="{x:Static resources:Strings.IncomeFormTitle}" Foreground="{StaticResource IncomeBrush}" FontSize="18" FontWeight="Bold" />
                     <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
                         <TextBox AutomationProperties.Name="{x:Static resources:Strings.IncomeDescriptionPlaceholder}" Grid.Row="0" Grid.Column="0" Text="{Binding Description}" behaviors:FocusOnRequest.Token="{Binding DescriptionFocusRequest}" Watermark="{x:Static resources:Strings.IncomeDescriptionPlaceholder}" />
                         <TextBox AutomationProperties.Name="{x:Static resources:Strings.IncomeAmountPlaceholder}" Grid.Row="0" Grid.Column="1" Margin="12,0,0,0" Text="{Binding Amount}" Watermark="{x:Static resources:Strings.IncomeAmountPlaceholder}" />
@@ -30,24 +30,24 @@
                         <ComboBox AutomationProperties.Name="{x:Static resources:Strings.IncomeCurrencyPlaceholder}" Grid.Row="2" Grid.Column="0" ItemsSource="{x:Static converters:EnumValues.Currencies}" SelectedItem="{Binding Currency}" PlaceholderText="{x:Static resources:Strings.IncomeCurrencyPlaceholder}" />
                         <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yDate}" Grid.Row="2" Grid.Column="1" Margin="12,0,0,0" SelectedDate="{Binding Date, Converter={StaticResource DateOnlyConverter}}" />
                         <TextBox AutomationProperties.Name="{x:Static resources:Strings.IncomeNotePlaceholder}" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Note}" Watermark="{x:Static resources:Strings.IncomeNotePlaceholder}" AcceptsReturn="True" Height="70" />
-                        <TextBlock AutomationProperties.LiveSetting="Polite" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
+                        <TextBlock AutomationProperties.LiveSetting="Polite" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
                         <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10">
-                            <Button Content="{x:Static resources:Strings.IncomeRegisterButton}" Command="{Binding RegisterIncomeCommand}" IsDefault="{Binding !IsEditMode}" Background="{StaticResource SageBrush}" Foreground="{StaticResource InkBrush}" />
+                            <Button Content="{x:Static resources:Strings.IncomeRegisterButton}" Command="{Binding RegisterIncomeCommand}" IsDefault="{Binding !IsEditMode}" Background="{StaticResource IncomeBrush}" Foreground="{StaticResource OnAccentBrush}" />
                             <Button Content="{x:Static resources:Strings.IncomeUpdateButton}" Command="{Binding UpdateIncomeCommand}" IsDefault="{Binding IsEditMode}" IsVisible="{Binding IsEditMode}" />
                             <Button Content="{x:Static resources:Strings.IncomeCancelButton}" Command="{Binding CancelEditCommand}" IsVisible="{Binding IsEditMode}" />
                         </StackPanel>
                     </Grid>
                 </StackPanel>
             </Border>
-            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
-            <TextBlock Text="{x:Static resources:Strings.IncomeListTitle}" Foreground="{StaticResource PaperBrush}" FontSize="20" FontWeight="Bold" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
+            <TextBlock Text="{x:Static resources:Strings.IncomeListTitle}" Foreground="{StaticResource TextBrush}" FontSize="20" FontWeight="Bold" />
             <!-- Filter panel (Phase 4 deliverable restored): search, category and date range narrow the list. -->
             <Border Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="20" IsVisible="{Binding !IsEmptyNoData}">
                 <StackPanel Spacing="12">
-                    <TextBlock Text="{x:Static resources:Strings.FiltersSectionTitle}" Foreground="{StaticResource SageBrush}" FontSize="18" FontWeight="Bold" />
+                    <TextBlock Text="{x:Static resources:Strings.FiltersSectionTitle}" Foreground="{StaticResource IncomeBrush}" FontSize="18" FontWeight="Bold" />
                     <WrapPanel Orientation="Horizontal">
                         <StackPanel Spacing="4" Width="260" Margin="0,0,16,12">
-                            <TextBlock Text="{x:Static resources:Strings.FilterSearchLabel}" Foreground="{StaticResource PaperDimBrush}" FontSize="12" />
+                            <TextBlock Text="{x:Static resources:Strings.FilterSearchLabel}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
                             <TextBox AutomationProperties.Name="{x:Static resources:Strings.FilterSearchLabel}" Classes="ledger-input" Text="{Binding FilterText}" Watermark="{x:Static resources:Strings.FilterSearchWatermark}">
                                 <!-- Enter applies the filter here; without this the window's default button would register the form above. -->
                                 <TextBox.KeyBindings>
@@ -56,19 +56,19 @@
                             </TextBox>
                         </StackPanel>
                         <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
-                            <TextBlock Text="{x:Static resources:Strings.CategoryLabel}" Foreground="{StaticResource PaperDimBrush}" FontSize="12" />
+                            <TextBlock Text="{x:Static resources:Strings.CategoryLabel}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
                             <ComboBox AutomationProperties.Name="{x:Static resources:Strings.FilterByCategoryLabel}" Classes="ledger-input" HorizontalAlignment="Stretch" ItemsSource="{Binding Categories}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding FilterCategoryId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.FilterAllCategoriesPlaceholder}" />
                         </StackPanel>
                         <StackPanel Spacing="4" Width="296" Margin="0,0,16,12">
-                            <TextBlock Text="{x:Static resources:Strings.FilterDateFromLabel}" Foreground="{StaticResource PaperDimBrush}" FontSize="12" />
+                            <TextBlock Text="{x:Static resources:Strings.FilterDateFromLabel}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
                             <DatePicker AutomationProperties.Name="{x:Static resources:Strings.FilterDateFromLabel}" Classes="ledger-input" SelectedDate="{Binding FilterDateFrom, Converter={StaticResource DateOnlyConverter}}" />
                         </StackPanel>
                         <StackPanel Spacing="4" Width="296" Margin="0,0,16,12">
-                            <TextBlock Text="{x:Static resources:Strings.FilterDateToLabel}" Foreground="{StaticResource PaperDimBrush}" FontSize="12" />
+                            <TextBlock Text="{x:Static resources:Strings.FilterDateToLabel}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
                             <DatePicker AutomationProperties.Name="{x:Static resources:Strings.FilterDateToLabel}" Classes="ledger-input" SelectedDate="{Binding FilterDateTo, Converter={StaticResource DateOnlyConverter}}" />
                         </StackPanel>
                     </WrapPanel>
-                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FilterError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" IsVisible="{Binding FilterError, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FilterError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" IsVisible="{Binding FilterError, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Button Content="{x:Static resources:Strings.ApplyFilterButton}" Command="{Binding ApplyFilterCommand}" Classes="ledger-btn-primary" />
                         <Button Content="{x:Static resources:Strings.ClearFilterButton}" Command="{Binding ClearFilterCommand}" Classes="ledger-btn" />
@@ -80,10 +80,10 @@
                     <DataTemplate x:DataType="dto:IncomeDto">
                         <Border Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="14" Margin="0,0,0,8">
                             <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" RowDefinitions="Auto,Auto">
-                                <TextBlock Grid.Column="0" Text="{Binding Date}" Foreground="{StaticResource PaperDimBrush}" VerticalAlignment="Center" Margin="0,0,16,0" />
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center"><TextBlock Text="{Binding Description}" Foreground="{StaticResource PaperBrush}" FontWeight="Bold" /><TextBlock Text="{Binding PaymentMethodName}" Foreground="{StaticResource PaperDimBrush}" /></StackPanel>
+                                <TextBlock Grid.Column="0" Text="{Binding Date}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,16,0" />
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center"><TextBlock Text="{Binding Description}" Foreground="{StaticResource TextBrush}" FontWeight="Bold" /><TextBlock Text="{Binding PaymentMethodName}" Foreground="{StaticResource TextSecondaryBrush}" /></StackPanel>
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="12,0,12,0">
-                                    <TextBlock Foreground="{StaticResource SageBrush}" FontSize="16" HorizontalAlignment="Right">
+                                    <TextBlock Foreground="{StaticResource IncomeBrush}" FontSize="16" HorizontalAlignment="Right">
                                         <TextBlock.Text>
                                             <MultiBinding StringFormat="{x:Static resources:Strings.RowAmountWithCurrencyFormat}">
                                                 <Binding Path="Amount" />
@@ -91,7 +91,7 @@
                                             </MultiBinding>
                                         </TextBlock.Text>
                                     </TextBlock>
-                                    <TextBlock Text="{Binding ConvertedAmountDisplay}" Foreground="{StaticResource PaperDimBrush}" FontSize="12" HorizontalAlignment="Right" IsVisible="{Binding ConvertedAmountDisplay, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
+                                    <TextBlock Text="{Binding ConvertedAmountDisplay}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" HorizontalAlignment="Right" IsVisible="{Binding ConvertedAmountDisplay, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
                                 </StackPanel>
                                 <Button Grid.Column="3" Content="{x:Static resources:Strings.IncomeEditButton}" Command="{Binding #Root.DataContext.BeginEditCommand}" CommandParameter="{Binding}" VerticalAlignment="Center" />
                                 <!-- Delete is two steps and stays inline: the same button turns into "Confirm" (keyboard focus stays on it) and a Cancel button appears. -->
@@ -120,7 +120,7 @@
                                         </Button.IsVisible>
                                     </Button>
                                 </StackPanel>
-                                <TextBlock Grid.Row="1" Grid.ColumnSpan="5" Margin="0,8,0,0" Text="{x:Static resources:Strings.DeleteConfirmPrompt}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap">
+                                <TextBlock Grid.Row="1" Grid.ColumnSpan="5" Margin="0,8,0,0" Text="{x:Static resources:Strings.DeleteConfirmPrompt}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap">
                                     <TextBlock.IsVisible>
                                         <MultiBinding Converter="{x:Static converters:RowPendingConverter.Instance}">
                                             <Binding Path="Id" />
@@ -137,8 +137,8 @@
             <Grid ColumnDefinitions="Auto,*,Auto" IsVisible="{Binding HasRecords}">
                 <Button Grid.Column="0" Content="{x:Static resources:Strings.PreviousPageButton}" Command="{Binding PreviousPageCommand}" Classes="ledger-btn" />
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding PageSummary}" Foreground="{StaticResource PaperBrush}" FontFamily="{StaticResource FontMono}" />
-                    <TextBlock Text="{Binding TotalCount, StringFormat={x:Static resources:Strings.ListTotalCountFormat}}" Foreground="{StaticResource PaperDimBrush}" />
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding PageSummary}" Foreground="{StaticResource TextBrush}" FontFamily="{StaticResource FontMono}" />
+                    <TextBlock Text="{Binding TotalCount, StringFormat={x:Static resources:Strings.ListTotalCountFormat}}" Foreground="{StaticResource TextSecondaryBrush}" />
                 </StackPanel>
                 <Button Grid.Column="2" Content="{x:Static resources:Strings.NextPageButton}" Command="{Binding NextPageCommand}" Classes="ledger-btn" />
             </Grid>

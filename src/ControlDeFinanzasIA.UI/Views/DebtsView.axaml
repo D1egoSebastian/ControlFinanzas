@@ -8,7 +8,7 @@
              x:Class="ControlDeFinanzasIA.UI.Views.DebtsView"
              x:DataType="vm:DebtsViewModel"
              x:Name="Root"
-             Background="{StaticResource InkBrush}">
+             Background="{StaticResource CanvasBrush}">
     <UserControl.Resources>
         <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
     </UserControl.Resources>
@@ -16,7 +16,7 @@
         <ScrollViewer Grid.Column="0">
             <StackPanel Spacing="10">
                 <TextBlock Text="{x:Static resources:Strings.DebtsNewTitle}" Classes="ledger-title" />
-                <TextBlock Text="{x:Static resources:Strings.DebtsNewSubtitle}" Foreground="{StaticResource PaperDimBrush}" />
+                <TextBlock Text="{x:Static resources:Strings.DebtsNewSubtitle}" Foreground="{StaticResource TextSecondaryBrush}" />
                 <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsDescriptionPlaceholder}" Text="{Binding Description}" Watermark="{x:Static resources:Strings.DebtsDescriptionPlaceholder}" Classes="ledger-input" />
                 <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsOriginalAmountPlaceholder}" Text="{Binding OriginalAmount}" Watermark="{x:Static resources:Strings.DebtsOriginalAmountPlaceholder}" Classes="ledger-input" />
                 <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yCurrency}" ItemsSource="{Binding Currencies}" SelectedItem="{Binding Currency}" Classes="ledger-input" />
@@ -32,9 +32,9 @@
                 <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yStartDate}" SelectedDate="{Binding StartDate, Converter={StaticResource DateOnlyConverter}}" Classes="ledger-input" />
                 <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsCounterpartyPlaceholder}" Text="{Binding CounterpartyName}" Watermark="{x:Static resources:Strings.DebtsCounterpartyPlaceholder}" Classes="ledger-input" />
                 <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsNotePlaceholder}" Text="{Binding Note}" Watermark="{x:Static resources:Strings.DebtsNotePlaceholder}" Classes="ledger-input" />
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
                 <Button Content="{x:Static resources:Strings.DebtsCreateButton}" Command="{Binding CreateCommand}" IsDefault="True" Classes="ledger-btn-primary" />
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource SageBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
             </StackPanel>
         </ScrollViewer>
         <ScrollViewer Grid.Column="1" Margin="24,0,0,0">
@@ -47,9 +47,9 @@
                                 <Grid ColumnDefinitions="*,Auto">
                                     <StackPanel>
                                         <TextBlock Text="{Binding Description}" Classes="ledger-section" />
-                                        <TextBlock Text="{Binding CounterpartyName}" Foreground="{StaticResource PaperDimBrush}" />
-                                        <TextBlock Text="{Binding TotalInstallments, StringFormat={x:Static resources:Strings.DebtsInstallmentsFormat}}" Foreground="{StaticResource PaperDimBrush}" />
-                                        <TextBlock Text="{Binding Status, Converter={x:Static converters:EnumLabelConverter.Instance}}" Foreground="{StaticResource PaperDimBrush}" />
+                                        <TextBlock Text="{Binding CounterpartyName}" Foreground="{StaticResource TextSecondaryBrush}" />
+                                        <TextBlock Text="{Binding TotalInstallments, StringFormat={x:Static resources:Strings.DebtsInstallmentsFormat}}" Foreground="{StaticResource TextSecondaryBrush}" />
+                                        <TextBlock Text="{Binding Status, Converter={x:Static converters:EnumLabelConverter.Instance}}" Foreground="{StaticResource TextSecondaryBrush}" />
                                     </StackPanel>
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding OriginalAmount.Amount, StringFormat={}{0:N2}}"
@@ -76,7 +76,7 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
                 <TextBlock Text="{Binding PendingBalance, StringFormat={x:Static resources:Strings.DebtsPendingBalanceFormat}}" Classes="ledger-section" />
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding ScheduleError}" Foreground="{StaticResource TerracottaTextBrush}" TextWrapping="Wrap" />
+                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding ScheduleError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
                 <ItemsControl ItemsSource="{Binding Schedule}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="domain:DebtPayment">
@@ -85,7 +85,7 @@
                                     <TextBlock Text="{Binding InstallmentNumber}" />
                                     <StackPanel Grid.Column="1" Margin="8,0">
                                         <TextBlock Text="{Binding ScheduledDate}" />
-                                        <TextBlock Text="{Binding Status, Converter={x:Static converters:EnumLabelConverter.Instance}}" Foreground="{StaticResource PaperDimBrush}" />
+                                        <TextBlock Text="{Binding Status, Converter={x:Static converters:EnumLabelConverter.Instance}}" Foreground="{StaticResource TextSecondaryBrush}" />
                                     </StackPanel>
                                     <Button Grid.Column="2" Content="{x:Static resources:Strings.DebtsPayButton}"
                                             Command="{Binding #Root.DataContext.RegisterPaymentCommand}"
@@ -102,7 +102,7 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <TextBlock Text="{x:Static resources:Strings.DebtsSelectHint}" IsVisible="{Binding !Schedule.Count}"
-                           Foreground="{StaticResource PaperDimBrush}" />
+                           Foreground="{StaticResource TextSecondaryBrush}" />
             </StackPanel>
         </ScrollViewer>
     </Grid>

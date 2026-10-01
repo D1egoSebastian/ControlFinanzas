@@ -17,38 +17,38 @@
             <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource SageBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource IncomeBrush}" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style Selector="TextBlock.import-badge.duplicate">
-            <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
         </Style>
         <Style Selector="TextBlock.import-badge.rejected">
-            <Setter Property="Foreground" Value="{StaticResource TerracottaTextBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
         </Style>
         <Style Selector="TextBlock.import-reason">
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{StaticResource AmberBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
         <Style Selector="TextBlock.import-reason.rejected">
-            <Setter Property="Foreground" Value="{StaticResource TerracottaTextBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
         </Style>
         <Style Selector="TextBlock.import-label">
             <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{StaticResource PaperDimBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
         </Style>
         <Style Selector="Border.import-callout">
-            <Setter Property="Background" Value="{StaticResource SurfaceTintBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AmberBrush}" />
+            <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
             <Setter Property="BorderThickness" Value="3,1,1,1" />
             <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
             <Setter Property="Padding" Value="16,12" />
         </Style>
         <Style Selector="Border.import-chip">
-            <Setter Property="Background" Value="{StaticResource InkBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
+            <Setter Property="Background" Value="{StaticResource CanvasBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
             <Setter Property="Padding" Value="8,2" />
@@ -56,7 +56,7 @@
     </UserControl.Styles>
 
     <Border Background="{StaticResource SurfaceBrush}"
-            BorderBrush="{StaticResource HairlineBrush}"
+            BorderBrush="{StaticResource DividerBrush}"
             BorderThickness="1"
             CornerRadius="{StaticResource RadiusMedium}"
             Padding="20">
@@ -65,7 +65,7 @@
             <!-- File header: name and how it was read -->
             <StackPanel Spacing="2" IsVisible="{Binding FileName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                 <TextBlock Text="{Binding FileName}"
-                           Foreground="{StaticResource PaperBrush}"
+                           Foreground="{StaticResource TextBrush}"
                            FontFamily="{StaticResource FontDisplay}"
                            FontSize="18"
                            FontWeight="SemiBold"
@@ -77,8 +77,8 @@
             <StackPanel Spacing="6" IsVisible="{Binding IsBusy}">
                 <ProgressBar IsIndeterminate="True"
                              Height="3"
-                             Foreground="{StaticResource AmberBrush}"
-                             Background="{StaticResource HairlineBrush}" />
+                             Foreground="{StaticResource AccentBrush}"
+                             Background="{StaticResource DividerBrush}" />
                 <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding WorkingMessage}" Classes="ledger-status" />
             </StackPanel>
 
@@ -94,7 +94,7 @@
                     <DataTemplate x:DataType="x:String">
                         <Border Classes="import-callout" Margin="0,0,0,8">
                             <TextBlock Text="{Binding}"
-                                       Foreground="{StaticResource AmberBrush}"
+                                       Foreground="{StaticResource AccentBrush}"
                                        TextWrapping="Wrap" />
                         </Border>
                     </DataTemplate>
@@ -199,7 +199,7 @@
 
                 <StackPanel Spacing="10" IsVisible="{Binding IsMappingVisible}">
                     <TextBlock Text="{x:Static resources:Strings.ImportMappingTitle}"
-                               Foreground="{StaticResource PaperBrush}"
+                               Foreground="{StaticResource TextBrush}"
                                FontFamily="{StaticResource FontDisplay}"
                                FontSize="16"
                                FontWeight="SemiBold" />
@@ -295,7 +295,7 @@
                 <StackPanel Spacing="12" IsVisible="{Binding HasPreview}"
                             Opacity="{Binding IsPreviewStale, Converter={x:Static converters:BoolToOpacityConverter.Instance}}">
                     <TextBlock Text="{Binding SummaryText}"
-                               Foreground="{StaticResource PaperBrush}"
+                               Foreground="{StaticResource TextBrush}"
                                FontWeight="SemiBold"
                                TextWrapping="Wrap" />
 
@@ -321,7 +321,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="x:String">
                                     <Border Classes="import-chip" Margin="0,0,6,6">
-                                        <TextBlock Text="{Binding}" Foreground="{StaticResource PaperBrush}" FontSize="12" />
+                                        <TextBlock Text="{Binding}" Foreground="{StaticResource TextBrush}" FontSize="12" />
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -334,24 +334,24 @@
                     <ItemsControl ItemsSource="{Binding VisibleRows}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:ImportRowItem">
-                                <Border BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,0,0,1" Padding="0,8">
+                                <Border BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1" Padding="0,8">
                                     <Grid ColumnDefinitions="88,104,140,*,Auto" RowDefinitions="Auto,Auto">
                                         <TextBlock Grid.Column="0" Text="{Binding StatusText}"
                                                    Classes="import-badge"
                                                    Classes.duplicate="{Binding IsDuplicate}"
                                                    Classes.rejected="{Binding IsRejected}" />
                                         <TextBlock Grid.Column="1" Text="{Binding DateText}"
-                                                   Foreground="{StaticResource PaperDimBrush}" VerticalAlignment="Center" />
+                                                   Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
                                         <TextBlock Grid.Column="2" Text="{Binding AmountText}"
                                                    Classes="ledger-amount" HorizontalAlignment="Left" VerticalAlignment="Center" />
                                         <TextBlock Grid.Column="3" Text="{Binding Description}"
-                                                   Foreground="{StaticResource PaperBrush}" TextTrimming="CharacterEllipsis"
+                                                   Foreground="{StaticResource TextBrush}" TextTrimming="CharacterEllipsis"
                                                    VerticalAlignment="Center" />
                                         <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding CategoryText}" Foreground="{StaticResource PaperDimBrush}" />
+                                            <TextBlock Text="{Binding CategoryText}" Foreground="{StaticResource TextSecondaryBrush}" />
                                             <Border Classes="import-chip" IsVisible="{Binding IsNewCategory}" Padding="6,0">
                                                 <TextBlock Text="{x:Static resources:Strings.ImportNewCategoryTag}"
-                                                           Foreground="{StaticResource AmberBrush}" FontSize="11" />
+                                                           Foreground="{StaticResource AccentBrush}" FontSize="11" />
                                             </Border>
                                         </StackPanel>
                                         <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4"
@@ -369,7 +369,7 @@
                 <!-- Confirmation: the backup recommendation is copy only, never a gate -->
                 <Border Classes="import-callout" IsVisible="{Binding IsConfirmVisible}">
                     <TextBlock Text="{Binding BackupRecommendation}"
-                               Foreground="{StaticResource PaperBrush}"
+                               Foreground="{StaticResource TextBrush}"
                                TextWrapping="Wrap" />
                 </Border>
 
@@ -378,7 +378,7 @@
                     <CheckBox IsChecked="{Binding IsAcknowledged}"
                               AutomationProperties.Name="{x:Static resources:Strings.ImportAcknowledgeLabel}">
                         <TextBlock Text="{x:Static resources:Strings.ImportAcknowledgeLabel}"
-                                   Foreground="{StaticResource AmberBrush}"
+                                   Foreground="{StaticResource AccentBrush}"
                                    TextWrapping="Wrap" />
                     </CheckBox>
                 </Border>
@@ -405,7 +405,7 @@
             <Border Classes="import-callout" IsVisible="{Binding IsDonePanelVisible}">
                 <StackPanel Spacing="10">
                     <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding DoneMessage}"
-                               Foreground="{StaticResource SageBrush}"
+                               Foreground="{StaticResource IncomeBrush}"
                                TextWrapping="Wrap" />
                     <Button Content="{x:Static resources:Strings.ImportCloseButton}"
                             Command="{Binding CloseCommand}"
