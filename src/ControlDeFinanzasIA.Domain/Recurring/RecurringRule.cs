@@ -144,6 +144,10 @@ public abstract class RecurringRule
     /// <param name="categoryId">Categoria del movimiento.</param>
     /// <param name="paymentMethodId">Metodo de pago del movimiento.</param>
     /// <param name="tagIds">Tags opcionales.</param>
+    /// <param name="firstChargeDate">
+    /// Fecha del primer cobro (cursor inicial). Null = <paramref name="startDate"/>. Debe estar dentro de
+    /// [<paramref name="startDate"/>, <paramref name="endDate"/>].
+    /// </param>
     /// <returns>Una instancia valida de <see cref="Subscription"/>.</returns>
     /// <exception cref="ArgumentException">Si se viola alguna invariante.</exception>
     public static Subscription Create(
@@ -155,7 +159,8 @@ public abstract class RecurringRule
         DateOnly? endDate,
         Guid categoryId,
         Guid paymentMethodId,
-        IReadOnlyList<Guid>? tagIds = null)
+        IReadOnlyList<Guid>? tagIds = null,
+        DateOnly? firstChargeDate = null)
     {
         ArgumentNullException.ThrowIfNull(amount);
 
@@ -171,15 +176,17 @@ public abstract class RecurringRule
         }
 
         IReadOnlyList<Guid> safeTags = tagIds ?? Array.Empty<Guid>();
+        DateOnly firstCharge = ValidateNextCharge(firstChargeDate, startDate, endDate);
 
         return new Subscription(
             Guid.NewGuid(), normalizedName, amount, currency, normalizedFrequency,
-            startDate, endDate, categoryId, paymentMethodId, safeTags, true, startDate);
+            startDate, endDate, categoryId, paymentMethodId, safeTags, true, firstCharge);
     }
 
     /// <summary>
     /// Aplica cambios a la regla. Re-valida todas las invariantes.
-    /// El Id no se puede cambiar.
+    /// El Id no se puede cambiar. El cursor <see cref="NextGenerationDate"/> solo se mueve si se indica
+    /// <c>nextChargeDate</c> o si la fecha de inicio lo supera; guardar sin cambios nunca mueve el calendario.
     /// </summary>
     public void Update(
         string name,
@@ -190,7 +197,8 @@ public abstract class RecurringRule
         DateOnly? endDate,
         Guid categoryId,
         Guid paymentMethodId,
-        IReadOnlyList<Guid>? tagIds = null)
+        IReadOnlyList<Guid>? tagIds = null,
+        DateOnly? nextChargeDate = null)
     {
         ArgumentNullException.ThrowIfNull(amount);
 
@@ -205,6 +213,8 @@ public abstract class RecurringRule
                 nameof(amount));
         }
 
+        DateOnly? explicitNext = nextChargeDate is null ? null : ValidateNextCharge(nextChargeDate, startDate, endDate);
+
         Name = normalizedName;
         Amount = amount;
         Currency = currency;
@@ -214,7 +224,14 @@ public abstract class RecurringRule
         CategoryId = categoryId;
         PaymentMethodId = paymentMethodId;
         TagIds = tagIds ?? TagIds;
-        if (NextGenerationDate < startDate)
+
+        // The schedule cursor only moves when the caller says where the next charge is, or when the start date was
+        // pushed past it. Saving an edit that changes neither never moves the schedule.
+        if (explicitNext is { } next)
+        {
+            NextGenerationDate = next;
+        }
+        else if (NextGenerationDate < startDate)
         {
             NextGenerationDate = startDate;
         }
@@ -248,7 +265,31 @@ public abstract class RecurringRule
                 nameof(generatedDate));
         }
 
-        NextGenerationDate = AddMonthsClamped(generatedDate, monthInterval);
+        NextGenerationDate = RecurringSchedule.AddMonthsAnchored(StartDate.Day, generatedDate, monthInterval);
+    }
+
+    private static DateOnly ValidateNextCharge(DateOnly? nextCharge, DateOnly startDate, DateOnly? endDate)
+    {
+        if (nextCharge is not { } next)
+        {
+            return startDate;
+        }
+
+        if (next < startDate)
+        {
+            throw new ArgumentException(
+                $"The first charge ({next:o}) must be on or after StartDate ({startDate:o}).",
+                nameof(nextCharge));
+        }
+
+        if (endDate is { } end && next > end)
+        {
+            throw new ArgumentException(
+                $"The first charge ({next:o}) must be on or before EndDate ({end:o}).",
+                nameof(nextCharge));
+        }
+
+        return next;
     }
 
     private static string ValidateName(string? name)
@@ -317,33 +358,5 @@ public abstract class RecurringRule
         {
             throw new ArgumentException("PaymentMethodId is required.", nameof(paymentMethodId));
         }
-    }
-
-    /// <summary>
-    /// Suma meses a una fecha, clamping al ultimo dia del mes destino.
-    /// Para mas detalles sobre la estrategia de borde, ver
-    /// <see cref="RecurringOccurrenceCalculator"/>.
-    /// </summary>
-    private static DateOnly AddMonthsClamped(DateOnly date, int months)
-    {
-        int year = date.Year;
-        int month = date.Month + months;
-        while (month > 12)
-        {
-            month -= 12;
-            year += 1;
-        }
-
-        while (month < 1)
-        {
-            month += 12;
-            year -= 1;
-        }
-
-        int targetDay = date.Day == DateTime.DaysInMonth(date.Year, date.Month)
-            ? DateTime.DaysInMonth(year, month)
-            : Math.Min(date.Day, DateTime.DaysInMonth(year, month));
-
-        return new DateOnly(year, month, targetDay);
     }
 }

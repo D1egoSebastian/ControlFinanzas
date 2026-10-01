@@ -62,6 +62,34 @@ public sealed class RecurringRuleRepositoryTests
     }
 
     [Fact]
+    public async Task UpdateAsync_FromADetachedCopy_PersistsTheAmountAndTheScheduleDates()
+    {
+        // The real app edits a copy read without tracking (GetByIdAsync), not the instance the context already holds.
+        using var factory = new TestAppDbContextFactory();
+        await using Infrastructure.Persistence.AppDbContext context = factory.CreateContext();
+        await context.Database.MigrateAsync();
+        var repository = new RecurringRuleRepository(context);
+        Subscription rule = RecurringRule.Create(
+            "Internet", Money.Create(30m, Currency.DOP), Currency.DOP, "Monthly",
+            new DateOnly(2026, 8, 25), null, new Guid("11111111-1111-1111-1111-000000000001"), new Guid("22222222-2222-2222-2222-000000000001"));
+        await repository.AddAsync(rule);
+
+        RecurringRule copy = (await repository.GetByIdAsync(rule.Id))!;
+        copy.Update("Internet Pro", Money.Create(45m, Currency.USD), Currency.USD, "Bimonthly",
+            new DateOnly(2026, 9, 28), null, copy.CategoryId, copy.PaymentMethodId, null, new DateOnly(2026, 9, 28));
+        Assert.True((await repository.UpdateAsync(copy)).IsSuccess);
+
+        context.ChangeTracker.Clear();
+        RecurringRule loaded = (await repository.GetByIdAsync(rule.Id))!;
+        Assert.Equal("Internet Pro", loaded.Name);
+        Assert.Equal(45m, loaded.Amount.Amount);
+        Assert.Equal(Currency.USD, loaded.Amount.Currency);
+        Assert.Equal("Bimonthly", loaded.Frequency);
+        Assert.Equal(new DateOnly(2026, 9, 28), loaded.StartDate);
+        Assert.Equal(new DateOnly(2026, 9, 28), loaded.NextGenerationDate);
+    }
+
+    [Fact]
     public async Task GeneratedExpense_RoundTripsProvenanceAndPeriod()
     {
         using var factory = new TestAppDbContextFactory();

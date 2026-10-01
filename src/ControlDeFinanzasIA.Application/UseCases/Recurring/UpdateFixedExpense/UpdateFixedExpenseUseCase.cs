@@ -36,7 +36,7 @@ public sealed class UpdateFixedExpenseUseCase
         try
         {
             rule.Update(command.Name, Money.Create(command.Amount, command.Currency), command.Currency, command.Frequency,
-                command.StartDate, command.EndDate, command.CategoryId, command.PaymentMethodId, command.TagIds);
+                command.StartDate, command.EndDate, command.CategoryId, command.PaymentMethodId, command.TagIds, command.NextChargeDate);
             return await _repository.UpdateAsync(rule, ct).ConfigureAwait(false);
         }
         catch (ArgumentException ex)

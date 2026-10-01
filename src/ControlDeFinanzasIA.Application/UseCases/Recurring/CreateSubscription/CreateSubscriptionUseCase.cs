@@ -26,7 +26,8 @@ public sealed record CreateSubscriptionCommand(
     DateOnly? EndDate,
     Guid CategoryId,
     Guid PaymentMethodId,
-    IReadOnlyList<Guid>? TagIds = null);
+    IReadOnlyList<Guid>? TagIds = null,
+    DateOnly? NextChargeDate = null);
 
 /// <summary>
 /// Use case que registra una nueva suscripcion. Orquestra la creacion
@@ -97,7 +98,8 @@ public sealed class CreateSubscriptionUseCase
                 endDate: command.EndDate,
                 categoryId: command.CategoryId,
                 paymentMethodId: command.PaymentMethodId,
-                tagIds: command.TagIds);
+                tagIds: command.TagIds,
+                firstChargeDate: command.NextChargeDate);
         }
         catch (ArgumentException ex)
         {

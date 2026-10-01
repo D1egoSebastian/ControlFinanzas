@@ -9,11 +9,12 @@ namespace ControlDeFinanzasIA.Domain.Recurring;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Estrategia de borde de mes: si la regla tiene dia 31 y el mes
+/// Estrategia de borde de mes: el dia de la fecha de inicio es el ancla. Si la regla tiene dia 31 y el mes
 /// destino tiene 28/29/30 dias, se usa el ultimo dia del mes
 /// destino. Esto es consistente con la convencion de varios
 /// sistemas de facturacion (Netflix cobra el 28 de feb si la suscripcion
-/// empezo el 31 de enero).
+/// empezo el 31 de enero). Cada ocurrencia se calcula desde el ancla, sin encadenar, asi que un cobro del 30
+    /// vuelve al 30 despues de febrero en lugar de deslizarse al fin de mes.
 /// </para>
 /// <para>
 /// La regla tiene un <see cref="RecurringRule.StartDate"/> y un
@@ -61,17 +62,19 @@ public sealed class RecurringOccurrenceCalculator
             return Array.Empty<DateOnly>();
         }
 
-        int monthInterval = FrequencyToMonths(rule.Frequency);
+        int monthInterval = RecurringSchedule.MonthsOf(rule.Frequency);
+        int anchorDay = rule.StartDate.Day;
         var occurrences = new List<DateOnly>();
 
-        // First occurrence is the first aligned date >= effectiveFrom
-        // based on the rule's StartDate.
-        DateOnly current = AlignedFirstOccurrenceOnOrAfter(rule.StartDate, effectiveFrom, monthInterval);
-
+        // Every occurrence is computed from the anchor (the day of the start date), never chained from the previous
+        // one, so a day 30 charge clamped to February 28 returns to the 30th in March instead of drifting.
+        int index = FirstIndexOnOrAfter(rule.StartDate, anchorDay, effectiveFrom, monthInterval);
+        DateOnly current = Nth(rule.StartDate, anchorDay, index, monthInterval);
         while (current <= effectiveTo)
         {
             occurrences.Add(current);
-            current = AddMonthsClamped(current, monthInterval);
+            index++;
+            current = Nth(rule.StartDate, anchorDay, index, monthInterval);
         }
 
         return occurrences;
@@ -95,73 +98,35 @@ public sealed class RecurringOccurrenceCalculator
             return rule.StartDate;
         }
 
-        int monthInterval = FrequencyToMonths(rule.Frequency);
-        return AddMonthsClamped(lastGeneratedDate.Value, monthInterval);
+        return RecurringSchedule.AddMonthsAnchored(rule.StartDate.Day, lastGeneratedDate.Value, RecurringSchedule.MonthsOf(rule.Frequency));
     }
 
-    private static int FrequencyToMonths(string frequency) => frequency switch
-    {
-        nameof(RecurringFrequency.Monthly) => 1,
-        nameof(RecurringFrequency.Bimonthly) => 2,
-        nameof(RecurringFrequency.Yearly) => 12,
-        _ => 1, // default
-    };
+    private static DateOnly Nth(DateOnly startDate, int anchorDay, int index, int monthInterval) =>
+        RecurringSchedule.AddMonthsAnchored(anchorDay, startDate, index * monthInterval);
 
     /// <summary>
-    /// Devuelve la primera fecha de ocurrencia de la regla que sea
-    /// &gt;= <paramref name="from"/>. Si la regla empezo en X y X es
-    /// anterior a <paramref name="from"/>, se avanza en pasos de
-    /// <paramref name="monthInterval"/> meses hasta alcanzar o
-    /// superar <paramref name="from"/>.
+    /// Devuelve el indice de la primera ocurrencia de la regla que sea
+    /// &gt;= <paramref name="from"/> (0 es la fecha de inicio).
     /// </summary>
-    private static DateOnly AlignedFirstOccurrenceOnOrAfter(
-        DateOnly startDate,
-        DateOnly from,
-        int monthInterval)
+    private static int FirstIndexOnOrAfter(DateOnly startDate, int anchorDay, DateOnly from, int monthInterval)
     {
         if (startDate >= from)
         {
-            return startDate;
+            return 0;
         }
 
-        int monthsBetween =
-            (from.Year - startDate.Year) * 12 + (from.Month - startDate.Month);
-        int steps = (int)Math.Ceiling(monthsBetween / (double)monthInterval);
-        if (steps <= 0)
+        int monthsBetween = ((from.Year - startDate.Year) * 12) + (from.Month - startDate.Month);
+        int index = Math.Max(0, monthsBetween / monthInterval);
+        while (Nth(startDate, anchorDay, index, monthInterval) < from)
         {
-            steps = 1;
+            index++;
         }
 
-        return AddMonthsClamped(startDate, steps * monthInterval);
-    }
-
-    /// <summary>
-    /// Suma meses a una fecha. Si la fecha original cae en el ultimo
-    /// dia de su mes, se preserva la "intencion" de fin de mes
-    /// (e.g. 31 de enero + 1 mes = 28 de febrero, luego 28 de febrero
-    /// + 1 mes = 31 de marzo, no 28). Esto evita que un dia de pago
-    /// "31" se "deslice" permanentemente al 28.
-    /// </summary>
-    private static DateOnly AddMonthsClamped(DateOnly date, int months)
-    {
-        int year = date.Year;
-        int month = date.Month + months;
-        while (month > 12)
+        while (index > 0 && Nth(startDate, anchorDay, index - 1, monthInterval) >= from)
         {
-            month -= 12;
-            year += 1;
+            index--;
         }
 
-        while (month < 1)
-        {
-            month += 12;
-            year -= 1;
-        }
-
-        int targetDay = date.Day == DateTime.DaysInMonth(date.Year, date.Month)
-            ? DateTime.DaysInMonth(year, month)
-            : Math.Min(date.Day, DateTime.DaysInMonth(year, month));
-
-        return new DateOnly(year, month, targetDay);
+        return index;
     }
 }

@@ -12,4 +12,5 @@ public sealed record UpdateSubscriptionCommand(
     DateOnly? EndDate,
     Guid CategoryId,
     Guid PaymentMethodId,
-    IReadOnlyList<Guid>? TagIds = null);
+    IReadOnlyList<Guid>? TagIds = null,
+    DateOnly? NextChargeDate = null);

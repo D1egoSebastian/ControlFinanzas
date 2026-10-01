@@ -45,7 +45,7 @@ public sealed class CreateFixedExpenseUseCase
         public static FixedExpense Create(CreateFixedExpenseCommand c)
         {
             Subscription subscription = RecurringRule.Create(c.Name, Money.Create(c.Amount, c.Currency), c.Currency,
-                c.Frequency, c.StartDate, c.EndDate, c.CategoryId, c.PaymentMethodId, c.TagIds);
+                c.Frequency, c.StartDate, c.EndDate, c.CategoryId, c.PaymentMethodId, c.TagIds, c.NextChargeDate);
             return new FixedExpense(subscription.Id, subscription.Name, subscription.Amount, subscription.Currency,
                 subscription.Frequency, subscription.StartDate, subscription.EndDate, subscription.CategoryId,
                 subscription.PaymentMethodId, subscription.TagIds, subscription.Active, subscription.NextGenerationDate);

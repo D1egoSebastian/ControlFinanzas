@@ -2,6 +2,7 @@ using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
 using ControlDeFinanzasIA.Domain.Recurring;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace ControlDeFinanzasIA.Infrastructure.Persistence.Repositories;
 
@@ -31,7 +32,11 @@ public sealed class RecurringRuleRepository : IRecurringRuleRepository
             return Result.Failure("NotFound", $"Recurring rule {rule.Id} was not found.");
         }
 
-        _db.Entry(existing).CurrentValues.SetValues(rule);
+        // SetValues copies the entity's own columns only; the amount is an owned type and needs its own copy,
+        // otherwise an edit of the amount or currency from a detached copy is silently dropped.
+        EntityEntry<RecurringRule> entry = _db.Entry(existing);
+        entry.CurrentValues.SetValues(rule);
+        entry.Reference(r => r.Amount).TargetEntry?.CurrentValues.SetValues(rule.Amount);
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         return Result.Success(null!);
     }

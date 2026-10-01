@@ -54,7 +54,8 @@ public sealed class UpdateSubscriptionUseCase
                 command.EndDate,
                 command.CategoryId,
                 command.PaymentMethodId,
-                command.TagIds);
+                command.TagIds,
+                command.NextChargeDate);
         }
         catch (ArgumentException ex)
         {
