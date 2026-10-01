@@ -1,94 +1,117 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
+             xmlns:controls="using:ControlDeFinanzasIA.UI.Controls"
              xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
              x:Class="ControlDeFinanzasIA.UI.Views.BudgetsView"
              x:DataType="vm:BudgetsViewModel"
              x:Name="Root"
              Background="{StaticResource CanvasBrush}">
-    <Grid ColumnDefinitions="360,*" Margin="24">
-        <ScrollViewer Grid.Column="0">
-            <StackPanel Spacing="10">
-                <TextBlock Text="{x:Static resources:Strings.BudgetsFormTitle}" Classes="ledger-title" />
-
-                <!-- Month header + navigation (R-1, R-9) -->
-                <Grid ColumnDefinitions="*,Auto,Auto">
-                    <TextBlock Grid.Column="0"
-                               Text="{Binding SelectedMonthLabel}"
-                               Classes="ledger-section"
-                               VerticalAlignment="Center" />
-                    <Button Grid.Column="1"
-                            Content="{x:Static resources:Strings.DashboardPreviousMonthButton}"
+    <ScrollViewer>
+        <StackPanel Margin="32" Spacing="20">
+            <!-- Page header: title on the left, the month navigation on the right (R-1, R-9). -->
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Text="{x:Static resources:Strings.SidebarBudgets}" Classes="page-title" />
+                    <TextBlock Text="{x:Static resources:Strings.BudgetsSubtitle}" Classes="page-subtitle" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding SelectedMonthLabel}" Classes="card-title" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <Button Content="{x:Static resources:Strings.DashboardPreviousMonthButton}"
                             Command="{Binding PreviousMonthCommand}"
                             Classes="ledger-btn" />
-                    <Button Grid.Column="2"
-                            Content="{x:Static resources:Strings.DashboardNextMonthButton}"
+                    <Button Content="{x:Static resources:Strings.DashboardNextMonthButton}"
                             Command="{Binding NextMonthCommand}"
-                            Classes="ledger-btn"
-                            Margin="8,0,0,0" />
-                </Grid>
+                            Classes="ledger-btn" />
+                </StackPanel>
+            </Grid>
 
-                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.BudgetsCategoryPlaceholder}" ItemsSource="{Binding Categories}"
-                          DisplayMemberBinding="{Binding Name}"
-                          SelectedValue="{Binding SelectedCategoryId}"
-                          SelectedValueBinding="{Binding Id}"
-                          PlaceholderText="{x:Static resources:Strings.BudgetsCategoryPlaceholder}"
-                          Classes="ledger-input"
-                          HorizontalAlignment="Stretch" />
-                <TextBox AutomationProperties.Name="{x:Static resources:Strings.BudgetsAmountWatermark}" Text="{Binding Amount}"
-                         Watermark="{x:Static resources:Strings.BudgetsAmountWatermark}"
-                         Classes="ledger-input" />
-                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.BudgetsCurrencyPlaceholder}" ItemsSource="{Binding Currencies}"
-                          SelectedItem="{Binding Currency}"
-                          PlaceholderText="{x:Static resources:Strings.BudgetsCurrencyPlaceholder}"
-                          Classes="ledger-input"
-                          HorizontalAlignment="Stretch" />
+            <!-- Budget form: one compact card, Save is the one primary action. -->
+            <Border Classes="card">
+                <StackPanel Spacing="14">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border Classes="icon-chip" AutomationProperties.AccessibilityView="Raw">
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBudgets}" Foreground="{StaticResource AccentBrush}" />
+                        </Border>
+                        <TextBlock Text="{x:Static resources:Strings.BudgetsFormTitle}" Classes="card-title" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <WrapPanel Orientation="Horizontal">
+                        <StackPanel Spacing="4" Width="260" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.BudgetsCategoryPlaceholder}" Classes="field-label" />
+                            <ComboBox AutomationProperties.Name="{x:Static resources:Strings.BudgetsCategoryPlaceholder}" ItemsSource="{Binding Categories}"
+                                      DisplayMemberBinding="{Binding Name}"
+                                      SelectedValue="{Binding SelectedCategoryId}"
+                                      SelectedValueBinding="{Binding Id}"
+                                      PlaceholderText="{x:Static resources:Strings.BudgetsCategoryPlaceholder}"
+                                      Classes="ledger-input"
+                                      HorizontalAlignment="Stretch" />
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.BudgetsAmountWatermark}" Classes="field-label" />
+                            <TextBox AutomationProperties.Name="{x:Static resources:Strings.BudgetsAmountWatermark}" Text="{Binding Amount}"
+                                     Watermark="{x:Static resources:Strings.BudgetsAmountWatermark}"
+                                     Classes="ledger-input" />
+                        </StackPanel>
+                        <StackPanel Spacing="4" Width="140" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.BudgetsCurrencyPlaceholder}" Classes="field-label" />
+                            <ComboBox AutomationProperties.Name="{x:Static resources:Strings.BudgetsCurrencyPlaceholder}" ItemsSource="{Binding Currencies}"
+                                      SelectedItem="{Binding Currency}"
+                                      PlaceholderText="{x:Static resources:Strings.BudgetsCurrencyPlaceholder}"
+                                      Classes="ledger-input"
+                                      HorizontalAlignment="Stretch" />
+                        </StackPanel>
+                    </WrapPanel>
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Content="{x:Static resources:Strings.BudgetsSaveButton}"
+                                Command="{Binding SaveCommand}"
+                                Classes="ledger-btn-primary" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
 
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
-                <Button Content="{x:Static resources:Strings.BudgetsSaveButton}"
-                        Command="{Binding SaveCommand}"
-                        Classes="ledger-btn-primary" />
-                <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
-            </StackPanel>
-        </ScrollViewer>
-
-        <ScrollViewer Grid.Column="1" Margin="24,0,0,0">
-            <StackPanel Spacing="12">
-                <TextBlock Text="{x:Static resources:Strings.BudgetsListTitle}" Classes="ledger-title" />
+            <TextBlock Text="{x:Static resources:Strings.BudgetsListTitle}" Classes="card-title" FontSize="20" />
+            <Border Classes="card" Padding="12,8" IsVisible="{Binding !!Budgets.Count}">
                 <ItemsControl ItemsSource="{Binding Budgets}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:BudgetRow">
-                            <Border Classes="ledger-row" Padding="12">
+                            <Border Classes="ledger-row" Padding="8,10">
                                 <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                                     <TextBlock Grid.Column="0"
                                                Text="{Binding CategoryName}"
-                                               Classes="ledger-section"
+                                               Classes="strong"
                                                VerticalAlignment="Center" />
                                     <TextBlock Grid.Column="1"
-                                               Text="{Binding Amount, StringFormat={}{0:N2}}"
                                                Classes="ledger-amount"
                                                VerticalAlignment="Center"
-                                               Margin="0,0,12,0" />
+                                               Margin="0,0,12,0">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{x:Static resources:Strings.RowAmountWithCurrencyFormat}">
+                                                <Binding Path="Amount" />
+                                                <Binding Path="Currency" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
                                     <Button Grid.Column="2"
                                             Content="{x:Static resources:Strings.EditButton}"
                                             Command="{Binding #Root.DataContext.EditCommand}"
                                             CommandParameter="{Binding}"
-                                            Classes="ledger-btn" />
+                                            Classes="ledger-btn ghost" />
                                     <Button Grid.Column="3"
                                             Content="{x:Static resources:Strings.DeleteButton}"
                                             Command="{Binding #Root.DataContext.DeleteCommand}"
                                             CommandParameter="{Binding}"
-                                            Classes="ledger-btn"
+                                            Classes="ledger-btn-danger"
                                             Margin="4,0,0,0" />
                                 </Grid>
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <TextBlock Text="{x:Static resources:Strings.BudgetsEmptyMessage}"
-                           IsVisible="{Binding !Budgets.Count}"
-                           Foreground="{StaticResource TextSecondaryBrush}" />
-            </StackPanel>
-        </ScrollViewer>
-    </Grid>
+            </Border>
+            <controls:EmptyState Title="{x:Static resources:Strings.BudgetsEmptyMessage}"
+                                 IsVisible="{Binding !Budgets.Count}" />
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

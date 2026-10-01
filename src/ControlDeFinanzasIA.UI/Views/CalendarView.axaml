@@ -8,63 +8,60 @@
              Background="{StaticResource CanvasBrush}">
     <ScrollViewer>
         <StackPanel Margin="32" Spacing="20">
-
-            <TextBlock Text="{x:Static resources:Strings.CalendarTitle}" Classes="ledger-section" />
-
-            <!-- Month header + navigation (R-1, R-7) -->
-            <Grid ColumnDefinitions="*,Auto,Auto">
-                <TextBlock Grid.Column="0"
-                           Text="{Binding SelectedMonthLabel}"
-                           Classes="ledger-title"
-                           VerticalAlignment="Center" />
-                <Button Grid.Column="1"
-                        Content="{x:Static resources:Strings.DashboardPreviousMonthButton}"
-                        Command="{Binding PreviousMonthCommand}"
-                        Classes="ledger-btn" />
-                <Button Grid.Column="2"
-                        Content="{x:Static resources:Strings.DashboardNextMonthButton}"
-                        Command="{Binding NextMonthCommand}"
-                        Classes="ledger-btn"
-                        Margin="8,0,0,0" />
-            </Grid>
-
-            <TextBlock Text="{Binding MonthTotalDisplay}" Classes="ledger-amount" HorizontalAlignment="Left" />
+            <!-- Page header -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="{x:Static resources:Strings.CalendarTitle}" Classes="page-title" />
+                <TextBlock Text="{x:Static resources:Strings.CalendarSubtitle}" Classes="page-subtitle" />
+            </StackPanel>
 
             <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding LoadError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
 
             <!-- "Tasa no disponible" notice, same pattern as Dashboard (R-7) -->
-            <Border Background="{StaticResource SurfaceMutedBrush}"
-                    BorderBrush="{StaticResource AccentBrush}"
-                    BorderThickness="1"
-                    CornerRadius="{StaticResource RadiusSmall}"
-                    Padding="12,8"
-                    IsVisible="{Binding HasMissingRates}">
+            <Border Classes="notice info" IsVisible="{Binding HasMissingRates}">
                 <TextBlock Text="{x:Static resources:Strings.DashboardMissingRatesNotice}"
                            Foreground="{StaticResource AccentBrush}"
                            TextWrapping="Wrap" />
             </Border>
 
-            <!-- Weekday header row, localized via CultureInfo.CurrentCulture (R-7) -->
-            <ItemsControl ItemsSource="{Binding WeekdayHeaders}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <UniformGrid Rows="1" Columns="7" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding}"
-                                   HorizontalAlignment="Center"
-                                   Classes="ledger-section" />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <!-- The month card: its name and total, the navigation, the weekday row and the day grid (R-1, R-2, R-3, R-7, D-6). -->
+            <Border Classes="card">
+                <StackPanel Spacing="16">
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="{Binding SelectedMonthLabel}" Classes="card-title" FontSize="22" />
+                            <TextBlock Text="{Binding MonthTotalDisplay}" Classes="ledger-amount expense" HorizontalAlignment="Left" />
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Content="{x:Static resources:Strings.DashboardPreviousMonthButton}"
+                                Command="{Binding PreviousMonthCommand}"
+                                Classes="ledger-btn" />
+                        <Button Grid.Column="2"
+                                Content="{x:Static resources:Strings.DashboardNextMonthButton}"
+                                Command="{Binding NextMonthCommand}"
+                                Classes="ledger-btn"
+                                Margin="8,0,0,0" />
+                    </Grid>
 
-            <!-- Month grid: single shared template over a 6x7 UniformGrid (R-1, R-2, R-3, D-6) -->
-            <calendar:MonthGrid Cells="{Binding Cells}"
-                                 DayCommand="{Binding SelectDayCommand}"
-                                 EmptyText="{x:Static resources:Strings.CalendarEmptyMessage}" />
+                    <!-- Weekday header row, spelled in the app language (R-7) -->
+                    <ItemsControl ItemsSource="{Binding WeekdayHeaders}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Rows="1" Columns="7" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" Classes="calendar-weekday" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
+                    <!-- Month grid: single shared template over a 6x7 UniformGrid (R-1, R-2, R-3, D-6) -->
+                    <calendar:MonthGrid Cells="{Binding Cells}"
+                                         DayCommand="{Binding SelectDayCommand}"
+                                         EmptyText="{x:Static resources:Strings.CalendarEmptyMessage}" />
+                </StackPanel>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </UserControl>
