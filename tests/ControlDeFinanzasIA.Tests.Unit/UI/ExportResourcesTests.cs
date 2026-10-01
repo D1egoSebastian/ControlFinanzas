@@ -21,8 +21,8 @@ public sealed class ExportResourcesTests
 
     [Fact]
     public void ExportKeys_CoverTheDesignedSet() =>
-        // 35 report labels (D-7), 9 UI keys and 4 error-code messages.
-        Assert.Equal(48, ExportKeys().Count());
+        // 36 report labels (D-7, plus the text-search echo of the 1.0 blockers slice B), 9 UI keys and 4 error-code messages.
+        Assert.Equal(49, ExportKeys().Count());
 
     [Theory]
     [MemberData(nameof(ExportKeys))]

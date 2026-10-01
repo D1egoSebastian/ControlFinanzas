@@ -232,6 +232,13 @@ public sealed class ClosedXmlReportWriter : IReportWriter
             row++;
         }
 
+        if (!string.IsNullOrWhiteSpace(filter.SearchText))
+        {
+            anyFilter = true;
+            SetText(ws.Cell(row, 1), string.Format(culture, labels.ReportFilterTextFormat, filter.SearchText));
+            row++;
+        }
+
         if (!anyFilter)
         {
             SetText(ws.Cell(row++, 1), labels.ReportFilterAll);

@@ -77,6 +77,7 @@ public sealed class GetIncomesQuery
             DateFrom = request.DateFrom,
             DateTo = request.DateTo,
             TagIds = request.TagIds,
+            Text = string.IsNullOrWhiteSpace(request.Text) ? null : request.Text.Trim(),
         };
 
         try

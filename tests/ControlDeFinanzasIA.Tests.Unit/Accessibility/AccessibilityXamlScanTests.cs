@@ -62,6 +62,9 @@ public sealed class AccessibilityXamlScanTests
         Assert.False(IsUnlabelledInput(Parse("<TextBox Watermark=\"Name\" AutomationProperties.Name=\"Name\"/>")));
         Assert.False(IsUnlabelledInput(Parse("<CheckBox Content=\"{x:Static resources:Strings.X}\"/>")));
         Assert.True(IsUnlabelledInput(Parse("<CheckBox IsChecked=\"True\"/>")));
+        Assert.True(HasName(Parse("<Button><AutomationProperties.Name><MultiBinding/></AutomationProperties.Name></Button>")));
+        Assert.False(HasName(Parse("<Button><Button.Content><MultiBinding/></Button.Content></Button>")));
+        Assert.True(IsTextlessButton(Parse("<Button><Button.Content><MultiBinding/></Button.Content></Button>")));
     }
 
     private static IEnumerable<string> Scan(Func<XElement, string, bool> predicate)
@@ -81,8 +84,13 @@ public sealed class AccessibilityXamlScanTests
         }
     }
 
+    /// <summary>
+    /// A name is set either as an attribute or, when it needs a multi-binding, as the property element
+    /// <c>&lt;AutomationProperties.Name&gt;...&lt;/AutomationProperties.Name&gt;</c> inside the control.
+    /// </summary>
     private static bool HasName(XElement element) =>
-        element.Attributes().Any(a => a.Name.LocalName is "AutomationProperties.Name" or "AutomationProperties.LabeledBy" && a.Value.Length > 0);
+        element.Attributes().Any(a => a.Name.LocalName is "AutomationProperties.Name" or "AutomationProperties.LabeledBy" && a.Value.Length > 0)
+        || element.Elements().Any(e => e.Name.LocalName is "AutomationProperties.Name" or "AutomationProperties.LabeledBy");
 
     /// <summary>Text content means a Content attribute (resource, binding or a literal with a letter) or a text node.</summary>
     private static bool HasTextContent(XElement element)

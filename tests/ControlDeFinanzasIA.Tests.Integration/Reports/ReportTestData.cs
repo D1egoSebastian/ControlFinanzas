@@ -46,6 +46,7 @@ internal static class ReportTestData
         ReportFilterPeriodFormat = prefix + "{0} to {1}",
         ReportFilterCategoryLabel = prefix + "Category",
         ReportFilterTagsFormat = prefix + "{0} tags",
+        ReportFilterTextFormat = prefix + "text: {0}",
         ReportCountLabel = prefix + "Count",
         ReportGeneratedOnFormat = prefix + "Generated on {0}",
         ReportMissingRatesNote = prefix + "Some amounts have no exchange rate and are excluded.",

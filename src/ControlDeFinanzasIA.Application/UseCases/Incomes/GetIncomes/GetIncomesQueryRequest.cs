@@ -11,10 +11,12 @@ namespace ControlDeFinanzasIA.Application.UseCases.Incomes.GetIncomes;
 /// <param name="DateFrom">Optional inclusive lower bound of the date range.</param>
 /// <param name="DateTo">Optional inclusive upper bound of the date range.</param>
 /// <param name="TagIds">Optional tag identifiers for OR-matching.</param>
+/// <param name="Text">Optional text searched inside the description (partial match).</param>
 public sealed record GetIncomesQueryRequest(
     int Page = 1,
     int PageSize = 50,
     Guid? CategoryId = null,
     DateOnly? DateFrom = null,
     DateOnly? DateTo = null,
-    IReadOnlyList<Guid>? TagIds = null);
+    IReadOnlyList<Guid>? TagIds = null,
+    string? Text = null);

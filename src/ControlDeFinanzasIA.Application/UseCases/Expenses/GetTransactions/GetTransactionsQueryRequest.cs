@@ -12,10 +12,12 @@ namespace ControlDeFinanzasIA.Application.UseCases.Expenses.GetTransactions;
 /// <param name="DateFrom">Fecha inicial inclusive opcional.</param>
 /// <param name="DateTo">Fecha final inclusive opcional.</param>
 /// <param name="TagIds">Identificadores de tags para OR-matching opcional.</param>
+/// <param name="Text">Optional text searched inside the description (partial match).</param>
 public sealed record GetTransactionsQueryRequest(
     int Page = 1,
     int PageSize = 50,
     Guid? CategoryId = null,
     DateOnly? DateFrom = null,
     DateOnly? DateTo = null,
-    IReadOnlyList<Guid>? TagIds = null);
+    IReadOnlyList<Guid>? TagIds = null,
+    string? Text = null);

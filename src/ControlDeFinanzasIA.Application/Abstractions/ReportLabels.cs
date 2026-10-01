@@ -74,6 +74,8 @@ public sealed record ReportLabels
 
     public required string ReportFilterTagsFormat { get; init; }
 
+    public required string ReportFilterTextFormat { get; init; }
+
     public required string ReportCountLabel { get; init; }
 
     public required string ReportGeneratedOnFormat { get; init; }

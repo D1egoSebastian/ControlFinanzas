@@ -135,7 +135,8 @@ public sealed class ExportExpenseListReportUseCase
             filter.DateFrom,
             filter.DateTo,
             categoryName,
-            filter.TagIds?.Count ?? 0);
+            filter.TagIds?.Count ?? 0,
+            string.IsNullOrWhiteSpace(filter.Text) ? null : filter.Text.Trim());
 
         decimal totalDop = lines.Sum(l => l.AmountDop ?? 0m);
         bool hasMissingRates = lines.Any(l => l.AmountDop is null);

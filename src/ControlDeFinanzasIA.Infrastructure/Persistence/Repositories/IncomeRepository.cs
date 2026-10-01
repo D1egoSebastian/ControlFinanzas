@@ -211,6 +211,12 @@ public sealed class IncomeRepository : IIncomeRepository
             query = query.Where(e => e.Date <= filter.DateTo);
         }
 
+        if (!string.IsNullOrWhiteSpace(filter.Text))
+        {
+            string pattern = TextSearch.ContainsPattern(filter.Text);
+            query = query.Where(e => EF.Functions.Like(e.Description, pattern, TextSearch.EscapeCharacter));
+        }
+
         if (filter.TagIds is { Count: > 0 })
         {
             query = query.Where(i => i.Tags.Any(t => filter.TagIds!.Contains(t.Id)));

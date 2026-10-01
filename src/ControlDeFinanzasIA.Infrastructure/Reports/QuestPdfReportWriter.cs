@@ -164,6 +164,12 @@ public sealed class QuestPdfReportWriter : IReportWriter
                 col.Item().Text(string.Format(culture, labels.ReportFilterTagsFormat, filter.TagCount));
             }
 
+            if (!string.IsNullOrWhiteSpace(filter.SearchText))
+            {
+                anyFilter = true;
+                col.Item().Text(string.Format(culture, labels.ReportFilterTextFormat, filter.SearchText));
+            }
+
             if (!anyFilter)
             {
                 col.Item().Text(labels.ReportFilterAll);

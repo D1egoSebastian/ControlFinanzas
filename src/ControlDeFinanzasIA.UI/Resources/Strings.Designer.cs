@@ -2896,4 +2896,64 @@ public class Strings
     /// Gets the localized text for EnumPaymentStatusSkipped (QA slice A).
     /// </summary>
     public static string EnumPaymentStatusSkipped => ResourceManager.GetString("EnumPaymentStatusSkipped", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for FilterSearchLabel (1.0 blockers slice B).
+    /// </summary>
+    public static string FilterSearchLabel => ResourceManager.GetString("FilterSearchLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for FilterSearchWatermark (1.0 blockers slice B).
+    /// </summary>
+    public static string FilterSearchWatermark => ResourceManager.GetString("FilterSearchWatermark", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for FilterAllCategoriesPlaceholder (1.0 blockers slice B).
+    /// </summary>
+    public static string FilterAllCategoriesPlaceholder => ResourceManager.GetString("FilterAllCategoriesPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for FilterDateRangeInvalidMessage (1.0 blockers slice B).
+    /// </summary>
+    public static string FilterDateRangeInvalidMessage => ResourceManager.GetString("FilterDateRangeInvalidMessage", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for ListTotalCountFormat (1.0 blockers slice B).
+    /// </summary>
+    public static string ListTotalCountFormat => ResourceManager.GetString("ListTotalCountFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for DeleteConfirmPrompt (1.0 blockers slice B).
+    /// </summary>
+    public static string DeleteConfirmPrompt => ResourceManager.GetString("DeleteConfirmPrompt", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for DeleteCancelButton (1.0 blockers slice B).
+    /// </summary>
+    public static string DeleteCancelButton => ResourceManager.GetString("DeleteCancelButton", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for A11yDeleteRowFormat (1.0 blockers slice B).
+    /// </summary>
+    public static string A11yDeleteRowFormat => ResourceManager.GetString("A11yDeleteRowFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for A11yConfirmDeleteRowFormat (1.0 blockers slice B).
+    /// </summary>
+    public static string A11yConfirmDeleteRowFormat => ResourceManager.GetString("A11yConfirmDeleteRowFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for A11yCancelDeleteRowFormat (1.0 blockers slice B).
+    /// </summary>
+    public static string A11yCancelDeleteRowFormat => ResourceManager.GetString("A11yCancelDeleteRowFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for FilterByCategoryLabel (1.0 blockers slice B).
+    /// </summary>
+    public static string FilterByCategoryLabel => ResourceManager.GetString("FilterByCategoryLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for ReportFilterTextFormat (1.0 blockers slice B).
+    /// </summary>
+    public static string ReportFilterTextFormat => ResourceManager.GetString("ReportFilterTextFormat", Culture)!;
 }

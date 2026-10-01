@@ -28,7 +28,14 @@ public sealed class DatePickerBindingHeadlessTests
 
     private static void Flush() => HeadlessUi.Flush();
 
-    private static DatePicker OnlyPicker(Control view) => view.GetVisualDescendants().OfType<DatePicker>().Single();
+    // The list views now carry two more date pickers (the from/to filter); the entry form's picker is the one named "Date".
+    private static DatePicker OnlyPicker(Control view)
+    {
+        List<DatePicker> pickers = [.. view.GetVisualDescendants().OfType<DatePicker>()];
+        return pickers.Count == 1
+            ? pickers[0]
+            : pickers.Single(p => Avalonia.Automation.AutomationProperties.GetName(p) == ControlDeFinanzasIA.UI.Resources.Strings.A11yDate);
+    }
 
     private static DateTimeOffset At(DateOnly date) => new(date.ToDateTime(TimeOnly.MinValue));
 

@@ -327,6 +327,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
     /// Gets or sets the current page number (1-based).
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PageSummary))]
     private int _page = 1;
 
     /// <summary>
@@ -335,7 +336,15 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmptyNoData))]
     [NotifyPropertyChangedFor(nameof(IsEmptyFiltered))]
+    [NotifyPropertyChangedFor(nameof(PageSummary))]
     private int _totalPages;
+
+    /// <summary>
+    /// Gets or sets the number of records matching the applied filter across all pages.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasRecords))]
+    private int _totalCount;
 
     /// <summary>
     /// Gets or sets the validation errors keyed by property name.
@@ -354,6 +363,18 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
     /// </summary>
     [ObservableProperty]
     private string? _statusMessage;
+
+    /// <summary>
+    /// Gets or sets the text searched inside the description by the filter.
+    /// </summary>
+    [ObservableProperty]
+    private string? _filterText;
+
+    /// <summary>
+    /// Gets or sets the message shown when the filter inputs cannot be applied (e.g. an inverted date range).
+    /// </summary>
+    [ObservableProperty]
+    private string? _filterError;
 
     /// <summary>
     /// Gets or sets the category identifier used by the filter.
@@ -422,6 +443,8 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
     /// Gets or sets the saved view selected in the filter rail.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSavedViewDeletePending))]
+    [NotifyPropertyChangedFor(nameof(SavedViewDeleteLabel))]
     private SavedView? _selectedSavedView;
 
     /// <summary>
@@ -434,7 +457,30 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
     /// Gets or sets the identifier of the saved view awaiting delete confirmation.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSavedViewDeletePending))]
+    [NotifyPropertyChangedFor(nameof(SavedViewDeleteLabel))]
     private Guid? _pendingDeleteViewId;
+
+    /// <summary>
+    /// Gets a value indicating whether the selected saved view is awaiting delete confirmation.
+    /// </summary>
+    public bool IsSavedViewDeletePending => SelectedSavedView is { } view && PendingDeleteViewId == view.Id;
+
+    /// <summary>
+    /// Gets the text of the saved-view delete button: "Delete view", or "Confirm" once the delete is armed.
+    /// </summary>
+    public string SavedViewDeleteLabel => _localizer[IsSavedViewDeletePending ? "ConfirmDeleteButton" : "DeleteViewButton"];
+
+    /// <summary>
+    /// Gets a value indicating whether at least one record matches the applied filter (drives the pager).
+    /// </summary>
+    public bool HasRecords => TotalCount > 0;
+
+    /// <summary>
+    /// Disarms the saved-view delete confirmation without deleting anything.
+    /// </summary>
+    [RelayCommand]
+    private void CancelSavedViewDelete() => PendingDeleteViewId = null;
 
     /// <summary>
     /// Gets a value indicating whether the list has been loaded successfully at least once. Until then no empty
@@ -454,7 +500,8 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
         CurrentFilter.CategoryId is not null
         || CurrentFilter.DateFrom is not null
         || CurrentFilter.DateTo is not null
-        || CurrentFilter.TagIds is { Count: > 0 };
+        || CurrentFilter.TagIds is { Count: > 0 }
+        || !string.IsNullOrWhiteSpace(CurrentFilter.Text);
 
     /// <summary>
     /// Gets a value indicating whether the list is loaded, empty, and no filter is narrowing it: there is no data yet.
@@ -772,6 +819,12 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
     private Task ConfirmDeleteAsync(ExpenseDto dto) => DeleteExpenseAsync(dto);
 
     /// <summary>
+    /// Disarms the row awaiting delete confirmation without deleting anything.
+    /// </summary>
+    [RelayCommand]
+    private void CancelDelete() => PendingDeleteExpenseId = null;
+
+    /// <summary>
     /// Gets or sets a value indicating whether a report export is in flight. Shared by both export
     /// commands: it is the single source of truth for the double-invocation guard (F-018, D-11).
     /// </summary>
@@ -997,7 +1050,8 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
                 CurrentFilter.CategoryId,
                 CurrentFilter.DateFrom,
                 CurrentFilter.DateTo,
-                CurrentFilter.TagIds),
+                CurrentFilter.TagIds,
+                CurrentFilter.Text),
             default);
 
         PagedResult<ExpenseDto>? paged = null;
@@ -1014,6 +1068,15 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
             return;
         }
 
+        // The requested page no longer exists (the last row of the last page was deleted, or a filter narrowed the
+        // list): step back to the new last page instead of showing an empty page "3 of 2".
+        if (result.IsSuccess && paged!.Items.Count == 0 && Page > 1)
+        {
+            Page = Math.Max(1, paged.TotalPages);
+            await RefreshAsync();
+            return;
+        }
+
         if (result.IsSuccess)
         {
             Expenses.Clear();
@@ -1022,12 +1085,14 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
                 Expenses.Add(item);
             }
 
+            TotalCount = paged.Total;
             TotalPages = paged.TotalPages;
             HasLoaded = true;
         }
         else
         {
             Expenses.Clear();
+            TotalCount = 0;
             TotalPages = 0;
             FormError = _localizer["FormErrorMessage"];
             _logger.LogError(
@@ -1068,6 +1133,14 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
     {
         ResetPendingStates();
         StatusMessage = null;
+
+        if (FilterDateFrom is { } from && FilterDateTo is { } to && from > to)
+        {
+            FilterError = _localizer["FilterDateRangeInvalidMessage"];
+            return;
+        }
+
+        FilterError = null;
         Page = 1;
         CurrentFilter = new ExpenseFilter
         {
@@ -1076,6 +1149,7 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
             CategoryId = FilterCategoryId,
             DateFrom = FilterDateFrom,
             DateTo = FilterDateTo,
+            Text = string.IsNullOrWhiteSpace(FilterText) ? null : FilterText.Trim(),
             TagIds = SelectedTagIds,
             PaymentMethodIds = SelectedPaymentMethodIds,
         };
@@ -1091,6 +1165,8 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
     {
         ResetPendingStates();
         StatusMessage = null;
+        FilterError = null;
+        FilterText = null;
         FilterCategoryId = null;
         FilterDateFrom = null;
         FilterDateTo = null;
@@ -1165,6 +1241,8 @@ public sealed partial class ExpensesViewModel : ViewModelBase, INavigationAware,
 
         if (result.IsSuccess && result.Value is ApplySavedViewResult applyResult && applyResult.Filter is ExpenseFilter expenseFilter)
         {
+            FilterError = null;
+            FilterText = expenseFilter.Text;
             FilterCategoryId = expenseFilter.CategoryId;
             FilterDateFrom = expenseFilter.DateFrom;
             FilterDateTo = expenseFilter.DateTo;

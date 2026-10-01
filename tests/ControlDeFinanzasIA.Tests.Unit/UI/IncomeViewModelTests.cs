@@ -533,7 +533,8 @@ public sealed class IncomeViewModelTests
         FakeExpenseRepository? expenseRepo = null,
         FakeCategoryRepository? categoryRepo = null,
         FakeTagRepository? tagRepo = null,
-        FakeSavedViewRepository? savedViewRepo = null)
+        FakeSavedViewRepository? savedViewRepo = null,
+        IStringLocalizer<Strings>? localizerOverride = null)
     {
         clock ??= new FakeClock
         {
@@ -606,7 +607,7 @@ public sealed class IncomeViewModelTests
             new ConfigurationBuilder().AddInMemoryCollection().Build(),
             NullLogger<CurrencyConverter>.Instance);
 
-        IStringLocalizer<Strings> localizer = new FakeStringLocalizer<Strings>();
+        IStringLocalizer<Strings> localizer = localizerOverride ?? new FakeStringLocalizer<Strings>();
 
         return new IncomeViewModel(
             registerUseCase,

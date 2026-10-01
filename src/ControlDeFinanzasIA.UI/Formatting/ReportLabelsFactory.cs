@@ -45,6 +45,7 @@ internal static class ReportLabelsFactory
         ReportFilterPeriodFormat = Strings.ReportFilterPeriodFormat,
         ReportFilterCategoryLabel = Strings.ReportFilterCategoryLabel,
         ReportFilterTagsFormat = Strings.ReportFilterTagsFormat,
+        ReportFilterTextFormat = Strings.ReportFilterTextFormat,
         ReportCountLabel = Strings.ReportCountLabel,
         ReportGeneratedOnFormat = Strings.ReportGeneratedOnFormat,
         ReportMissingRatesNote = Strings.ReportMissingRatesNote,

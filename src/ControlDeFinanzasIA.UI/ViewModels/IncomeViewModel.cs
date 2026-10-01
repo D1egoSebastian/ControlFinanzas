@@ -206,6 +206,7 @@ public sealed partial class IncomeViewModel : ViewModelBase
     /// Gets or sets the current page number (1-based).
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PageSummary))]
     private int _page = 1;
 
     /// <summary>
@@ -214,7 +215,27 @@ public sealed partial class IncomeViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmptyNoData))]
     [NotifyPropertyChangedFor(nameof(IsEmptyFiltered))]
+    [NotifyPropertyChangedFor(nameof(PageSummary))]
     private int _totalPages;
+
+    /// <summary>
+    /// Gets or sets the number of records matching the applied filter across all pages.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasRecords))]
+    private int _totalCount;
+
+    /// <summary>
+    /// Gets or sets the text searched inside the description by the filter.
+    /// </summary>
+    [ObservableProperty]
+    private string? _filterText;
+
+    /// <summary>
+    /// Gets or sets the message shown when the filter inputs cannot be applied (e.g. an inverted date range).
+    /// </summary>
+    [ObservableProperty]
+    private string? _filterError;
 
     /// <summary>
     /// Gets or sets the validation errors keyed by property name.
@@ -333,7 +354,8 @@ public sealed partial class IncomeViewModel : ViewModelBase
         CurrentFilter.CategoryId is not null
         || CurrentFilter.DateFrom is not null
         || CurrentFilter.DateTo is not null
-        || CurrentFilter.TagIds is { Count: > 0 };
+        || CurrentFilter.TagIds is { Count: > 0 }
+        || !string.IsNullOrWhiteSpace(CurrentFilter.Text);
 
     /// <summary>
     /// Gets a value indicating whether the list is loaded, empty, and no filter is narrowing it: there is no data yet.
@@ -378,6 +400,11 @@ public sealed partial class IncomeViewModel : ViewModelBase
     /// Gets a value indicating whether the next page command can execute.
     /// </summary>
     public bool CanGoToNextPage => Page < TotalPages;
+
+    /// <summary>
+    /// Gets a value indicating whether at least one record matches the applied filter (drives the pager).
+    /// </summary>
+    public bool HasRecords => TotalCount > 0;
 
     /// <summary>
     /// Gets the localized page summary text.
@@ -616,6 +643,12 @@ public sealed partial class IncomeViewModel : ViewModelBase
     private Task ConfirmDeleteAsync(IncomeDto dto) => DeleteIncomeAsync(dto);
 
     /// <summary>
+    /// Disarms the row awaiting delete confirmation without deleting anything.
+    /// </summary>
+    [RelayCommand]
+    private void CancelDelete() => PendingDeleteIncomeId = null;
+
+    /// <summary>
     /// Refreshes the paginated income list for the current filter and page.
     /// </summary>
     [RelayCommand]
@@ -628,8 +661,18 @@ public sealed partial class IncomeViewModel : ViewModelBase
                 CurrentFilter.CategoryId,
                 CurrentFilter.DateFrom,
                 CurrentFilter.DateTo,
-                CurrentFilter.TagIds),
+                CurrentFilter.TagIds,
+                CurrentFilter.Text),
             default);
+
+        // The requested page no longer exists (the last row of the last page was deleted, or a filter narrowed the
+        // list): step back to the new last page instead of showing an empty page "3 of 2".
+        if (result.IsSuccess && ((PagedResult<IncomeDto>)result.Value!) is { Items.Count: 0 } emptyPage && Page > 1)
+        {
+            Page = Math.Max(1, emptyPage.TotalPages);
+            await RefreshAsync();
+            return;
+        }
 
         if (result.IsSuccess)
         {
@@ -641,12 +684,14 @@ public sealed partial class IncomeViewModel : ViewModelBase
                 Incomes.Add(item);
             }
 
+            TotalCount = paged.Total;
             TotalPages = paged.TotalPages;
             HasLoaded = true;
         }
         else
         {
             Incomes.Clear();
+            TotalCount = 0;
             TotalPages = 0;
             FormError = _localizer["FormErrorMessage"];
             _logger.LogError(
@@ -668,6 +713,14 @@ public sealed partial class IncomeViewModel : ViewModelBase
     {
         ResetPendingStates();
         StatusMessage = null;
+
+        if (FilterDateFrom is { } from && FilterDateTo is { } to && from > to)
+        {
+            FilterError = _localizer["FilterDateRangeInvalidMessage"];
+            return;
+        }
+
+        FilterError = null;
         Page = 1;
         CurrentFilter = new IncomeFilter
         {
@@ -676,6 +729,7 @@ public sealed partial class IncomeViewModel : ViewModelBase
             CategoryId = FilterCategoryId,
             DateFrom = FilterDateFrom,
             DateTo = FilterDateTo,
+            Text = string.IsNullOrWhiteSpace(FilterText) ? null : FilterText.Trim(),
             TagIds = SelectedTagIds,
             PaymentMethodIds = SelectedPaymentMethodIds,
         };
@@ -691,6 +745,8 @@ public sealed partial class IncomeViewModel : ViewModelBase
     {
         ResetPendingStates();
         StatusMessage = null;
+        FilterError = null;
+        FilterText = null;
         FilterCategoryId = null;
         FilterDateFrom = null;
         FilterDateTo = null;
@@ -765,6 +821,8 @@ public sealed partial class IncomeViewModel : ViewModelBase
 
         if (result.IsSuccess && result.Value is ApplySavedViewResult applyResult && applyResult.Filter is IncomeFilter incomeFilter)
         {
+            FilterError = null;
+            FilterText = incomeFilter.Text;
             FilterCategoryId = incomeFilter.CategoryId;
             FilterDateFrom = incomeFilter.DateFrom;
             FilterDateTo = incomeFilter.DateTo;

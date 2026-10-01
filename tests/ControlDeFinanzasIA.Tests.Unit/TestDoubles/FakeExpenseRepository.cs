@@ -199,7 +199,10 @@ public sealed class FakeExpenseRepository : IExpenseRepository
             var matching = _addedExpenses
                 .Where(x => (filter.CategoryId is null || x.CategoryId == filter.CategoryId)
                     && (filter.DateFrom is null || x.Date >= filter.DateFrom)
-                    && (filter.DateTo is null || x.Date <= filter.DateTo))
+                    && (filter.DateTo is null || x.Date <= filter.DateTo)
+                    && (filter.Text is null || x.Description.Contains(filter.Text, StringComparison.OrdinalIgnoreCase)))
+                .OrderByDescending(x => x.Date)
+                .ThenByDescending(x => x.CreatedAt)
                 .ToList();
             var pageItems = matching.Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize).ToList();
             return Task.FromResult(new PagedResult<Expense>(pageItems, matching.Count, filter.Page, filter.PageSize));

@@ -1771,4 +1771,40 @@ Showing approximate conversions only.
   <data name="EnumPaymentStatusSkipped" xml:space="preserve">
     <value>Skipped</value>
   </data>
+  <data name="FilterSearchLabel" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="FilterSearchWatermark" xml:space="preserve">
+    <value>Text in the description…</value>
+  </data>
+  <data name="FilterAllCategoriesPlaceholder" xml:space="preserve">
+    <value>All categories</value>
+  </data>
+  <data name="FilterDateRangeInvalidMessage" xml:space="preserve">
+    <value>The start date cannot be later than the end date.</value>
+  </data>
+  <data name="ListTotalCountFormat" xml:space="preserve">
+    <value>{0} records</value>
+  </data>
+  <data name="DeleteConfirmPrompt" xml:space="preserve">
+    <value>Delete this record? This cannot be undone.</value>
+  </data>
+  <data name="DeleteCancelButton" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="A11yDeleteRowFormat" xml:space="preserve">
+    <value>Delete {0}</value>
+  </data>
+  <data name="A11yConfirmDeleteRowFormat" xml:space="preserve">
+    <value>Confirm deleting {0}</value>
+  </data>
+  <data name="A11yCancelDeleteRowFormat" xml:space="preserve">
+    <value>Cancel deleting {0}</value>
+  </data>
+  <data name="FilterByCategoryLabel" xml:space="preserve">
+    <value>Filter by category</value>
+  </data>
+  <data name="ReportFilterTextFormat" xml:space="preserve">
+    <value>Text: {0}</value>
+  </data>
 </root>

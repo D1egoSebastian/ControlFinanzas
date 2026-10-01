@@ -38,6 +38,9 @@ internal sealed class RealShellRig : IAsyncDisposable
 
     public MainWindow Window { get; }
 
+    /// <summary>Gets the real service provider (to seed and inspect the temp database).</summary>
+    public IServiceProvider Services => _provider;
+
     public static async Task<RealShellRig> CreateAsync(string culture)
     {
         CultureInfo previous = CultureInfo.CurrentUICulture;

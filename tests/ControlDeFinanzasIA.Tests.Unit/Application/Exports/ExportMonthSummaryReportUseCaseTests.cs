@@ -380,6 +380,7 @@ public sealed class ExportMonthSummaryReportUseCaseTests
             ReportFilterPeriodFormat = "{0}-{1}",
             ReportFilterCategoryLabel = "Category",
             ReportFilterTagsFormat = "{0} tags",
+            ReportFilterTextFormat = "text: {0}",
             ReportCountLabel = "Count",
             ReportGeneratedOnFormat = "Generated {0}",
             ReportMissingRatesNote = "Missing rates",

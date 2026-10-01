@@ -45,6 +45,12 @@ public sealed record IncomeFilter
     /// </summary>
     public DateOnly? DateTo { get; init; }
 
+    /// <summary>
+    /// Texto a buscar dentro de la descripción (coincidencia parcial, sin distinguir mayúsculas
+    /// ASCII). <c>null</c> significa que no se aplica búsqueda por texto.
+    /// </summary>
+    public string? Text { get; init; }
+
 /// <summary>
 /// Identificadores de tags para filtrar (semántica OR: la entidad
 /// debe tener al menos uno). <c>null</c> o lista vacía significan

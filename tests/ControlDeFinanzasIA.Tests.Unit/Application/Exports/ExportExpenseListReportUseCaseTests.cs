@@ -142,6 +142,18 @@ public sealed class ExportExpenseListReportUseCaseTests
         Assert.Equal(2, summary.TagCount);
     }
 
+
+    [Theory]
+    [InlineData("pizza", "pizza")]
+    [InlineData(null, null)]
+    public async Task ExecuteAsync_FilterSummary_EchoesTheSearchText(string? text, string? expected)
+    {
+        using var f = new Fixture();
+
+        await f.RunAsync(new ExpenseFilter { Text = text });
+
+        Assert.Equal(expected, f.Writer.CapturedExpenseList!.Filter.SearchText);
+    }
     [Fact]
     public async Task ExecuteAsync_NoFilter_SummaryHasNoCategoryNoDatesNoTags()
     {
@@ -371,6 +383,7 @@ public sealed class ExportExpenseListReportUseCaseTests
             ReportFilterPeriodFormat = "{0}-{1}",
             ReportFilterCategoryLabel = "Category",
             ReportFilterTagsFormat = "{0} tags",
+            ReportFilterTextFormat = "text: {0}",
             ReportCountLabel = "Count",
             ReportGeneratedOnFormat = "Generated {0}",
             ReportMissingRatesNote = "Missing rates",

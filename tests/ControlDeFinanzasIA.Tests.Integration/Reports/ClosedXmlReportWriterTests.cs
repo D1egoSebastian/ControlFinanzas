@@ -221,7 +221,7 @@ public sealed class ClosedXmlReportWriterTests
         Assert.Equal("ReportRenderFailed", result.Error!.Code);
     }
 
-    private static ExpenseListReport ListReport(int count = 2, bool missingRate = false)
+    private static ExpenseListReport ListReport(int count = 2, bool missingRate = false, string? searchText = null)
     {
         var lines = new List<ReportTransactionLine>();
         for (int i = 0; i < count; i++)
@@ -238,7 +238,7 @@ public sealed class ClosedXmlReportWriterTests
 
         return new ExpenseListReport(
             new DateOnly(2026, 9, 29),
-            new ReportFilterSummary(new DateOnly(2026, 9, 1), new DateOnly(2026, 9, 30), "Transporte", 2),
+            new ReportFilterSummary(new DateOnly(2026, 9, 1), new DateOnly(2026, 9, 30), "Transporte", 2, searchText),
             lines,
             lines.Sum(l => l.AmountDop ?? 0m),
             missingRate);
@@ -271,6 +271,16 @@ public sealed class ClosedXmlReportWriterTests
         Assert.NotNull(Find(ws, "Transporte"));
         Assert.NotNull(Find(ws, "EN Some amounts have no exchange rate and are excluded."));
         Assert.True(wb.Worksheet("Data").Cell(2, 7).IsEmpty());
+    }
+
+    [Fact]
+    public async Task ExpenseList_SummarySheet_EchoesTheSearchText_OnlyWhenOneWasUsed()
+    {
+        using XLWorkbook withText = await RenderListAsync(ListReport(2, searchText: "pizza"), ReportTestData.EnLabels());
+        using XLWorkbook without = await RenderListAsync(ListReport(2), ReportTestData.EnLabels());
+
+        Assert.NotNull(Find(withText.Worksheet("Summary"), "EN text: pizza"));
+        Assert.Null(Find(without.Worksheet("Summary"), "EN text: pizza"));
     }
 
     [Fact]
