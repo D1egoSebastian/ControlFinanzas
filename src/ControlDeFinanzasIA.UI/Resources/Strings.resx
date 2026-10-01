@@ -1421,7 +1421,7 @@ Showing approximate conversions only.
     <value>No results for this filter</value>
   </data>
   <data name="EmptyStateFilteredHint" xml:space="preserve">
-    <value>Nothing matches the dates, category or tags you chose.</value>
+    <value>Nothing matches the search, dates or category you chose.</value>
   </data>
   <data name="EmptyStateClearFilterAction" xml:space="preserve">
     <value>Clear filter</value>

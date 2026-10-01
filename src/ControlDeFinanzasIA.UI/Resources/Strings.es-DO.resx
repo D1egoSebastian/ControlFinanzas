@@ -1421,7 +1421,7 @@ Mostrando conversiones aproximadas.
     <value>Sin resultados para este filtro</value>
   </data>
   <data name="EmptyStateFilteredHint" xml:space="preserve">
-    <value>Nada coincide con las fechas, la categoría o las etiquetas elegidas.</value>
+    <value>Nada coincide con la búsqueda, las fechas o la categoría elegidas.</value>
   </data>
   <data name="EmptyStateClearFilterAction" xml:space="preserve">
     <value>Quitar filtro</value>
