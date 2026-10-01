@@ -60,7 +60,7 @@ debería justificarse en el documento de la Specification correspondiente.
 | 18 | Exportación a PDF y Excel | Features | Botón de exportar reporte actual |
 | 19 | Backup y restauración | Features | Exportar/importar archivo de respaldo completo |
 | 20 | Importación CSV / Excel | Features | Wizard de import con mapeo de columnas |
-| 21 | Empaquetado, pulido, accesibilidad | Cierre | Instaladores Win/Mac/Linux; app pulida |
+| 21 | Empaquetado, pulido, accesibilidad | Cierre | Paquetes self-contained zip / tar.gz / .app.zip con checksums; app pulida (MSIX, firma y DMG/AppImage verificados: diferidos) |
 
 **Fases 0 a 12 = MVP funcional sin IA.** Todo lo de la 13 en adelante es
 mejora progresiva. La 21 es el cierre.
@@ -1464,7 +1464,13 @@ uso principal.
 
 ---
 
-### Fase 21 — Empaquetado, pulido, accesibilidad
+### Fase 21 — Empaquetado, pulido, accesibilidad ✅ IMPLEMENTADA (2026-09-30, con desviaciones documentadas)
+
+**Estado (2026-09-30):** implementada en 12 slices encadenados (`f10816a` S1 a `8876338` S9, más el cierre de docs S10).
+Pendientes, a propósito: la verificación independiente (`sdd-verify`), el archivo (la spec sigue como `.spec.md`) y la
+etiqueta `v1.0.0`. Spec: `spec/features/phase-21/F-021-packaging-polish-a11y.spec.md`; tareas:
+`tasks/phase-21/`; diseño: `.atl/sdd/f-021p21-packaging/`; arquitectura en `docs/architecture.md` §14, §16 y §18;
+lo no comprobado, en `docs/packaging-unverified.md` y `docs/accessibility.md`.
 
 **Objetivo**
 Publicar la app como binarios self-contained por SO, pulir
@@ -1479,17 +1485,34 @@ una pantalla.
 **Dependencias**
 - Todas las anteriores.
 
-**Entregables esperados**
-- Build self-contained para `win-x64`, `osx-arm64`, `osx-x64`,
-  `linux-x64`.
-- Instaladores o paquetes por SO (decisión en la Specification: MSIX /
-  DMG / AppImage en v1; Flatpak / Snap como siguientes pasos).
-- Empty states en todas las listas.
-- Atajos de teclado (Ctrl+N = nuevo gasto, etc.).
-- Diálogos de error con correlation id visibles.
-- Navegación completa con teclado.
-- Screen reader labels (al menos los críticos).
-- README y CHANGELOG actualizados.
+**Entregables (estado real)**
+
+Verificado localmente (ejecutado en esta máquina Windows, con prueba automatizada o corrida real):
+- ✅ Versión `1.0.0` única en `Directory.Build.props`, icono, README, CHANGELOG, LICENSE.
+- ✅ Logger de archivo rotativo propio (`<DataDir>/logs`, 5 MB x 5, UTC, nunca lanza) con guarda de privacidad.
+- ✅ Errores inesperados: `UnexpectedErrorReporter`, `GlobalExceptionHooks`, overlay con id corto y copia, y
+  `StartupGuard` con `startup-error-*.log`.
+- ✅ Atajos de teclado (catálogo único: ventana, tooltips y lista de Configuración), Enter como acción por defecto,
+  sidebar con sección actual, anillo de foco, flujo de registrar gasto solo con teclado (prueba headless).
+- ✅ Empty states y localización (es-DO / en) de Gastos, Ingresos, Deudas y Recurrentes; paridad de resx.
+- ✅ Nombres accesibles, contraste, regiones vivas (peers de Avalonia); declaración en `docs/accessibility.md`.
+- ✅ Publicación self-contained de `win-x64`, `osx-arm64`, `osx-x64` y `linux-x64` (carpetas de 141–152 MB), archivos
+  `.zip` / `.tar.gz` / `.app.zip` con modos Unix verificados leyendo los archivos, `SHA256SUMS.txt` recalculado,
+  `verify-layout.ps1` por RID y `smoke-win.ps1` (el zip de Windows extraído arranca sin .NET en el PATH).
+
+Escrito pero sin verificar (no se ejecutó nunca):
+- ⚠️ Los binarios de macOS y Linux, el `.app` (solo estructura), el AppImage, la creación del DMG y el flujo
+  `release.yml` completo (sin remoto, solo reglas de texto; crea solo un **borrador**).
+- ⚠️ Narrator / NVDA / VoiceOver / Orca y el alto contraste: nunca se ejecutaron.
+
+**Desviaciones del entregable original (decisión de la Specification y del diseño)**
+- **MSIX: diferido.** No hay instalador de Windows; se entrega un zip extraíble.
+- **DMG: solo en CI** (paso `hdiutil` de `release.yml`, nunca ejecutado); el artefacto verificado en estructura es el
+  `.app.zip`. **AppImage: receta escrita, sin construir ni ejecutar.**
+- **Sin firma de código ni notarización** (Windows SmartScreen y macOS Gatekeeper requieren los pasos del README).
+- **Formato de archivo de macOS**: existen a la vez `.tar.gz` (R-22) y `.app.zip` (diseño); el dueño debe confirmar
+  cuál conservar.
+- Flatpak / Snap siguen como pasos posteriores; el auto-update sigue fuera de alcance.
 
 **Riesgos principales**
 - Particularidades de cada SO (notificaciones, paths, instaladores).
@@ -1498,11 +1521,13 @@ una pantalla.
 - Accesibilidad: Avalonia tiene soporte limitado; documentar lo que
   sí y lo que no.
 
-**Criterios de fase completada**
-- App instalable en Win/Mac/Linux sin necesidad de .NET preinstalado.
-- Flujo principal (registrar gasto) funciona 100% con teclado.
-- Empty states visibles en todas las secciones.
-- Versión etiquetada lista para distribuir.
+**Criterios de fase completada (estado)**
+- App instalable en Win/Mac/Linux sin necesidad de .NET preinstalado: **cumplido solo para la ejecución en Windows desde
+  el zip**; macOS y Linux, sin verificar.
+- Flujo principal (registrar gasto) funciona 100% con teclado: cumplido (prueba headless; sin pase manual).
+- Empty states visibles en todas las secciones: cumplido en las cuatro listas de la Specification (sin pase visual manual).
+- Versión etiquetada lista para distribuir: **no etiquetada**; la etiqueta `v1.0.0` y la primera ejecución del flujo de
+  release son pasos del dueño.
 
 ---
 
@@ -1607,4 +1632,4 @@ de 2+.
 
 ---
 
-*Last reviewed: 2026-09-17.*
+*Last reviewed: 2026-09-30.*

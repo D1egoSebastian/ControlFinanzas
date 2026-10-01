@@ -1016,10 +1016,16 @@ Detalle completo en §11g. Resumen de la persistencia:
 ### Stack
 
 - **`Microsoft.Extensions.Logging`** como abstracción.
-- **Sinks**:
-  - **Consola** (con colores, opcional), en `Debug`.
-  - **Archivo rotativo** en producción: `logs/app-YYYYMMDD.log`, tamaño máx 5 MB,retención 5 archivos.
-- **Niveles por categoría** configurables via `appsettings.json` o env var (`LOGGING__LOGLEVEL__DEFAULT=Debug`).
+- **Archivo rotativo propio** (Fase 21, implementado en `Infrastructure/Logging`: `RollingFileLoggerProvider`,
+  `RollingFileLogger`, `RollingFileSink`, `LogEntryFormatter`; sin Serilog ni ningún paquete nuevo). Carpeta:
+  `<DataDirectory>/logs`. Nombres `app-YYYYMMDD.log`, luego `app-YYYYMMDD.1.log`, `.2.log`...; la fecha del nombre es
+  **UTC** y el sello de cada línea también. Cada archivo tiene un tope blando de **5 MB** (la siguiente entrada que lo
+  superaría abre el siguiente índice), se conservan **5 archivos** (los más nuevos por fecha e índice) y cada entrada se
+  trunca a 64 K caracteres con una marca. El logger **nunca lanza**: un fallo de E/S se traga y el proceso sigue. Se abre
+  con `FileShare.ReadWrite`, así que dos instancias pueden compartir el archivo sin bloquearse (riesgo T18 aceptado).
+- **Consola**: el proveedor estándar `AddConsole()` de `Program.cs`, además del archivo; no hay sink de consola propio.
+- Reglas de filtro del archivo (`AddRollingFileLogging`): `Information` por defecto y `Microsoft.*` en `Warning`. Que
+  `appsettings.json` o `LOGGING__LOGLEVEL__DEFAULT` cambien esos niveles **no está verificado ni probado**.
 
 ### Qué se loguea
 
@@ -1075,7 +1081,19 @@ Result<T> = Success(T) | Failure(code, message, details?)
 
 - **Errores de validación**: code `VALIDATION`, message agregado, details con errores por campo.
 - **Errores de negocio**: codes por tipo (`BUDGET_EXCEEDED`, `GOAL_PAST_DATE`, `DEBT_ALREADY_CLOSED`, `LLM_UNAVAILABLE`, `IMPORT_INVALID_FILE`, etc.).
-- **Excepciones inesperadas**: burbujean hasta un `IExceptionHandler` global (CommunityToolkit.Mvvm) que muestra un diálogo con correlation id y loguea el stack.
+- **Excepciones inesperadas** (Fase 21, `UI/Diagnostics`): CommunityToolkit.Mvvm no ofrece ningún `IExceptionHandler`; esa
+  línea del diseño original nunca se implementó. El mecanismo real es:
+  - `IUnexpectedErrorReporter` / `UnexpectedErrorReporter`: un `Guid` por fallo, la excepción completa al log local y una
+    línea best-effort a stderr (para que el id sobreviva a un logger deshabilitado). Nunca lanza y no usa red.
+  - `GlobalExceptionHooks`: tres ganchos de proceso. El de la UI (`Dispatcher.UIThread.UnhandledException`) reporta,
+    muestra el overlay y marca la excepción como manejada solo después de reportar, detrás de un cortafuegos (20 en una
+    ventana de 10 s; superado, solo registra). El de `AppDomain` (Critical) y el de tareas no observadas (Warning)
+    registran sin mostrar nada.
+  - Overlay de error (`ErrorOverlayViewModel`, `IErrorPresenter`): id corto de 8 caracteres hexadecimales, copia del
+    texto de soporte (versión, id completo) y contador "+N más" para fallos consecutivos. Escape lo cierra.
+  - `StartupGuard` / `StartupFailureWriter`: un fallo durante el arranque (antes de que existan UI y logger) escribe
+    `startup-error-<UTC>.log` en el directorio de datos (o en el temporal), una línea a stderr y sale con código 1.
+  La IA y las restauraciones no cambian: los errores esperados siguen siendo `Result<T>`.
 
 ### Capas defensivas
 
@@ -1105,13 +1123,24 @@ Result<T> = Success(T) | Failure(code, message, details?)
 
 ## 18. Empaquetado y despliegue
 
-- **Self-contained** por SO: el binario incluye el runtime, no requiere .NET instalado.
-- **Publicación por RID**: `win-x64`, `osx-arm64` + `osx-x64`, `linux-x64`. Decidir `linux-musl-x64` si se quiere evitar glibc (ver ADR).
-- **Instaladores**:
-  - Windows: MSIX o instalador propio (siguiente paso).
-  - macOS: `.app` + `.dmg`.
-  - Linux: AppImage en v1, Flatpak/Snap como siguientes pasos.
-- **Auto-update**: **fuera de alcance** en v1. El usuario descarga nuevas versiones manualmente.
+Estado real tras la Fase 21 (detalle de lo verificado y lo no verificado en `docs/packaging-unverified.md`):
+
+- **Self-contained** por SO: el binario incluye el runtime, no requiere .NET instalado. Propiedades en
+  `build/Publish.props` (importado solo por el proyecto UI); versión única `1.0.0` en `Directory.Build.props`.
+- **Publicación por RID**: `win-x64`, `osx-arm64`, `osx-x64`, `linux-x64` con `scripts/publish.ps1` (Windows PowerShell 5.1
+  o PowerShell 7). La salida va a `artifacts/` (ignorado por git): `ControlDeFinanzasIA-<versión>-win-x64.zip`,
+  `...-<rid>.tar.gz` para macOS y Linux, `...-osx-<arch>.app.zip` y `SHA256SUMS.txt`. Los modos Unix se escriben dentro
+  del archivo con un escritor propio (`scripts/lib/Archive.psm1`). `scripts/verify-layout.ps1` valida ejecutable y
+  bibliotecas nativas por RID; `scripts/smoke-win.ps1` ejecuta el zip de Windows extraído.
+- **Sin instalador ni firma**: no hay MSIX (diferido), ni firma de código, ni notarización. Windows muestra SmartScreen y
+  macOS Gatekeeper; el README documenta los pasos. El `.app` (`scripts/package-macos-app.ps1`, plantilla
+  `packaging/macos/Info.plist.template`) se generó y se comprobó en estructura, nunca se lanzó. La receta de AppImage
+  (`packaging/linux/`) y el paso `hdiutil` del DMG (en `release.yml`) están **escritos pero no ejecutados**; solo se
+  construirían en CI.
+- **Release**: `.github/workflows/release.yml` se dispara solo con un tag `v*` y crea un **borrador** (nunca publica).
+  No se ha ejecutado nunca (no hay remoto); `build.yml` no cambió.
+- **Plataformas**: Windows es la única plataforma ejecutada; macOS y Linux se entregan "provistos, sin probar".
+- **Auto-update**: **fuera de alcance**. El usuario descarga nuevas versiones manualmente.
 
 ---
 
@@ -1134,6 +1163,8 @@ Plantilla: **Contexto · Decisión · Consecuencias**. Lista viva. Se actualiza 
 | ADR-011 | **Cifrado en reposo de la API key** (DPAPI/Keychain/libsecret) | Pendiente v2 |
 | ADR-012 | **Auto-update de la app** | Pendiente v2 |
 | ADR-013 | **Multi-proceso / lock file** | Pendiente (no necesario en v1) |
+| ADR-014 | **Logger de archivo rotativo propio (sin Serilog, sin paquetes nuevos) y reporte de errores inesperados con ganchos globales + overlay** (Fase 21, §14 y §16) | Aceptada |
+| ADR-015 | **Empaquetado v1 como archivos self-contained (zip / tar.gz / `.app.zip`) con checksums; sin MSIX, sin firma ni notarización** (Fase 21, §18) | Aceptada (MSIX, firma y DMG/AppImage verificados, diferidos) |
 
 ---
 

@@ -46,9 +46,11 @@ class in `scripts/lib/Archive.psm1` (not `System.Formats.Tar`, which needs .NET 
   keep both.
 - MSIX, signing and notarization: out of scope for 1.0.0.
 - `PublishLayoutTests` and `ChecksumVerificationTests` need `artifacts/` (run `scripts/publish.ps1 -Rid all` first).
-  They fail with an explicit message when it is missing, except on GitHub Actions (`GITHUB_ACTIONS=true`), where the
-  existing `build.yml` runs the plain test suite without publishing; there they return without checking, and the
-  release workflow runs `verify-layout.ps1` and the smoke test itself.
+  When the `artifacts/` folder does not exist (a fresh clone, or the existing `build.yml`, which runs the plain test
+  suite without publishing) those tests are SKIPPED with an explicit message that names the command to run. Set the
+  environment variable `CONTROLDEFINANZASIA_REQUIRE_PACKAGING=1` to make a missing `artifacts/` a failure instead (use it
+  before a release). When `artifacts/` exists the tests are real and a missing file fails them. The gate is covered by
+  `PackagingGateTests`. The release workflow runs `verify-layout.ps1` and the smoke test itself.
 
 ## Observations
 

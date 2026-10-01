@@ -11,10 +11,42 @@ the project state changes, update this file.
   **Entity Framework Core** (Code First, versioned migrations),
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
-- **Status (today):** Phases 0–20 fully archived. Phase 21 (packaging,
-  polish, accessibility) is next per the roadmap and is its last phase —
-  check `.atl/sdd/f-021*` and `git log --oneline` for in-flight work before
-  planning. Phase 20 (CSV/Excel import) shipped an "Importar" button in
+- **Status (today):** Phases 0–21 implemented; Phases 0–20 fully archived.
+  Phase 21 (packaging, polish, accessibility — the last roadmap phase) is
+  IMPLEMENTED but not yet verified independently or archived: its spec is
+  still `spec/features/phase-21/F-021-packaging-polish-a11y.spec.md`, the
+  tag `v1.0.0` does not exist, and `sdd-verify`/archive are the next step.
+  Phase 21 shipped version 1.0.0 (one source in `Directory.Build.props`), an
+  app icon, README/CHANGELOG/LICENSE, an own rolling file logger
+  (`<DataDir>/logs/app-YYYYMMDD[.n].log`, 5 MB x 5, UTC, never throws, no new
+  package), `UnexpectedErrorReporter` + `GlobalExceptionHooks` + an error
+  overlay (short id, copy, `+N more`) + `StartupGuard`
+  (`startup-error-*.log`), a single `KeyboardShortcutCatalog` driving the
+  window bindings, tooltips and the Settings list, `IsDefault` Enter submit,
+  a sidebar on `NavigationSections` with a visible current section, empty
+  states and es-DO/en localization of Expenses/Income/Debts/Recurring, named
+  controls, contrast and live-region tests (`docs/accessibility.md`), and
+  packaging: `build/Publish.props`, `scripts/publish.ps1` (Windows
+  PowerShell 5.1 or 7) producing self-contained `.zip`/`.tar.gz`/`.app.zip`
+  archives plus `SHA256SUMS.txt` in the git-ignored `artifacts/`,
+  `verify-layout.ps1`, `smoke-win.ps1`, a macOS `.app` script, an AppImage
+  recipe and a draft-only `release.yml` (tag `v*`). Deviations: MSIX
+  deferred, no installer, DMG only as a CI step, no signing or
+  notarization, both macOS `.tar.gz` and `.app.zip` exist (owner to
+  choose). No migration, no new package, no new setting. 2871 unit + 837
+  integration tests green (3708), build 0/0, format exit 0, NetArchTest
+  20/20. Commits: `f10816a` (S1) to `8876338` (S9), docs/test-gate close-out
+  S10. Packaging tests: `PublishLayoutTests` and `ChecksumVerificationTests`
+  need `artifacts/` (run `scripts/publish.ps1 -Rid all`); when it is missing
+  they SKIP with an explicit message, unless the environment variable
+  `CONTROLDEFINANZASIA_REQUIRE_PACKAGING=1` is set, in which case they fail.
+  Not done by hand: Narrator/NVDA/VoiceOver/Orca passes, install from the
+  zip on a clean Windows machine, running the macOS and Linux builds, the
+  AppImage/DMG builds, the real execution of `release.yml` (no git remote),
+  the es-DO/en visual pass, and `sdd-verify`/archive (tasks 11.2-11.9). See
+  `docs/packaging-unverified.md`, `docs/accessibility.md`, `tasks/phase-21/`
+  and `.atl/sdd/f-021p21-packaging/`. Earlier status: Phase 20 (CSV/Excel
+  import) shipped an "Importar" button in
   the Expenses toolbar that swaps the list for `ImportView` in place (no
   route). It reads a generic CSV/TXT (strict UTF-8, Windows-1252 fallback,
   UTF-16 with BOM; `,` `;` tab sniffed) or a Phase-18 XLSX, chosen by

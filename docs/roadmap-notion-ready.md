@@ -1,7 +1,7 @@
 # ControlDeFinanzasIA — Roadmap visual y backlog restante
 
 > Documento preparado para copiarse a Notion cuando el conector esté
-> habilitado. Estado basado en el repositorio al 2026-09-10.
+> habilitado. Estado basado en el repositorio al 2026-09-30.
 
 ## Tablero resumido
 
@@ -13,56 +13,39 @@
 | 3 | Slice de gastos | ✅ Completada | 2 |
 | 4 | Ingresos, tags, filtros y vistas | ✅ Completada | 3 |
 | 5 | Multi-moneda y métodos de pago | ✅ Completada | 4 |
-| 6 | Recurrentes | 🔄 En curso | 5 |
-| 7 | Deudas y cuotas | ⏳ Pendiente | 6 |
-| 8 | Dashboard y visualizaciones | ⏳ Pendiente | 7 |
-| 9 | Calendario de gastos | ⏳ Pendiente | 8 |
-| 10 | Presupuestos | ⏳ Pendiente | 8 |
-| 11 | Metas de ahorro | ⏳ Pendiente | 8 |
-| 12 | Configuración e i18n completa | ⏳ Pendiente | 8 |
-| 13 | Pipeline IA y categorización | ⏳ Pendiente | 12 |
-| 14 | Insights, forecast y anomalías | ⏳ Pendiente | 8, 10, 13 |
-| 15 | Chat financiero | ⏳ Pendiente | 14 |
-| 16 | Plan de ahorro con IA | ⏳ Pendiente | 11, 13 |
-| 17 | Notificaciones | ⏳ Pendiente | 7, 10, 14 |
-| 18 | Exportación PDF/Excel | ⏳ Pendiente | 4, 5, 8 |
-| 19 | Backup/restauración | ⏳ Pendiente | 2, 4, 5, 6, 7 |
-| 20 | Importación CSV/Excel | ⏳ Pendiente | 4, 19 |
-| 21 | Empaquetado y accesibilidad | ⏳ Pendiente | Todas |
+| 6 | Recurrentes | ✅ Completada | 5 |
+| 7 | Deudas y cuotas | ✅ Completada | 6 |
+| 8 | Dashboard y visualizaciones | ✅ Completada | 7 |
+| 9 | Calendario de gastos | ✅ Completada | 8 |
+| 10 | Presupuestos | ✅ Completada | 8 |
+| 11 | Metas de ahorro | ✅ Completada | 8 |
+| 12 | Configuración e i18n completa | ✅ Completada | 8 |
+| 13 | Pipeline IA y categorización | ✅ Completada | 12 |
+| 14 | Insights, forecast y anomalías | ✅ Completada | 8, 10, 13 |
+| 15 | Chat financiero | ✅ Completada | 14 |
+| 16 | Plan de ahorro con IA | ✅ Completada | 11, 13 |
+| 17 | Notificaciones | ✅ Completada | 7, 10, 14 |
+| 18 | Exportación PDF/Excel | ✅ Completada | 4, 5, 8 |
+| 19 | Backup/restauración | ✅ Completada | 2, 4, 5, 6, 7 |
+| 20 | Importación CSV/Excel | ✅ Completada | 4, 19 |
+| 21 | Empaquetado y accesibilidad | ✅ Implementada (pendiente verificación independiente, archivo y etiqueta `v1.0.0`) | Todas |
 
-## Estado actual: Phase 6
+## Estado actual: Fase 21 implementada
 
-- [x] Persistencia EF Core, migración y repositorio de `RecurringRule`.
-- [x] Create/update de `Subscription` en backend.
-- [ ] CRUD de `FixedExpense`.
-- [ ] Preview y confirmación de generación mensual.
-- [ ] Idempotencia de generación y trazabilidad de movimientos creados.
-- [ ] Saltar ocurrencias y editar movimientos generados.
-- [ ] Completar UI de reglas para FixedExpense y pantalla “Generar del mes”.
-- [ ] Tests de fechas, integración, ViewModels y gates SDD.
-
-## Backlog funcional por fases futuras
-
-- Phase 7: `Debt`, `DebtPayment`, generador de cuotas, pagos, saltos, saldo y UI.
-- Phase 8: selector de periodos, agregaciones, dashboard y gráficos reutilizables.
-- Phase 9: calendario mensual, totales diarios y drill-down.
-- Phase 10: presupuestos, evaluador, progreso y umbrales.
-- Phase 11: metas, aportes manuales y calculador determinista.
-- Phase 12: settings, tema, idioma, configuración IA y persistencia.
-- Phase 13: `ILLMClient`, adapters, resiliencia y categorización.
-- Phase 14: insights, proyección mensual y narrativas de anomalías.
-- Phase 15: chat con contexto financiero local.
-- Phase 16: explicación IA del plan de ahorro determinista.
-- Phase 17: bandeja y reglas de notificación in-app.
-- Phase 18: exportadores PDF y Excel/CSV.
-- Phase 19: backup ZIP + manifest y restauración segura.
-- Phase 20: wizard CSV/Excel, mapeo, preview, deduplicación y rollback.
-- Phase 21: builds self-contained, instaladores, accesibilidad y release.
+- [x] Versión 1.0.0, icono, README, CHANGELOG y LICENSE.
+- [x] Logger de archivo rotativo, overlay de errores inesperados y atajos de teclado.
+- [x] Empty states y localización de Gastos, Ingresos, Deudas y Recurrentes; nombres accesibles y foco visible.
+- [x] Publicación self-contained para win-x64, osx-arm64, osx-x64 y linux-x64, con `SHA256SUMS.txt` (Windows ejecutado;
+  macOS y Linux solo estructura).
+- [ ] `sdd-verify`, archivo de la spec y etiqueta `v1.0.0` (siguiente paso).
+- [ ] Pruebas manuales no ejecutadas: Narrator, instalación en Windows limpio, macOS, Linux, ejecución real de
+  `release.yml`, revisión visual es-DO / en.
+- Diferido: MSIX, firma de código y notarización, DMG / AppImage verificados, Flatpak / Snap, auto-update.
 
 ## Riesgos y decisiones abiertas
 
-- Elegir estrategia de PR para Phase 6: se recomiendan 4 unidades encadenadas.
-- Definir la política exacta para fechas 29–31 y meses cortos.
-- Decidir provider real de tipos de cambio.
-- Resolver umbral de presupuesto y deduplicación de importaciones.
+- Confirmar con el dueño cuál formato de macOS conservar (`.tar.gz` o `.app.zip`).
+- Primera ejecución real del flujo de release (crea solo un borrador) cuando se empuje la etiqueta `v1.0.0`.
 - Mantener IA opcional y la aplicación funcional offline.
+
+Ver `docs/roadmap.md` (fuente de verdad), `docs/packaging-unverified.md` y `docs/accessibility.md`.

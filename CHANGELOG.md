@@ -40,8 +40,18 @@ Summary by feature area (Phases 0-21).
 - **Import (Phase 20):** CSV and Excel import with preview, column mapping and duplicate detection.
 - **Packaging, polish and accessibility (Phase 21):** application version 1.0.0 and icon, rolling log files in the
   data directory, an unexpected-error screen with a short reference id, keyboard shortcuts for the main actions,
-  localized empty states, screen-reader names and focus styles, and self-contained packages for Windows, macOS and
-  Linux (macOS and Linux are provided, untested).
+  localized empty states, screen-reader names and focus styles, and a build script that produces self-contained
+  archives with SHA-256 checksums for Windows (zip), macOS (tar.gz and .app.zip) and Linux (tar.gz). Only the Windows
+  archive was run; macOS and Linux are provided, untested.
+
+### Not included
+
+- There is no installer: no MSIX, no DMG or AppImage is distributed yet (their recipes are written but were never
+  built), and the binaries are not code-signed or notarized.
+- There is no auto-update: new versions are downloaded manually.
+- The GitHub release workflow only creates a draft release on a `v*` tag and has never been run.
+- Screen-reader support is based on automated checks against Avalonia automation peers; Narrator, NVDA, VoiceOver and
+  Orca were never run by hand. See `docs/accessibility.md` and `docs/packaging-unverified.md`.
 
 ### Security
 

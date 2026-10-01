@@ -19,8 +19,11 @@ Release archives are named `ControlDeFinanzasIA-<version>-<platform>` and are li
 `SHA256SUMS.txt`. The packages are self-contained: no .NET installation is needed. The executable inside every
 package is `ControlDeFinanzasIA.UI`.
 
-macOS and Linux builds are **provided, untested**: they are produced by the release workflow but have not been run
-on real hardware by the author. Windows is the verified platform.
+macOS and Linux builds are **provided, untested**: they are built by `scripts/publish.ps1` and their file layout was
+checked, but they have never been run on real hardware. Windows is the only platform that was run (the extracted zip
+starts and creates its database). The GitHub release workflow (`.github/workflows/release.yml`, draft releases only,
+triggered by a `v*` tag) has never been run: no release has been published yet. There is no installer (no MSIX, no DMG
+or AppImage is distributed yet) and nothing is code-signed.
 
 ### Windows
 
