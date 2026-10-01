@@ -1,6 +1,6 @@
 # Tasks — F-021 Packaging, Polish and Accessibility (1.0.0)
 
-> Governing inputs: `spec/features/phase-21/F-021-packaging-polish-a11y.spec.md` (requirements R-1..R-26, scenarios
+> Governing inputs: `spec/features/phase-21/F-021-packaging-polish-a11y.done.md` (requirements R-1..R-26, scenarios
 > S-1..S-48), `.atl/sdd/f-021p21-packaging/design.md` (DD-1..DD-13, Threat Table T1..T18 and its 14-item "Proposal
 > Reconciliation" are binding; **the design wins over the proposal and, where listed in the Reconciliation section
 > below, over the spec's contract names**), `.atl/sdd/f-021p21-packaging/proposal.md` (D-1..D-28) and
@@ -714,13 +714,14 @@ _Apply notes S10 (Strict TDD). 10.1: `tests/…Unit/Packaging/DocsReconciledTest
   (scrim, REF line, `+N more`), empty states in Expenses/Income/Debts/Recurring, sidebar current-item style and digit hints,
   focus rings on buttons/sidebar/rows/inputs, Settings shortcut list, contrast legibility. Record screenshots. (R-2, R-10,
   R-15, R-17, R-20, AC [U])
-- [ ] 11.8 Run `sdd-verify`; resolve or explicitly record every critical/warning finding with a test-first fix against the real
+- [x] 11.8 Run `sdd-verify`; resolve or explicitly record every critical/warning finding with a test-first fix against the real
   component (Phase 19/20 precedent). Do not tick while warnings are open without a note. Flag Reconciliation #10 (osx archive
   format) for the owner's confirmation.
-- [ ] 11.9 Archive: rename `spec/features/phase-21/F-021-packaging-polish-a11y.spec.md` to `F-021-packaging-polish-a11y.done.md`
+- [x] 11.9 Archive: rename `spec/features/phase-21/F-021-packaging-polish-a11y.spec.md` to `F-021-packaging-polish-a11y.done.md`
   ONLY after archive with `git mv`, tick the Acceptance Criteria of the spec with evidence, leave every [U] item unticked,
   append a "Post-apply reconciliation" restating the Reconciliation table above, and update `AGENTS.md`/memory pointers.
   Conventional commits, no AI trailers.
+_Closing notes (2026-09-30). 11.8 DONE: `.atl/sdd/f-021p21-packaging/verify-report.md` = PASS WITH WARNINGS, 0 critical; W2, W3, W4, W6 fixed test-first in `c11fb6e` and `ac181ca`; W1 and W5 accepted and recorded in its "Post-verify fixes" section; Reconciliation #10 (both macOS archives) is flagged for the owner. 11.9 DONE: spec renamed with `git mv` to `F-021-packaging-polish-a11y.done.md`, [L] criteria ticked with test evidence, [U] items unticked, "Post-apply reconciliation" appended, AGENTS.md and docs reconciled. Final gates re-run: build 0/0, 2876 unit + 845 integration = 3721 passed, format exit 0, Architecture 23/23. STILL UNTICKED on purpose: 9.9 (release.yml never YAML-parsed: no YAML library, no package allowed, accepted W1) and 11.2-11.7 (need a human, a clean Windows machine, real Mac/Linux hosts, a git remote with a tag push, or a visual pass; none were run)._
 
 ---
 

@@ -28,7 +28,7 @@
 | 18 | Exportación PDF/Excel | ✅ Completada | 4, 5, 8 |
 | 19 | Backup/restauración | ✅ Completada | 2, 4, 5, 6, 7 |
 | 20 | Importación CSV/Excel | ✅ Completada | 4, 19 |
-| 21 | Empaquetado y accesibilidad | ✅ Implementada (pendiente verificación independiente, archivo y etiqueta `v1.0.0`) | Todas |
+| 21 | Empaquetado y accesibilidad | ✅ Completada y archivada (la etiqueta `v1.0.0`, las comprobaciones manuales y el primer release son del dueño) | Todas |
 
 ## Estado actual: Fase 21 implementada
 

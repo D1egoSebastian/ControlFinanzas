@@ -1138,7 +1138,9 @@ Estado real tras la Fase 21 (detalle de lo verificado y lo no verificado en `doc
   (`packaging/linux/`) y el paso `hdiutil` del DMG (en `release.yml`) están **escritos pero no ejecutados**; solo se
   construirían en CI.
 - **Release**: `.github/workflows/release.yml` se dispara solo con un tag `v*` y crea un **borrador** (nunca publica).
-  No se ha ejecutado nunca (no hay remoto); `build.yml` no cambió.
+  Un job `test` (build + pruebas, solo en `windows-latest`) debe pasar antes de publicar y `appimagetool` va fijado por versión y SHA-256 (el paso del AppImage nunca se ejecutó).
+  Los directorios publicados pesan 126-137 MB tras excluir del payload los ensamblados de pruebas y de diseño
+  (`PublishPayloadTests`). No se ha ejecutado nunca (no hay remoto); `build.yml` no cambió.
 - **Plataformas**: Windows es la única plataforma ejecutada; macOS y Linux se entregan "provistos, sin probar".
 - **Auto-update**: **fuera de alcance**. El usuario descarga nuevas versiones manualmente.
 

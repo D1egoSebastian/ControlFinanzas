@@ -1,7 +1,7 @@
 # F-021 — Packaging, Polish and Accessibility (1.0.0)
 
 > **Phase:** 21 — Packaging, polish, accessibility
-> **Status:** Active (spec written 2026-09-30).
+> **Status:** Archived (2026-09-30). Verify PASS WITH WARNINGS (0 critical); post-verify fixes `c11fb6e`, `ac181ca`.
 > **SDD:** `.atl/sdd/f-021p21-packaging/`
 > **Input:** `.atl/sdd/f-021p21-packaging/proposal.md` (D-1..D-28 binding), `.atl/sdd/f-021p21-packaging/exploration.md`
 > **Depends on:** Phases 0-20 archived (Phase-19 restore and Phase-20 import are the busy flows gated by R-13).
@@ -199,27 +199,27 @@ Legend: **[L]** verified locally (Windows, headless or scripted run) with the na
 
 ### Verified locally [L]
 
-- [ ] **(roadmap)** win-x64 self-contained build runs without .NET installed on PATH; other RIDs publish with native libs present (R-21, S-42, S-43). Evidence: `scripts/publish.ps1` run log + `PublishLayoutTests` (file presence per RID) + win smoke script.
-- [ ] **(roadmap)** Register-expense flow 100% by keyboard (R-12, R-14, S-25, S-31). Evidence: `KeyboardOnlyExpenseFlowTests` (real `MainWindow`, real VM, temp SQLite).
-- [ ] **(roadmap)** Every section shows data or an empty state; no hardcoded UI string in the four views (R-19, R-20, S-38..S-41). Evidence: `EmptyStateViewTests` (es-DO + en), `HardcodedStringsScanTests`, `ResourceCompletenessTests`.
-- [ ] **(roadmap)** `1.0.0` versioned; CHANGELOG + README current; tag-ready (R-1, S-1, S-2). Evidence: `VersionTests`, `RepoDocsTests`.
-- [ ] Icon set and `Window.Icon` (R-2, S-3). Evidence: `AppIconTests`.
-- [ ] Rolling logger: path, format, level filter, 5 MB roll, date roll, keep 5, concurrency (R-3..R-5, S-4..S-9, S-11). Evidence: `RollingFileLoggerTests` (real provider, temp dir, fake clock).
-- [ ] Logger survives unwritable directory and never throws; sink disabled after first failure (R-6, S-10). Evidence: `RollingFileLoggerFailureTests`.
-- [ ] No API key in logs (R-5, S-12). Evidence: `LogPrivacyTests` (sentinel through real flows).
-- [ ] Forced unexpected exception -> overlay with 8-hex id; same Guid in the log; `Result.Failure` unaffected (R-7, S-13, S-14). Evidence: `UnexpectedErrorReporterTests` (real reporter + real logger), `ErrorOverlayEndToEndTests`.
-- [ ] Global hooks and startup failure path (R-8, R-9, S-15..S-18). Evidence: `GlobalExceptionHooksTests`, `StartupFailureTests` (child process, exit code).
-- [ ] Overlay content, Copy without stack or user data, single overlay with counter, no auto-restart, restore rollback first (R-10, R-11, S-19..S-23). Evidence: `ErrorOverlayViewModelTests`, `ErrorOverlayHeadlessTests`, `RestoreUnhandledFailureTests`.
-- [ ] Shortcut parity, navigation, gating (R-12, R-13, R-16, S-24..S-30, S-33). Evidence: `ShortcutCatalogParityTests`, `ShellShortcutTests`, `ShortcutGatingTests`, `SettingsShortcutListTests`.
-- [ ] Sidebar rework and current-section visibility (R-15, S-32). Evidence: `SidebarHeadlessTests`.
-- [ ] Automation names on all textless interactive controls; focus style; live region or documented limitation (R-17, S-34..S-36). Evidence: `AutomationNameScanTests`, `FocusStyleTests`, `LiveRegionSupportTests`, `docs/accessibility.md`.
-- [ ] Palette contrast (R-18, S-37). Evidence: `ContrastTests`.
-- [ ] Archives and SHA-256 (R-22, S-44). Evidence: `publish.ps1` run + `ChecksumVerificationTests`.
-- [ ] macOS `.app` structure and `Info.plist` lint (R-23, S-45). Evidence: `AppBundleStructureTests` (folder + plist parse only).
-- [ ] AppImage recipe files present and self-consistent; workflow YAML lint and `draft: true` (R-23, R-24, S-46, S-47). Evidence: `ReleaseWorkflowTests` (YAML parse), `AppImageRecipeTests`.
-- [ ] No schema change, migration or new package; logger in Infrastructure; UI has no `System.Net.Http` error reporting; NetArchTest R-1..R-5 green (R-25, S-48). Evidence: `ArchitectureTests`, `git diff --stat` review.
-- [ ] Tests never touch real AppData (R-26). Evidence: temp dirs / `CONTROLDEFINANZASIA_DATA_DIR` in all new tests.
-- [ ] Gates: `dotnet build -c Release` 0 warnings/0 errors, `dotnet test` green, `dotnet format style --verify-no-changes` exit 0, docs reconciled (R-26), spec renamed to `.done.md` after archive.
+- [x] **(roadmap)** win-x64 self-contained build runs without .NET installed on PATH; other RIDs publish with native libs present (R-21, S-42, S-43). Evidence: `scripts/publish.ps1` run log + `PublishLayoutTests` (file presence per RID) + `PublishPayloadTests` + win smoke script (`scripts/smoke-win.ps1` SMOKE PASSED on the extracted zip).
+- [x] **(roadmap)** Register-expense flow 100% by keyboard (R-12, R-14, S-25, S-31). Evidence: `KeyboardOnlyExpenseFlowTests` (real `MainWindow`, real VM, temp SQLite). Note: the flow Tabs to Register then presses Enter on it; Enter inside an input is `DefaultButtonTests` (accepted warning W5).
+- [x] **(roadmap)** Every section shows data or an empty state; no hardcoded UI string in the four views (R-19, R-20, S-38..S-41). Evidence: `EmptyStateViewTests` (es-DO + en), `HardcodedStringsScanTests`, `StringsParityTests` (resx parity).
+- [x] **(roadmap)** `1.0.0` versioned; CHANGELOG + README current; tag-ready (R-1, S-1, S-2). Evidence: `AppVersionTests`, `RepoDocsTests`.
+- [x] Icon set and `Window.Icon` (R-2, S-3). Evidence: `IconAssetTests`.
+- [x] Rolling logger: path, format, level filter, 5 MB roll, date roll, keep 5, concurrency (R-3..R-5, S-4..S-9, S-11). Evidence: `RollingFileSinkTests`, `RollingFileSinkConcurrencyTests` (real sink, temp dir, fake clock).
+- [x] Logger survives unwritable directory and never throws; sink disabled after first failure (R-6, S-10). Evidence: `RollingFileLoggerFailureTests`.
+- [x] No API key in logs (R-5, S-12). Evidence: `LogPrivacyTests` (sentinel through real flows).
+- [x] Forced unexpected exception -> overlay with 8-hex id; same Guid in the log; `Result.Failure` unaffected (R-7, S-13, S-14). Evidence: `UnexpectedErrorReporterTests` (real reporter + real logger), `ErrorOverlayEndToEndTests`.
+- [x] Global hooks and startup failure path (R-8, R-9, S-15..S-18). Evidence: `GlobalExceptionHooksTests`, `StartupGuardTests`, `StartupFailureProcessTests` (child process, exit code).
+- [x] Overlay content, Copy without stack or user data, single overlay with counter, no auto-restart, restore rollback first (R-10, R-11, S-19..S-23). Evidence: `ErrorOverlayViewModelTests`, `ErrorOverlayHeadlessTests`, `RestoreUnhandledFailureTests`.
+- [x] Shortcut parity, navigation, gating (R-12, R-13, R-16, S-24..S-30, S-33). Evidence: `ShortcutCatalogParityTests`, `ShellShortcutTests`, `ShortcutGatingTests`, `SettingsShortcutListTests`.
+- [x] Sidebar rework and current-section visibility (R-15, S-32). Evidence: `SidebarHeadlessTests`.
+- [x] Automation names on all textless interactive controls; focus style; live region or documented limitation (R-17, S-34..S-36). Evidence: `AutomationNameScanTests`, `FocusStyleTests`, `LiveRegionSupportTests`, `docs/accessibility.md`.
+- [x] Palette contrast (R-18, S-37). Evidence: `ContrastTests`.
+- [x] Archives and SHA-256 (R-22, S-44). Evidence: `publish.ps1` run + `ChecksumVerificationTests`.
+- [x] macOS `.app` structure and `Info.plist` lint (R-23, S-45). Evidence: `AppBundleStructureTests` (folder + plist parse only).
+- [ ] AppImage recipe files present and self-consistent; workflow YAML lint and `draft: true` (R-23, R-24, S-46, S-47). Evidence: `ReleaseWorkflowTests` (YAML parse), `AppImageRecipeTests`. NOT MET as written: `release.yml` is checked only with anchored text rules, never YAML-parsed (accepted warning W1, task 9.9); `AppImageRecipeTests` is green. Left unticked on purpose.
+- [x] No schema change, migration or new package; logger in Infrastructure; UI has no `System.Net.Http` error reporting; NetArchTest R-1..R-5 green (R-25, S-48). Evidence: `ArchitectureTests`, `git diff --stat` review.
+- [x] Tests never touch real AppData (R-26). Evidence: temp dirs / `CONTROLDEFINANZASIA_DATA_DIR` in all new tests.
+- [x] Gates: `dotnet build -c Release` 0 warnings/0 errors, `dotnet test` green, `dotnet format style --verify-no-changes` exit 0, docs reconciled (R-26), spec renamed to `.done.md` after archive.
 
 ### Authored, unverified [U] (needs real runner or device)
 
@@ -245,3 +245,16 @@ MSIX; signed DMG; notarization and code signing; Flatpak/Snap; auto-update; cras
 4. The win smoke uses the published executable with a scripted close (headless-safe exit); exact mechanism is a design decision.
 5. Contrast thresholds: 4.5:1 text, 3:1 focus ring and large text.
 6. `Ctrl+,` and `Esc` are also disabled during a restore (proposal D-23 only named Ctrl+N and Ctrl+1..0 for busy flows).
+
+## Post-apply reconciliation (2026-09-30)
+
+Closing facts of Phase 21 not already recorded above. The design wins over this spec's contract names (`tasks/phase-21/F-021-packaging-polish-a11y.tasks.md`, "Reconciliation" #1-#17); notably:
+
+- Names: `AddRollingFileLogging` (not `AddFileLogging`); icons in `Assets/Icon/` with `Window.Icon` from the `.ico`; `scripts/package-macos-app.ps1`, `packaging/macos/`, `packaging/linux/`; test names `StringsParityTests`, `AppVersionTests`, `IconAssetTests`, `RollingFileSinkTests`, `StartupGuardTests` stand in for the contract names listed in the criteria.
+- Both macOS archives exist: `.tar.gz` (R-22) and `.app.zip` (design); the owner chooses which to keep.
+- `Escape` closes the error overlay even while busy; Meta shortcut twins exist on macOS only (29 entries, no Meta+Esc); Windows and Linux use Control only.
+- Terracotta text failed contrast (4.43:1); new token `TerracottaTextColor` for text.
+- Post-verify fixes: W2 release gated on build and test (Windows runner only), W3 inline colors tokenized, W4 test-only and tooling assemblies out of the publish payload (folders 126-137 MB instead of 141-152 MB), W6 401 privacy test through the real `HttpClient` pipeline, appimagetool pinned with SHA-256, README privacy wording. Accepted: W1 (no YAML parse of `release.yml`; task 9.9 unticked) and W5 (Tab to Register then Enter; Enter inside an input is `DefaultButtonTests`).
+- Follow-ups: `exception.ToString()` in log entries can embed user data; two app instances sharing a DataDir can exceed the 5 MB roll and prune each other's file; sidebar mouse clicks are not gated during import or restore; Meta path never run on a Mac; input resting border 1.46:1 (WCAG 1.4.11 gap, in `docs/accessibility.md`); MSIX, signing, notarization, DMG, AppImage deferred or unverified.
+- Final gates: build 0/0, 2876 unit + 845 integration = 3721 passed, format exit 0, NetArchTest green.
+- Still NOT RUN BY HAND and unticked above ([U] list) plus tasks 11.2-11.7: Narrator, clean-Windows install, macOS and Linux runs, first release workflow run, es-DO/en visual pass. The tag `v1.0.0` is not created and only follows the owner's request.

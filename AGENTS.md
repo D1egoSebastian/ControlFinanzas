@@ -11,11 +11,18 @@ the project state changes, update this file.
   **Entity Framework Core** (Code First, versioned migrations),
   `Microsoft.Extensions.DependencyInjection`, xUnit + FluentAssertions.
 - **Solution:** `ControlDeFinanzasIA.sln` at the repo root.
-- **Status (today):** Phases 0–21 implemented; Phases 0–20 fully archived.
-  Phase 21 (packaging, polish, accessibility — the last roadmap phase) is
-  IMPLEMENTED but not yet verified independently or archived: its spec is
-  still `spec/features/phase-21/F-021-packaging-polish-a11y.spec.md`, the
-  tag `v1.0.0` does not exist, and `sdd-verify`/archive are the next step.
+- **Status (today):** Phases 0–21 fully archived. Phase 21 (packaging,
+  polish, accessibility — the last roadmap phase) is archived: its spec is
+  `spec/features/phase-21/F-021-packaging-polish-a11y.done.md`. The roadmap
+  has no phase after 21; what remains is the owner's manual checks, the tag
+  `v1.0.0` (it does not exist; create it only when the owner asks) and the
+  first real release run. Verify history: independent verification PASSED
+  WITH WARNINGS (0 critical, 6 warnings, 6 suggestions); W2, W3, W4, W6 and
+  the README wording were fixed in `c11fb6e` and `ac181ca`; W1
+  (`release.yml` never parsed as YAML, task 9.9 unticked) and W5 (the
+  keyboard-only flow Tabs to Register then presses Enter; Enter inside an
+  input is covered by `DefaultButtonTests`) are accepted, documented
+  exceptions.
   Phase 21 shipped version 1.0.0 (one source in `Directory.Build.props`), an
   app icon, README/CHANGELOG/LICENSE, an own rolling file logger
   (`<DataDir>/logs/app-YYYYMMDD[.n].log`, 5 MB x 5, UTC, never throws, no new
@@ -33,17 +40,28 @@ the project state changes, update this file.
   recipe and a draft-only `release.yml` (tag `v*`). Deviations: MSIX
   deferred, no installer, DMG only as a CI step, no signing or
   notarization, both macOS `.tar.gz` and `.app.zip` exist (owner to
-  choose). No migration, no new package, no new setting. 2871 unit + 837
-  integration tests green (3708), build 0/0, format exit 0, NetArchTest
-  20/20. Commits: `f10816a` (S1) to `8876338` (S9), docs/test-gate close-out
-  S10. Packaging tests: `PublishLayoutTests` and `ChecksumVerificationTests`
+  choose). No migration, no new package, no new setting. 2876 unit + 845
+  integration tests green (3721), build 0/0, format exit 0, NetArchTest
+  20/20. Commits: `f10816a` (S1) to `60800fc` (S10), post-verify fixes
+  `c11fb6e` and `ac181ca`. After the W4 fix the test-only and tooling
+  assemblies (Avalonia.Headless, EF design-time, Roslyn) are out of the
+  publish payload and `PublishPayloadTests` guards it: folders are 126 MB
+  (linux-x64), 131 MB (osx-x64), 133 MB (win-x64) and 137 MB (osx-arm64),
+  down from 141-152 MB; `release.yml` now runs build + test (windows-latest
+  only) before publishing and pins `appimagetool`. Packaging tests: `PublishLayoutTests` and `ChecksumVerificationTests`
   need `artifacts/` (run `scripts/publish.ps1 -Rid all`); when it is missing
   they SKIP with an explicit message, unless the environment variable
   `CONTROLDEFINANZASIA_REQUIRE_PACKAGING=1` is set, in which case they fail.
   Not done by hand: Narrator/NVDA/VoiceOver/Orca passes, install from the
   zip on a clean Windows machine, running the macOS and Linux builds, the
   AppImage/DMG builds, the real execution of `release.yml` (no git remote),
-  the es-DO/en visual pass, and `sdd-verify`/archive (tasks 11.2-11.9). See
+  and the es-DO/en visual pass (tasks 11.2-11.7). Follow-ups: log entries
+  carry `exception.ToString()`, which can embed user data; two app
+  instances sharing one data directory can exceed the 5 MB roll and prune
+  each other's file; sidebar mouse clicks are not gated during an import
+  or restore; the Meta shortcut path was never run on a Mac; the input
+  resting border has a 1.46:1 contrast (a WCAG 1.4.11 gap, documented in
+  `docs/accessibility.md`). See
   `docs/packaging-unverified.md`, `docs/accessibility.md`, `tasks/phase-21/`
   and `.atl/sdd/f-021p21-packaging/`. Earlier status: Phase 20 (CSV/Excel
   import) shipped an "Importar" button in

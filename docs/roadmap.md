@@ -1464,13 +1464,15 @@ uso principal.
 
 ---
 
-### Fase 21 — Empaquetado, pulido, accesibilidad ✅ IMPLEMENTADA (2026-09-30, con desviaciones documentadas)
+### Fase 21 — Empaquetado, pulido, accesibilidad ✅ IMPLEMENTADA Y ARCHIVADA (2026-09-30, con desviaciones documentadas)
 
-**Estado (2026-09-30):** implementada en 12 slices encadenados (`f10816a` S1 a `8876338` S9, más el cierre de docs S10).
-Pendientes, a propósito: la verificación independiente (`sdd-verify`), el archivo (la spec sigue como `.spec.md`) y la
-etiqueta `v1.0.0`. Spec: `spec/features/phase-21/F-021-packaging-polish-a11y.spec.md`; tareas:
-`tasks/phase-21/`; diseño: `.atl/sdd/f-021p21-packaging/`; arquitectura en `docs/architecture.md` §14, §16 y §18;
-lo no comprobado, en `docs/packaging-unverified.md` y `docs/accessibility.md`.
+**Estado (2026-09-30):** implementada en 12 slices encadenados (`f10816a` S1 a `60800fc` S10), verificada de forma
+independiente (PASS WITH WARNINGS, 0 críticos; W2, W3, W4 y W6 corregidos en `c11fb6e` y `ac181ca`; W1 y W5
+aceptados y documentados) y archivada (la spec es `F-021-packaging-polish-a11y.done.md`). No hay ninguna fase después
+de la 21: quedan las comprobaciones manuales del dueño, la etiqueta `v1.0.0` (solo si el dueño la pide) y el primer
+release. Tests finales: 3721 (2876 unit + 845 integration). Tareas: `tasks/phase-21/`; diseño: `.atl/sdd/f-021p21-packaging/`;
+arquitectura en `docs/architecture.md` §14, §16 y §18; lo no comprobado, en `docs/packaging-unverified.md` y
+`docs/accessibility.md`.
 
 **Objetivo**
 Publicar la app como binarios self-contained por SO, pulir
@@ -1496,7 +1498,7 @@ Verificado localmente (ejecutado en esta máquina Windows, con prueba automatiza
   sidebar con sección actual, anillo de foco, flujo de registrar gasto solo con teclado (prueba headless).
 - ✅ Empty states y localización (es-DO / en) de Gastos, Ingresos, Deudas y Recurrentes; paridad de resx.
 - ✅ Nombres accesibles, contraste, regiones vivas (peers de Avalonia); declaración en `docs/accessibility.md`.
-- ✅ Publicación self-contained de `win-x64`, `osx-arm64`, `osx-x64` y `linux-x64` (carpetas de 141–152 MB), archivos
+- ✅ Publicación self-contained de `win-x64`, `osx-arm64`, `osx-x64` y `linux-x64` (carpetas de 126–137 MB tras quitar del payload los ensamblados de pruebas y de diseño), archivos
   `.zip` / `.tar.gz` / `.app.zip` con modos Unix verificados leyendo los archivos, `SHA256SUMS.txt` recalculado,
   `verify-layout.ps1` por RID y `smoke-win.ps1` (el zip de Windows extraído arranca sin .NET en el PATH).
 

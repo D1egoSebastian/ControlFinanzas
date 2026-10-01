@@ -1,10 +1,10 @@
 # Phase 21 — Packaging, Polish, Accessibility
 
 > **Phase:** 21 — Packaging, polish, accessibility (release 1.0.0)
-> **Status:** Specified (2026-09-30); not started. Next: design, tasks, apply.
-> **Spec ID:** F-021 — `spec/features/phase-21/F-021-packaging-polish-a11y.spec.md`
+> **Status:** Archived (2026-09-30). Implemented in S1-S10, verified (PASS WITH WARNINGS), post-verify fixes applied; the owner's manual checks, the `v1.0.0` tag and the first release run remain.
+> **Spec ID:** F-021 — `spec/features/phase-21/F-021-packaging-polish-a11y.done.md`
 > **Dependencies:** Phases 0-20 archived.
-> **Blocks:** nothing (last roadmap phase).
+> **Blocks:** nothing (last roadmap phase; the roadmap has no phase after 21).
 > **Roadmap:** `docs/roadmap.md` §Fase 21
 > **Stack:** .NET 8 · Avalonia 11.2.7 (MVVM strict) · existing packages only · no schema change, no migration, no new package.
 
@@ -20,16 +20,16 @@ Each slice is at most about 400 changed lines and leaves build, tests and format
 
 | ID | Slice | Status |
 | --- | --- | --- |
-| S1 | Identity and docs: `<Version>`, icon set, README rewrite, CHANGELOG, LICENSE, `VersionTests`, `RepoDocsTests`, `AppIconTests` (R-1, R-2) | Pending |
-| S2 | `RollingFileLoggerProvider` in Infrastructure, `AddFileLogging`, Bootstrap wiring, rolling/failure/privacy tests (R-3..R-6) | Pending |
-| S3 | `IUnexpectedErrorReporter`, global hooks, startup-failure path, child-process test (R-7..R-9) | Pending |
-| S4 | `ErrorOverlayViewModel`/`View`, overlay host in `MainWindow`, Copy via `IClipboardService`, end-to-end tests (R-10, R-11) | Pending |
-| S5 | Localization cleanup + `EmptyState` control + Expenses/Income empty states (R-19, R-20) | Pending |
-| S6 | Debts/Recurring localization and empty states, sidebar labels to resx (R-19, R-20) | Pending |
-| S7 | `KeyboardShortcutCatalog`, KeyBindings, focus behavior, gating, sidebar rework, focus visuals, Settings shortcut list, keyboard-only expense test (R-12..R-16) | Pending |
-| S8 | Accessibility pass: automation names, name-scan, contrast, live region check, `docs/accessibility.md` (R-17, R-18) | Pending |
-| S9 | Packaging: `build/Publish.props`, `publish.ps1` (4 RIDs), win smoke, archives + checksums, `.app` script, AppImage recipe, draft `release.yml` (R-21..R-24) | Pending |
-| S10 | Close-out docs: `architecture.md` §14/§16/§18, `roadmap.md`, `AGENTS.md`, arch guards (R-25, R-26), verify, archive | Pending |
+| S1 | Identity and docs: `<Version>`, icon set, README rewrite, CHANGELOG, LICENSE, `VersionTests`, `RepoDocsTests`, `AppIconTests` (R-1, R-2) | Done (`f10816a`) |
+| S2 | `RollingFileLoggerProvider` in Infrastructure, `AddFileLogging`, Bootstrap wiring, rolling/failure/privacy tests (R-3..R-6) | Done (`dae9bb1`) |
+| S3 | `IUnexpectedErrorReporter`, global hooks, startup-failure path, child-process test (R-7..R-9) | Done (`76e2c97`) |
+| S4 | `ErrorOverlayViewModel`/`View`, overlay host in `MainWindow`, Copy via `IClipboardService`, end-to-end tests (R-10, R-11) | Done (`085256b`) |
+| S5 | Localization cleanup + `EmptyState` control + Expenses/Income empty states (R-19, R-20) | Done (`c2866f7`, `0d60c96`) |
+| S6 | Debts/Recurring localization and empty states, sidebar labels to resx (R-19, R-20) | Done (`b4bbdc4`) |
+| S7 | `KeyboardShortcutCatalog`, KeyBindings, focus behavior, gating, sidebar rework, focus visuals, Settings shortcut list, keyboard-only expense test (R-12..R-16) | Done (`d96056d`, `055e08a`, `8bf9845`, `08279a7`) |
+| S8 | Accessibility pass: automation names, name-scan, contrast, live region check, `docs/accessibility.md` (R-17, R-18) | Done (`b577999`) |
+| S9 | Packaging: `build/Publish.props`, `publish.ps1` (4 RIDs), win smoke, archives + checksums, `.app` script, AppImage recipe, draft `release.yml` (R-21..R-24) | Done (`8876338`) |
+| S10 | Close-out docs: `architecture.md` §14/§16/§18, `roadmap.md`, `AGENTS.md`, arch guards (R-25, R-26), verify, archive | Done (`23baed0`, `60800fc`; verify and archive in the closing commit) |
 
 ## 3. Phase completion criteria
 
@@ -58,7 +58,7 @@ Each slice is at most about 400 changed lines and leaves build, tests and format
 ## 5. References
 
 - `docs/roadmap.md` §Fase 21; `docs/architecture.md` §14, §16, §18
-- `spec/features/phase-21/F-021-packaging-polish-a11y.spec.md`
+- `spec/features/phase-21/F-021-packaging-polish-a11y.done.md`
 - `.atl/sdd/f-021p21-packaging/{exploration,proposal}.md`
 - `spec/phases/phase-20/features.md` and `spec/features/phase-20/F-020-import.done.md` — format precedent
 
@@ -68,3 +68,25 @@ Each slice is at most about 400 changed lines and leaves build, tests and format
 - Real-device verification of macOS/Linux builds, VoiceOver and Orca/AT-SPI.
 - High-contrast theme, full WCAG audit, shortcut remapping.
 - Debts CSV export; leftover Phase-19/20 follow-ups (aside `.bak` sweeping, `ExpensesAi*` Designer accessors).
+
+## 7. Reconciliation with the final state (2026-09-30)
+
+What the phase delivered versus what this plan and the spec said:
+
+| Topic | Plan / spec said | Final state |
+| --- | --- | --- |
+| Slice count | S1-S10 | 12 commits: S5a/S5b and S7a/S7b were split; S7a, S7b, S9 and S10 span two commits each |
+| Names | spec contract names | design names win (`AddRollingFileLogging`, `Assets/Icon/`, `scripts/package-macos-app.ps1`, `packaging/linux/`, `AccessibilityXamlScanTests`); mapped in `tasks/phase-21/` "Reconciliation" #1-#17 |
+| macOS archives | `.tar.gz` (spec R-22) | both `.tar.gz` and `.app.zip` are produced; the owner picks one |
+| Release workflow parse (S-47, task 9.9) | YAML parse | anchored text rules only; no YAML library, no new package allowed; accepted exception W1, task 9.9 stays unticked |
+| Release gate (R-24) | build/test on the matching runners | a `test` job (build + tests, `windows-latest` only) gates every build job; fixed in `ac181ca` (W2) |
+| Inline colors (R-19) | none in views | tokenized in `ac181ca` (W3) |
+| Publish payload | self-contained folders | test-only and tooling assemblies (Avalonia.Headless, EF design-time, Roslyn) removed; 126-137 MB per RID instead of 141-152 MB; `PublishPayloadTests` guards it (`c11fb6e`, W4) |
+| Keyboard-only flow (R-14) | one flow ending in Enter | Tabs to Register then Enter; Enter inside an input is `DefaultButtonTests` (accepted W5) |
+| Privacy test (R-5) | real pipeline | the 401 test now goes through the real `HttpClient` pipeline (`ac181ca`, W6) |
+| Meta shortcuts | Meta duplicates | macOS only (29 entries, no Meta+Esc); Windows/Linux keep Control only; never run on a Mac |
+| Tests | n/a | 3721 (2876 unit + 845 integration), build 0/0, format 0, NetArchTest 20/20 |
+
+Follow-ups added by verify: `exception.ToString()` in log entries can embed user data; two instances sharing a DataDir can exceed the 5 MB roll and prune each other's file; sidebar mouse clicks are not gated during an import or restore; input resting border contrast 1.46:1 (WCAG 1.4.11 gap, in `docs/accessibility.md`).
+
+Still open for the owner: tasks 11.2-11.7 (Narrator, clean-Windows install, macOS and Linux runs, first `release.yml` run, es-DO/en visual pass) and the `v1.0.0` tag.
