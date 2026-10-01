@@ -9,7 +9,7 @@
         for both charts. Bind Series from the ViewModel; IsEmpty drives
         which of the two children is shown.
     -->
-    <Grid MinHeight="220">
+    <Grid Height="200">
         <lvc:PieChart Series="{Binding #Root.Series}"
                       IsVisible="{Binding !#Root.IsEmpty}" />
         <TextBlock Text="{Binding #Root.EmptyText}"

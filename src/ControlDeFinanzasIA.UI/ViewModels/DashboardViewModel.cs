@@ -24,9 +24,12 @@ using ControlDeFinanzasIA.Domain.ValueObjects;
 using ControlDeFinanzasIA.UI.Formatting;
 using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.Resources;
+using ControlDeFinanzasIA.UI.Views.Charts;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 
 namespace ControlDeFinanzasIA.UI.ViewModels;
 
@@ -169,11 +172,18 @@ public sealed partial class DashboardViewModel : ViewModelBase
     [ObservableProperty]
     private Axis[] _evolutionXAxes = [];
 
+    /// <summary>Gets or sets the LiveCharts Y axes (compact amounts, soft gridlines) backing the monthly-evolution chart.</summary>
+    [ObservableProperty]
+    private Axis[] _evolutionYAxes = [];
+
     /// <summary>
     /// Gets the top-N + "Otras" category slices for <see cref="SelectedMonth"/>.
     /// Asserted directly by unit tests; <see cref="CategorySeries"/> is derived from it.
     /// </summary>
     public ObservableCollection<CategorySlice> CategorySlices { get; } = [];
+
+    /// <summary>Gets the legend of the category chart (one entry per slice: color, label, amount, share).</summary>
+    public ObservableCollection<CategoryLegendItem> CategoryLegend { get; } = [];
 
     /// <summary>
     /// Gets the exactly-6, zero-filled monthly points ending at
@@ -239,6 +249,11 @@ public sealed partial class DashboardViewModel : ViewModelBase
             RouteNames.Expenses,
             vm => vm.ApplyDateRangeFilter(range.Start, range.End));
     }
+
+    /// <summary>Opens the Expenses screen ready for a new entry (the screen's primary action).</summary>
+    [RelayCommand]
+    private void NewExpense() =>
+        _navigation.NavigateTo<ExpensesViewModel>(RouteNames.Expenses, vm => vm.BeginNewEntry());
 
     private void ApplyMonthExpenses(Result result)
     {
@@ -830,6 +845,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
     private void ApplyCategoryBreakdown(Result result)
     {
         CategorySlices.Clear();
+        CategoryLegend.Clear();
 
         if (!result.IsSuccess)
         {
@@ -846,11 +862,27 @@ public sealed partial class DashboardViewModel : ViewModelBase
 
         HasMissingRates |= breakdown.HasMissingRates;
 
+        decimal total = breakdown.Slices.Sum(slice => slice.AmountDop);
+        for (int i = 0; i < breakdown.Slices.Count; i++)
+        {
+            CategorySlice slice = breakdown.Slices[i];
+            decimal share = total > 0m ? slice.AmountDop / total * 100m : 0m;
+            CategoryLegend.Add(new CategoryLegendItem(
+                slice.Label,
+                ChartPalette.SliceHexes[i % ChartPalette.SliceHexes.Count],
+                FormatDop(slice.AmountDop),
+                share.ToString("0", CultureInfo.CurrentCulture) + "%"));
+        }
+
         CategorySeries = breakdown.Slices
-            .Select(slice => (ISeries)new PieSeries<double>
+            .Select((slice, index) => (ISeries)new PieSeries<double>
             {
                 Values = [(double)slice.AmountDop],
                 Name = slice.Label,
+                Fill = new SolidColorPaint(ChartPalette.Slice(index)),
+                Stroke = new SolidColorPaint(SKColors.White, 2),
+                InnerRadius = 54,
+                MaxRadialColumnWidth = 40,
             })
             .ToArray();
     }
@@ -864,6 +896,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
             LoadError = result.Error?.Message ?? "No se pudo cargar el gráfico de evolución.";
             EvolutionSeries = [];
             EvolutionXAxes = [];
+            EvolutionYAxes = [];
             return;
         }
 
@@ -877,16 +910,8 @@ public sealed partial class DashboardViewModel : ViewModelBase
 
         EvolutionSeries =
         [
-            new LineSeries<double>
-            {
-                Values = evolution.Points.Select(p => (double)p.ExpensesDop).ToArray(),
-                Name = "Gastos",
-            },
-            new LineSeries<double>
-            {
-                Values = evolution.Points.Select(p => (double)p.IncomesDop).ToArray(),
-                Name = "Ingresos",
-            },
+            BuildLine("Gastos", evolution.Points.Select(p => (double)p.ExpensesDop).ToArray(), ChartPalette.Expense, filled: false),
+            BuildLine("Ingresos", evolution.Points.Select(p => (double)p.IncomesDop).ToArray(), ChartPalette.Income, filled: true),
         ];
 
         EvolutionXAxes =
@@ -894,8 +919,23 @@ public sealed partial class DashboardViewModel : ViewModelBase
             new Axis
             {
                 Labels = evolution.Points
-                    .Select(p => new DateOnly(p.Year, p.Month, 1).ToString("MMM yyyy", CultureInfo.CurrentCulture))
+                    .Select(p => new DateOnly(p.Year, p.Month, 1).ToString("MMM", CultureInfo.CurrentCulture))
                     .ToArray(),
+                LabelsPaint = new SolidColorPaint(ChartPalette.AxisText),
+                TextSize = 12,
+                ShowSeparatorLines = false,
+            },
+        ];
+
+        EvolutionYAxes =
+        [
+            new Axis
+            {
+                LabelsPaint = new SolidColorPaint(ChartPalette.AxisText),
+                SeparatorsPaint = new SolidColorPaint(ChartPalette.Grid, 1),
+                TextSize = 12,
+                MinLimit = 0,
+                Labeler = CompactAmount,
             },
         ];
     }
@@ -1015,4 +1055,30 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// (D-5, Phase 9), which now owns the shared formatting body.
     /// </summary>
     private static string FormatDop(decimal amount) => MoneyFormat.ApproximateDop(amount);
+
+    private static LineSeries<double> BuildLine(string name, double[] values, SKColor color, bool filled) => new()
+    {
+        Values = values,
+        Name = name,
+        Stroke = new SolidColorPaint(color, 3),
+        Fill = filled ? new SolidColorPaint(color.WithAlpha(24)) : null,
+        GeometrySize = 8,
+        GeometryStroke = new SolidColorPaint(color, 3),
+        GeometryFill = new SolidColorPaint(SKColors.White),
+        LineSmoothness = 0.6,
+    };
+
+    /// <summary>Formats an axis value compactly (1.5k, 2M) so the Y axis stays narrow.</summary>
+    /// <param name="value">The axis value.</param>
+    /// <returns>The compact label.</returns>
+    internal static string CompactAmount(double value)
+    {
+        double abs = Math.Abs(value);
+        return abs switch
+        {
+            >= 1_000_000 => (value / 1_000_000).ToString("0.#", CultureInfo.CurrentCulture) + "M",
+            >= 1_000 => (value / 1_000).ToString("0.#", CultureInfo.CurrentCulture) + "k",
+            _ => value.ToString("0", CultureInfo.CurrentCulture),
+        };
+    }
 }

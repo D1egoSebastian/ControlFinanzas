@@ -21,6 +21,10 @@ public partial class MonthlyEvolutionChart : UserControl
     public static readonly StyledProperty<IEnumerable<ICartesianAxis>?> XAxesProperty =
         AvaloniaProperty.Register<MonthlyEvolutionChart, IEnumerable<ICartesianAxis>?>(nameof(XAxes));
 
+    /// <summary>Identifies the <see cref="YAxes"/> styled property.</summary>
+    public static readonly StyledProperty<IEnumerable<ICartesianAxis>?> YAxesProperty =
+        AvaloniaProperty.Register<MonthlyEvolutionChart, IEnumerable<ICartesianAxis>?>(nameof(YAxes));
+
     /// <summary>Identifies the <see cref="IsEmpty"/> styled property.</summary>
     public static readonly StyledProperty<bool> IsEmptyProperty =
         AvaloniaProperty.Register<MonthlyEvolutionChart, bool>(nameof(IsEmpty));
@@ -54,6 +58,15 @@ public partial class MonthlyEvolutionChart : UserControl
     {
         get => GetValue(XAxesProperty);
         set => SetValue(XAxesProperty, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the Y axes (compact amounts, soft gridlines) of the wrapped <c>CartesianChart</c>.
+    /// </summary>
+    public IEnumerable<ICartesianAxis>? YAxes
+    {
+        get => GetValue(YAxesProperty);
+        set => SetValue(YAxesProperty, value);
     }
 
     /// <summary>

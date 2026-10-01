@@ -5,100 +5,120 @@
              xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
              xmlns:converters="using:ControlDeFinanzasIA.UI.Converters"
              xmlns:controls="using:ControlDeFinanzasIA.UI.Controls"
+             xmlns:input="using:ControlDeFinanzasIA.UI.Input"
              xmlns:dashboard="using:ControlDeFinanzasIA.Application.UseCases.Dashboard.GetUpcomingPayments"
              x:Class="ControlDeFinanzasIA.UI.Views.DashboardView"
              x:DataType="vm:DashboardViewModel"
              x:Name="Root"
              Background="{StaticResource CanvasBrush}">
     <ScrollViewer>
-        <StackPanel Margin="32" Spacing="20">
+        <StackPanel Margin="32">
 
-            <!-- Period navigation (R-1) -->
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto">
-                <TextBlock Grid.Column="0"
-                           Text="{Binding SelectedMonthLabel}"
-                           Classes="ledger-title"
-                           VerticalAlignment="Center" />
-                <Button Grid.Column="1"
-                        Content="{x:Static resources:Strings.DashboardPreviousMonthButton}"
-                        Command="{Binding PreviousMonthCommand}"
-                        Classes="ledger-btn" />
-                <Button Grid.Column="2"
-                        Content="{x:Static resources:Strings.DashboardNextMonthButton}"
-                        Command="{Binding NextMonthCommand}"
-                        Classes="ledger-btn"
-                        Margin="8,0,0,0" />
-                <Button Grid.Column="3"
-                        Content="{x:Static resources:Strings.DashboardRefreshButton}"
-                        Command="{Binding RefreshCommand}"
-                        Classes="ledger-btn-primary"
-                        Margin="8,0,0,0" />
-                <!-- Report export (F-018): secondary buttons, visually apart from navigation. -->
-                <Button Grid.Column="4"
-                        Content="{x:Static resources:Strings.ExportPdfButton}"
-                        Command="{Binding ExportPdfCommand}"
-                        Classes="ledger-btn"
-                        Margin="24,0,0,0" />
-                <Button Grid.Column="5"
-                        Content="{x:Static resources:Strings.ExportExcelButton}"
-                        Command="{Binding ExportExcelCommand}"
-                        Classes="ledger-btn"
-                        Margin="8,0,0,0" />
+            <!-- Header: month title and navigation on the left; the exports and the primary action on the right. -->
+            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+                <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding SelectedMonthLabel}"
+                               Classes="page-title"
+                               VerticalAlignment="Center"
+                               Margin="0,0,20,8" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,0,0,8">
+                        <Button Content="{x:Static resources:Strings.DashboardPreviousMonthButton}"
+                                Command="{Binding PreviousMonthCommand}"
+                                Classes="ledger-btn" />
+                        <Button Content="{x:Static resources:Strings.DashboardNextMonthButton}"
+                                Command="{Binding NextMonthCommand}"
+                                Classes="ledger-btn" />
+                        <Button Content="{x:Static resources:Strings.DashboardRefreshButton}"
+                                Command="{Binding RefreshCommand}"
+                                Classes="ledger-btn ghost" />
+                    </StackPanel>
+                </WrapPanel>
+                <!-- Report export (F-018): quiet buttons, visually apart from navigation. -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="16,0,0,8">
+                    <Button Content="{x:Static resources:Strings.ExportPdfButton}"
+                            Command="{Binding ExportPdfCommand}"
+                            Classes="ledger-btn ghost" />
+                    <Button Content="{x:Static resources:Strings.ExportExcelButton}"
+                            Command="{Binding ExportExcelCommand}"
+                            Classes="ledger-btn ghost" />
+                    <Button Content="{x:Static resources:Strings.ExpensesFormTitle}"
+                            Command="{Binding NewExpenseCommand}"
+                            ToolTip.Tip="{x:Static input:ShortcutTexts.NewExpense}"
+                            AutomationProperties.AcceleratorKey="{x:Static input:ShortcutTexts.NewExpense}"
+                            Classes="ledger-btn-primary" />
+                </StackPanel>
             </Grid>
 
             <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding LoadError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
 
-            <!-- Export outcome (F-018): empty after a cancel, file name on success, terracotta on error. -->
+            <!-- Export outcome (F-018): empty after a cancel, file name on success, rose on error. -->
             <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding ExportStatusMessage}"
                        IsVisible="{Binding ExportStatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                        Classes="ledger-status"
                        Classes.export-error="{Binding IsExportError}" />
 
             <!-- "Tasa no disponible" notice (R-7, S-6) -->
-            <Border Background="{StaticResource SurfaceMutedBrush}"
-                    BorderBrush="{StaticResource AccentBrush}"
-                    BorderThickness="1"
-                    CornerRadius="{StaticResource RadiusSmall}"
-                    Padding="12,8"
-                    IsVisible="{Binding HasMissingRates}">
+            <Border Classes="notice info" Margin="0,0,0,20" IsVisible="{Binding HasMissingRates}">
                 <TextBlock Text="{x:Static resources:Strings.DashboardMissingRatesNotice}"
                            Foreground="{StaticResource AccentBrush}"
                            TextWrapping="Wrap" />
             </Border>
 
-            <!-- Summary card (R-2) -->
-            <Grid ColumnDefinitions="*,*,*">
-                <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20" Margin="0,0,8,0">
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="{x:Static resources:Strings.DashboardExpensesLabel}" Classes="ledger-section" />
-                        <TextBlock Text="{Binding TotalExpensesDisplay}" Classes="ledger-amount expense" FontSize="20" HorizontalAlignment="Left" />
-                        <TextBlock Text="{Binding ExpensesDeltaDisplay}" Classes="ledger-status" />
+            <!-- Summary cards (R-2): big figures, a soft icon tile each. -->
+            <Grid ColumnDefinitions="*,*,*" Margin="0,0,0,20">
+                <Border Grid.Column="0" Classes="card" Margin="0,0,8,0">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Classes="icon-chip expense" AutomationProperties.AccessibilityView="Raw">
+                                <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconExpenses}" Foreground="{StaticResource ExpenseBrush}" />
+                            </Border>
+                            <TextBlock Text="{x:Static resources:Strings.DashboardExpensesLabel}" Classes="ledger-section" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding TotalExpensesDisplay}" Classes="metric expense" />
+                        </Viewbox>
+                        <Border Classes="stat-pill" IsVisible="{Binding ExpensesDeltaDisplay, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                            <TextBlock Text="{Binding ExpensesDeltaDisplay}" Classes="ledger-status" />
+                        </Border>
                     </StackPanel>
                 </Border>
-                <Border Grid.Column="1" Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20" Margin="8,0">
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="{x:Static resources:Strings.DashboardIncomesLabel}" Classes="ledger-section" />
-                        <TextBlock Text="{Binding TotalIncomesDisplay}" Classes="ledger-amount income" FontSize="20" HorizontalAlignment="Left" />
+                <Border Grid.Column="1" Classes="card" Margin="8,0">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Classes="icon-chip income" AutomationProperties.AccessibilityView="Raw">
+                                <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconIncomes}" Foreground="{StaticResource IncomeBrush}" />
+                            </Border>
+                            <TextBlock Text="{x:Static resources:Strings.DashboardIncomesLabel}" Classes="ledger-section" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding TotalIncomesDisplay}" Classes="metric income" />
+                        </Viewbox>
                     </StackPanel>
                 </Border>
-                <Border Grid.Column="2" Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20" Margin="8,0,0,0">
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="{x:Static resources:Strings.DashboardNetBalanceLabel}" Classes="ledger-section" />
-                        <TextBlock Text="{Binding NetBalanceDisplay}" Classes="ledger-amount" FontSize="20" HorizontalAlignment="Left" />
+                <Border Grid.Column="2" Classes="card" Margin="8,0,0,0">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Classes="icon-chip" AutomationProperties.AccessibilityView="Raw">
+                                <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBudgets}" Foreground="{StaticResource AccentBrush}" />
+                            </Border>
+                            <TextBlock Text="{x:Static resources:Strings.DashboardNetBalanceLabel}" Classes="ledger-section" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding NetBalanceDisplay}" Classes="metric" />
+                        </Viewbox>
                     </StackPanel>
                 </Border>
             </Grid>
 
             <!-- Expenses of the month (pre-1.0 slice D): the latest rows of SelectedMonth, right under the summary. -->
-            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20">
-                <StackPanel Spacing="10">
+            <Border Classes="card" Margin="0,0,0,20">
+                <StackPanel Spacing="12">
                     <Grid ColumnDefinitions="*,Auto">
                         <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
-                            <TextBlock Text="{x:Static resources:Strings.DashboardMonthExpensesTitle}" Classes="ledger-section" />
+                            <TextBlock Text="{x:Static resources:Strings.DashboardMonthExpensesTitle}" Classes="card-title" />
                             <TextBlock Text="{Binding MonthExpensesCountText}"
                                        IsVisible="{Binding MonthExpensesCountText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                       Foreground="{StaticResource TextSecondaryBrush}"
-                                       TextWrapping="Wrap" />
+                                       Classes="ledger-status" />
                         </StackPanel>
                         <Button Grid.Column="1"
                                 Content="{x:Static resources:Strings.DashboardMonthExpensesViewAllButton}"
@@ -112,18 +132,17 @@
                     <ItemsControl ItemsSource="{Binding MonthExpenses}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:MonthExpenseRow">
-                                <Border Classes="ledger-row" Padding="12">
-                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Classes="ledger-row" Padding="4,10">
+                                    <Grid ColumnDefinitions="64,*,Auto">
                                         <TextBlock Grid.Column="0"
                                                    Text="{Binding DateDisplay}"
-                                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,12,0" />
+                                                   Classes="ledger-status"
+                                                   VerticalAlignment="Center" />
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding Description}" Classes="strong" TextWrapping="Wrap" />
                                             <TextBlock Text="{Binding CategoryName}"
                                                        IsVisible="{Binding CategoryName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                       Foreground="{StaticResource TextSecondaryBrush}" />
+                                                       Classes="caption" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding AmountDisplay}"
@@ -131,7 +150,7 @@
                                                        HorizontalAlignment="Right" />
                                             <TextBlock Text="{Binding DopDisplay}"
                                                        IsVisible="{Binding DopDisplay, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       Classes="caption"
                                                        HorizontalAlignment="Right" />
                                         </StackPanel>
                                     </Grid>
@@ -141,88 +160,114 @@
                     </ItemsControl>
                     <TextBlock Text="{Binding MonthExpensesShowingText}"
                                IsVisible="{Binding MonthExpensesShowingText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
+                               Classes="caption" />
                     <controls:EmptyState Title="{x:Static resources:Strings.DashboardMonthExpensesEmptyTitle}"
                                          Hint="{x:Static resources:Strings.DashboardMonthExpensesEmptyHint}"
                                          IsVisible="{Binding IsMonthExpensesEmpty}" />
                 </StackPanel>
             </Border>
 
-            <!-- Charts (R-4, R-5) -->
-            <Grid ColumnDefinitions="*,*">
-                <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20" Margin="0,0,8,0">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="{x:Static resources:Strings.DashboardCategoryBreakdownTitle}" Classes="ledger-section" />
+            <!-- Charts (R-4, R-5): the category donut carries its own legend (color + label + amount + share). -->
+            <Grid ColumnDefinitions="*,*" Margin="0,0,0,20">
+                <Border Grid.Column="0" Classes="card" Margin="0,0,8,0">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="{x:Static resources:Strings.DashboardCategoryBreakdownTitle}" Classes="card-title" />
                         <charts:CategoryBreakdownChart
                             Series="{Binding CategorySeries}"
                             IsEmpty="{Binding !CategorySlices.Count}"
                             EmptyText="{x:Static resources:Strings.DashboardEmptyCategoryBreakdownMessage}" />
+                        <ItemsControl ItemsSource="{Binding CategoryLegend}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:CategoryLegendItem">
+                                    <Grid ColumnDefinitions="Auto,*,Auto,52" Margin="0,3">
+                                        <Ellipse Grid.Column="0" Classes="legend-dot" Fill="{Binding ColorHex}" Margin="0,0,10,0" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="2" Text="{Binding AmountDisplay}" Classes="ledger-status" Margin="8,0" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="3" Text="{Binding PercentDisplay}" Classes="ledger-amount" HorizontalAlignment="Right" FontSize="13" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </Border>
-                <Border Grid.Column="1" Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20" Margin="8,0,0,0">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="{x:Static resources:Strings.DashboardMonthlyEvolutionTitle}" Classes="ledger-section" />
+                <Border Grid.Column="1" Classes="card" Margin="8,0,0,0">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="{x:Static resources:Strings.DashboardMonthlyEvolutionTitle}" Classes="card-title" />
                         <charts:MonthlyEvolutionChart
                             Series="{Binding EvolutionSeries}"
                             XAxes="{Binding EvolutionXAxes}"
+                            YAxes="{Binding EvolutionYAxes}"
                             IsEmpty="{Binding !EvolutionPoints.Count}"
                             EmptyText="{x:Static resources:Strings.DashboardEmptyMonthlyEvolutionMessage}" />
+                        <!-- Two-entry legend: the lines are told apart by color AND by this key. -->
+                        <StackPanel Orientation="Horizontal" Spacing="18" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Ellipse Classes="legend-dot" Fill="{StaticResource ExpenseBrush}" />
+                                <TextBlock Text="{x:Static resources:Strings.DashboardExpensesLabel}" Classes="ledger-status" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Ellipse Classes="legend-dot" Fill="{StaticResource IncomeBrush}" />
+                                <TextBlock Text="{x:Static resources:Strings.DashboardIncomesLabel}" Classes="ledger-status" />
+                            </StackPanel>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
             </Grid>
 
             <!-- "Próximos pagos" (R-6, R-1a): anchored to today, not the -->
             <!-- selected month; does not change on PreviousMonth/NextMonth. -->
-            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="{x:Static resources:Strings.DashboardUpcomingPaymentsTitle}" Classes="ledger-section" />
-                    <ItemsControl ItemsSource="{Binding UpcomingPayments}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="dashboard:UpcomingPaymentItem">
-                                <Border Classes="ledger-row" Padding="12">
-                                    <Grid ColumnDefinitions="Auto,*,Auto">
-                                        <TextBlock Grid.Column="0"
-                                                   Text="{Binding Date}"
-                                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                                   Margin="0,0,12,0" />
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock Text="{Binding Label}" Classes="ledger-section" />
-                                            <TextBlock Text="{Binding Kind, Converter={x:Static converters:UpcomingPaymentKindLabelConverter.Instance}}"
-                                                       Foreground="{StaticResource TextSecondaryBrush}" />
-                                        </StackPanel>
-                                        <TextBlock Grid.Column="2"
-                                                   Text="{Binding Amount, Converter={x:Static converters:MoneyApproximateConverter.Instance}}"
-                                                   Classes="ledger-amount"
-                                                   Margin="12,0,0,0" />
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    <TextBlock Text="{x:Static resources:Strings.DashboardEmptyUpcomingPaymentsMessage}"
-                               IsVisible="{Binding !UpcomingPayments.Count}"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
-                </StackPanel>
-            </Border>
-
             <!-- Budget-progress card (F-010, R-7, D-11): one bar per budgeted -->
             <!-- category for SelectedMonth — reuses the Dashboard's own month -->
             <!-- navigation, no second month selector. -->
-            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="{x:Static resources:Strings.DashboardBudgetProgressTitle}" Classes="ledger-section" />
-                    <ItemsControl ItemsSource="{Binding BudgetProgress}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:BudgetProgressItem">
-                                <Border Classes="ledger-row" Padding="12">
-                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+            <Grid ColumnDefinitions="*,*" Margin="0,0,0,20">
+                <Border Grid.Column="0" Classes="card" Margin="0,0,8,0">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="{x:Static resources:Strings.DashboardUpcomingPaymentsTitle}" Classes="card-title" />
+                        <ItemsControl ItemsSource="{Binding UpcomingPayments}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="dashboard:UpcomingPaymentItem">
+                                    <Border Classes="ledger-row" Padding="4,10">
+                                        <Grid ColumnDefinitions="Auto,*,Auto">
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding Date}"
+                                                       Classes="ledger-status"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,12,0" />
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Label}" Classes="strong" TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding Kind, Converter={x:Static converters:UpcomingPaymentKindLabelConverter.Instance}}"
+                                                           Classes="caption" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding Amount, Converter={x:Static converters:MoneyApproximateConverter.Instance}}"
+                                                       Classes="ledger-amount"
+                                                       Margin="12,0,0,0"
+                                                       VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="{x:Static resources:Strings.DashboardEmptyUpcomingPaymentsMessage}"
+                                   IsVisible="{Binding !UpcomingPayments.Count}"
+                                   Classes="ledger-status" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Classes="card" Margin="8,0,0,0">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="{x:Static resources:Strings.DashboardBudgetProgressTitle}" Classes="card-title" />
+                        <ItemsControl ItemsSource="{Binding BudgetProgress}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:BudgetProgressItem">
+                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" Margin="0,6,0,10">
                                         <TextBlock Grid.Row="0" Grid.Column="0"
                                                    Text="{Binding CategoryName}"
-                                                   Classes="ledger-section" />
+                                                   Classes="strong" />
                                         <TextBlock Grid.Row="0" Grid.Column="1"
                                                    Text="{Binding PercentDisplay}"
                                                    Classes="ledger-amount" />
                                         <ProgressBar Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                                     Margin="0,6"
                                                      Minimum="0" Maximum="100"
                                                      Value="{Binding ProgressValue}"
                                                      IsIndeterminate="{Binding IsIndeterminate}"
@@ -231,69 +276,88 @@
                                                      Classes.exceeded="{Binding IsExceeded}" />
                                         <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
                                                    Text="{Binding AmountsDisplay}"
-                                                   Foreground="{StaticResource TextSecondaryBrush}" />
+                                                   Classes="caption" />
                                     </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    <TextBlock Text="{x:Static resources:Strings.DashboardEmptyBudgetProgressMessage}"
-                               IsVisible="{Binding !BudgetProgress.Count}"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
-                </StackPanel>
-            </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="{x:Static resources:Strings.DashboardEmptyBudgetProgressMessage}"
+                                   IsVisible="{Binding !BudgetProgress.Count}"
+                                   Classes="ledger-status" />
+                    </StackPanel>
+                </Border>
+            </Grid>
 
             <!-- Month-end forecast card (F-014, R-1, R-9): zero LLM, always -->
             <!-- numeric; ForecastStateMessage/ForecastBudgetDisplay follow the -->
             <!-- LoadError pattern above (bound directly, blank when empty). -->
-            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="{x:Static resources:Strings.DashboardForecastTitle}" Classes="ledger-section" />
-                    <Grid ColumnDefinitions="*,*" IsVisible="{Binding HasForecast}">
-                        <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,8,0">
-                            <TextBlock Text="{x:Static resources:Strings.DashboardForecastSpentToDateLabel}"
-                                       Foreground="{StaticResource TextSecondaryBrush}" />
-                            <TextBlock Text="{Binding ForecastSpentToDateDisplay}" Classes="ledger-amount" FontSize="20" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="1" Spacing="4" Margin="8,0,0,0">
-                            <TextBlock Text="{x:Static resources:Strings.DashboardForecastProjectedLabel}"
-                                       Foreground="{StaticResource TextSecondaryBrush}" />
-                            <TextBlock Text="{Binding ForecastProjectedDisplay}" Classes="ledger-amount" FontSize="20" />
-                        </StackPanel>
-                    </Grid>
-                    <TextBlock Text="{Binding ForecastBudgetDisplay}"
-                               Foreground="{Binding ForecastBudgetStatus, Converter={x:Static converters:BudgetStatusBrushConverter.Instance}}" />
-                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding ForecastStateMessage}"
-                               Foreground="{StaticResource TextSecondaryBrush}"
-                               TextWrapping="Wrap" />
-                </StackPanel>
-            </Border>
+            <!-- AI insights card (F-014, R-4, R-6, R-9): non-blocking narration; -->
+            <!-- InsightsStatusText mirrors the LoadError pattern — bound directly, -->
+            <!-- blank when InsightsText has content. -->
+            <Grid ColumnDefinitions="*,*" Margin="0,0,0,20">
+                <Border Grid.Column="0" Classes="card" Margin="0,0,8,0">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="{x:Static resources:Strings.DashboardForecastTitle}" Classes="card-title" />
+                        <Grid ColumnDefinitions="*,*" IsVisible="{Binding HasForecast}">
+                            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,8,0">
+                                <TextBlock Text="{x:Static resources:Strings.DashboardForecastSpentToDateLabel}"
+                                           Classes="ledger-status" />
+                                <TextBlock Text="{Binding ForecastSpentToDateDisplay}" Classes="ledger-amount" FontSize="20" HorizontalAlignment="Left" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="4" Margin="8,0,0,0">
+                                <TextBlock Text="{x:Static resources:Strings.DashboardForecastProjectedLabel}"
+                                           Classes="ledger-status" />
+                                <TextBlock Text="{Binding ForecastProjectedDisplay}" Classes="ledger-amount" FontSize="20" HorizontalAlignment="Left" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Text="{Binding ForecastBudgetDisplay}"
+                                   Foreground="{Binding ForecastBudgetStatus, Converter={x:Static converters:BudgetStatusBrushConverter.Instance}}" />
+                        <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding ForecastStateMessage}"
+                                   Classes="ledger-status" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Classes="card" Margin="8,0,0,0">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="{x:Static resources:Strings.DashboardInsightsTitle}" Classes="card-title" />
+                        <TextBlock Text="{x:Static resources:Strings.DashboardInsightsLoading}"
+                                   IsVisible="{Binding IsInsightsLoading}"
+                                   Classes="ledger-status" />
+                        <TextBlock Text="{Binding InsightsText}"
+                                   IsVisible="{Binding !IsInsightsLoading}"
+                                   TextWrapping="Wrap" />
+                        <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding InsightsStatusText}"
+                                   IsVisible="{Binding !IsInsightsLoading}"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </Grid>
 
             <!-- Anomalies list (F-014, R-2, R-3, R-9): severity chip + per-row -->
             <!-- dismiss; Message shows the deterministic template until narration -->
             <!-- (S8b) replaces it in place. AnomalyNarrationStatusText mirrors the -->
             <!-- LoadError pattern — bound directly, blank when narration succeeded. -->
-            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20">
+            <Border Classes="card" Margin="0,0,0,20">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="{x:Static resources:Strings.DashboardAnomaliesTitle}" Classes="ledger-section" />
+                    <TextBlock Text="{x:Static resources:Strings.DashboardAnomaliesTitle}" Classes="card-title" />
                     <ItemsControl ItemsSource="{Binding Anomalies}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:AnomalyListItem">
-                                <Border Classes="ledger-row" Padding="12">
+                                <Border Classes="ledger-row" Padding="4,12">
                                     <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                                         <Border Grid.Column="0"
                                                 Background="{Binding Severity, Converter={x:Static converters:AnomalySeverityBrushConverter.Instance}}"
-                                                CornerRadius="{StaticResource RadiusSmall}"
-                                                Padding="8,2"
+                                                CornerRadius="{StaticResource RadiusPill}"
+                                                Padding="10,2"
                                                 VerticalAlignment="Center"
                                                 Margin="0,0,12,0">
                                             <TextBlock Text="{Binding SeverityLabel}" Foreground="{StaticResource OnAccentBrush}" FontWeight="SemiBold" />
                                         </Border>
                                         <StackPanel Grid.Column="1" Spacing="2">
-                                            <TextBlock Text="{Binding CategoryName}" Classes="ledger-section" />
-                                            <TextBlock Text="{Binding Description}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding CategoryName}" Classes="strong" />
+                                            <TextBlock Text="{Binding Description}" Classes="secondary" TextWrapping="Wrap" />
                                             <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
-                                            <TextBlock Text="{Binding DateDisplay}" Foreground="{StaticResource TextSecondaryBrush}" />
+                                            <TextBlock Text="{Binding DateDisplay}" Classes="caption" />
                                         </StackPanel>
                                         <TextBlock Grid.Column="2"
                                                    Text="{Binding AmountDisplay}"
@@ -313,27 +377,8 @@
                     </ItemsControl>
                     <TextBlock Text="{x:Static resources:Strings.DashboardEmptyAnomaliesMessage}"
                                IsVisible="{Binding !Anomalies.Count}"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
+                               Classes="ledger-status" />
                     <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding AnomalyNarrationStatusText}"
-                               Foreground="{StaticResource AccentBrush}"
-                               TextWrapping="Wrap" />
-                </StackPanel>
-            </Border>
-
-            <!-- AI insights card (F-014, R-4, R-6, R-9): non-blocking narration; -->
-            <!-- InsightsStatusText mirrors the LoadError pattern — bound directly, -->
-            <!-- blank when InsightsText has content. -->
-            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="{StaticResource RadiusMedium}" Padding="20">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="{x:Static resources:Strings.DashboardInsightsTitle}" Classes="ledger-section" />
-                    <TextBlock Text="{x:Static resources:Strings.DashboardInsightsLoading}"
-                               IsVisible="{Binding IsInsightsLoading}"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
-                    <TextBlock Text="{Binding InsightsText}"
-                               IsVisible="{Binding !IsInsightsLoading}"
-                               TextWrapping="Wrap" />
-                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding InsightsStatusText}"
-                               IsVisible="{Binding !IsInsightsLoading}"
                                Foreground="{StaticResource AccentBrush}"
                                TextWrapping="Wrap" />
                 </StackPanel>

@@ -9,9 +9,10 @@
         for both charts. Bind Series/XAxes from the ViewModel; IsEmpty
         drives which of the two children is shown.
     -->
-    <Grid MinHeight="220">
+    <Grid MinHeight="230">
         <lvc:CartesianChart Series="{Binding #Root.Series}"
                              XAxes="{Binding #Root.XAxes}"
+                             YAxes="{Binding #Root.YAxes}"
                              IsVisible="{Binding !#Root.IsEmpty}" />
         <TextBlock Text="{Binding #Root.EmptyText}"
                    IsVisible="{Binding #Root.IsEmpty}"

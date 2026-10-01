@@ -229,6 +229,19 @@ public sealed class DashboardMonthExpensesViewModelTests
     }
 
     [Fact]
+    public async Task NewExpense_OpensExpensesAndAsksTheFormToTakeFocus()
+    {
+        Rig rig = Create(e => Add(e, new DateOnly(2026, 3, 2), 100m, "Marzo"));
+        await rig.ViewModel.RefreshCommand.ExecuteAsync(null);
+        Assert.Null(rig.ExpensesViewModel.DescriptionFocusRequest);
+
+        rig.ViewModel.NewExpenseCommand.Execute(null);
+
+        Assert.Equal(new[] { RouteNames.Expenses }, rig.Navigation.NavigateToTypedCalls.ToArray());
+        Assert.NotNull(rig.ExpensesViewModel.DescriptionFocusRequest);
+    }
+
+    [Fact]
     public async Task ALoadFailure_ShowsTheLocalizedError_KeepsTheRestOfTheDashboard_AndDoesNotClaimTheMonthIsEmpty()
     {
         Rig rig = Create(e => Add(e, new DateOnly(2026, 3, 2), 100m, "Marzo"));
