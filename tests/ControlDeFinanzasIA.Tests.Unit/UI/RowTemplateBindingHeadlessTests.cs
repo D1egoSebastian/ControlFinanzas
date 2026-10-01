@@ -250,10 +250,8 @@ public sealed class RowTemplateBindingHeadlessTests
             edit.Command!.Execute(edit.CommandParameter);
             Assert.Same(rule, vm.SelectedRule);
 
-            // "Saltar" acts on the selected rule and carries no parameter: find it through its command.
-            Assert.Contains(
-                view.GetVisualDescendants().OfType<Button>(),
-                b => ReferenceEquals(b.Command, vm.SkipSelectedCommand));
+            // "Saltar" carries its own row: it can never skip another rule than the one it sits in.
+            RowButtonFor(view, rule, vm.SkipCommand);
             await Task.CompletedTask;
             return true;
         });
@@ -261,15 +259,22 @@ public sealed class RowTemplateBindingHeadlessTests
         Assert.True(ok);
     }
 
-    internal static RecurringRulesViewModel NewRecurringRulesViewModel(FakeRecurringRuleRepository? seeded = null)
+    internal static RecurringRulesViewModel NewRecurringRulesViewModel(FakeRecurringRuleRepository? seeded = null, bool withCatalog = false)
     {
         FakeRecurringRuleRepository rules = seeded ?? new FakeRecurringRuleRepository();
         var clock = new FakeClock { Today = new DateOnly(2026, 9, 20), UtcNow = new DateTime(2026, 9, 20, 12, 0, 0, DateTimeKind.Utc) };
+        var categories = new FakeCategoryRepository();
+        var methods = new FakePaymentMethodRepository();
+        if (withCatalog)
+        {
+            categories.SetCategories([new ControlDeFinanzasIA.Domain.Catalog.Category { Id = new Guid("11111111-1111-1111-1111-000000000001"), Name = "Servicios", IsSystem = false }]);
+            methods.Methods = [new ControlDeFinanzasIA.Domain.Catalog.PaymentMethod { Id = new Guid("22222222-2222-2222-2222-000000000001"), Name = "Tarjeta", IsSystem = false, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }];
+        }
 
         return new RecurringRulesViewModel(
             rules,
-            new FakeCategoryRepository(),
-            new FakePaymentMethodRepository(),
+            categories,
+            methods,
             new CreateSubscriptionUseCase(rules, new CreateSubscriptionValidator(), NullLogger<CreateSubscriptionUseCase>.Instance),
             new UpdateSubscriptionUseCase(rules, new UpdateSubscriptionValidator(), NullLogger<UpdateSubscriptionUseCase>.Instance),
             new CreateFixedExpenseUseCase(rules, new CreateFixedExpenseValidator(), NullLogger<CreateFixedExpenseUseCase>.Instance),
@@ -278,6 +283,7 @@ public sealed class RowTemplateBindingHeadlessTests
             new DeactivateRecurringRuleUseCase(rules),
             new DeleteRecurringRuleUseCase(rules),
             new SkipNextOccurrenceUseCase(rules),
+            clock,
             NullLogger<RecurringRulesViewModel>.Instance);
     }
 }

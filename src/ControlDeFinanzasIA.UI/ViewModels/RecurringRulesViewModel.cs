@@ -15,13 +15,21 @@ using ControlDeFinanzasIA.Application.UseCases.Recurring.UpdateSubscription;
 using ControlDeFinanzasIA.Domain.Catalog;
 using ControlDeFinanzasIA.Domain.Enums;
 using ControlDeFinanzasIA.Domain.Recurring;
+using ControlDeFinanzasIA.UI.Converters;
 using ControlDeFinanzasIA.UI.Resources;
 using Microsoft.Extensions.Logging;
 
 namespace ControlDeFinanzasIA.UI.ViewModels;
 
+/// <summary>A month of the year as offered by the yearly-charge month selector.</summary>
+/// <param name="Number">The month number (1-12).</param>
+/// <param name="Name">The localized month name.</param>
+public sealed record MonthOption(int Number, string Name);
+
 /// <summary>
-/// Demo screen for creating and updating subscription rules.
+/// Screen for creating and editing recurring rules (subscriptions and fixed monthly expenses). A charge is defined by
+/// the day of the month it always happens on (plus the month, for a yearly charge); the first charge is derived from
+/// it and shown read-only, and saving an edit never moves the schedule unless the user changes it.
 /// </summary>
 public sealed partial class RecurringRulesViewModel : ViewModelBase
 {
@@ -36,6 +44,7 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
     private readonly DeactivateRecurringRuleUseCase _deactivateUseCase;
     private readonly DeleteRecurringRuleUseCase _deleteUseCase;
     private readonly SkipNextOccurrenceUseCase _skipUseCase;
+    private readonly IClock _clock;
     private readonly ILogger<RecurringRulesViewModel> _logger;
 
     public RecurringRulesViewModel(
@@ -50,6 +59,7 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
         DeactivateRecurringRuleUseCase deactivateUseCase,
         DeleteRecurringRuleUseCase deleteUseCase,
         SkipNextOccurrenceUseCase skipUseCase,
+        IClock clock,
         ILogger<RecurringRulesViewModel> logger)
     {
         _repository = repository;
@@ -63,10 +73,14 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
         _deactivateUseCase = deactivateUseCase;
         _deleteUseCase = deleteUseCase;
         _skipUseCase = skipUseCase;
+        _clock = clock;
         _logger = logger;
-        StartDate = DateTime.Today;
+        _dayOfMonth = clock.Today.Day;
+        _month = clock.Today.Month;
         Frequencies = ["Monthly", "Bimonthly", "Yearly"];
         Currencies = Enum.GetValues<Currency>();
+        DaysOfMonth = [.. Enumerable.Range(1, 31)];
+        Months = [.. Enumerable.Range(1, 12).Select(n => new MonthOption(n, MonthName(n)))];
         Rules.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmptyNoData));
         _ = LoadAsync();
     }
@@ -78,13 +92,36 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
     public IReadOnlyList<string> RuleTypes { get; } = ["Subscription", "FixedExpense"];
     public IReadOnlyList<Currency> Currencies { get; }
 
+    /// <summary>Gets the days of the month a charge can happen on (1-31).</summary>
+    public IReadOnlyList<int> DaysOfMonth { get; }
+
+    /// <summary>Gets the months a yearly charge can happen in.</summary>
+    public IReadOnlyList<MonthOption> Months { get; }
+
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private decimal _amount;
     [ObservableProperty] private Currency _currency = Currency.DOP;
-    [ObservableProperty] private string _frequency = "Monthly";
-    [ObservableProperty] private string _ruleType = "Subscription";
-    [ObservableProperty] private DateTime? _startDate;
-    [ObservableProperty] private DateTime? _endDate;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsMonthVisible))]
+    [NotifyPropertyChangedFor(nameof(NextChargeText))]
+    private string _frequency = "Monthly";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(RuleTypeHelp))]
+    private string _ruleType = "Subscription";
+
+    /// <summary>Gets or sets the day of the month the charge always happens on (1-31).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NextChargeText))]
+    private int _dayOfMonth;
+
+    /// <summary>Gets or sets the month (1-12) of a yearly charge.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NextChargeText))]
+    private int _month;
+
+    [ObservableProperty] private DateOnly? _endDate;
     [ObservableProperty] private Category? _selectedCategory;
     [ObservableProperty] private PaymentMethod? _selectedPaymentMethod;
     [ObservableProperty] private RecurringRule? _selectedRule;
@@ -105,12 +142,55 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
     /// </summary>
     public bool IsEmptyNoData => HasLoaded && Rules.Count == 0;
 
+    /// <summary>Gets a value indicating whether the month selector is shown (yearly charges only).</summary>
+    public bool IsMonthVisible => Frequency == nameof(RecurringFrequency.Yearly);
+
+    /// <summary>Gets the plain-language explanation of the selected rule type.</summary>
+    public string RuleTypeHelp => RuleType == "FixedExpense"
+        ? Strings.RecurringTypeHelpFixedExpense
+        : Strings.RecurringTypeHelpSubscription;
+
+    /// <summary>
+    /// Gets the read-only "Next charge" line: the stored next charge of the rule being edited while its schedule is
+    /// untouched, otherwise the first charge that the chosen day, month and frequency would give.
+    /// </summary>
+    public string NextChargeText
+    {
+        get
+        {
+            try
+            {
+                DateOnly next = SelectedRule is { } rule && !ScheduleChanged
+                    ? rule.NextGenerationDate
+                    : DerivedFirstCharge();
+                return NextChargeTextConverter.Format(next);
+            }
+            catch (ArgumentException)
+            {
+                return string.Empty;
+            }
+        }
+    }
 
     public ObservableCollection<RecurringGenerationPreview> PreviewItems { get; } = [];
 
     public bool IsEditing => SelectedRule is not null;
 
     public static bool IsEditableRule(RecurringRule rule) => rule is Subscription or FixedExpense;
+
+    private bool ScheduleChanged => SelectedRule is { } rule
+        && (Frequency != rule.Frequency
+            || DayOfMonth != rule.StartDate.Day
+            || (IsMonthVisible && Month != rule.StartDate.Month));
+
+    private static string MonthName(int month)
+    {
+        string name = CultureInfo.CurrentUICulture.DateTimeFormat.GetMonthName(month);
+        return name.Length == 0 ? name : char.ToUpper(name[0], CultureInfo.CurrentUICulture) + name[1..];
+    }
+
+    private DateOnly DerivedFirstCharge() =>
+        RecurringSchedule.FirstCharge(Frequency, DayOfMonth, IsMonthVisible ? Month : null, _clock.Today);
 
     partial void OnSelectedRuleChanged(RecurringRule? value)
     {
@@ -125,13 +205,15 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
             Amount = value.Amount.Amount;
             Currency = value.Currency;
             Frequency = value.Frequency;
-            StartDate = value.StartDate.ToDateTime(TimeOnly.MinValue);
-            EndDate = value.EndDate?.ToDateTime(TimeOnly.MinValue);
+            DayOfMonth = value.StartDate.Day;
+            Month = value.StartDate.Month;
+            EndDate = value.EndDate;
             SelectedCategory = Categories.FirstOrDefault(c => c.Id == value.CategoryId);
             SelectedPaymentMethod = PaymentMethods.FirstOrDefault(p => p.Id == value.PaymentMethodId);
         }
 
         OnPropertyChanged(nameof(IsEditing));
+        OnPropertyChanged(nameof(NextChargeText));
         SaveCommand.NotifyCanExecuteChanged();
     }
 
@@ -139,29 +221,49 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
     private async Task SaveAsync()
     {
         FormError = string.Empty;
-        if (SelectedCategory is null || SelectedPaymentMethod is null || StartDate is null)
+        if (SelectedCategory is null || SelectedPaymentMethod is null)
         {
             FormError = Strings.RecurringSelectionRequired;
             return;
         }
 
-        var start = DateOnly.FromDateTime(StartDate.Value);
-        DateOnly? end = EndDate.HasValue ? DateOnly.FromDateTime(EndDate.Value) : null;
+        if (DayOfMonth is < 1 or > 31 || (IsMonthVisible && Month is < 1 or > 12))
+        {
+            FormError = Strings.RecurringScheduleRequired;
+            return;
+        }
+
+        // An untouched schedule is never recomputed: the stored start date and next charge go back as they are.
+        DateOnly start;
+        DateOnly? next;
+        if (SelectedRule is { } edited && !ScheduleChanged)
+        {
+            start = edited.StartDate;
+            next = null;
+        }
+        else
+        {
+            DateOnly first = DerivedFirstCharge();
+            start = RecurringSchedule.AnchorStartDate(Frequency, DayOfMonth, IsMonthVisible ? Month : null, first);
+            next = first;
+        }
+
+        DateOnly? end = EndDate;
         Result result = SelectedRule is null && RuleType == "Subscription"
             ? await _createUseCase.ExecuteAsync(new CreateSubscriptionCommand(
                 Name, Amount, Currency, Frequency, start, end,
-                SelectedCategory.Id, SelectedPaymentMethod.Id))
+                SelectedCategory.Id, SelectedPaymentMethod.Id, null, next))
             : SelectedRule is null
             ? await _createFixedExpenseUseCase.ExecuteAsync(new CreateFixedExpenseCommand(
                 Name, Amount, Currency, Frequency, start, end,
-                SelectedCategory.Id, SelectedPaymentMethod.Id))
+                SelectedCategory.Id, SelectedPaymentMethod.Id, null, next))
             : RuleType == "Subscription"
             ? await _updateUseCase.ExecuteAsync(new UpdateSubscriptionCommand(
                 SelectedRule.Id, Name, Amount, Currency, Frequency, start, end,
-                SelectedCategory.Id, SelectedPaymentMethod.Id))
+                SelectedCategory.Id, SelectedPaymentMethod.Id, null, next))
             : await _updateFixedExpenseUseCase.ExecuteAsync(new UpdateFixedExpenseCommand(
                 SelectedRule.Id, Name, Amount, Currency, Frequency, start, end,
-                SelectedCategory.Id, SelectedPaymentMethod.Id));
+                SelectedCategory.Id, SelectedPaymentMethod.Id, null, next));
 
         if (!result.IsSuccess)
         {
@@ -173,13 +275,13 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
             ? Strings.RecurringCreated
             : Strings.RecurringUpdated;
         await LoadRulesAsync();
-        SelectedRule = null;
+        EndEntry();
     }
 
     [RelayCommand]
     private void CancelEdit()
     {
-        SelectedRule = null;
+        EndEntry();
         FormError = string.Empty;
     }
 
@@ -189,6 +291,20 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
         if (rule is not null && IsEditableRule(rule))
         {
             SelectedRule = rule;
+        }
+    }
+
+    // Leaves the form ready for a new rule: clearing the selection resets it, and when nothing was selected (a
+    // creation) it is reset directly, so pressing Save twice can never register the same rule twice.
+    private void EndEntry()
+    {
+        if (SelectedRule is null)
+        {
+            ResetForm();
+        }
+        else
+        {
+            SelectedRule = null;
         }
     }
 
@@ -228,9 +344,13 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
         Currency = Currency.DOP;
         Frequency = "Monthly";
         RuleType = "Subscription";
-        StartDate = DateTime.Today;
+        DayOfMonth = _clock.Today.Day;
+        Month = _clock.Today.Month;
         EndDate = null;
+        SelectedCategory = null;
+        SelectedPaymentMethod = null;
         FormError = string.Empty;
+        OnPropertyChanged(nameof(NextChargeText));
     }
 
     [RelayCommand]
@@ -278,6 +398,9 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
             }
 
             PreviewItems.Clear();
+
+            // Generating advances each rule's next charge: reload so the list shows what is stored.
+            await LoadRulesAsync();
         }
         catch (Exception ex)
         {
@@ -301,15 +424,17 @@ public sealed partial class RecurringRulesViewModel : ViewModelBase
         await LoadRulesAsync();
     }
 
+    /// <summary>Skips the next charge of the rule whose row was clicked (never the rule being edited, if another).</summary>
+    /// <param name="rule">The rule of the clicked row.</param>
     [RelayCommand]
-    private async Task SkipSelectedAsync()
+    private async Task SkipAsync(RecurringRule? rule)
     {
-        if (SelectedRule is null)
+        if (rule is null)
         {
             return;
         }
 
-        Result result = await _skipUseCase.ExecuteAsync(SelectedRule.Id);
+        Result result = await _skipUseCase.ExecuteAsync(rule.Id);
         if (!result.IsSuccess) { FormError = result.Error?.Message ?? Strings.RecurringSkipFailed; return; }
         StatusMessage = Strings.RecurringSkipped;
         await LoadRulesAsync();

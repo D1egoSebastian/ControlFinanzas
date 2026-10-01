@@ -172,32 +172,6 @@ public sealed class DatePickerBindingHeadlessTests
     }
 
     [Fact]
-    public async Task RecurringRulesView_StartDatePicker_IsTwoWayWithTheViewModelStartDate()
-    {
-        bool ok = await OnUiThread(async () =>
-        {
-            RecurringRulesViewModel vm = RowTemplateBindingHeadlessTests.NewRecurringRulesViewModel();
-            var view = new RecurringRulesView();
-            using var _ = new HeadlessUi.Scope(HeadlessUi.Show(view, vm));
-            DatePicker picker = OnlyPicker(view);
-
-            Assert.Equal(DateTime.Today, picker.SelectedDate?.DateTime);
-
-            vm.StartDate = _fromViewModel.ToDateTime(TimeOnly.MinValue);
-            Flush();
-            Assert.Equal(_fromViewModel.ToDateTime(TimeOnly.MinValue), picker.SelectedDate?.DateTime);
-
-            picker.SelectedDate = At(_picked);
-            Flush();
-            Assert.Equal(_picked.ToDateTime(TimeOnly.MinValue), vm.StartDate);
-            await Task.CompletedTask;
-            return true;
-        });
-
-        Assert.True(ok);
-    }
-
-    [Fact]
     public async Task GoalsView_DatePickers_StayTwoWay_WithTheSharedConverter()
     {
         bool ok = await OnUiThread(async () =>

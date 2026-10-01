@@ -113,6 +113,7 @@ public sealed class DebtsRecurringLocalizationTests
             new DeactivateRecurringRuleUseCase(rules),
             new DeleteRecurringRuleUseCase(rules),
             new SkipNextOccurrenceUseCase(rules),
+            clock,
             NullLogger<RecurringRulesViewModel>.Instance);
         if (delay)
         {
@@ -244,7 +245,7 @@ public sealed class DebtsRecurringLocalizationTests
             rig.Vm.SelectedRule = rig.Vm.Rules.Single();
             await rig.Vm.DeactivateSelectedCommand.ExecuteAsync(null);
             actualMessages.Add(rig.Vm.StatusMessage);
-            await rig.Vm.SkipSelectedCommand.ExecuteAsync(null);
+            await rig.Vm.SkipCommand.ExecuteAsync(rig.Vm.Rules.Single());
             actualMessages.Add(rig.Vm.StatusMessage);
             await rig.Vm.DeleteSelectedCommand.ExecuteAsync(null);
             actualMessages.Add(rig.Vm.StatusMessage);
@@ -296,6 +297,10 @@ public sealed class DebtsRecurringLocalizationTests
             nameof(Strings.RecurringLoadFailed), nameof(Strings.RecurringPreviewFailed), nameof(Strings.RecurringGenerateFailed),
             nameof(Strings.RecurringGenerated), nameof(Strings.RecurringSaveFailed), nameof(Strings.RecurringDeactivateFailed),
             nameof(Strings.RecurringSkipFailed), nameof(Strings.RecurringDeleteFailed),
+            nameof(Strings.RecurringFieldType), nameof(Strings.RecurringFieldFrequency), nameof(Strings.RecurringTypeHelpSubscription),
+            nameof(Strings.RecurringTypeHelpFixedExpense), nameof(Strings.RecurringDayOfMonthLabel), nameof(Strings.RecurringYearlyDateLabel),
+            nameof(Strings.RecurringDayOfMonthHelp), nameof(Strings.RecurringMonthOfChargeLabel), nameof(Strings.RecurringNextChargeFormat),
+            nameof(Strings.RecurringScheduleRequired), nameof(Strings.RecurringSkipButton), nameof(Strings.EnumRuleTypeFixedExpense),
         ];
 
         foreach (string name in names)

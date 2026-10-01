@@ -12,6 +12,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The Windows executable is a GUI-subsystem app (`WinExe`): no console window opens next to the UI and closing a console
   no longer kills the app. A start-up failure still writes `startup-error-*.log` and exits non-zero; with no console
   there is no stderr line for a double-clicked exe (run `dotnet ControlDeFinanzasIA.UI.dll` to see it on a terminal).
+- Recurring rules: the form asks for the day of the month the charge is always made (1-31; the month and day for a
+  yearly charge) instead of a raw start date, and shows the first charge read-only ("Next charge: ..."). The type
+  selector explains Subscription and Fixed monthly expense in plain language. The stored model is unchanged (the day
+  lives in the start date) and no migration was needed.
+- Recurring rules: saving an edit can no longer change the schedule. The form re-sends the stored start date and next
+  charge untouched unless the day, month or frequency changed; a changed schedule moves the next charge to the new
+  day. The row "Skip" button now skips the rule of its own row (it used to skip whichever rule was open in the form),
+  and the list refreshes after "Confirm" instead of showing a stale next-charge date.
+- Recurring rules: editing the amount or currency of a rule was silently dropped by the database (the amount is an
+  owned type that the update did not copy). It is persisted now.
+- Recurring rules: a day 29, 30 or 31 charge is clamped to the last day of a short month for that month only and
+  returns to its own day afterwards (a day 30 charge used to slide to the 31st after February).
+- Recurring rules: after creating a rule the form is cleared, so pressing Save twice no longer registers it twice.
 - The recurring "Generar del mes" preview now shows rule name, amount, currency and date instead of blank rows.
 - Expense and income rows show the currency next to the amount.
 - Debt schedule: Pay and Skip are disabled for installments that are no longer pending, rejected actions show a

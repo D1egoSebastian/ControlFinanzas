@@ -58,9 +58,13 @@ public sealed class FakeRecurringRuleRepository : IRecurringRuleRepository
 
     /// <inheritdoc />
     public Task<IReadOnlyList<RecurringRule>> GetAllAsync(CancellationToken ct = default)
-        => GetAllGate is not null
-            ? GetAllGatedAsync()
-            : GetAllCore();
+    {
+        GetAllCallCount++;
+        return GetAllGate is not null ? GetAllGatedAsync() : GetAllCore();
+    }
+
+    /// <summary>Gets the number of times <see cref="GetAllAsync"/> was called.</summary>
+    public int GetAllCallCount { get; private set; }
 
     /// <summary>
     /// Gets or sets a gate that holds <see cref="GetAllAsync"/> until completed (simulates a slow first load,

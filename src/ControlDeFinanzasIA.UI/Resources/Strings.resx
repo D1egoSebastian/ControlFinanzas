@@ -1610,7 +1610,7 @@ Showing approximate conversions only.
     <value>Edit</value>
   </data>
   <data name="RecurringSkipButton" xml:space="preserve">
-    <value>Skip</value>
+    <value>Skip next charge</value>
   </data>
   <data name="EmptyStateRecurringTitle" xml:space="preserve">
     <value>No recurring rules yet</value>
@@ -1619,7 +1619,7 @@ Showing approximate conversions only.
     <value>Subscriptions and fixed expenses you add here are generated for you every month.</value>
   </data>
   <data name="RecurringSelectionRequired" xml:space="preserve">
-    <value>Select a category, a payment method and a start date.</value>
+    <value>Select a category and a payment method.</value>
   </data>
   <data name="RecurringSaveFailed" xml:space="preserve">
     <value>The recurring rule could not be saved.</value>
@@ -1754,7 +1754,7 @@ Showing approximate conversions only.
     <value>Subscription</value>
   </data>
   <data name="EnumRuleTypeFixedExpense" xml:space="preserve">
-    <value>Fixed expense</value>
+    <value>Fixed monthly expense</value>
   </data>
   <data name="EnumDebtStatusActive" xml:space="preserve">
     <value>Active</value>
@@ -1806,5 +1806,35 @@ Showing approximate conversions only.
   </data>
   <data name="ReportFilterTextFormat" xml:space="preserve">
     <value>Text: {0}</value>
+  </data>
+  <data name="RecurringFieldType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="RecurringFieldFrequency" xml:space="preserve">
+    <value>How often</value>
+  </data>
+  <data name="RecurringTypeHelpSubscription" xml:space="preserve">
+    <value>A service you pay for on a schedule, such as streaming or a gym membership.</value>
+  </data>
+  <data name="RecurringTypeHelpFixedExpense" xml:space="preserve">
+    <value>A bill that comes around on the same day with a steady amount, such as rent or internet.</value>
+  </data>
+  <data name="RecurringDayOfMonthLabel" xml:space="preserve">
+    <value>Day of the month the charge is made</value>
+  </data>
+  <data name="RecurringYearlyDateLabel" xml:space="preserve">
+    <value>Month and day of the yearly charge</value>
+  </data>
+  <data name="RecurringDayOfMonthHelp" xml:space="preserve">
+    <value>If a month has fewer days, the charge is made on its last day.</value>
+  </data>
+  <data name="RecurringMonthOfChargeLabel" xml:space="preserve">
+    <value>Month of the charge</value>
+  </data>
+  <data name="RecurringNextChargeFormat" xml:space="preserve">
+    <value>Next charge: {0:d MMM yyyy}</value>
+  </data>
+  <data name="RecurringScheduleRequired" xml:space="preserve">
+    <value>Choose the day of the month the charge is made.</value>
   </data>
 </root>

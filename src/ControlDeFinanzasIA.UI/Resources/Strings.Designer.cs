@@ -2956,4 +2956,54 @@ public class Strings
     /// Gets the localized text for ReportFilterTextFormat (1.0 blockers slice B).
     /// </summary>
     public static string ReportFilterTextFormat => ResourceManager.GetString("ReportFilterTextFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for RecurringFieldType (pre-1.0 slice C).
+    /// </summary>
+    public static string RecurringFieldType => ResourceManager.GetString("RecurringFieldType", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for RecurringFieldFrequency (pre-1.0 slice C).
+    /// </summary>
+    public static string RecurringFieldFrequency => ResourceManager.GetString("RecurringFieldFrequency", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for RecurringTypeHelpSubscription (pre-1.0 slice C).
+    /// </summary>
+    public static string RecurringTypeHelpSubscription => ResourceManager.GetString("RecurringTypeHelpSubscription", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for RecurringTypeHelpFixedExpense (pre-1.0 slice C).
+    /// </summary>
+    public static string RecurringTypeHelpFixedExpense => ResourceManager.GetString("RecurringTypeHelpFixedExpense", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for RecurringDayOfMonthLabel (pre-1.0 slice C).
+    /// </summary>
+    public static string RecurringDayOfMonthLabel => ResourceManager.GetString("RecurringDayOfMonthLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for RecurringYearlyDateLabel (pre-1.0 slice C).
+    /// </summary>
+    public static string RecurringYearlyDateLabel => ResourceManager.GetString("RecurringYearlyDateLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for RecurringDayOfMonthHelp (pre-1.0 slice C).
+    /// </summary>
+    public static string RecurringDayOfMonthHelp => ResourceManager.GetString("RecurringDayOfMonthHelp", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for RecurringMonthOfChargeLabel (pre-1.0 slice C).
+    /// </summary>
+    public static string RecurringMonthOfChargeLabel => ResourceManager.GetString("RecurringMonthOfChargeLabel", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for RecurringNextChargeFormat (pre-1.0 slice C).
+    /// </summary>
+    public static string RecurringNextChargeFormat => ResourceManager.GetString("RecurringNextChargeFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for RecurringScheduleRequired (pre-1.0 slice C).
+    /// </summary>
+    public static string RecurringScheduleRequired => ResourceManager.GetString("RecurringScheduleRequired", Culture)!;
 }

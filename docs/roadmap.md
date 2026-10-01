@@ -373,6 +373,11 @@ explícito.
 - Tests: calculadora con varios escenarios (mensual, bimestral, fin de
   mes, leap years), idempotencia de generación.
 
+**Ajuste previo a la 1.0 (formulario de recurrentes):** el formulario pide el
+día del mes en que se hace el cobro (y el mes para un cobro anual) en lugar
+de una fecha de inicio libre, y muestra el próximo cobro de solo lectura. El
+día elegido vive en el día de `StartDate`; no hay migración. Ver `CHANGELOG.md`.
+
 **Riesgos principales**
 - Fechas de generación en bordes (29-31 de mes, año bisiesto).
 - Edición de un movimiento generado sin romper la regla que lo creó.

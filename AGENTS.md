@@ -271,6 +271,18 @@ the project state changes, update this file.
   no new package. Not done by hand: macOS/Linux, a screen reader, the
   from/to date pickers in the real binary (covered headless only) and the real
   save dialog with a text-filtered export.
+- **Recurring rules form (pre-1.0 slice C):** a recurring charge is defined
+  by the day of the month it is always made on (1-31; month + day for a
+  yearly charge), picked in the form with a read-only "Next charge" line; the
+  type selector (Subscription / Fixed monthly expense) has plain-language help.
+  The persisted model is unchanged: the chosen day is the day of
+  `RecurringRule.StartDate` (the anchor, see `RecurringSchedule`) and
+  `NextGenerationDate` is the cursor; a day 31 charge created in a short month
+  stores the closest earlier month that has the day as its start date. An edit
+  re-sends the stored start date and cursor untouched unless the day, month or
+  frequency changed; the row "Skip" skips its own rule. The repository update
+  now also copies the owned `Amount`. No migration. 3883/3883 tests green
+  (3028 unit + 855 integration), build 0/0, format exit 0.
 - **Roadmap / architecture / vision:** `docs/roadmap.md`,
   `docs/architecture.md`, `docs/vision.md`.
 - **Mission / stack constitution:** `spec/constitution/mission.md`,
