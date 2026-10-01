@@ -2826,4 +2826,74 @@ public class Strings
     /// Gets the accessible name of the decrease button of a numeric input (F-021 S8).
     /// </summary>
     public static string A11yDecreaseValue => ResourceManager.GetString("A11yDecreaseValue", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for DebtsInstallmentNotPending (QA slice A).
+    /// </summary>
+    public static string DebtsInstallmentNotPending => ResourceManager.GetString("DebtsInstallmentNotPending", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for RecurringPreviewItemFormat (QA slice A).
+    /// </summary>
+    public static string RecurringPreviewItemFormat => ResourceManager.GetString("RecurringPreviewItemFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for RowAmountWithCurrencyFormat (QA slice A).
+    /// </summary>
+    public static string RowAmountWithCurrencyFormat => ResourceManager.GetString("RowAmountWithCurrencyFormat", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for EnumFrequencyMonthly (QA slice A).
+    /// </summary>
+    public static string EnumFrequencyMonthly => ResourceManager.GetString("EnumFrequencyMonthly", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for EnumFrequencyBimonthly (QA slice A).
+    /// </summary>
+    public static string EnumFrequencyBimonthly => ResourceManager.GetString("EnumFrequencyBimonthly", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for EnumFrequencyYearly (QA slice A).
+    /// </summary>
+    public static string EnumFrequencyYearly => ResourceManager.GetString("EnumFrequencyYearly", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for EnumFrequencyBiweekly (QA slice A).
+    /// </summary>
+    public static string EnumFrequencyBiweekly => ResourceManager.GetString("EnumFrequencyBiweekly", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for EnumRuleTypeSubscription (QA slice A).
+    /// </summary>
+    public static string EnumRuleTypeSubscription => ResourceManager.GetString("EnumRuleTypeSubscription", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for EnumRuleTypeFixedExpense (QA slice A).
+    /// </summary>
+    public static string EnumRuleTypeFixedExpense => ResourceManager.GetString("EnumRuleTypeFixedExpense", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for EnumDebtStatusActive (QA slice A).
+    /// </summary>
+    public static string EnumDebtStatusActive => ResourceManager.GetString("EnumDebtStatusActive", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for EnumDebtStatusClosed (QA slice A).
+    /// </summary>
+    public static string EnumDebtStatusClosed => ResourceManager.GetString("EnumDebtStatusClosed", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for EnumPaymentStatusPending (QA slice A).
+    /// </summary>
+    public static string EnumPaymentStatusPending => ResourceManager.GetString("EnumPaymentStatusPending", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for EnumPaymentStatusPaid (QA slice A).
+    /// </summary>
+    public static string EnumPaymentStatusPaid => ResourceManager.GetString("EnumPaymentStatusPaid", Culture)!;
+
+    /// <summary>
+    /// Gets the localized text for EnumPaymentStatusSkipped (QA slice A).
+    /// </summary>
+    public static string EnumPaymentStatusSkipped => ResourceManager.GetString("EnumPaymentStatusSkipped", Culture)!;
 }

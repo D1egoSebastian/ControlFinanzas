@@ -7,9 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-### Added
+### Fixed
 
-- Nothing yet.
+- The Windows executable is a GUI-subsystem app (`WinExe`): no console window opens next to the UI and closing a console
+  no longer kills the app. A start-up failure still writes `startup-error-*.log` and exits non-zero; with no console
+  there is no stderr line for a double-clicked exe (run `dotnet ControlDeFinanzasIA.UI.dll` to see it on a terminal).
+- The recurring "Generar del mes" preview now shows rule name, amount, currency and date instead of blank rows.
+- Expense and income rows show the currency next to the amount.
+- Debt schedule: Pay and Skip are disabled for installments that are no longer pending, rejected actions show a
+  localized message without internal ids, and the debt stays selected after a payment.
+- Frequency, rule type and status values in the Recurring and Debts screens are localized (es-DO / en).
 
 ## [1.0.0]
 

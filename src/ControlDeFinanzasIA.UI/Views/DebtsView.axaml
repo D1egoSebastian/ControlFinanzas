@@ -22,7 +22,13 @@
                 <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yCurrency}" ItemsSource="{Binding Currencies}" SelectedItem="{Binding Currency}" Classes="ledger-input" />
                 <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsInstallmentsPlaceholder}" Text="{Binding TotalInstallments}" Watermark="{x:Static resources:Strings.DebtsInstallmentsPlaceholder}" Classes="ledger-input" />
                 <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsInstallmentAmountPlaceholder}" Text="{Binding InstallmentAmount}" Watermark="{x:Static resources:Strings.DebtsInstallmentAmountPlaceholder}" Classes="ledger-input" />
-                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yFrequency}" ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input" />
+                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yFrequency}" ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <TextBlock Text="{Binding ., Converter={x:Static converters:EnumLabelConverter.Instance}}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
                 <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yStartDate}" SelectedDate="{Binding StartDate, Converter={StaticResource DateOnlyConverter}}" Classes="ledger-input" />
                 <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsCounterpartyPlaceholder}" Text="{Binding CounterpartyName}" Watermark="{x:Static resources:Strings.DebtsCounterpartyPlaceholder}" Classes="ledger-input" />
                 <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsNotePlaceholder}" Text="{Binding Note}" Watermark="{x:Static resources:Strings.DebtsNotePlaceholder}" Classes="ledger-input" />
@@ -43,7 +49,7 @@
                                         <TextBlock Text="{Binding Description}" Classes="ledger-section" />
                                         <TextBlock Text="{Binding CounterpartyName}" Foreground="{StaticResource PaperDimBrush}" />
                                         <TextBlock Text="{Binding TotalInstallments, StringFormat={x:Static resources:Strings.DebtsInstallmentsFormat}}" Foreground="{StaticResource PaperDimBrush}" />
-                                        <TextBlock Text="{Binding Status}" Foreground="{StaticResource PaperDimBrush}" />
+                                        <TextBlock Text="{Binding Status, Converter={x:Static converters:EnumLabelConverter.Instance}}" Foreground="{StaticResource PaperDimBrush}" />
                                     </StackPanel>
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding OriginalAmount.Amount, StringFormat={}{0:N2}}"
@@ -79,7 +85,7 @@
                                     <TextBlock Text="{Binding InstallmentNumber}" />
                                     <StackPanel Grid.Column="1" Margin="8,0">
                                         <TextBlock Text="{Binding ScheduledDate}" />
-                                        <TextBlock Text="{Binding Status}" Foreground="{StaticResource PaperDimBrush}" />
+                                        <TextBlock Text="{Binding Status, Converter={x:Static converters:EnumLabelConverter.Instance}}" Foreground="{StaticResource PaperDimBrush}" />
                                     </StackPanel>
                                     <Button Grid.Column="2" Content="{x:Static resources:Strings.DebtsPayButton}"
                                             Command="{Binding #Root.DataContext.RegisterPaymentCommand}"

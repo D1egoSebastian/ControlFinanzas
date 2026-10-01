@@ -125,7 +125,17 @@ public sealed partial class DebtsViewModel : ViewModelBase
         await LoadDebtsAsync();
     }
 
-    [RelayCommand]
+    /// <summary>Pay and Skip only apply to an installment that is still pending.</summary>
+    private static bool CanChangeInstallment(DebtPayment? payment) => payment?.Status == DebtPaymentStatus.Pending;
+
+    /// <summary>
+    /// Maps a failed result to a user-facing message. The use case message is for logs: it can carry internal ids and
+    /// English exception text, so only the error code decides what the user reads.
+    /// </summary>
+    private static string FailureMessage(Result result, string fallback) =>
+        result.Error?.Code == "DomainInvariant" ? Strings.DebtsInstallmentNotPending : fallback;
+
+    [RelayCommand(CanExecute = nameof(CanChangeInstallment))]
     private async Task RegisterPaymentAsync(DebtPayment? payment)
     {
         if (payment is null)
@@ -134,22 +144,32 @@ public sealed partial class DebtsViewModel : ViewModelBase
         }
 
         ScheduleError = string.Empty;
+        if (!CanChangeInstallment(payment))
+        {
+            ScheduleError = Strings.DebtsInstallmentNotPending;
+            return;
+        }
+
         Result result = await _registerPaymentUseCase.ExecuteAsync(payment.Id);
         if (!result.IsSuccess)
         {
-            ScheduleError = result.Error?.Message ?? Strings.DebtsPaymentFailed;
+            ScheduleError = FailureMessage(result, Strings.DebtsPaymentFailed);
             return;
         }
 
         StatusMessage = Strings.DebtsPaymentRegistered;
+        Guid? selectedId = SelectedDebt?.Id;
         await LoadDebtsAsync();
-        if (SelectedDebt is not null)
+
+        // Reloading the list replaces the debt instances (and a bound list clears its selection): keep the same debt selected.
+        if (selectedId is Guid id)
         {
-            await LoadScheduleAsync(SelectedDebt.Id);
+            SelectedDebt = Debts.FirstOrDefault(d => d.Id == id);
+            await LoadScheduleAsync(id);
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanChangeInstallment))]
     private async Task SkipPaymentAsync(DebtPayment? payment)
     {
         if (payment is null)
@@ -158,10 +178,16 @@ public sealed partial class DebtsViewModel : ViewModelBase
         }
 
         ScheduleError = string.Empty;
+        if (!CanChangeInstallment(payment))
+        {
+            ScheduleError = Strings.DebtsInstallmentNotPending;
+            return;
+        }
+
         Result result = await _skipPaymentUseCase.ExecuteAsync(payment.Id);
         if (!result.IsSuccess)
         {
-            ScheduleError = result.Error?.Message ?? Strings.DebtsSkipFailed;
+            ScheduleError = FailureMessage(result, Strings.DebtsSkipFailed);
             return;
         }
 

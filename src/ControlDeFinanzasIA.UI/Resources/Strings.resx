@@ -1729,4 +1729,46 @@ Showing approximate conversions only.
   <data name="A11yDecreaseValue" xml:space="preserve">
     <value>Decrease</value>
   </data>
+  <data name="DebtsInstallmentNotPending" xml:space="preserve">
+    <value>This installment is no longer pending, so it cannot be changed.</value>
+  </data>
+  <data name="RecurringPreviewItemFormat" xml:space="preserve">
+    <value>{0} — {1:N2} {2} ({3:d})</value>
+  </data>
+  <data name="RowAmountWithCurrencyFormat" xml:space="preserve">
+    <value>{0:N2} {1}</value>
+  </data>
+  <data name="EnumFrequencyMonthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="EnumFrequencyBimonthly" xml:space="preserve">
+    <value>Bimonthly</value>
+  </data>
+  <data name="EnumFrequencyYearly" xml:space="preserve">
+    <value>Yearly</value>
+  </data>
+  <data name="EnumFrequencyBiweekly" xml:space="preserve">
+    <value>Biweekly</value>
+  </data>
+  <data name="EnumRuleTypeSubscription" xml:space="preserve">
+    <value>Subscription</value>
+  </data>
+  <data name="EnumRuleTypeFixedExpense" xml:space="preserve">
+    <value>Fixed expense</value>
+  </data>
+  <data name="EnumDebtStatusActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="EnumDebtStatusClosed" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="EnumPaymentStatusPending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="EnumPaymentStatusPaid" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="EnumPaymentStatusSkipped" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
 </root>

@@ -17,11 +17,23 @@
             <StackPanel Spacing="10">
                 <TextBlock Text="{x:Static resources:Strings.RecurringTitle}" Classes="ledger-title" />
                 <TextBlock Text="{x:Static resources:Strings.RecurringSubtitle}" Foreground="{StaticResource PaperDimBrush}" />
-                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yRuleType}" ItemsSource="{Binding RuleTypes}" SelectedItem="{Binding RuleType}" Classes="ledger-input" />
+                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yRuleType}" ItemsSource="{Binding RuleTypes}" SelectedItem="{Binding RuleType}" Classes="ledger-input">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <TextBlock Text="{Binding ., Converter={x:Static converters:EnumLabelConverter.Instance}}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
                 <TextBox AutomationProperties.Name="{x:Static resources:Strings.RecurringNamePlaceholder}" Text="{Binding Name}" Watermark="{x:Static resources:Strings.RecurringNamePlaceholder}" Classes="ledger-input" />
                 <TextBox AutomationProperties.Name="{x:Static resources:Strings.RecurringAmountPlaceholder}" Text="{Binding Amount}" Watermark="{x:Static resources:Strings.RecurringAmountPlaceholder}" Classes="ledger-input" />
                 <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yCurrency}" ItemsSource="{Binding Currencies}" SelectedItem="{Binding Currency}" Classes="ledger-input" />
-                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yFrequency}" ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input" />
+                <ComboBox AutomationProperties.Name="{x:Static resources:Strings.A11yFrequency}" ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" Classes="ledger-input">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <TextBlock Text="{Binding ., Converter={x:Static converters:EnumLabelConverter.Instance}}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
                 <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yStartDate}" SelectedDate="{Binding StartDate, Converter={StaticResource DateOnlyConverter}}" Classes="ledger-input" />
                 <ComboBox AutomationProperties.Name="{x:Static resources:Strings.RecurringCategoryPlaceholder}" ItemsSource="{Binding Categories}"
                           DisplayMemberBinding="{Binding Name}"
@@ -51,7 +63,16 @@
                 <ItemsControl ItemsSource="{Binding PreviewItems}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding RuleName, StringFormat={}{0} — {1}}" Foreground="{StaticResource PaperDimBrush}" />
+                            <TextBlock Foreground="{StaticResource PaperDimBrush}">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{x:Static resources:Strings.RecurringPreviewItemFormat}">
+                                        <Binding Path="RuleName" />
+                                        <Binding Path="Amount" />
+                                        <Binding Path="Currency" />
+                                        <Binding Path="OccurrenceDate" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -67,7 +88,7 @@
                                 <Grid ColumnDefinitions="*,Auto,Auto">
                                     <StackPanel>
                                         <TextBlock Text="{Binding Name}" Classes="ledger-section" />
-                                        <TextBlock Text="{Binding Frequency}" Foreground="{StaticResource PaperDimBrush}" />
+                                        <TextBlock Text="{Binding Frequency, Converter={x:Static converters:EnumLabelConverter.Instance}}" Foreground="{StaticResource PaperDimBrush}" />
                                         <TextBlock Text="{Binding NextGenerationDate}" Foreground="{StaticResource PaperDimBrush}" />
                                     </StackPanel>
                                     <TextBlock Grid.Column="1"

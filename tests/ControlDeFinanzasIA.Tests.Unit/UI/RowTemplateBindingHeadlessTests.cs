@@ -261,9 +261,9 @@ public sealed class RowTemplateBindingHeadlessTests
         Assert.True(ok);
     }
 
-    internal static RecurringRulesViewModel NewRecurringRulesViewModel()
+    internal static RecurringRulesViewModel NewRecurringRulesViewModel(FakeRecurringRuleRepository? seeded = null)
     {
-        var rules = new FakeRecurringRuleRepository();
+        FakeRecurringRuleRepository rules = seeded ?? new FakeRecurringRuleRepository();
         var clock = new FakeClock { Today = new DateOnly(2026, 9, 20), UtcNow = new DateTime(2026, 9, 20, 12, 0, 0, DateTimeKind.Utc) };
 
         return new RecurringRulesViewModel(

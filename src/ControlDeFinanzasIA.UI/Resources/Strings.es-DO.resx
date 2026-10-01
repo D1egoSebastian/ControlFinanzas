@@ -1729,4 +1729,46 @@ Mostrando conversiones aproximadas.
   <data name="A11yDecreaseValue" xml:space="preserve">
     <value>Disminuir</value>
   </data>
+  <data name="DebtsInstallmentNotPending" xml:space="preserve">
+    <value>Esta cuota ya no está pendiente, por lo que no se puede modificar.</value>
+  </data>
+  <data name="RecurringPreviewItemFormat" xml:space="preserve">
+    <value>{0} — {1:N2} {2} ({3:d})</value>
+  </data>
+  <data name="RowAmountWithCurrencyFormat" xml:space="preserve">
+    <value>{0:N2} {1}</value>
+  </data>
+  <data name="EnumFrequencyMonthly" xml:space="preserve">
+    <value>Mensual</value>
+  </data>
+  <data name="EnumFrequencyBimonthly" xml:space="preserve">
+    <value>Bimestral</value>
+  </data>
+  <data name="EnumFrequencyYearly" xml:space="preserve">
+    <value>Anual</value>
+  </data>
+  <data name="EnumFrequencyBiweekly" xml:space="preserve">
+    <value>Quincenal</value>
+  </data>
+  <data name="EnumRuleTypeSubscription" xml:space="preserve">
+    <value>Suscripción</value>
+  </data>
+  <data name="EnumRuleTypeFixedExpense" xml:space="preserve">
+    <value>Gasto fijo</value>
+  </data>
+  <data name="EnumDebtStatusActive" xml:space="preserve">
+    <value>Activa</value>
+  </data>
+  <data name="EnumDebtStatusClosed" xml:space="preserve">
+    <value>Cerrada</value>
+  </data>
+  <data name="EnumPaymentStatusPending" xml:space="preserve">
+    <value>Pendiente</value>
+  </data>
+  <data name="EnumPaymentStatusPaid" xml:space="preserve">
+    <value>Pagada</value>
+  </data>
+  <data name="EnumPaymentStatusSkipped" xml:space="preserve">
+    <value>Saltada</value>
+  </data>
 </root>

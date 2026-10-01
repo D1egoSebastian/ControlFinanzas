@@ -113,7 +113,14 @@
                             <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                                 <TextBlock Grid.Column="0" Text="{Binding Date}" Foreground="{StaticResource PaperDimBrush}" VerticalAlignment="Center" />
                                 <StackPanel Grid.Column="1"><TextBlock Text="{Binding Description}" Foreground="{StaticResource PaperBrush}" FontWeight="Bold" /><TextBlock Text="{Binding PaymentMethodName}" Foreground="{StaticResource PaperDimBrush}" /></StackPanel>
-                                <TextBlock Grid.Column="2" Text="{Binding Amount, StringFormat={}{0:N2}}" Foreground="{StaticResource TerracottaTextBrush}" FontSize="16" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Foreground="{StaticResource TerracottaTextBrush}" FontSize="16" VerticalAlignment="Center">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{x:Static resources:Strings.RowAmountWithCurrencyFormat}">
+                                            <Binding Path="Amount" />
+                                            <Binding Path="Currency" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
                                 <Button Grid.Column="3" Content="{x:Static resources:Strings.ExpensesEditButton}" Command="{Binding #Root.DataContext.BeginEditCommand}" CommandParameter="{Binding}" VerticalAlignment="Center" />
                             </Grid>
                         </Border>
