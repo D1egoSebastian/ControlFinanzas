@@ -70,6 +70,7 @@ public sealed class ExpensesLedgerViewHeadlessTests
             localizerOverride: new ResourceStringLocalizer());
         var rig = new Rig(vm, repo);
         await WaitUntil(() => vm.HasLoaded && vm.Categories.Count > 0);
+        OpenFilterPanel(rig.Window, rig.View);
         return rig;
     }
 

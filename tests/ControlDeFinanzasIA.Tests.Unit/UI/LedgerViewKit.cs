@@ -49,7 +49,10 @@ internal static class LedgerViewKit
         ];
 
         Assert.NotEmpty(matches);
-        return matches[0];
+
+        // The same command can be bound twice (the clear action lives in the filter panel and in the collapsed summary);
+        // the one the user can see is the one to press.
+        return matches.Find(b => b.IsEffectivelyVisible) ?? matches[0];
     }
 
     internal static Button[] VisibleButtonsFor(Control root, ICommand command, object? parameter = null) =>
@@ -66,6 +69,20 @@ internal static class LedgerViewKit
         window.KeyPressQwerty(PhysicalKey.Space, RawInputModifiers.None);
         window.KeyReleaseQwerty(PhysicalKey.Space, RawInputModifiers.None);
         HeadlessUi.Flush();
+    }
+
+    /// <summary>Opens the collapsed filter panel the way a keyboard user does: focus the "Filters" toggle and press Space.</summary>
+    internal static void OpenFilterPanel(Window window, Control view)
+    {
+        Avalonia.Controls.Primitives.ToggleButton toggle = view.GetVisualDescendants().OfType<Avalonia.Controls.Primitives.ToggleButton>()
+            .Single(t => Avalonia.Automation.AutomationProperties.GetName(t) == ControlDeFinanzasIA.UI.Resources.Strings.FiltersSectionTitle);
+        if (toggle.IsChecked != true)
+        {
+            toggle.Focus();
+            window.KeyPressQwerty(PhysicalKey.Space, RawInputModifiers.None);
+            window.KeyReleaseQwerty(PhysicalKey.Space, RawInputModifiers.None);
+            HeadlessUi.Flush();
+        }
     }
 
     internal static string[] VisibleTexts(Control root) =>

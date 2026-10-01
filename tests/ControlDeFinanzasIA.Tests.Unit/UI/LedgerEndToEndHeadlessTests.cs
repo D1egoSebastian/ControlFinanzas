@@ -86,6 +86,7 @@ public sealed class LedgerEndToEndHeadlessTests
             await rig.SettleAsync(() => vm.TotalCount == 44);
             int after = await PersistedExpensesAsync(rig);
 
+            OpenFilterPanel(rig.Window, view);
             TextBox search = view.GetVisualDescendants().OfType<TextBox>().Single(t => Avalonia.Automation.AutomationProperties.GetName(t) == "Search");
             search.Text = "Gasto 4";
             Press(rig.Window, ButtonFor(view, vm.ApplyFilterCommand));
@@ -133,6 +134,7 @@ public sealed class LedgerEndToEndHeadlessTests
             await rig.SettleAsync(() => vm.TotalCount == 44);
             int after = await PersistedIncomesAsync(rig);
 
+            OpenFilterPanel(rig.Window, view);
             TextBox search = view.GetVisualDescendants().OfType<TextBox>().Single(t => Avalonia.Automation.AutomationProperties.GetName(t) == "Search");
             search.Text = "Ingreso 4";
             Press(rig.Window, ButtonFor(view, vm.ApplyFilterCommand));

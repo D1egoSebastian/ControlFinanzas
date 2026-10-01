@@ -145,6 +145,9 @@
   <data name="FiltersSectionTitle" xml:space="preserve">
     <value>Filtros</value>
   </data>
+  <data name="FiltersActiveSummary" xml:space="preserve">
+    <value>Filtros aplicados</value>
+  </data>
   <data name="FilterTagsLabel" xml:space="preserve">
     <value>Etiquetas</value>
   </data>

@@ -17,39 +17,49 @@
         <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
     </UserControl.Resources>
     <ScrollViewer>
-        <StackPanel Margin="28" Spacing="16">
-            <TextBlock Text="{x:Static resources:Strings.ExpensesTitle}" Foreground="{StaticResource TextBrush}" FontSize="28" FontWeight="Bold" />
-            <TextBlock Text="{x:Static resources:Strings.ExpensesSubtitle}" Foreground="{StaticResource TextSecondaryBrush}" />
-            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="20">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="{x:Static resources:Strings.ExpensesFormTitle}" Foreground="{StaticResource AccentBrush}" FontSize="18" FontWeight="Bold" />
-                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
-                        <TextBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesDescriptionPlaceholder}" Grid.Row="0" Grid.Column="0" Text="{Binding Description}" behaviors:FocusOnRequest.Token="{Binding DescriptionFocusRequest}" Watermark="{x:Static resources:Strings.ExpensesDescriptionPlaceholder}" />
-                        <TextBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesAmountPlaceholder}" Grid.Row="0" Grid.Column="1" Margin="12,0,0,0" Text="{Binding Amount}" Watermark="{x:Static resources:Strings.ExpensesAmountPlaceholder}" />
-                        <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4">
-                            <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesCategoryPlaceholder}" ItemsSource="{Binding Categories}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedCategoryId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.ExpensesCategoryPlaceholder}" />
+        <StackPanel Margin="32" Spacing="20">
+            <!-- Page header -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="{x:Static resources:Strings.ExpensesTitle}" Classes="page-title" />
+                <TextBlock Text="{x:Static resources:Strings.ExpensesSubtitle}" Classes="page-subtitle" />
+            </StackPanel>
+
+            <!-- New / edit form: one compact card, the primary action is its Register button. -->
+            <Border Classes="card">
+                <StackPanel Spacing="14">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border Classes="icon-chip expense" AutomationProperties.AccessibilityView="Raw">
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconExpenses}" Foreground="{StaticResource ExpenseBrush}" />
+                        </Border>
+                        <TextBlock Text="{x:Static resources:Strings.ExpensesFormTitle}" Classes="card-title" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                        <TextBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesDescriptionPlaceholder}" Grid.Row="0" Grid.Column="0" Margin="0,0,12,12" Grid.ColumnSpan="2" Text="{Binding Description}" behaviors:FocusOnRequest.Token="{Binding DescriptionFocusRequest}" Watermark="{x:Static resources:Strings.ExpensesDescriptionPlaceholder}" />
+                        <TextBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesAmountPlaceholder}" Grid.Row="0" Grid.Column="2" Margin="0,0,0,12" Text="{Binding Amount}" Watermark="{x:Static resources:Strings.ExpensesAmountPlaceholder}" />
+                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,12,12" Spacing="4">
+                            <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesCategoryPlaceholder}" HorizontalAlignment="Stretch" ItemsSource="{Binding Categories}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedCategoryId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.ExpensesCategoryPlaceholder}" />
                             <!-- F-013 slice 6 (R-5, D-13): AI suggestion chip. Accepting it is the ONLY code path that writes SelectedCategoryId from AI output. -->
                             <StackPanel Orientation="Horizontal" Spacing="6" Opacity="{Binding IsSuggestionLoading, Converter={x:Static converters:BoolToOpacityConverter.Instance}}" IsVisible="{Binding IsSuggestionVisible}">
                                 <Button Command="{Binding AcceptSuggestionCommand}"
                                         Content="{Binding SuggestedCategoryChipLabel}"
                                         ToolTip.Tip="{Binding SuggestedCategoryAcceptHint}"
-                                        Background="{StaticResource SurfaceBrush}" Foreground="{StaticResource AccentBrush}" Padding="8,2" CornerRadius="10" FontSize="12" />
+                                        Background="{StaticResource AccentSoftBrush}" Foreground="{StaticResource AccentBrush}" Padding="10,2" CornerRadius="{StaticResource RadiusPill}" FontSize="12" />
                                 <Button AutomationProperties.Name="{x:Static resources:Strings.A11yDismissSuggestion}" Command="{Binding DismissSuggestionCommand}" Content="✕"
                                         ToolTip.Tip="{Binding SuggestedCategoryDismissHint}"
                                         Background="Transparent" Foreground="{StaticResource TextSecondaryBrush}" Padding="4,2" FontSize="12" />
                             </StackPanel>
-                            <TextBlock Text="{Binding SuggestionLoadingLabel}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" IsVisible="{Binding IsSuggestionLoading}" />
-                            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding AiStatusMessage}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" TextWrapping="Wrap"
+                            <TextBlock Text="{Binding SuggestionLoadingLabel}" Classes="caption" IsVisible="{Binding IsSuggestionLoading}" />
+                            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding AiStatusMessage}" Classes="caption"
                                        IsVisible="{Binding AiStatusMessage, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
                         </StackPanel>
-                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesPaymentMethodPlaceholder}" Grid.Row="1" Grid.Column="1" Margin="12,0,0,0" ItemsSource="{Binding PaymentMethods}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedPaymentMethodId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.ExpensesPaymentMethodPlaceholder}" />
-                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesCurrencyPlaceholder}" Grid.Row="2" Grid.Column="0" ItemsSource="{x:Static converters:EnumValues.Currencies}" SelectedItem="{Binding Currency}" PlaceholderText="{x:Static resources:Strings.ExpensesCurrencyPlaceholder}" />
-                        <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yDate}" Grid.Row="2" Grid.Column="1" Margin="12,0,0,0" SelectedDate="{Binding Date, Converter={StaticResource DateOnlyConverter}}" />
-                        <TextBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesNotePlaceholder}" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Note}" Watermark="{x:Static resources:Strings.ExpensesNotePlaceholder}" AcceptsReturn="True" Height="70" />
-                        <TextBlock AutomationProperties.LiveSetting="Polite" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
-                        <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10">
+                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesPaymentMethodPlaceholder}" Grid.Row="1" Grid.Column="1" Margin="0,0,12,12" VerticalAlignment="Top" HorizontalAlignment="Stretch" ItemsSource="{Binding PaymentMethods}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedPaymentMethodId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.ExpensesPaymentMethodPlaceholder}" />
+                        <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesCurrencyPlaceholder}" Grid.Row="1" Grid.Column="2" Margin="0,0,0,12" VerticalAlignment="Top" HorizontalAlignment="Stretch" ItemsSource="{x:Static converters:EnumValues.Currencies}" SelectedItem="{Binding Currency}" PlaceholderText="{x:Static resources:Strings.ExpensesCurrencyPlaceholder}" />
+                        <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yDate}" Grid.Row="2" Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" SelectedDate="{Binding Date, Converter={StaticResource DateOnlyConverter}}" />
+                        <TextBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesNotePlaceholder}" Grid.Row="2" Grid.Column="1" Margin="0,0,0,0" Grid.ColumnSpan="2" VerticalAlignment="Top" Text="{Binding Note}" Watermark="{x:Static resources:Strings.ExpensesNotePlaceholder}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="40" MaxHeight="96" />
+                        <TextBlock AutomationProperties.LiveSetting="Polite" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+                        <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="10" Margin="0,16,0,0">
                             <!-- Default (Enter) only in register mode and never while the import panel replaces the list (F-021 S8). -->
-                            <Button Content="{x:Static resources:Strings.ExpensesRegisterButton}" Command="{Binding RegisterExpenseCommand}" Background="{StaticResource AccentBrush}" Foreground="{StaticResource OnAccentBrush}">
+                            <Button Content="{x:Static resources:Strings.ExpensesRegisterButton}" Command="{Binding RegisterExpenseCommand}" Classes="ledger-btn-primary">
                                 <Button.IsDefault>
                                     <MultiBinding Converter="{x:Static BoolConverters.And}">
                                         <Binding Path="!IsEditMode" />
@@ -57,7 +67,7 @@
                                     </MultiBinding>
                                 </Button.IsDefault>
                             </Button>
-                            <Button Content="{x:Static resources:Strings.ExpensesUpdateButton}" Command="{Binding UpdateExpenseCommand}" IsVisible="{Binding IsEditMode}">
+                            <Button Content="{x:Static resources:Strings.ExpensesUpdateButton}" Command="{Binding UpdateExpenseCommand}" IsVisible="{Binding IsEditMode}" Classes="ledger-btn-primary">
                                 <Button.IsDefault>
                                     <MultiBinding Converter="{x:Static BoolConverters.And}">
                                         <Binding Path="IsEditMode" />
@@ -65,37 +75,44 @@
                                     </MultiBinding>
                                 </Button.IsDefault>
                             </Button>
-                            <Button Content="{x:Static resources:Strings.ExpensesCancelButton}" Command="{Binding CancelEditCommand}" IsVisible="{Binding IsEditMode}" />
+                            <Button Content="{x:Static resources:Strings.ExpensesCancelButton}" Command="{Binding CancelEditCommand}" IsVisible="{Binding IsEditMode}" Classes="ledger-btn" />
                         </StackPanel>
                     </Grid>
                 </StackPanel>
             </Border>
             <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
-            <!-- Report export (F-018) and import (F-020): secondary buttons beside the list title; outcome shows via StatusMessage/FormError. -->
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
-                <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ExpensesListTitle}" Foreground="{StaticResource TextBrush}" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" />
-                <Button Grid.Column="1"
-                        Content="{x:Static resources:Strings.ExportPdfButton}"
-                        Command="{Binding ExportPdfCommand}"
-                        Classes="ledger-btn" />
-                <Button Grid.Column="2"
-                        Content="{x:Static resources:Strings.ExportExcelButton}"
-                        Command="{Binding ExportExcelCommand}"
-                        Classes="ledger-btn"
-                        Margin="8,0,0,0" />
-                <Button Grid.Column="3"
-                        Content="{x:Static resources:Strings.ImportButton}"
-                        Command="{Binding OpenImportCommand}"
-                        IsVisible="{Binding HasImport}"
-                        Classes="ledger-btn"
-                        Margin="8,0,0,0" />
+
+            <!-- List header: the title and the quiet report export (F-018) / import (F-020) buttons; the outcome shows via StatusMessage/FormError. -->
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ExpensesListTitle}" Classes="card-title" FontSize="20" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <ToggleButton Classes="filter-toggle" Classes.active="{Binding HasActiveFilter}"
+                              IsChecked="{Binding IsFilterPanelOpen, Mode=TwoWay}"
+                              AutomationProperties.Name="{x:Static resources:Strings.FiltersSectionTitle}"
+                              IsVisible="{Binding !IsEmptyNoData}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <controls:Icon Size="16" Data="{StaticResource IconFilter}" VerticalAlignment="Center" />
+                        <TextBlock Text="{x:Static resources:Strings.FiltersSectionTitle}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ToggleButton>
+                    <Button Content="{x:Static resources:Strings.ExportPdfButton}"
+                            Command="{Binding ExportPdfCommand}"
+                            Classes="ledger-btn ghost" />
+                    <Button Content="{x:Static resources:Strings.ExportExcelButton}"
+                            Command="{Binding ExportExcelCommand}"
+                            Classes="ledger-btn ghost" />
+                    <Button Content="{x:Static resources:Strings.ImportButton}"
+                            Command="{Binding OpenImportCommand}"
+                            IsVisible="{Binding HasImport}"
+                            Classes="ledger-btn ghost" />
+                </StackPanel>
             </Grid>
             <!-- Import panel (F-020, R-22): replaces the movement list in place while open; not a route. -->
             <StackPanel Spacing="12" IsVisible="{Binding IsImportOpen}">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Grid.Column="0"
                                Text="{x:Static resources:Strings.ImportTitle}"
-                               Classes="ledger-title"
+                               Classes="card-title"
                                FontSize="20"
                                VerticalAlignment="Center" />
                     <Button Grid.Column="1"
@@ -105,14 +122,21 @@
                 </Grid>
                 <views:ImportView DataContext="{Binding Import}" />
             </StackPanel>
-            <StackPanel Spacing="16" IsVisible="{Binding !IsImportOpen}">
-            <!-- Filter panel (Phase 4 deliverable restored): search, category and date range narrow the list; saved views keep a filter for later. -->
-            <Border Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="20" IsVisible="{Binding !IsEmptyNoData}">
-                <StackPanel Spacing="12">
-                    <TextBlock Text="{x:Static resources:Strings.FiltersSectionTitle}" Foreground="{StaticResource AccentBrush}" FontSize="18" FontWeight="Bold" />
+            <StackPanel Spacing="20" IsVisible="{Binding !IsImportOpen}">
+            <!-- A filter that is applied while the panel is closed stays visible: what is narrowing the list, and how to undo it. -->
+            <Border Classes="notice info" IsVisible="{Binding IsFilterSummaryVisible}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.FiltersActiveSummary}" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <Button Grid.Column="1" Content="{x:Static resources:Strings.ClearFilterButton}" Command="{Binding ClearFilterCommand}" Classes="ledger-btn ghost" />
+                </Grid>
+            </Border>
+            <!-- Filter panel (Phase 4 deliverable restored): search, category and date range narrow the list; saved views keep a filter for later. Collapsed behind the "Filters" toggle. -->
+            <Border Classes="card" IsVisible="{Binding IsFilterPanelOpen}">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="{x:Static resources:Strings.FiltersSectionTitle}" Classes="card-title" />
                     <WrapPanel Orientation="Horizontal">
                         <StackPanel Spacing="4" Width="260" Margin="0,0,16,12">
-                            <TextBlock Text="{x:Static resources:Strings.FilterSearchLabel}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
+                            <TextBlock Text="{x:Static resources:Strings.FilterSearchLabel}" Classes="field-label" />
                             <TextBox AutomationProperties.Name="{x:Static resources:Strings.FilterSearchLabel}" Classes="ledger-input" Text="{Binding FilterText}" Watermark="{x:Static resources:Strings.FilterSearchWatermark}">
                                 <!-- Enter applies the filter here; without this the window's default button would register the form above. -->
                                 <TextBox.KeyBindings>
@@ -121,16 +145,16 @@
                             </TextBox>
                         </StackPanel>
                         <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
-                            <TextBlock Text="{x:Static resources:Strings.CategoryLabel}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
+                            <TextBlock Text="{x:Static resources:Strings.CategoryLabel}" Classes="field-label" />
                             <ComboBox AutomationProperties.Name="{x:Static resources:Strings.FilterByCategoryLabel}" Classes="ledger-input" HorizontalAlignment="Stretch" ItemsSource="{Binding Categories}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding FilterCategoryId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.FilterAllCategoriesPlaceholder}" />
                         </StackPanel>
-                        <StackPanel Spacing="4" Width="296" Margin="0,0,16,12">
-                            <TextBlock Text="{x:Static resources:Strings.FilterDateFromLabel}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
-                            <DatePicker AutomationProperties.Name="{x:Static resources:Strings.FilterDateFromLabel}" Classes="ledger-input" SelectedDate="{Binding FilterDateFrom, Converter={StaticResource DateOnlyConverter}}" />
+                        <StackPanel Spacing="4" Width="240" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.FilterDateFromLabel}" Classes="field-label" />
+                            <DatePicker AutomationProperties.Name="{x:Static resources:Strings.FilterDateFromLabel}" Classes="ledger-input" HorizontalAlignment="Stretch" SelectedDate="{Binding FilterDateFrom, Converter={StaticResource DateOnlyConverter}}" />
                         </StackPanel>
-                        <StackPanel Spacing="4" Width="296" Margin="0,0,16,12">
-                            <TextBlock Text="{x:Static resources:Strings.FilterDateToLabel}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
-                            <DatePicker AutomationProperties.Name="{x:Static resources:Strings.FilterDateToLabel}" Classes="ledger-input" SelectedDate="{Binding FilterDateTo, Converter={StaticResource DateOnlyConverter}}" />
+                        <StackPanel Spacing="4" Width="240" Margin="0,0,16,12">
+                            <TextBlock Text="{x:Static resources:Strings.FilterDateToLabel}" Classes="field-label" />
+                            <DatePicker AutomationProperties.Name="{x:Static resources:Strings.FilterDateToLabel}" Classes="ledger-input" HorizontalAlignment="Stretch" SelectedDate="{Binding FilterDateTo, Converter={StaticResource DateOnlyConverter}}" />
                         </StackPanel>
                     </WrapPanel>
                     <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FilterError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" IsVisible="{Binding FilterError, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
@@ -138,8 +162,8 @@
                         <Button Content="{x:Static resources:Strings.ApplyFilterButton}" Command="{Binding ApplyFilterCommand}" Classes="ledger-btn-primary" />
                         <Button Content="{x:Static resources:Strings.ClearFilterButton}" Command="{Binding ClearFilterCommand}" Classes="ledger-btn" />
                     </StackPanel>
-                    <Border Height="1" Background="{StaticResource DividerBrush}" />
-                    <TextBlock Text="{x:Static resources:Strings.SavedViewsSectionTitle}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
+                    <Border Classes="divider" />
+                    <TextBlock Text="{x:Static resources:Strings.SavedViewsSectionTitle}" Classes="field-label" />
                     <WrapPanel Orientation="Horizontal">
                         <ComboBox AutomationProperties.Name="{x:Static resources:Strings.SavedViewsSectionTitle}" Classes="ledger-input" Width="240" Margin="0,0,16,8" ItemsSource="{Binding SavedViews}" DisplayMemberBinding="{Binding Name}" SelectedItem="{Binding SelectedSavedView}" PlaceholderText="{x:Static resources:Strings.SavedViewsPlaceholder}" />
                         <TextBox AutomationProperties.Name="{x:Static resources:Strings.NewViewNameWatermark}" Classes="ledger-input" Width="200" Margin="0,0,10,8" Text="{Binding NewViewName}" Watermark="{x:Static resources:Strings.NewViewNameWatermark}">
@@ -147,79 +171,89 @@
                                 <KeyBinding Gesture="Enter" Command="{Binding SaveViewCommand}" />
                             </TextBox.KeyBindings>
                         </TextBox>
-                        <Button Content="{x:Static resources:Strings.SaveViewButton}" Command="{Binding SaveViewCommand}" Classes="ledger-btn-primary" Margin="0,0,10,8" />
+                        <Button Content="{x:Static resources:Strings.SaveViewButton}" Command="{Binding SaveViewCommand}" Classes="ledger-btn" Margin="0,0,10,8" />
                         <Button Content="{Binding SavedViewDeleteLabel}" Command="{Binding DeleteSavedViewCommand}" Classes="ledger-btn-danger" Margin="0,0,4,8" />
                         <Button Content="{x:Static resources:Strings.DeleteCancelButton}" Command="{Binding CancelSavedViewDeleteCommand}" IsVisible="{Binding IsSavedViewDeletePending}" Classes="ledger-btn" Margin="0,0,0,8" />
                     </WrapPanel>
                 </StackPanel>
             </Border>
-            <ItemsControl ItemsSource="{Binding Expenses}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="dto:ExpenseDto">
-                        <Border Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="14" Margin="0,0,0,8">
-                            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" RowDefinitions="Auto,Auto">
-                                <TextBlock Grid.Column="0" Text="{Binding Date}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,16,0" />
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center"><TextBlock Text="{Binding Description}" Foreground="{StaticResource TextBrush}" FontWeight="Bold" /><TextBlock Text="{Binding PaymentMethodName}" Foreground="{StaticResource TextSecondaryBrush}" /></StackPanel>
-                                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="12,0,12,0">
-                                    <TextBlock Foreground="{StaticResource ExpenseBrush}" FontSize="16" HorizontalAlignment="Right">
-                                        <TextBlock.Text>
-                                            <MultiBinding StringFormat="{x:Static resources:Strings.RowAmountWithCurrencyFormat}">
-                                                <Binding Path="Amount" />
-                                                <Binding Path="Currency" />
-                                            </MultiBinding>
-                                        </TextBlock.Text>
-                                    </TextBlock>
-                                    <TextBlock Text="{Binding ConvertedAmountDisplay}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" HorizontalAlignment="Right" IsVisible="{Binding ConvertedAmountDisplay, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
-                                </StackPanel>
-                                <Button Grid.Column="3" Content="{x:Static resources:Strings.ExpensesEditButton}" Command="{Binding #Root.DataContext.BeginEditCommand}" CommandParameter="{Binding}" VerticalAlignment="Center" />
-                                <!-- Delete is two steps and stays inline: the same button turns into "Confirm" (keyboard focus stays on it) and a Cancel button appears. -->
-                                <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4" Margin="8,0,0,0" VerticalAlignment="Center">
-                                    <Button Command="{Binding #Root.DataContext.DeleteExpenseCommand}" CommandParameter="{Binding}" Classes="ledger-btn-danger">
-                                        <Button.Content>
-                                            <MultiBinding Converter="{x:Static converters:DeleteRowTextConverter.Instance}" ConverterParameter="label">
-                                                <Binding Path="Id" />
-                                                <Binding Path="#Root.DataContext.PendingDeleteExpenseId" />
-                                            </MultiBinding>
-                                        </Button.Content>
-                                        <AutomationProperties.Name>
-                                            <MultiBinding Converter="{x:Static converters:DeleteRowTextConverter.Instance}" ConverterParameter="name">
-                                                <Binding Path="Id" />
-                                                <Binding Path="#Root.DataContext.PendingDeleteExpenseId" />
-                                                <Binding Path="Description" />
-                                            </MultiBinding>
-                                        </AutomationProperties.Name>
-                                    </Button>
-                                    <Button Content="{x:Static resources:Strings.DeleteCancelButton}" Command="{Binding #Root.DataContext.CancelDeleteCommand}" Classes="ledger-btn" AutomationProperties.Name="{Binding Description, StringFormat={x:Static resources:Strings.A11yCancelDeleteRowFormat}}">
-                                        <Button.IsVisible>
-                                            <MultiBinding Converter="{x:Static converters:RowPendingConverter.Instance}">
-                                                <Binding Path="Id" />
-                                                <Binding Path="#Root.DataContext.PendingDeleteExpenseId" />
-                                            </MultiBinding>
-                                        </Button.IsVisible>
-                                    </Button>
-                                </StackPanel>
-                                <TextBlock Grid.Row="1" Grid.ColumnSpan="5" Margin="0,8,0,0" Text="{x:Static resources:Strings.DeleteConfirmPrompt}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap">
-                                    <TextBlock.IsVisible>
-                                        <MultiBinding Converter="{x:Static converters:RowPendingConverter.Instance}">
-                                            <Binding Path="Id" />
-                                            <Binding Path="#Root.DataContext.PendingDeleteExpenseId" />
-                                        </MultiBinding>
-                                    </TextBlock.IsVisible>
-                                </TextBlock>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            <!-- Pager: previous / next, "Page X of Y" and the total across all pages. Hidden while the list is empty. -->
-            <Grid ColumnDefinitions="Auto,*,Auto" IsVisible="{Binding HasRecords}">
-                <Button Grid.Column="0" Content="{x:Static resources:Strings.PreviousPageButton}" Command="{Binding PreviousPageCommand}" Classes="ledger-btn" />
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding PageSummary}" Foreground="{StaticResource TextBrush}" FontFamily="{StaticResource FontMono}" />
-                    <TextBlock Text="{Binding TotalCount, StringFormat={x:Static resources:Strings.ListTotalCountFormat}}" Foreground="{StaticResource TextSecondaryBrush}" />
+
+            <!-- The list: one card, hairline rows with a hover wash, right-aligned amounts in the expense color. -->
+            <Border Classes="card" Padding="12,8" IsVisible="{Binding !!Expenses.Count}">
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding Expenses}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="dto:ExpenseDto">
+                                <Border Classes="ledger-row" Padding="8,10">
+                                    <Grid ColumnDefinitions="92,*,Auto,Auto,Auto" RowDefinitions="Auto,Auto">
+                                        <TextBlock Grid.Column="0" Text="{Binding Date}" Classes="ledger-status" VerticalAlignment="Center" />
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Description}" Classes="strong" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding PaymentMethodName}" Classes="caption" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="12,0">
+                                            <TextBlock Classes="ledger-amount expense" HorizontalAlignment="Right">
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="{x:Static resources:Strings.RowAmountWithCurrencyFormat}">
+                                                        <Binding Path="Amount" />
+                                                        <Binding Path="Currency" />
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding ConvertedAmountDisplay}" Classes="caption" HorizontalAlignment="Right" IsVisible="{Binding ConvertedAmountDisplay, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
+                                        </StackPanel>
+                                        <Button Grid.Column="3" Content="{x:Static resources:Strings.ExpensesEditButton}" Command="{Binding #Root.DataContext.BeginEditCommand}" CommandParameter="{Binding}" VerticalAlignment="Center" Classes="ledger-btn ghost" />
+                                        <!-- Delete is two steps and stays inline: the same button turns into "Confirm" (keyboard focus stays on it) and a Cancel button appears. -->
+                                        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4" Margin="4,0,0,0" VerticalAlignment="Center">
+                                            <Button Command="{Binding #Root.DataContext.DeleteExpenseCommand}" CommandParameter="{Binding}" Classes="ledger-btn-danger">
+                                                <Button.Content>
+                                                    <MultiBinding Converter="{x:Static converters:DeleteRowTextConverter.Instance}" ConverterParameter="label">
+                                                        <Binding Path="Id" />
+                                                        <Binding Path="#Root.DataContext.PendingDeleteExpenseId" />
+                                                    </MultiBinding>
+                                                </Button.Content>
+                                                <AutomationProperties.Name>
+                                                    <MultiBinding Converter="{x:Static converters:DeleteRowTextConverter.Instance}" ConverterParameter="name">
+                                                        <Binding Path="Id" />
+                                                        <Binding Path="#Root.DataContext.PendingDeleteExpenseId" />
+                                                        <Binding Path="Description" />
+                                                    </MultiBinding>
+                                                </AutomationProperties.Name>
+                                            </Button>
+                                            <Button Content="{x:Static resources:Strings.DeleteCancelButton}" Command="{Binding #Root.DataContext.CancelDeleteCommand}" Classes="ledger-btn" AutomationProperties.Name="{Binding Description, StringFormat={x:Static resources:Strings.A11yCancelDeleteRowFormat}}">
+                                                <Button.IsVisible>
+                                                    <MultiBinding Converter="{x:Static converters:RowPendingConverter.Instance}">
+                                                        <Binding Path="Id" />
+                                                        <Binding Path="#Root.DataContext.PendingDeleteExpenseId" />
+                                                    </MultiBinding>
+                                                </Button.IsVisible>
+                                            </Button>
+                                        </StackPanel>
+                                        <Border Grid.Row="1" Grid.ColumnSpan="5" Classes="notice error" Margin="0,8,0,0">
+                                            <Border.IsVisible>
+                                                <MultiBinding Converter="{x:Static converters:RowPendingConverter.Instance}">
+                                                    <Binding Path="Id" />
+                                                    <Binding Path="#Root.DataContext.PendingDeleteExpenseId" />
+                                                </MultiBinding>
+                                            </Border.IsVisible>
+                                            <TextBlock Text="{x:Static resources:Strings.DeleteConfirmPrompt}" Classes="negative" TextWrapping="Wrap" />
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <!-- Pager: previous / next, "Page X of Y" and the total across all pages. Hidden while the list is empty. -->
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,12,0,4" IsVisible="{Binding HasRecords}">
+                        <Button Grid.Column="0" Content="{x:Static resources:Strings.PreviousPageButton}" Command="{Binding PreviousPageCommand}" Classes="ledger-btn" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding PageSummary}" Classes="strong" FontFamily="{StaticResource FontMono}" />
+                            <TextBlock Text="{Binding TotalCount, StringFormat={x:Static resources:Strings.ListTotalCountFormat}}" Classes="ledger-status" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Button Grid.Column="2" Content="{x:Static resources:Strings.NextPageButton}" Command="{Binding NextPageCommand}" Classes="ledger-btn" />
+                    </Grid>
                 </StackPanel>
-                <Button Grid.Column="2" Content="{x:Static resources:Strings.NextPageButton}" Command="{Binding NextPageCommand}" Classes="ledger-btn" />
-            </Grid>
+            </Border>
             <!-- F-021 (DD-9): "no data yet" and "no results for this filter" are distinct states; neither shows before the first load. -->
             <controls:EmptyState Title="{x:Static resources:Strings.EmptyStateExpensesTitle}"
                                  Hint="{x:Static resources:Strings.EmptyStateExpensesHint}"

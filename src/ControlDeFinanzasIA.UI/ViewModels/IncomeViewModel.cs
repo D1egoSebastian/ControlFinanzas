@@ -278,9 +278,29 @@ public sealed partial class IncomeViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasActiveFilter))]
+    [NotifyPropertyChangedFor(nameof(IsFilterSummaryVisible))]
     [NotifyPropertyChangedFor(nameof(IsEmptyNoData))]
     [NotifyPropertyChangedFor(nameof(IsEmptyFiltered))]
     private IncomeFilter _currentFilter;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the filter panel is expanded. The panel is collapsed by default behind
+    /// a "Filters" toggle; <see cref="IsFilterSummaryVisible"/> keeps an applied filter visible while it is collapsed.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFilterSummaryVisible))]
+    private bool _isFilterPanelOpen;
+
+    /// <summary>
+    /// Gets a value indicating whether the collapsed-panel summary ("filters applied" plus a clear action) is shown:
+    /// a filter narrows the list but the panel that edits it is closed.
+    /// </summary>
+    public bool IsFilterSummaryVisible => HasActiveFilter && !IsFilterPanelOpen;
+
+    /// <summary>Expands or collapses the filter panel.</summary>
+    [RelayCommand]
+    private void ToggleFilterPanel() => IsFilterPanelOpen = !IsFilterPanelOpen;
+
 
     /// <summary>
     /// Gets or sets the tags available for the tag filter picker.

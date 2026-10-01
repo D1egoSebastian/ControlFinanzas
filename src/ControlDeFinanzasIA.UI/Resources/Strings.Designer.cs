@@ -183,6 +183,11 @@ public class Strings
     public static string FiltersSectionTitle => ResourceManager.GetString("FiltersSectionTitle", Culture)!;
 
     /// <summary>
+    /// Gets the localized string for the summary shown while a filter is applied and the filter panel is collapsed.
+    /// </summary>
+    public static string FiltersActiveSummary => ResourceManager.GetString("FiltersActiveSummary", Culture)!;
+
+    /// <summary>
     /// Gets the localized string for the filter tags label.
     /// </summary>
     public static string FilterTagsLabel => ResourceManager.GetString("FilterTagsLabel", Culture)!;

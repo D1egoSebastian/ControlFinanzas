@@ -37,11 +37,10 @@ public sealed class ImportViewXamlTests
     }
 
     [Fact]
-    public void Toolbar_HasFourColumns_AndTheImportButtonExistsOnceNextToExport()
+    public void Toolbar_HoldsTheThreeGhostButtons_AndTheImportButtonExistsOnceNextToExport()
     {
         string xaml = ExpensesView();
 
-        Assert.Single(Regex.Matches(xaml, "ColumnDefinitions=\"\\*,Auto,Auto,Auto\""));
         Assert.Single(Regex.Matches(xaml, "Strings\\.ImportButton\\b"));
         Assert.Single(Regex.Matches(xaml, "\\{Binding OpenImportCommand\\}"));
 
@@ -49,7 +48,7 @@ public sealed class ImportViewXamlTests
         int excel = xaml.IndexOf("Strings.ExportExcelButton", StringComparison.Ordinal);
         int import = xaml.IndexOf("Strings.ImportButton", StringComparison.Ordinal);
         Assert.True(pdf < excel && excel < import);
-        Assert.Contains("Grid.Column=\"3\"", xaml.Substring(excel), StringComparison.Ordinal);
+        Assert.Contains("ledger-btn ghost", xaml.Substring(excel, import - excel), StringComparison.Ordinal);
     }
 
     [Fact]
