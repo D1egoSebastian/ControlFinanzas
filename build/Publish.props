@@ -1,0 +1,25 @@
+<Project>
+
+  <!--
+    Shared publish properties (F-021 S9, DD-12). Imported by the UI project only.
+
+    Every property is conditioned on a RuntimeIdentifier: SelfContained without a RID is error NETSDK1031, and a plain
+    `dotnet build` / `dotnet test` must stay framework-dependent and unchanged.
+
+    - Self-contained, folder layout: the app restarts itself through Environment.ProcessPath, which a single-file
+      bundle would break, and the Skia / SQLite / QuestPDF natives are plain files next to the executable.
+    - No trimming and no ReadyToRun: reflection (DI, resx, Avalonia bindings) and EF Core are not trim-safe.
+    - DebugType=embedded: line numbers in logged stack traces without a loose .pdb.
+    - Satellite languages limited to the two shipped locales; ICU stays on because es-DO formatting needs it.
+  -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <DebugType>embedded</DebugType>
+    <SatelliteResourceLanguages>en;es;es-DO</SatelliteResourceLanguages>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+</Project>

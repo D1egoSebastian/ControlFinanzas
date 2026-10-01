@@ -33,3 +33,6 @@ appsettings.Local.json
 ## OpenCode config (per-machine, regenerated)
 opencode.json
 .config/
+
+## Packaging output (F-021 S9)
+artifacts/

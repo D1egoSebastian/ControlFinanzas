@@ -1,1 +1,7 @@
 tests/**/Import/Fixtures/* -text
+
+# F-021 S9: files executed or parsed on Unix must keep LF endings on every checkout.
+packaging/linux/AppRun text eol=lf
+packaging/linux/*.sh text eol=lf
+packaging/linux/*.desktop text eol=lf
+packaging/macos/Info.plist.template text eol=lf

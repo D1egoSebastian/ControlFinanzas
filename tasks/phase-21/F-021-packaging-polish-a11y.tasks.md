@@ -605,47 +605,47 @@ recipes, and a draft-only workflow. Only win-x64 is RUN; everything else is layo
 "authored, unverified". Size note: scripts are dense; if above ~450 lines split at "publish + archives" vs "app bundle,
 AppImage, workflow".
 
-- [ ] 9.1 Preflight (record in the apply notes): `pwsh --version` is 7.2 or newer on this machine; `dotnet --list-sdks`
+- [x] 9.1 Preflight (record in the apply notes): `pwsh --version` is 7.2 or newer on this machine; `dotnet --list-sdks`
   shows the .NET 8 SDK; the runtime packs for the four RIDs can be restored (online). If `pwsh` 7.2+ is missing, write the
   scripts anyway, mark every script-run task UNVERIFIED and do not tick it. (Reconciliation #12)
-- [ ] 9.2 Write failing `tests/…Unit/Packaging/PublishPropsTests.cs` (parses the REAL `build/Publish.props` and
+- [x] 9.2 Write failing `tests/…Unit/Packaging/PublishPropsTests.cs` (parses the REAL `build/Publish.props` and
   `UI.csproj`): properties `SelfContained=true`, `PublishSingleFile=false`, `PublishTrimmed=false`,
   `PublishReadyToRun=false`, `DebugType=embedded`, `SatelliteResourceLanguages=en;es;es-DO`, `InvariantGlobalization=false`
   exist and are ALL conditioned on `'$(RuntimeIdentifier)' != ''`; the UI project imports the file; `.gitignore` contains
   `artifacts/`; `AppRestartService` source still uses `Environment.ProcessPath` (guards the single-file ban). (R-21,
   R-25, DD-12)
-- [ ] 9.3 Create `build/Publish.props`, edit `UI.csproj` (import) and `.gitignore`. Run 9.2 green. Then create
+- [x] 9.3 Create `build/Publish.props`, edit `UI.csproj` (import) and `.gitignore`. Run 9.2 green. Then create
   `scripts/publish.ps1` (`#Requires -Version 7.2`; `-Rid win-x64|osx-arm64|osx-x64|linux-x64|all`; reads the version from
   `Directory.Build.props`, never typed; `dotnet publish src/ControlDeFinanzasIA.UI -c Release -r <rid>` to
   `artifacts/publish/<rid>/`; `scripts/lib/Archive.psm1` writes zip entries with `ExternalAttributes = 0x81ED << 16` and tar
   via `System.Formats.Tar.TarWriter` with mode 755 for `ControlDeFinanzasIA.UI` and `createdump`; archives
   `ControlDeFinanzasIA-1.0.0-<rid>.zip` (win) / `.tar.gz` (osx, linux) plus the osx `.app.zip` from 9.7; `SHA256SUMS.txt` in
   `sha256sum` format). (R-21, R-22, DD-12, Reconciliation #10)
-- [ ] 9.4 **RUN** `scripts/publish.ps1 -Rid all` (needs network for runtime packs). Record the publish log, exact native
+- [x] 9.4 **RUN** `scripts/publish.ps1 -Rid all` (needs network for runtime packs). Record the publish log, exact native
   library file names per RID from the first real output, and .NET 8's minimum macOS version used for
   `LSMinimumSystemVersion`. Write `scripts/verify-layout.ps1` (per RID: executable, SkiaSharp, HarfBuzzSharp, `e_sqlite3`,
   QuestPDF native present with the RID's prefix/extension; names taken from 9.4, not guessed) and
   `tests/…Integration/Packaging/PublishLayoutTests.cs` that runs it (skips with an explicit "artifacts missing" failure
   message, NOT a silent pass, when `artifacts/publish/<rid>` is absent; the test is tagged so CI can opt out). (R-21, S-43)
-- [ ] 9.5 Write `scripts/smoke-win.ps1` (extracts the win zip to a temp dir; starts the exe with
+- [x] 9.5 Write `scripts/smoke-win.ps1` (extracts the win zip to a temp dir; starts the exe with
   `CONTROLDEFINANZASIA_DATA_DIR`=temp, `DOTNET_ROOT` removed and dotnet dirs stripped from `PATH`; waits <= 30 s for
   `data.db` and a log line `Migrations applied` in `logs/`; `CloseMainWindow()`; asserts exit code 0 within 10 s and no
   `startup-error-*.log`) and **RUN** it. If `Migrations applied` is not logged by production code today, add that single
   `Information` log line test-first (assert in `BootstrapLoggingTests`) instead of weakening the script. Record the
   run output and the `Environment.ProcessPath` value observed. (R-21, S-42)
-- [ ] 9.6 Write failing `tests/…Integration/Packaging/ChecksumVerificationTests.cs`: against the REAL archives in
+- [x] 9.6 Write failing `tests/…Integration/Packaging/ChecksumVerificationTests.cs`: against the REAL archives in
   `artifacts/`: names match `ControlDeFinanzasIA-1.0.0-<rid>.{zip|tar.gz}` for the four RIDs, the version in every name
   equals `AppVersionInfo.Current`, every `SHA256SUMS.txt` line verifies by recomputing SHA-256, and an archive round-trip
   re-read shows exec mode on `ControlDeFinanzasIA.UI` for tar entries and zip external attributes (T13). Run green after
   9.4. (R-22, S-44, T13)
-- [ ] 9.7 Write failing `tests/…Unit/Packaging/AppBundleStructureTests.cs` (runs `scripts/package-macos-app.ps1` on the
+- [x] 9.7 Write failing `tests/…Unit/Packaging/AppBundleStructureTests.cs` (runs `scripts/package-macos-app.ps1` on the
   osx publish output into a temp dir, folder + plist parse only): `ControlDeFinanzasIA.app/Contents/MacOS/ControlDeFinanzasIA.UI`,
   `Contents/Resources/AppIcon.icns`, `Contents/Info.plist` parses as XML plist with keys `CFBundleExecutable`,
   `CFBundleIdentifier` (`com.diego.controldefinanzasia`), `CFBundleShortVersionString`/`CFBundleVersion` = `1.0.0` (from the
   props), `CFBundleIconFile`, `NSHighResolutionCapable`, `LSMinimumSystemVersion` (value pinned in 9.4). Then create
   `scripts/package-macos-app.ps1` and `packaging/macos/Info.plist.template`; run green. DMG creation is CI-only and NOT
   run. (R-23, S-45)
-- [ ] 9.8 Write failing `tests/…Unit/Packaging/AppImageRecipeTests.cs`: `packaging/linux/AppRun`,
+- [x] 9.8 Write failing `tests/…Unit/Packaging/AppImageRecipeTests.cs`: `packaging/linux/AppRun`,
   `controldefinanzasia.desktop` (valid keys `Type`, `Name`, `Exec`, `Icon`, `Categories`), the icon reference, and
   `build-appimage.sh` exist; every file the script references exists in the repo or is explicitly produced by an earlier
   line of the script. Then author the files. No AppImage is built here. (R-23, S-46)
@@ -657,9 +657,11 @@ AppImage, workflow".
   third-party release action); only the last job has `contents: write`, all others `contents: read`; `build.yml` is byte-for-
   byte unchanged (`git diff --quiet` against HEAD for that file). Then author `release.yml` (windows-latest: win-x64 + smoke;
   macos-14: both osx RIDs, `.app`, DMG via `hdiutil`; ubuntu-latest: linux-x64, AppImage). (R-24, S-47, T16)
-- [ ] 9.10 **Run gate block G** (grep files: `build/Publish.props`, `scripts/**`, `packaging/**`, `release.yml`, new tests).
+- [x] 9.10 **Run gate block G** (grep files: `build/Publish.props`, `scripts/**`, `packaging/**`, `release.yml`, new tests).
   Add to the apply notes the verified/unverified table for this slice: win-x64 publish + smoke RUN; other RIDs layout
   only; `.app` structure only; AppImage, DMG, workflow execution, MSIX: authored, unverified / deferred.
+
+_Apply notes S9 (Strict TDD where code applies). Preflight (9.1): `pwsh` is NOT installed (only Windows PowerShell 5.1.26100), .NET SDKs 8.0.422 (global.json) and 10.0.302, network available (all four runtime packs restored). Instead of leaving the scripts unverified, they were written for Windows PowerShell 5.1 and PowerShell 7 (`#Requires -Version 5.1`): `scripts/lib/Archive.psm1` embeds a small C# archive writer (zip with Unix mode + "made by Unix" host byte patched in the central directory; ustar `.tar.gz` with explicit modes) because `System.Formats.Tar` needs .NET 7 (pwsh 7.3+, not 7.2 as Reconciliation #12 assumed). So the scripts RAN here for all four RIDs. Reds observed for 9.2/9.7/9.8/9.9 (17 of 19 new unit tests failed before the props, scripts and recipe files existed; the two guards `AppRestartService` ProcessPath and `build.yml` unchanged passed at once). 9.4/9.6: the layout script and the integration tests were written AFTER the first real publish because their expectations (native file names, archive contents) come from real output; they were not red-first. Evidence: real publish of win-x64, osx-arm64, osx-x64, linux-x64 (141-152 MB folders, archives 59-65 MiB), `verify-layout.ps1` OK for all four, `PublishLayoutTests` (4 + 2 negative) and `ChecksumVerificationTests` (8) green over the real files, `smoke-win.ps1` PASSED (data.db + `Migrations applied` in 5 s, `Environment.ProcessPath` = the extracted exe, `coreclr.dll` loaded from the extracted folder, no dotnet on PATH, CloseMainWindow, exit 0, no startup-error log; real %APPDATA% listing identical before/after). `Migrations applied` was already logged by production code, nothing added. `LSMinimumSystemVersion` pinned to 12.0 from the Mach-O build versions of the published dylibs (e_sqlite3, QuestPdfSkia, qpdf = 12.0; runtime 10.15 x64 / 11.0 arm64) and .NET 8 docs. 9.9 NOT ticked (partial): `ReleaseWorkflowTests` (6) check the workflow with anchored text rules, because the test project has no YAML library, no package may be added, and `ConvertFrom-Yaml` does not exist in PowerShell 5.1 or stock PowerShell 7 (a text-rule check is the closest allowed); `release.yml` was never parsed as YAML nor executed. Last job renamed `publish-draft` (a job called `release` would collide with the "no `release:` trigger" rule). Deviations: archives are tar.gz/zip with a versioned top-level folder; `build-appimage.sh` downloads appimagetool 1.9.0 in CI without a pinned hash; `PublishLayoutTests`/`ChecksumVerificationTests` return without checking only when `GITHUB_ACTIONS=true` and artifacts are absent (build.yml must stay unchanged and cannot publish); `.gitattributes` gained LF rules for the Unix-executed files; `DebugType=embedded` only reaches the UI project. Gate G: build 0/0 (`--no-incremental`); full suite x3 = 2861 unit + 829 integration each run (baseline 2842 + 815; +19 unit, +14 integration), 0 skipped, no intermittents; `dotnet format style --verify-no-changes` exit 0; Architecture filter 20/20; no-stub grep empty; footprint clean (no Directory.Packages.props, Migrations, snapshot, SettingKeys/AppSettings; UI.csproj only gained the Publish.props import); build servers shut down. Verified vs unverified table: see `docs/packaging-unverified.md` (win-x64 publish + smoke RUN; other RIDs publish + layout + archive modes RUN, never executed; `.app` structure only; AppImage, DMG, workflow execution, MSIX, signing: authored, unverified / deferred). Commit: see git log (slice S9/12)._
 
 ## 10. Docs close-out (S10)
 

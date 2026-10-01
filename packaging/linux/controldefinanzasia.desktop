@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=ControlDeFinanzasIA
+Comment=Personal finance control with local data
+Exec=ControlDeFinanzasIA.UI
+Icon=controldefinanzasia
+Categories=Office;Finance;
+Terminal=false

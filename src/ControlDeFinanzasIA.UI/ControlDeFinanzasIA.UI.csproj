@@ -9,6 +9,8 @@
     <UseAvaloniaApp>true</UseAvaloniaApp>
   </PropertyGroup>
 
+  <Import Project="..\..\build\Publish.props" />
+
   <ItemGroup>
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />

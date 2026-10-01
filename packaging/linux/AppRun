@@ -1,0 +1,6 @@
+#!/bin/sh
+# AppImage entry point (F-021 S9). Runs the self-contained ControlDeFinanzasIA.UI shipped under usr/bin.
+set -e
+HERE="$(dirname "$(readlink -f "$0")")"
+export PATH="$HERE/usr/bin:$PATH"
+exec "$HERE/usr/bin/ControlDeFinanzasIA.UI" "$@"

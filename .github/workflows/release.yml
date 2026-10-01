@@ -1,0 +1,147 @@
+# Draft-only release workflow for ControlDeFinanzasIA (F-021 S9, R-24, DD-12).
+#
+# - Triggered ONLY by pushing a tag that starts with "v".
+# - The first job fails unless the tag equals "v" + the <Version> in Directory.Build.props.
+# - Every build job has read-only contents access; only the last job can write contents, and it only creates a DRAFT
+#   release with the preinstalled GitHub CLI (no third-party release action, no custom secrets).
+# - Nothing here is signed or notarized: no certificates, no Apple ID, nothing to leak.
+#
+# Authored, NOT executed (no GitHub runner was used while writing it). See docs/packaging-unverified.md.
+
+name: Release (draft)
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  check-tag:
+    name: tag matches the application version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail unless the tag is v + the props version
+        shell: bash
+        run: |
+          version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props | head -n 1)"
+          if [ -z "$version" ] || [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "Tag '$GITHUB_REF_NAME' does not match v$version from Directory.Build.props." >&2
+            exit 1
+          fi
+
+  build-windows:
+    name: win-x64 publish, layout check and smoke test
+    needs: check-tag
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Publish win-x64
+        shell: pwsh
+        run: ./scripts/publish.ps1 -Rid win-x64
+      - name: Verify layout
+        shell: pwsh
+        run: ./scripts/verify-layout.ps1 -Rid win-x64
+      - name: Smoke test the archive
+        shell: pwsh
+        run: ./scripts/smoke-win.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-win-x64
+          path: artifacts/ControlDeFinanzasIA-*.zip
+          if-no-files-found: error
+
+  build-macos:
+    name: osx-arm64 and osx-x64 publish, .app and DMG
+    needs: check-tag
+    runs-on: macos-14
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Publish osx-arm64 and osx-x64
+        shell: pwsh
+        run: |
+          ./scripts/publish.ps1 -Rid osx-arm64
+          ./scripts/publish.ps1 -Rid osx-x64
+          ./scripts/verify-layout.ps1 -Rid osx-arm64
+          ./scripts/verify-layout.ps1 -Rid osx-x64
+      - name: Build unsigned DMGs
+        shell: bash
+        run: |
+          version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props | head -n 1)"
+          for rid in osx-arm64 osx-x64; do
+            chmod 755 "artifacts/publish/$rid-app/ControlDeFinanzasIA.app/Contents/MacOS/ControlDeFinanzasIA.UI"
+            hdiutil create -volname ControlDeFinanzasIA -srcfolder "artifacts/publish/$rid-app" -ov -format UDZO "artifacts/ControlDeFinanzasIA-$version-$rid.dmg"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: |
+            artifacts/ControlDeFinanzasIA-*.tar.gz
+            artifacts/ControlDeFinanzasIA-*.app.zip
+            artifacts/ControlDeFinanzasIA-*.dmg
+          if-no-files-found: error
+
+  build-linux:
+    name: linux-x64 publish and AppImage
+    needs: check-tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Publish linux-x64
+        shell: pwsh
+        run: |
+          ./scripts/publish.ps1 -Rid linux-x64
+          ./scripts/verify-layout.ps1 -Rid linux-x64
+      - name: Build the AppImage
+        shell: bash
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: '1'
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/appimagetool" https://github.com/AppImage/appimagetool/releases/download/1.9.0/appimagetool-x86_64.AppImage
+          chmod +x "$RUNNER_TEMP/appimagetool"
+          APPIMAGETOOL="$RUNNER_TEMP/appimagetool" sh packaging/linux/build-appimage.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-linux
+          path: |
+            artifacts/ControlDeFinanzasIA-*.tar.gz
+            artifacts/ControlDeFinanzasIA-*.AppImage
+          if-no-files-found: error
+
+  publish-draft:
+    name: create the draft release
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        shell: bash
+        working-directory: dist
+        run: sha256sum ControlDeFinanzasIA-* > SHA256SUMS.txt
+      - name: Create the draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --draft --verify-tag --title "ControlDeFinanzasIA $GITHUB_REF_NAME" --notes "Draft release. Unsigned builds; verify the checksums in SHA256SUMS.txt."
