@@ -10,7 +10,7 @@
              x:Name="Root"
              Background="{StaticResource CanvasBrush}">
     <ScrollViewer>
-        <StackPanel Margin="32" Spacing="20">
+        <StackPanel Margin="32,4,32,32" Spacing="20">
             <!-- Page header -->
             <StackPanel Spacing="4">
                 <TextBlock Text="{x:Static resources:Strings.RecurringTitle}" Classes="page-title" />

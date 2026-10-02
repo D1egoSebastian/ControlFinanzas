@@ -548,7 +548,7 @@ Showing approximate conversions only.
     <value>Light</value>
   </data>
   <data name="SettingsThemeLightNotice" xml:space="preserve">
-    <value>Light theme is not available yet. Only Dark renders in v1; your choice is saved for a future release.</value>
+    <value>The app has a single light look in this version. Your choice is saved for a future release.</value>
   </data>
   <data name="SettingsLanguageTitle" xml:space="preserve">
     <value>Language</value>
@@ -1878,5 +1878,20 @@ Showing approximate conversions only.
   </data>
   <data name="RecurringFormTitle" xml:space="preserve">
     <value>Recurring charge</value>
+  </data>
+  <data name="ChatSubtitle" xml:space="preserve">
+    <value>Ask about your money in plain language. Answers use the exact figures shown on the right.</value>
+  </data>
+  <data name="SettingsSubtitle" xml:space="preserve">
+    <value>Look, language, AI, alerts and your data in one place.</value>
+  </data>
+  <data name="DatePickerDayPlaceholder" xml:space="preserve">
+    <value>day</value>
+  </data>
+  <data name="DatePickerMonthPlaceholder" xml:space="preserve">
+    <value>month</value>
+  </data>
+  <data name="DatePickerYearPlaceholder" xml:space="preserve">
+    <value>year</value>
   </data>
 </root>

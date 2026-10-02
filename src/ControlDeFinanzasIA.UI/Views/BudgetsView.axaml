@@ -8,7 +8,7 @@
              x:Name="Root"
              Background="{StaticResource CanvasBrush}">
     <ScrollViewer>
-        <StackPanel Margin="32" Spacing="20">
+        <StackPanel Margin="32,4,32,32" Spacing="20">
             <!-- Page header: title on the left, the month navigation on the right (R-1, R-9). -->
             <Grid ColumnDefinitions="*,Auto">
                 <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">

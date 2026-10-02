@@ -12,7 +12,7 @@
              x:Name="Root"
              Background="{StaticResource CanvasBrush}">
     <ScrollViewer>
-        <StackPanel Margin="32">
+        <StackPanel Margin="32,4,32,32">
 
             <!-- Header: month title and navigation on the left; the exports and the primary action on the right. -->
             <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,12">

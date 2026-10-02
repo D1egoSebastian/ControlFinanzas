@@ -32,7 +32,7 @@
     <Panel>
     <Grid ColumnDefinitions="216,*" RowDefinitions="Auto,*" IsEnabled="{Binding !IsModalOpen}">
         <!-- Header (F-017 D-10): owns the notification bell; no rule, no fill, just room to breathe. -->
-        <Grid Grid.Row="0" Grid.Column="1" Height="64" Margin="0,0,24,0">
+        <Grid Grid.Row="0" Grid.Column="1" Height="48" Margin="0,4,24,0">
             <Grid HorizontalAlignment="Right"
                   VerticalAlignment="Center">
                 <ToggleButton x:Name="BellToggle"

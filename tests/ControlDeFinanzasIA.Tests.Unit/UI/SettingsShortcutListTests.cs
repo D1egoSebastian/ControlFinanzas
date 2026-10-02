@@ -103,7 +103,7 @@ public sealed class SettingsShortcutListTests
                 string[] texts = [.. block.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text ?? string.Empty)];
                 int interactive = block.GetVisualDescendants().Count(v => v is Button or TextBox or ComboBox or CheckBox or ToggleButton or Slider);
 
-                var all = view.GetVisualDescendants().OfType<Border>().Where(b => b.Classes.Contains("ledger-row")).ToList();
+                var all = view.GetVisualDescendants().OfType<Border>().Where(b => b.Classes.Contains("settings-card")).ToList();
                 int blockIndex = all.IndexOf(block);
                 int aboutIndex = all.FindIndex(b => b.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == Strings.SettingsAboutTitle));
                 return (new[] { Strings.ShortcutsSectionTitle, Strings.ShortcutsSectionDescription }, texts, interactive, aboutIndex - blockIndex, vm.Shortcuts.Count);

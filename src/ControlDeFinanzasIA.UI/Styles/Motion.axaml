@@ -1,7 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--
-        BOLD "Libro Mayor" motion.
+        BOLD motion.
         Pure Avalonia Animation / Transitions — no code-behind.
         See spec/features/phase-04/F-008-ui-capstone.spec.md §4.4.
     -->

@@ -548,7 +548,7 @@ Mostrando conversiones aproximadas.
     <value>Claro</value>
   </data>
   <data name="SettingsThemeLightNotice" xml:space="preserve">
-    <value>El tema claro todavía no está disponible. Solo el oscuro se aplica en v1; tu selección se guarda para una futura versión.</value>
+    <value>La app tiene un único aspecto claro en esta versión. Tu selección se guarda para una futura versión.</value>
   </data>
   <data name="SettingsLanguageTitle" xml:space="preserve">
     <value>Idioma</value>
@@ -1878,5 +1878,20 @@ Mostrando conversiones aproximadas.
   </data>
   <data name="RecurringFormTitle" xml:space="preserve">
     <value>Cobro recurrente</value>
+  </data>
+  <data name="ChatSubtitle" xml:space="preserve">
+    <value>Pregunta sobre tu dinero con lenguaje natural. Las respuestas usan las cifras exactas del panel de la derecha.</value>
+  </data>
+  <data name="SettingsSubtitle" xml:space="preserve">
+    <value>Apariencia, idioma, IA, avisos y tus datos en un solo lugar.</value>
+  </data>
+  <data name="DatePickerDayPlaceholder" xml:space="preserve">
+    <value>día</value>
+  </data>
+  <data name="DatePickerMonthPlaceholder" xml:space="preserve">
+    <value>mes</value>
+  </data>
+  <data name="DatePickerYearPlaceholder" xml:space="preserve">
+    <value>año</value>
   </data>
 </root>

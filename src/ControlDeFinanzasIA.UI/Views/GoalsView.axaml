@@ -13,7 +13,7 @@
         <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
     </UserControl.Resources>
     <ScrollViewer>
-        <StackPanel Margin="32" Spacing="20">
+        <StackPanel Margin="32,4,32,32" Spacing="20">
             <!-- Page header -->
             <StackPanel Spacing="4">
                 <TextBlock Text="{x:Static resources:Strings.SidebarGoals}" Classes="page-title" />
@@ -52,7 +52,7 @@
                         </StackPanel>
                         <StackPanel Spacing="4" Width="220" Margin="0,0,16,12">
                             <TextBlock Text="{x:Static resources:Strings.A11yTargetDate}" Classes="field-label" />
-                            <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yTargetDate}" SelectedDate="{Binding TargetDate, Converter={StaticResource DateOnlyConverter}}"
+                            <controls:LocalizedDatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yTargetDate}" SelectedDate="{Binding TargetDate, Converter={StaticResource DateOnlyConverter}}"
                                         Classes="ledger-input" />
                         </StackPanel>
                         <StackPanel Spacing="4" Width="300" Margin="0,0,16,12">
@@ -91,7 +91,7 @@
                         </StackPanel>
                         <StackPanel Spacing="4" Width="220" Margin="0,0,16,12">
                             <TextBlock Text="{x:Static resources:Strings.A11yContributionDate}" Classes="field-label" />
-                            <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yContributionDate}" SelectedDate="{Binding ContributionDate, Converter={StaticResource DateOnlyConverter}}"
+                            <controls:LocalizedDatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yContributionDate}" SelectedDate="{Binding ContributionDate, Converter={StaticResource DateOnlyConverter}}"
                                         Classes="ledger-input" />
                         </StackPanel>
                     </WrapPanel>

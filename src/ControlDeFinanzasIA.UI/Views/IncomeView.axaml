@@ -17,7 +17,7 @@
         <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
     </UserControl.Resources>
     <ScrollViewer>
-        <StackPanel Margin="32" Spacing="20">
+        <StackPanel Margin="32,4,32,32" Spacing="20">
             <!-- Page header -->
             <StackPanel Spacing="4">
                 <TextBlock Text="{x:Static resources:Strings.IncomeTitle}" Classes="page-title" />
@@ -39,7 +39,7 @@
                         <ComboBox AutomationProperties.Name="{x:Static resources:Strings.IncomeCategoryPlaceholder}" Grid.Row="1" Grid.Column="0" Margin="0,0,12,12" VerticalAlignment="Top" HorizontalAlignment="Stretch" ItemsSource="{Binding Categories}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedCategoryId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.IncomeCategoryPlaceholder}" />
                         <ComboBox AutomationProperties.Name="{x:Static resources:Strings.IncomePaymentMethodPlaceholder}" Grid.Row="1" Grid.Column="1" Margin="0,0,12,12" VerticalAlignment="Top" HorizontalAlignment="Stretch" ItemsSource="{Binding PaymentMethods}" DisplayMemberBinding="{Binding Name}" SelectedValue="{Binding SelectedPaymentMethodId}" SelectedValueBinding="{Binding Id}" PlaceholderText="{x:Static resources:Strings.IncomePaymentMethodPlaceholder}" />
                         <ComboBox AutomationProperties.Name="{x:Static resources:Strings.IncomeCurrencyPlaceholder}" Grid.Row="1" Grid.Column="2" Margin="0,0,0,12" VerticalAlignment="Top" HorizontalAlignment="Stretch" ItemsSource="{x:Static converters:EnumValues.Currencies}" SelectedItem="{Binding Currency}" PlaceholderText="{x:Static resources:Strings.IncomeCurrencyPlaceholder}" />
-                        <DatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yDate}" Grid.Row="2" Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" SelectedDate="{Binding Date, Converter={StaticResource DateOnlyConverter}}" />
+                        <controls:LocalizedDatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yDate}" Grid.Row="2" Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" SelectedDate="{Binding Date, Converter={StaticResource DateOnlyConverter}}" />
                         <TextBox AutomationProperties.Name="{x:Static resources:Strings.IncomeNotePlaceholder}" Grid.Row="2" Grid.Column="1" Margin="0,0,0,0" Grid.ColumnSpan="2" VerticalAlignment="Top" Text="{Binding Note}" Watermark="{x:Static resources:Strings.IncomeNotePlaceholder}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="40" MaxHeight="96" />
                         <TextBlock AutomationProperties.LiveSetting="Polite" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
                         <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="10" Margin="0,16,0,0">
@@ -92,11 +92,11 @@
                         </StackPanel>
                         <StackPanel Spacing="4" Width="240" Margin="0,0,16,12">
                             <TextBlock Text="{x:Static resources:Strings.FilterDateFromLabel}" Classes="field-label" />
-                            <DatePicker AutomationProperties.Name="{x:Static resources:Strings.FilterDateFromLabel}" Classes="ledger-input" HorizontalAlignment="Stretch" SelectedDate="{Binding FilterDateFrom, Converter={StaticResource DateOnlyConverter}}" />
+                            <controls:LocalizedDatePicker AutomationProperties.Name="{x:Static resources:Strings.FilterDateFromLabel}" Classes="ledger-input" HorizontalAlignment="Stretch" SelectedDate="{Binding FilterDateFrom, Converter={StaticResource DateOnlyConverter}}" />
                         </StackPanel>
                         <StackPanel Spacing="4" Width="240" Margin="0,0,16,12">
                             <TextBlock Text="{x:Static resources:Strings.FilterDateToLabel}" Classes="field-label" />
-                            <DatePicker AutomationProperties.Name="{x:Static resources:Strings.FilterDateToLabel}" Classes="ledger-input" HorizontalAlignment="Stretch" SelectedDate="{Binding FilterDateTo, Converter={StaticResource DateOnlyConverter}}" />
+                            <controls:LocalizedDatePicker AutomationProperties.Name="{x:Static resources:Strings.FilterDateToLabel}" Classes="ledger-input" HorizontalAlignment="Stretch" SelectedDate="{Binding FilterDateTo, Converter={StaticResource DateOnlyConverter}}" />
                         </StackPanel>
                     </WrapPanel>
                     <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FilterError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" IsVisible="{Binding FilterError, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />

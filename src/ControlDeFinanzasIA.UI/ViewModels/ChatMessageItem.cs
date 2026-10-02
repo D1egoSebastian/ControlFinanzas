@@ -73,6 +73,9 @@ public sealed partial class ChatMessageItem : ObservableObject
         or ChatMessageState.NotConfigured
         or ChatMessageState.Unavailable;
 
+    /// <summary>Gets a value indicating whether this bubble is the user's own (the view tints it with the accent wash).</summary>
+    public bool IsUser => Role == ChatMessageRole.User;
+
     private ChatMessageItem(ChatMessageRole role, string text, ChatMessageState state)
     {
         Role = role;

@@ -3,17 +3,30 @@
              xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
              xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
              xmlns:avaloniaConverters="using:Avalonia.Data.Converters"
+             xmlns:controls="using:ControlDeFinanzasIA.UI.Controls"
              x:Class="ControlDeFinanzasIA.UI.Views.SettingsView"
              x:DataType="vm:SettingsViewModel"
              Background="{StaticResource CanvasBrush}">
     <ScrollViewer>
-        <StackPanel Spacing="24" Margin="24" MaxWidth="720">
+        <StackPanel Spacing="20" Margin="32,4,32,32" MaxWidth="760" HorizontalAlignment="Left">
+
+            <!-- Page header -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="{x:Static resources:Strings.SidebarSettings}" Classes="page-title" />
+                <TextBlock Text="{x:Static resources:Strings.SettingsSubtitle}" Classes="page-subtitle" />
+            </StackPanel>
 
             <!-- Apariencia (R-3, S-1, S-2) -->
-            <Border Classes="ledger-row" Padding="16">
+            <Border Classes="card settings-card">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="{x:Static resources:Strings.SettingsAppearanceTitle}" Classes="ledger-title" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border Classes="icon-chip neutral" AutomationProperties.AccessibilityView="Raw">
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconSettings}" Foreground="{StaticResource TextSecondaryBrush}" />
+                        </Border>
+                        <TextBlock Text="{x:Static resources:Strings.SettingsAppearanceTitle}" Classes="card-title" VerticalAlignment="Center" />
+                    </StackPanel>
 
+                    <TextBlock Text="{x:Static resources:Strings.SettingsThemeLabel}" Classes="field-label" />
                     <ComboBox AutomationProperties.Name="{x:Static resources:Strings.SettingsThemeLabel}" ItemsSource="{Binding ThemeOptions}"
                               DisplayMemberBinding="{Binding Label}"
                               SelectedValue="{Binding Theme}"
@@ -24,25 +37,34 @@
 
                     <!--
                         Always visible, never conditional on the current
-                        selection (R-3, S-1, D-10): a selectable Light
-                        option that silently does nothing is a defect,
-                        not an acceptable v1 cut.
+                        selection (R-3, S-1, D-10): the app ships ONE look
+                        (light), so the selector says so instead of
+                        implying a switch that does nothing.
                     -->
-                    <TextBlock Text="{x:Static resources:Strings.SettingsThemeLightNotice}"
-                               Foreground="{StaticResource AccentBrush}"
-                               TextWrapping="Wrap" />
+                    <Border Classes="notice info">
+                        <TextBlock Text="{x:Static resources:Strings.SettingsThemeLightNotice}"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   TextWrapping="Wrap" />
+                    </Border>
 
                     <Button Content="{x:Static resources:Strings.SettingsSaveButton}"
                             Command="{Binding SaveThemeCommand}"
+                            HorizontalAlignment="Left"
                             Classes="ledger-btn-primary" />
                 </StackPanel>
             </Border>
 
             <!-- Idioma (R-4, S-3, S-4, S-5) -->
-            <Border Classes="ledger-row" Padding="16">
+            <Border Classes="card settings-card">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="{x:Static resources:Strings.SettingsLanguageTitle}" Classes="ledger-title" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border Classes="icon-chip neutral" AutomationProperties.AccessibilityView="Raw">
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconChat}" Foreground="{StaticResource TextSecondaryBrush}" />
+                        </Border>
+                        <TextBlock Text="{x:Static resources:Strings.SettingsLanguageTitle}" Classes="card-title" VerticalAlignment="Center" />
+                    </StackPanel>
 
+                    <TextBlock Text="{x:Static resources:Strings.SettingsLanguageLabel}" Classes="field-label" />
                     <ComboBox AutomationProperties.Name="{x:Static resources:Strings.SettingsLanguageLabel}" ItemsSource="{Binding LocaleOptions}"
                               DisplayMemberBinding="{Binding Label}"
                               SelectedValue="{Binding Locale}"
@@ -53,49 +75,62 @@
 
                     <Button Content="{x:Static resources:Strings.SettingsSaveButton}"
                             Command="{Binding SaveLocaleCommand}"
+                            HorizontalAlignment="Left"
                             Classes="ledger-btn-primary" />
 
-                    <TextBlock Text="{x:Static resources:Strings.SettingsRestartRequiredNotice}"
-                               IsVisible="{Binding IsRestartRequired}"
-                               Foreground="{StaticResource AccentBrush}"
-                               TextWrapping="Wrap" />
+                    <Border Classes="notice info" IsVisible="{Binding IsRestartRequired}">
+                        <TextBlock Text="{x:Static resources:Strings.SettingsRestartRequiredNotice}"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   TextWrapping="Wrap" />
+                    </Border>
                 </StackPanel>
             </Border>
 
             <!-- IA (R-5, R-6, S-6, S-7, S-8) -->
-            <Border Classes="ledger-row" Padding="16">
+            <Border Classes="card settings-card">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="{x:Static resources:Strings.SettingsAiTitle}" Classes="ledger-title" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border Classes="icon-chip" AutomationProperties.AccessibilityView="Raw">
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBrand}" Foreground="{StaticResource AccentBrush}" />
+                        </Border>
+                        <TextBlock Text="{x:Static resources:Strings.SettingsAiTitle}" Classes="card-title" VerticalAlignment="Center" />
+                    </StackPanel>
 
                     <!--
                         Always visible, never conditional on whether a key
                         has been entered (R-5, S-8): the cleartext-storage
                         risk exists either way.
                     -->
-                    <TextBlock Text="{x:Static resources:Strings.SettingsAiApiKeyWarning}"
-                               Foreground="{StaticResource ExpenseBrush}"
-                               TextWrapping="Wrap" />
+                    <Border Classes="notice">
+                        <TextBlock Text="{x:Static resources:Strings.SettingsAiApiKeyWarning}"
+                                   Foreground="{StaticResource WarningBrush}"
+                                   TextWrapping="Wrap" />
+                    </Border>
 
+                    <TextBlock Text="{x:Static resources:Strings.SettingsAiProviderLabel}" Classes="field-label" />
                     <ComboBox AutomationProperties.Name="{x:Static resources:Strings.SettingsAiProviderLabel}" ItemsSource="{Binding AiProviders}"
                               SelectedItem="{Binding AiProvider}"
                               PlaceholderText="{x:Static resources:Strings.SettingsAiProviderLabel}"
                               Classes="ledger-input"
                               HorizontalAlignment="Stretch" />
 
+                    <TextBlock Text="{x:Static resources:Strings.SettingsAiModelWatermark}" Classes="field-label" />
                     <TextBox AutomationProperties.Name="{x:Static resources:Strings.SettingsAiModelWatermark}" Text="{Binding AiModel}"
                              Watermark="{x:Static resources:Strings.SettingsAiModelWatermark}"
                              Classes="ledger-input" />
 
+                    <TextBlock Text="{x:Static resources:Strings.SettingsAiApiKeyWatermark}" Classes="field-label" />
                     <TextBox AutomationProperties.Name="{x:Static resources:Strings.SettingsAiApiKeyWatermark}" Text="{Binding AiApiKey}"
                              Watermark="{x:Static resources:Strings.SettingsAiApiKeyWatermark}"
                              PasswordChar="●"
                              Classes="ledger-input" />
 
+                    <TextBlock Text="{x:Static resources:Strings.SettingsAiBaseUrlWatermark}" Classes="field-label" />
                     <TextBox AutomationProperties.Name="{x:Static resources:Strings.SettingsAiBaseUrlWatermark}" Text="{Binding AiBaseUrl}"
                              Watermark="{x:Static resources:Strings.SettingsAiBaseUrlWatermark}"
                              Classes="ledger-input" />
 
-                    <TextBlock Text="{x:Static resources:Strings.SettingsAiTemperatureLabel}" />
+                    <TextBlock Text="{x:Static resources:Strings.SettingsAiTemperatureLabel}" Classes="field-label" />
                     <NumericUpDown AutomationProperties.Name="{x:Static resources:Strings.SettingsAiTemperatureLabel}" Value="{Binding AiTemperature}"
                                    Minimum="0"
                                    Maximum="2"
@@ -103,34 +138,43 @@
                                    Classes="ledger-input"
                                    HorizontalAlignment="Stretch" />
 
-                    <TextBlock Text="{x:Static resources:Strings.SettingsAiMaxTokensLabel}" />
+                    <TextBlock Text="{x:Static resources:Strings.SettingsAiMaxTokensLabel}" Classes="field-label" />
                     <NumericUpDown AutomationProperties.Name="{x:Static resources:Strings.SettingsAiMaxTokensLabel}" Value="{Binding AiMaxTokensPerRequest}"
                                    Minimum="1"
                                    Maximum="128000"
                                    Classes="ledger-input"
                                    HorizontalAlignment="Stretch" />
 
-                    <Button Content="{x:Static resources:Strings.SettingsSaveButton}"
-                            Command="{Binding SaveAiCommand}"
-                            Classes="ledger-btn-primary" />
+                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,6,0,0">
+                        <Button Content="{x:Static resources:Strings.SettingsSaveButton}"
+                                Command="{Binding SaveAiCommand}"
+                                Classes="ledger-btn-primary" />
 
-                    <!-- "Probar conexión" (F-013, slice 7, R-8) -->
-                    <Button Content="{x:Static resources:Strings.SettingsAiTestConnectionButton}"
-                            Command="{Binding TestConnectionCommand}"
-                            IsEnabled="{Binding CanTestConnection}"
-                            Classes="ledger-btn" />
+                        <!-- "Probar conexión" (F-013, slice 7, R-8) -->
+                        <Button Content="{x:Static resources:Strings.SettingsAiTestConnectionButton}"
+                                Command="{Binding TestConnectionCommand}"
+                                IsEnabled="{Binding CanTestConnection}"
+                                Classes="ledger-btn" />
+                    </StackPanel>
 
-                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding AiTestConnectionMessage}"
-                               Foreground="{StaticResource IncomeBrush}"
-                               TextWrapping="Wrap"
-                               IsVisible="{Binding AiTestConnectionMessage, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
+                    <Border Classes="notice info"
+                            IsVisible="{Binding AiTestConnectionMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding AiTestConnectionMessage}"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   TextWrapping="Wrap" />
+                    </Border>
                 </StackPanel>
             </Border>
 
             <!-- Notificaciones (F-017, R-12, R-13, R-17, D-11) -->
-            <Border Classes="ledger-row" Padding="16">
+            <Border Classes="card settings-card">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="{x:Static resources:Strings.SettingsNotificationsTitle}" Classes="ledger-title" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border Classes="icon-chip" AutomationProperties.AccessibilityView="Raw">
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBell}" Foreground="{StaticResource AccentBrush}" />
+                        </Border>
+                        <TextBlock Text="{x:Static resources:Strings.SettingsNotificationsTitle}" Classes="card-title" VerticalAlignment="Center" />
+                    </StackPanel>
 
                     <CheckBox IsChecked="{Binding NotifyDebtDue}"
                               Content="{x:Static resources:Strings.SettingsNotificationsDebtDue}" />
@@ -141,7 +185,7 @@
                     <CheckBox IsChecked="{Binding NotifyAnomaly}"
                               Content="{x:Static resources:Strings.SettingsNotificationsAnomaly}" />
 
-                    <TextBlock Text="{x:Static resources:Strings.SettingsNotificationsDigestLabel}" />
+                    <TextBlock Text="{x:Static resources:Strings.SettingsNotificationsDigestLabel}" Classes="field-label" Margin="0,6,0,0" />
                     <ComboBox AutomationProperties.Name="{x:Static resources:Strings.SettingsNotificationsDigestLabel}" ItemsSource="{Binding DigestFrequencyOptions}"
                               DisplayMemberBinding="{Binding Label}"
                               SelectedValue="{Binding DigestFrequency}"
@@ -152,6 +196,7 @@
 
                     <Button Content="{x:Static resources:Strings.SettingsSaveButton}"
                             Command="{Binding SaveNotificationsCommand}"
+                            HorizontalAlignment="Left"
                             Classes="ledger-btn-primary" />
                 </StackPanel>
             </Border>
@@ -161,12 +206,17 @@
                 was composed. The visibility binding lives on this outer Border because the inner
                 panel re-targets DataContext to the Backup view-model.
             -->
-            <Border Classes="ledger-row" Padding="16"
+            <Border Classes="card settings-card"
                     IsVisible="{Binding Backup, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}">
                 <StackPanel DataContext="{Binding Backup}"
                             x:DataType="vm:BackupSettingsViewModel"
                             Spacing="12">
-                    <TextBlock Text="{x:Static resources:Strings.BackupSectionTitle}" Classes="ledger-title" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border Classes="icon-chip income" AutomationProperties.AccessibilityView="Raw">
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconDownload}" Foreground="{StaticResource IncomeBrush}" />
+                        </Border>
+                        <TextBlock Text="{x:Static resources:Strings.BackupSectionTitle}" Classes="card-title" VerticalAlignment="Center" />
+                    </StackPanel>
 
                     <TextBlock Text="{x:Static resources:Strings.BackupSectionDescription}"
                                Classes="ledger-status" />
@@ -185,13 +235,14 @@
                     <!-- Indeterminate progress with the localized caption of the running step. -->
                     <StackPanel Spacing="6" IsVisible="{Binding IsBusy}">
                         <ProgressBar IsIndeterminate="True"
-                                     Height="3"
+                                     Height="4"
+                                     CornerRadius="2"
                                      Foreground="{StaticResource AccentBrush}"
-                                     Background="{StaticResource DividerBrush}" />
+                                     Background="{StaticResource SurfaceMutedBrush}" />
                         <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding WorkingMessage}" Classes="ledger-status" />
                     </StackPanel>
 
-                    <!-- Outcome of the last operation: empty after a cancel, terracotta on failure. -->
+                    <!-- Outcome of the last operation: empty after a cancel, rose on failure. -->
                     <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}"
                                IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                Classes="ledger-status"
@@ -199,54 +250,46 @@
 
                     <!-- Inline destructive confirmation: backup facts, then the irreversible warning. -->
                     <Border IsVisible="{Binding IsConfirmVisible}"
-                            Background="{StaticResource SurfaceMutedBrush}"
-                            BorderBrush="{StaticResource AccentBrush}"
-                            BorderThickness="3,1,1,1"
-                            CornerRadius="{StaticResource RadiusSmall}"
-                            Padding="16">
+                            Classes="card-flat">
                         <StackPanel Spacing="10">
                             <TextBlock Text="{x:Static resources:Strings.BackupConfirmTitle}"
                                        Classes="ledger-section" />
                             <TextBlock Text="{Binding PendingSummary}"
                                        Foreground="{StaticResource TextBrush}"
                                        TextWrapping="Wrap" />
-                            <TextBlock Text="{x:Static resources:Strings.BackupConfirmWarning}"
-                                       Foreground="{StaticResource AccentBrush}"
-                                       FontWeight="SemiBold"
-                                       TextWrapping="Wrap" />
+                            <Border Classes="notice error">
+                                <TextBlock Text="{x:Static resources:Strings.BackupConfirmWarning}"
+                                           Foreground="{StaticResource ExpenseBrush}"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap" />
+                            </Border>
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <Button Content="{x:Static resources:Strings.BackupCancelButton}"
                                         Command="{Binding CancelRestoreCommand}"
                                         Classes="ledger-btn" />
                                 <Button Content="{x:Static resources:Strings.BackupConfirmButton}"
                                         Command="{Binding ConfirmRestoreCommand}"
-                                        Classes="ledger-btn-danger"
-                                        BorderBrush="{StaticResource ExpenseBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="{StaticResource RadiusSmall}" />
+                                        Classes="ledger-btn-danger" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
 
                     <!-- Restart panel: the restored data only loads after a restart (terminal state). -->
                     <Border IsVisible="{Binding IsRestartPanelVisible}"
-                            Background="{StaticResource SurfaceMutedBrush}"
-                            BorderBrush="{StaticResource AccentBrush}"
-                            BorderThickness="3,1,1,1"
-                            CornerRadius="{StaticResource RadiusSmall}"
-                            Padding="16">
+                            Classes="card-flat">
                         <StackPanel Spacing="10">
                             <TextBlock Text="{x:Static resources:Strings.BackupRestartRequiredNotice}"
-                                       Foreground="{StaticResource AccentBrush}"
+                                       Foreground="{StaticResource TextBrush}"
                                        TextWrapping="Wrap" />
                             <Button Content="{x:Static resources:Strings.BackupRestartNowButton}"
                                     Command="{Binding RestartNowCommand}"
                                     HorizontalAlignment="Left"
                                     Classes="ledger-btn-primary" />
-                            <TextBlock Text="{x:Static resources:Strings.BackupRestartFallback}"
-                                       IsVisible="{Binding RestartFailed}"
-                                       Foreground="{StaticResource ExpenseBrush}"
-                                       TextWrapping="Wrap" />
+                            <Border Classes="notice error" IsVisible="{Binding RestartFailed}">
+                                <TextBlock Text="{x:Static resources:Strings.BackupRestartFallback}"
+                                           Foreground="{StaticResource ExpenseBrush}"
+                                           TextWrapping="Wrap" />
+                            </Border>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -256,9 +299,14 @@
                 Atajos de teclado (F-021, R-16): a read-only index generated from KeyboardShortcutCatalog, so this list,
                 the window key bindings and the tooltips cannot drift. Plain text only: no control, nothing to save.
             -->
-            <Border Classes="ledger-row shortcuts-block" Padding="16">
+            <Border Classes="card settings-card shortcuts-block">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="{x:Static resources:Strings.ShortcutsSectionTitle}" Classes="ledger-title" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border Classes="icon-chip neutral" AutomationProperties.AccessibilityView="Raw">
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconDashboard}" Foreground="{StaticResource TextSecondaryBrush}" />
+                        </Border>
+                        <TextBlock Text="{x:Static resources:Strings.ShortcutsSectionTitle}" Classes="card-title" VerticalAlignment="Center" />
+                    </StackPanel>
                     <TextBlock Text="{x:Static resources:Strings.ShortcutsSectionDescription}" Classes="ledger-status" />
                     <ItemsControl ItemsSource="{Binding Shortcuts}"
                                   AutomationProperties.AccessibilityView="Content">
@@ -266,20 +314,23 @@
                             <DataTemplate x:DataType="vm:ShortcutListItem">
                                 <Border BorderBrush="{StaticResource DividerBrush}"
                                         BorderThickness="0,0,0,1"
-                                        Padding="0,6">
+                                        Padding="0,8">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBlock Text="{Binding ActionName}"
                                                    FontFamily="{StaticResource FontBody}"
                                                    Foreground="{StaticResource TextBrush}"
                                                    TextWrapping="Wrap"
                                                    VerticalAlignment="Center" />
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding Gesture}"
-                                                   FontFamily="{StaticResource FontMono}"
-                                                   FontSize="13"
-                                                   Foreground="{StaticResource AccentBrush}"
-                                                   Margin="16,0,0,0"
-                                                   VerticalAlignment="Center" />
+                                        <Border Grid.Column="1"
+                                                Classes="stat-pill"
+                                                Margin="16,0,0,0"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Gesture}"
+                                                       FontFamily="{StaticResource FontMono}"
+                                                       FontSize="13"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextBrush}" />
+                                        </Border>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -288,13 +339,18 @@
                 </StackPanel>
             </Border>
 
-            <!-- Acerca de — no controls, no save (D-10) -->
-            <Border Classes="ledger-row" Padding="16">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="{x:Static resources:Strings.SettingsAboutTitle}" Classes="ledger-title" />
-                    <TextBlock Text="{x:Static resources:Strings.WindowTitle}" />
-                    <TextBlock Text="{Binding AppVersionLabel}" />
-                    <TextBlock Text="{x:Static resources:Strings.SettingsAboutDescription}" TextWrapping="Wrap" />
+            <!-- Acerca de, no controls, no save (D-10) -->
+            <Border Classes="card settings-card">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border Classes="icon-chip" AutomationProperties.AccessibilityView="Raw">
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBrand}" Foreground="{StaticResource AccentBrush}" />
+                        </Border>
+                        <TextBlock Text="{x:Static resources:Strings.SettingsAboutTitle}" Classes="card-title" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Static resources:Strings.WindowTitle}" Classes="strong" />
+                    <TextBlock Text="{Binding AppVersionLabel}" Classes="secondary" />
+                    <TextBlock Text="{x:Static resources:Strings.SettingsAboutDescription}" Classes="secondary" TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 

@@ -14,7 +14,7 @@ public sealed class AccessibilityXamlScanTests
 {
     private static readonly string[] _buttons = ["Button", "ToggleButton", "RepeatButton"];
 
-    private static readonly string[] _inputs = ["TextBox", "ComboBox", "DatePicker", "NumericUpDown", "ToggleSwitch", "Slider", "CalendarDatePicker"];
+    private static readonly string[] _inputs = ["TextBox", "ComboBox", "DatePicker", "LocalizedDatePicker", "NumericUpDown", "ToggleSwitch", "Slider", "CalendarDatePicker"];
 
     /// <summary>Pre-existing debt that is accepted on purpose, with the reason. Empty: S8 fixed every hit.</summary>
     private static readonly string[] _allowlist = [];

@@ -3076,4 +3076,29 @@ public class Strings
     /// Gets the recurring charge form heading.
     /// </summary>
     public static string RecurringFormTitle => ResourceManager.GetString("RecurringFormTitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized subtitle of the chat page header.
+    /// </summary>
+    public static string ChatSubtitle => ResourceManager.GetString("ChatSubtitle", Culture)!;
+
+    /// <summary>
+    /// Gets the localized subtitle of the settings page header.
+    /// </summary>
+    public static string SettingsSubtitle => ResourceManager.GetString("SettingsSubtitle", Culture)!;
+
+    /// <summary>
+    /// Gets the placeholder shown in the day slot of a date picker with no date.
+    /// </summary>
+    public static string DatePickerDayPlaceholder => ResourceManager.GetString("DatePickerDayPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the placeholder shown in the month slot of a date picker with no date.
+    /// </summary>
+    public static string DatePickerMonthPlaceholder => ResourceManager.GetString("DatePickerMonthPlaceholder", Culture)!;
+
+    /// <summary>
+    /// Gets the placeholder shown in the year slot of a date picker with no date.
+    /// </summary>
+    public static string DatePickerYearPlaceholder => ResourceManager.GetString("DatePickerYearPlaceholder", Culture)!;
 }

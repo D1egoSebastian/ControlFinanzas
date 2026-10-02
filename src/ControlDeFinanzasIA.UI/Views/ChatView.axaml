@@ -8,29 +8,45 @@
              x:DataType="vm:ChatViewModel"
              x:Name="Root"
              Background="{StaticResource CanvasBrush}">
-    <Grid ColumnDefinitions="*,320" Margin="24">
+    <UserControl.Styles>
+        <!-- Message bubbles: the assistant's sit on a white card, the user's on the accent wash. -->
+        <Style Selector="Border.bubble">
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="16,16,16,4" />
+            <Setter Property="Padding" Value="14,10" />
+            <Setter Property="MaxWidth" Value="520" />
+        </Style>
+        <Style Selector="Border.bubble.user">
+            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentSoftBrush}" />
+            <Setter Property="CornerRadius" Value="16,16,4,16" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid ColumnDefinitions="*,320" RowDefinitions="Auto,*" Margin="32,4,32,32">
+
+        <!-- Page header: title + subtitle, and the one secondary action (a fresh conversation). -->
+        <Grid Grid.Row="0" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" Margin="0,0,0,20">
+            <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="{x:Static resources:Strings.ChatTitle}" Classes="page-title" />
+                <TextBlock Text="{x:Static resources:Strings.ChatSubtitle}" Classes="page-subtitle" />
+            </StackPanel>
+            <Button Grid.Column="1"
+                    Content="{x:Static resources:Strings.ChatNewConversationButton}"
+                    Command="{Binding NewConversationCommand}"
+                    Classes="ledger-btn"
+                    VerticalAlignment="Center" />
+        </Grid>
 
         <!-- Left column: conversation (F-015, R-1, R-9, D-10) -->
-        <Grid Grid.Column="0" RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="0,0,24,0">
-
-            <!-- Header: title + new conversation -->
-            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
-                <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ChatTitle}" Classes="ledger-title" />
-                <Button Grid.Column="1"
-                        Content="{x:Static resources:Strings.ChatNewConversationButton}"
-                        Command="{Binding NewConversationCommand}"
-                        Classes="ledger-btn"
-                        VerticalAlignment="Center" />
-            </Grid>
+        <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="Auto,*,Auto,Auto" Margin="0,0,24,0">
 
             <!-- "AI not configured" banner (D3, R-12) -->
-            <Border Grid.Row="1"
+            <Border Grid.Row="0"
+                    Classes="notice info"
                     IsVisible="{Binding ShowNotConfiguredBanner}"
-                    Background="{StaticResource AccentSoftBrush}"
-                    BorderBrush="{StaticResource AccentBrush}"
-                    BorderThickness="1"
-                    CornerRadius="{StaticResource RadiusMedium}"
-                    Padding="12"
                     Margin="0,0,0,12">
                 <TextBlock Text="{x:Static resources:Strings.ChatAiNotConfiguredBanner}"
                            Foreground="{StaticResource AccentBrush}"
@@ -38,58 +54,61 @@
             </Border>
 
             <!-- Transcript (D2, S-12): auto-scrolls to the newest message -->
-            <ScrollViewer Grid.Row="2" behaviors:ScrollToEndOnCollectionChanged.Observe="{Binding Messages}">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="{x:Static resources:Strings.ChatEmptyState}"
-                               IsVisible="{Binding !Messages.Count}"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
+            <Border Grid.Row="1" Classes="card" Padding="0">
+                <ScrollViewer behaviors:ScrollToEndOnCollectionChanged.Observe="{Binding Messages}">
+                    <StackPanel Spacing="12" Margin="20">
+                        <TextBlock Text="{x:Static resources:Strings.ChatEmptyState}"
+                                   IsVisible="{Binding !Messages.Count}"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   Margin="0,40"
+                                   Foreground="{StaticResource TextSecondaryBrush}" />
 
-                    <ItemsControl ItemsSource="{Binding Messages}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:ChatMessageItem">
-                                <!--
-                                    Role-aligned bubble (D-10): User bubbles align right, Assistant
-                                    replies/notes align left. IsNote drives muted styling (R-9, R-12);
-                                    State drives the Sage/Terracotta accent (R-6, S-6).
-                                -->
-                                <Border Background="{StaticResource SurfaceBrush}"
-                                        BorderThickness="0,0,0,2"
-                                        CornerRadius="{StaticResource RadiusMedium}"
-                                        Padding="12,8"
-                                        MaxWidth="480"
-                                        Opacity="{Binding IsNote, Converter={x:Static converters:BoolToOpacityConverter.Instance}}"
-                                        HorizontalAlignment="{Binding Role, Converter={x:Static converters:ChatMessageRoleAlignmentConverter.Instance}}">
-                                    <Border.BorderBrush>
-                                        <Binding Path="State" Converter="{x:Static converters:ChatMessageStateBrushConverter.Instance}" />
-                                    </Border.BorderBrush>
-                                    <StackPanel Spacing="4">
-                                        <Grid ColumnDefinitions="*,Auto">
-                                            <TextBlock Grid.Column="0"
-                                                       Text="{Binding Role, Converter={x:Static converters:ChatMessageRoleLabelConverter.Instance}}"
-                                                       Classes="ledger-section"
-                                                       Margin="0" />
-                                            <Button Grid.Column="1"
-                                                    Content="{x:Static resources:Strings.ChatCopyButton}"
-                                                    Command="{Binding #Root.DataContext.CopyCommand}"
-                                                    CommandParameter="{Binding}"
-                                                    IsEnabled="{Binding State, Converter={x:Static converters:ChatMessageCopyableConverter.Instance}}"
-                                                    Classes="ledger-btn"
-                                                    Padding="6,2"
-                                                    FontSize="11" />
-                                        </Grid>
-                                        <TextBlock Text="{Binding Text}"
-                                                   TextWrapping="Wrap"
-                                                   Foreground="{StaticResource TextBrush}" />
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding Messages}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ChatMessageItem">
+                                    <!--
+                                        Role-aligned bubble (D-10): User bubbles align right, Assistant
+                                        replies/notes align left. IsNote drives muted styling (R-9, R-12);
+                                        State colours the message text (R-6, S-6).
+                                    -->
+                                    <Border Classes="bubble"
+                                            Classes.user="{Binding IsUser}"
+                                            Margin="0,0,0,12"
+                                            Opacity="{Binding IsNote, Converter={x:Static converters:BoolToOpacityConverter.Instance}}"
+                                            HorizontalAlignment="{Binding Role, Converter={x:Static converters:ChatMessageRoleAlignmentConverter.Instance}}">
+                                        <StackPanel Spacing="4">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{Binding Role, Converter={x:Static converters:ChatMessageRoleLabelConverter.Instance}}"
+                                                           Classes="ledger-section"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,16,0" />
+                                                <Button Grid.Column="1"
+                                                        Content="{x:Static resources:Strings.ChatCopyButton}"
+                                                        Command="{Binding #Root.DataContext.CopyCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        IsEnabled="{Binding State, Converter={x:Static converters:ChatMessageCopyableConverter.Instance}}"
+                                                        Classes="ledger-btn ghost"
+                                                        Padding="8,0"
+                                                        MinHeight="26"
+                                                        FontSize="12" />
+                                            </Grid>
+                                            <TextBlock Text="{Binding Text}"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{Binding State, Converter={x:Static converters:ChatMessageStateBrushConverter.Instance}}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
 
-            <!-- Input row: TextBox + Send/Stop (R-4, R-9, D-10) -->
-            <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" Margin="0,12,0,0">
+            <!-- Input bar: TextBox + Send (the primary action) / Stop (R-4, R-9, D-10) -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" Margin="0,12,0,0">
                 <TextBox AutomationProperties.Name="{x:Static resources:Strings.ChatInputPlaceholder}" Grid.Column="0"
                          Text="{Binding QuestionText}"
                          Watermark="{x:Static resources:Strings.ChatInputPlaceholder}"
@@ -114,42 +133,43 @@
             </Grid>
 
             <!-- Permanent privacy disclosure (R-11, D13) -->
-            <TextBlock Grid.Row="4"
+            <TextBlock Grid.Row="3"
                        Text="{Binding PrivacyDisclosure}"
-                       Classes="ledger-status"
-                       Margin="0,8,0,0" />
+                       Classes="caption"
+                       Margin="4,8,0,0" />
         </Grid>
 
-        <!-- Right column: exact-figure backup panel, from the DTO — never from LLM text (R-10, D12) -->
-        <ScrollViewer Grid.Column="1">
-            <Border Classes="ledger-row" Padding="16">
+        <!-- Right column: exact-figure backup panel, from the DTO, never from LLM text (R-10, D12) -->
+        <ScrollViewer Grid.Row="1" Grid.Column="1">
+            <Border Classes="card" Padding="20" VerticalAlignment="Top">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="{x:Static resources:Strings.ChatFiguresTitle}" Classes="ledger-section" />
-                    <TextBlock Text="{Binding FiguresMonthLabel}" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <TextBlock Text="{x:Static resources:Strings.ChatFiguresTitle}" Classes="card-title" />
+                    <TextBlock Text="{Binding FiguresMonthLabel}" Classes="secondary" />
 
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ChatFiguresExpensesLabel}" />
+                        <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ChatFiguresExpensesLabel}" Classes="secondary" />
                         <TextBlock Grid.Column="1" Text="{Binding FiguresExpenses}" Classes="ledger-amount expense" />
                     </Grid>
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ChatFiguresIncomesLabel}" />
+                        <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ChatFiguresIncomesLabel}" Classes="secondary" />
                         <TextBlock Grid.Column="1" Text="{Binding FiguresIncomes}" Classes="ledger-amount income" />
                     </Grid>
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ChatFiguresNetLabel}" />
+                        <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.ChatFiguresNetLabel}" Classes="secondary" />
                         <TextBlock Grid.Column="1" Text="{Binding FiguresNet}" Classes="ledger-amount" />
                     </Grid>
 
-                    <Border Classes="amber-rule" />
+                    <Border Classes="divider" Margin="0,4" />
 
                     <TextBlock Text="{x:Static resources:Strings.ChatFiguresEmpty}"
                                IsVisible="{Binding !FigureLines.Count}"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
+                               TextWrapping="Wrap"
+                               Classes="secondary" />
 
                     <ItemsControl ItemsSource="{Binding FigureLines}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:ChatFigureLine">
-                                <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,6">
                                     <TextBlock Grid.Column="0"
                                                Text="{Binding Name}"
                                                Foreground="{StaticResource TextBrush}"
@@ -160,10 +180,11 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <TextBlock Text="{x:Static resources:Strings.ChatFiguresMissingRates}"
-                               IsVisible="{Binding FiguresHaveMissingRates}"
-                               Foreground="{StaticResource ExpenseBrush}"
-                               TextWrapping="Wrap" />
+                    <Border Classes="notice error" IsVisible="{Binding FiguresHaveMissingRates}">
+                        <TextBlock Text="{x:Static resources:Strings.ChatFiguresMissingRates}"
+                                   Foreground="{StaticResource ExpenseBrush}"
+                                   TextWrapping="Wrap" />
+                    </Border>
                 </StackPanel>
             </Border>
         </ScrollViewer>

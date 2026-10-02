@@ -7,7 +7,7 @@
              x:DataType="vm:CalendarViewModel"
              Background="{StaticResource CanvasBrush}">
     <ScrollViewer>
-        <StackPanel Margin="32" Spacing="20">
+        <StackPanel Margin="32,4,32,32" Spacing="20">
             <!-- Page header -->
             <StackPanel Spacing="4">
                 <TextBlock Text="{x:Static resources:Strings.CalendarTitle}" Classes="page-title" />

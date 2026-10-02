@@ -3,12 +3,13 @@
              xmlns:vm="using:ControlDeFinanzasIA.UI.ViewModels"
              xmlns:behaviors="using:ControlDeFinanzasIA.UI.Behaviors"
              xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
+             xmlns:controls="using:ControlDeFinanzasIA.UI.Controls"
              x:Class="ControlDeFinanzasIA.UI.Views.ErrorOverlayView"
              x:DataType="vm:ErrorOverlayViewModel">
     <!--
-        F-021 (DD-4) unexpected-error overlay, "Libro Mayor": the ledger's amber rule turned red ink for an
-        exception entry. A dimmed scrim swallows pointer input; the card is a focus trap (Tab cycles inside);
-        the short id is the hero, set like a ledger reference line. Hosted by MainWindow (no extra Window).
+        F-021 (DD-4) unexpected-error overlay ("Sand and Cobalt"): a dimmed scrim swallows pointer input; the
+        card is a focus trap (Tab cycles inside); a rose icon tile and the short id lead. Hosted by MainWindow
+        (no extra Window).
     -->
     <UserControl.KeyBindings>
         <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
@@ -36,7 +37,7 @@
     </UserControl.Styles>
 
     <Grid behaviors:RestoreFocusOnClose.IsOpen="{Binding IsOpen}">
-        <!-- Scrim: Ink at 80 %; opaque to hit testing so nothing behind it is clickable. -->
+        <!-- Scrim: the canvas at 80 %; opaque to hit testing so nothing behind it is clickable. -->
         <Border Classes="error-scrim"
                 Classes.open="{Binding IsOpen}"
                 Background="{StaticResource CanvasBrush}"
@@ -50,21 +51,22 @@
                 Background="{StaticResource SurfaceBrush}"
                 BorderBrush="{StaticResource DividerBrush}"
                 BorderThickness="1"
-                CornerRadius="{StaticResource RadiusMedium}"
-                ClipToBounds="True"
+                CornerRadius="{StaticResource RadiusLarge}"
+                BoxShadow="{StaticResource ShadowPopup}"
                 KeyboardNavigation.TabNavigation="Cycle"
                 AutomationProperties.Name="{x:Static resources:Strings.ErrorOverlayTitle}">
             <StackPanel>
-                <!-- Red-ink rule: the exception entry of the ledger. -->
-                <Border Height="2" Background="{StaticResource ExpenseBrush}" />
-
                 <StackPanel Margin="28,24,28,24" Spacing="16">
-                    <TextBlock Text="{x:Static resources:Strings.ErrorOverlayTitle}"
-                               FontFamily="{StaticResource FontDisplay}"
-                               FontSize="22"
-                               FontWeight="SemiBold"
-                               Foreground="{StaticResource TextBrush}"
-                               TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Border Classes="icon-chip expense" AutomationProperties.AccessibilityView="Raw">
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconClose}" Foreground="{StaticResource ExpenseBrush}" />
+                        </Border>
+                        <TextBlock Text="{x:Static resources:Strings.ErrorOverlayTitle}"
+                                   Classes="card-title"
+                                   FontSize="20"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
 
                     <TextBlock Text="{x:Static resources:Strings.ErrorOverlayBody}"
                                AutomationProperties.LiveSetting="Polite"
@@ -73,10 +75,8 @@
                                Foreground="{StaticResource TextSecondaryBrush}"
                                TextWrapping="Wrap" />
 
-                    <!-- Ledger reference line: hairline rules above and below, the id in mono. -->
-                    <Border BorderBrush="{StaticResource DividerBrush}"
-                            BorderThickness="0,1,0,1"
-                            Padding="0,12">
+                    <!-- Reference line on a soft panel: the short id in mono. -->
+                    <Border Classes="card-flat" Padding="16,12">
                         <StackPanel Spacing="4">
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <TextBlock Classes="error-mono"

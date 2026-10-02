@@ -38,8 +38,8 @@ public sealed class SettingsViewBackupBlockTests
         Assert.True(first < about);
         Assert.Equal(about, xaml.LastIndexOf("Strings.SettingsAboutTitle", StringComparison.Ordinal));
 
-        // About stays the last section: no other ledger-row block follows it.
-        Assert.Equal(-1, xaml.IndexOf("Classes=\"ledger-row\"", about, StringComparison.Ordinal));
+        // About stays the last section: no other settings card follows it.
+        Assert.Equal(-1, xaml.IndexOf("Classes=\"card settings-card\"", about, StringComparison.Ordinal));
     }
 
     [Fact]

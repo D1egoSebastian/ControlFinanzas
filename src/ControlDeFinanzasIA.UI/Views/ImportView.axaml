@@ -8,7 +8,7 @@
              x:CompileBindings="True">
     <!--
         Import panel (F-020, R-22, DD-14). Hosted in place by ExpensesView; every text comes from resx,
-        every color from the "Libro Mayor" tokens, and all behavior lives in ImportViewModel.
+        every color from the design tokens, and all behavior lives in ImportViewModel.
         Reading order follows the flow: progress and status, banners, options, column mapping,
         summary, categories to create, preview rows, confirm, result.
     -->
@@ -40,35 +40,27 @@
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
         </Style>
         <Style Selector="Border.import-callout">
-            <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-            <Setter Property="BorderThickness" Value="3,1,1,1" />
-            <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
-            <Setter Property="Padding" Value="16,12" />
+            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+            <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}" />
+            <Setter Property="Padding" Value="14,10" />
+        </Style>
+        <Style Selector="Border.import-callout.success">
+            <Setter Property="Background" Value="{StaticResource IncomeSoftBrush}" />
         </Style>
         <Style Selector="Border.import-chip">
-            <Setter Property="Background" Value="{StaticResource CanvasBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
-            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
+            <Setter Property="CornerRadius" Value="{StaticResource RadiusPill}" />
+            <Setter Property="Padding" Value="10,2" />
         </Style>
     </UserControl.Styles>
 
-    <Border Background="{StaticResource SurfaceBrush}"
-            BorderBrush="{StaticResource DividerBrush}"
-            BorderThickness="1"
-            CornerRadius="{StaticResource RadiusMedium}"
-            Padding="20">
+    <Border Classes="card">
         <StackPanel Spacing="16">
 
             <!-- File header: name and how it was read -->
             <StackPanel Spacing="2" IsVisible="{Binding FileName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                 <TextBlock Text="{Binding FileName}"
-                           Foreground="{StaticResource TextBrush}"
-                           FontFamily="{StaticResource FontDisplay}"
-                           FontSize="18"
-                           FontWeight="SemiBold"
+                           Classes="card-title"
                            TextTrimming="CharacterEllipsis" />
                 <TextBlock Text="{Binding SourceFacts}" Classes="ledger-status" />
             </StackPanel>
@@ -76,13 +68,14 @@
             <!-- Progress with the localized caption of the running step -->
             <StackPanel Spacing="6" IsVisible="{Binding IsBusy}">
                 <ProgressBar IsIndeterminate="True"
-                             Height="3"
+                             Height="4"
+                             CornerRadius="2"
                              Foreground="{StaticResource AccentBrush}"
-                             Background="{StaticResource DividerBrush}" />
+                             Background="{StaticResource SurfaceMutedBrush}" />
                 <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding WorkingMessage}" Classes="ledger-status" />
             </StackPanel>
 
-            <!-- Outcome of the last operation: terracotta on failure -->
+            <!-- Outcome of the last operation: rose on failure -->
             <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}"
                        IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                        Classes="ledger-status"
@@ -199,10 +192,7 @@
 
                 <StackPanel Spacing="10" IsVisible="{Binding IsMappingVisible}">
                     <TextBlock Text="{x:Static resources:Strings.ImportMappingTitle}"
-                               Foreground="{StaticResource TextBrush}"
-                               FontFamily="{StaticResource FontDisplay}"
-                               FontSize="16"
-                               FontWeight="SemiBold" />
+                               Classes="card-title" />
                     <WrapPanel>
                         <StackPanel Spacing="4" Width="200" Margin="0,0,16,12">
                             <TextBlock Text="{x:Static resources:Strings.ImportFieldDate}" Classes="import-label" />
@@ -402,7 +392,7 @@
                     Classes="ledger-btn-primary" />
 
             <!-- Result of the finished import -->
-            <Border Classes="import-callout" IsVisible="{Binding IsDonePanelVisible}">
+            <Border Classes="import-callout success" IsVisible="{Binding IsDonePanelVisible}">
                 <StackPanel Spacing="10">
                     <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding DoneMessage}"
                                Foreground="{StaticResource IncomeBrush}"

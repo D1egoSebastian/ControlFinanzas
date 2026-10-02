@@ -346,6 +346,13 @@ public sealed class ChatViewModelTests
             line.Name == "Comida" && line.AmountDisplay == ChatContextRenderer.FormatDop(12_345.67m, culture));
     }
 
+    [Fact]
+    public void ChatMessageItem_IsUser_IsTrueOnlyForTheUsersOwnBubble()
+    {
+        Assert.True(ChatMessageItem.User("hola").IsUser);
+        Assert.False(ChatMessageItem.Pending("...").IsUser);
+    }
+
     private static async Task<Sut> CreateActivatedSutAsync(AppSettings? settings = null)
     {
         Sut sut = CreateSut(settings);
