@@ -317,6 +317,14 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 - **`ViewModels/`** — uno por vista. Heredan de `ObservableObject` (CommunityToolkit).
 - **`Navigation/`** — `INavigationService` + `NavigationService` + `RouteNames` (constantes).
 
+### Sistema de diseño ("Sand and Cobalt", pre-1.0)
+
+- **Un solo tema claro**: lienzo arena cálido, tarjetas blancas con sombra suave, texto casi negro y un único acento cobalto; ingresos (verde), gastos (rosa) y advertencias (ámbar) tienen su propio color. No hay tema oscuro: el selector de Settings guarda la preferencia para una versión futura y lo dice.
+- **`Styles/Tokens.axaml`** concentra colores (`*Color` + `*Brush`), tipografía de sistema (sin fuentes empaquetadas), escala de espaciado de 4 px, radios y sombras, además de los overrides de recursos de Fluent. **`Styles/LedgerStyles.axaml`** define los estilos de controles; conserva los nombres históricos de clase (`ledger-btn`, `ledger-input`, `ledger-row`, `sidebar-item`) y añade `card`, `row-card`, `notice`, `chip`, `icon-chip`, `page-title`/`page-subtitle`, `field-label`. `Styles/Icons.axaml` trae los iconos vectoriales (control `Icon`).
+- **Contraste**: cada par texto/fondo y el anillo de foco se miden en `ContrastTests` (4.5:1 texto, 3:1 gráficos); la tabla está en `docs/accessibility.md`. Un solo anillo de foco (2 px) por `:focus-visible`.
+- **Shell**: sidebar claro de 216 px (`NavigationSections`), cabecera delgada con la campana y el contenido. Cada pantalla abre con título + subtítulo y tarjetas; los estados vacíos usan `EmptyState`.
+- `Controls/LocalizedDatePicker` es el `DatePicker` de Avalonia con los textos "día / mes / año" tomados de resx.
+
 ### Composition root
 
 - En `App.axaml.cs` (o un `Bootstrapper` aparte) se hace **toda** la registración de servicios. Aquí es el único lugar donde UI referencia a Infrastructure:

@@ -7,6 +7,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Full visual redesign, "Sand and Cobalt": a warm sand canvas, white rounded cards with soft shadows, near-ink text and
+  one cobalt accent, replacing the earlier heavy ledger look (serif display faces, thick rules, amber accent). One set
+  of design tokens (`Tokens.axaml`) and control styles (`LedgerStyles.axaml`) drives every screen: pill buttons
+  (primary, secondary, ghost, danger), rounded inputs with a cobalt focus border, page headers with a subtitle, card
+  forms with an icon tile, card lists with status chips, vector icons, a light sidebar with a visible current section and
+  a slim notification bell with no empty band above the page title. Dashboard, Expenses, Income, Recurring, Debts,
+  Calendar, Budgets, Goals, Chat (message bubbles, exact-figure side card), Settings (one card per section), the import
+  panel, the unexpected-error dialog and the notifications popup all use it. The keyboard focus ring, tab order,
+  shortcuts, accessibility names, live regions and the 4.5:1 / 3:1 contrast checks are unchanged in behavior; the
+  resting border of an input now reaches 3:1 (the earlier documented gap is closed). No schema change, no migration,
+  no new package.
+- Settings: the theme selector now says the truth: the app has a single light look in this version and the choice is
+  saved for a future release (the old note claimed only a dark theme rendered).
+
 ### Fixed
 
 - The Windows executable is a GUI-subsystem app (`WinExe`): no console window opens next to the UI and closing a console
@@ -44,6 +60,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Date pickers with no date picked show "día / mes / año" (or "day / month / year") in the app language instead of the
+  English words of the stock control; month and weekday names everywhere follow the app language instead of the
+  operating system's regional format.
 - Dashboard: an "Expenses this month" card right under the summary cards (before the charts) lists the latest expenses
   of the displayed month, newest first (date, description, category, exact amount with its currency, and the DOP
   equivalent for foreign-currency rows; at most 8 rows), with an "N expenses in <month>" line, a "Showing the latest 8"

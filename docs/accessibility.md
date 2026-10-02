@@ -27,22 +27,28 @@ tested. It is not a certification and it is not a full WCAG audit.
 - **Keyboard**: every action of the main flow is reachable without a mouse; shortcuts are generated from one catalog and
   listed in Settings; Enter submits the form on screen; Tab follows the visual order on the four primary forms
   (`TabOrderTests`), and a shortcut navigation moves focus into the new screen.
-- **Focus is visible**: a 2 px Amber ring appears on keyboard focus (`:focus-visible`, not on mouse focus).
+- **Focus is visible**: a 2 px ring appears on keyboard focus (cobalt on neutral controls, near-ink on the cobalt primary button) (`:focus-visible`, not on mouse focus).
 - **Focus is restored after the error overlay**: closing the overlay returns focus to the control that had it before the
   overlay opened (`ErrorOverlayHeadlessTests`), and Enter cannot reach a default button behind it.
 - **Contrast** is measured on the real palette (`ContrastTests`, WCAG relative luminance). Text pairs must reach 4.5:1 and
   focus rings and graphical fills 3:1:
 
-  | Pair | On `Ink` | On `Surface` |
-  |---|---|---|
-  | Paper (body text) | 13.98 | 12.40 |
-  | PaperDim (secondary text, sidebar digit hint) | 6.75 | 5.99 |
-  | Amber (accent text, focus ring) | 8.23 | 7.30 |
-  | Sage (success text) | 7.03 | 6.24 |
-  | TerracottaText (error text) | 7.33 | 6.50 |
+  | Pair ("Sand and Cobalt" palette) | On `Canvas` | On `Surface` | On `SurfaceMuted` |
+  |---|---|---|---|
+  | Text (body text) | 15.87 | 17.45 | 14.89 |
+  | TextSecondary (secondary text) | 7.94 | 8.73 | 7.45 |
+  | TextMuted (captions, sidebar digit hint) | 5.56 | 6.11 | 5.22 |
+  | Accent (cobalt: links, selected item) | 5.14 | 5.65 | 4.82 |
+  | Income (green) | 5.58 | 6.13 | 5.23 |
+  | Expense (rose) | 5.53 | 6.08 | 5.19 |
+  | Warning (amber text) | 5.56 | 6.11 | 5.22 |
 
-  The raw `Terracotta` fill reaches only 4.44:1 on `Surface`, so it is used for fills and rules only; a test fails if any
-  text foreground uses it. Calendar days of the adjacent month no longer use reduced opacity (it measured 3.25:1).
+  Soft washes carry their own text: Text on `AccentSoft` 14.92, Accent on `AccentSoft` 4.83, Income on `IncomeSoft`
+  5.33, Expense on `ExpenseSoft` 5.14, Warning on `WarningSoft` 5.41, and the white label on the cobalt button 5.65.
+  Graphics need 3:1: the input border on `Surface` 3.41 (on `Canvas` 3.11) and the focus ring on `Canvas` 15.87,
+  `Surface` 17.45 and the cobalt fill 3.09. The `WarningFill` colour is a lighter amber used only for the budget
+  progress fill, never for text; a test fails if a fill-only token is used as a text foreground. Calendar days of the
+  adjacent month do not use reduced opacity (it measured 3.25:1).
 - **Status and error text is marked as a polite live region**: `AutomationProperties.LiveSetting` is set to `Polite` on
   the status, error and AI-fallback text of the views, the import result and the error overlay (`LiveRegionSupportTests`).
 
@@ -51,16 +57,13 @@ tested. It is not a certification and it is not a full WCAG audit.
 - **Live-region delivery is unverified.** The property is set, but whether the Avalonia Windows UIA peer raises the
   live-region event so that a screen reader announces a change is unverified until a manual Narrator run. Do not rely on
   it to announce results; the text is also on screen and focus is not moved to it.
-- **Non-text contrast of input borders is below 3:1.** Text boxes and selectors are drawn with a `Hairline` bottom border
-  (1.46:1 on `Ink`). The focused state uses the Amber border (3:1 or more), but the resting boundary of an input does not
-  meet the WCAG 1.4.11 ratio. Known gap, not fixed in 1.0.0.
 - **Placeholder (watermark) colour** is the Fluent default and was not measured.
 - **Reduced-opacity states** (a note in the chat transcript, the AI suggestion while loading, a stale import preview) dim
   text and were not measured.
 - **Charts** (category breakdown, monthly evolution) are drawn graphics; they have no text alternative beyond their
   titles and the figures listed next to them.
-- **No high-contrast theme.** The app has a dark theme and a light-theme notice; it does not follow the operating system
-  high-contrast mode.
+- **No high-contrast theme.** The app ships one light look ("Sand and Cobalt"); the theme selector in Settings saves a
+  choice for a future release and says so. It does not follow the operating system high-contrast mode.
 - **Row buttons share one name.** "Edit" and "Delete" buttons in lists have the same name on every row; the row text is
   next to them, but the buttons do not repeat it.
 - **No full WCAG audit.** Only the checks listed above exist.

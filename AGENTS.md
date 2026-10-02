@@ -295,6 +295,14 @@ the project state changes, update this file.
   `ExpensesViewModel.ApplyDateRangeFilter` (`ApplyDayFilter` delegates to
   it). No migration, no new package. 3912/3912 tests green (3056 unit + 856
   integration).
+- **Visual redesign "Sand and Cobalt" (pre-1.0 slice E, E1-E4):** every screen was restyled with no behavior change: one light
+  theme (sand canvas, white cards, near-ink text, one cobalt accent), tokens in `Styles/Tokens.axaml`. Control styles live in
+  `Styles/LedgerStyles.axaml` (historical `ledger-*` class names kept), icons in `Styles/Icons.axaml`. E4 restyled Chat (bubbles),
+  Settings (one card per section, tagged `settings-card`), the import panel, the error overlay and the header (no empty band above
+  page titles), and added `Controls/LocalizedDatePicker` (resx "día/mes/año" placeholders). The Settings theme note now says the
+  truth: one light look, the choice is saved for later. Contrast figures are in `docs/accessibility.md` (the input border
+  reaches 3.41:1, which closes the old 1.46:1 gap). 4014/4014 tests green (3158 unit + 856 integration), build 0/0, format exit
+  0, no migration, no new package. Not captured live: the notification popup (PrintWindow does not draw popups).
 - **Roadmap / architecture / vision:** `docs/roadmap.md`,
   `docs/architecture.md`, `docs/vision.md`.
 - **Mission / stack constitution:** `spec/constitution/mission.md`,
