@@ -487,6 +487,18 @@
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}" />
         <Setter Property="BorderThickness" Value="0" />
     </Style>
+    <Style Selector="ListBox.pick-list ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+    <Style Selector="ListBox.pick-list ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+    <Style Selector="ListBox.pick-list ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
 
     <!-- Goal progress: cobalt while saving, income green once the target is met. Same slim rounded track as the budgets. -->
     <Style Selector="ProgressBar.goal-progress">

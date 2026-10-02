@@ -88,6 +88,12 @@
             <TextBlock Text="{x:Static resources:Strings.DebtsListTitle}" Classes="card-title" FontSize="20" />
             <Border Classes="card" Padding="12" IsVisible="{Binding !!Debts.Count}">
                 <ListBox Classes="pick-list" ItemsSource="{Binding Debts}" SelectedItem="{Binding SelectedDebt}">
+                    <ListBox.Styles>
+                        <!-- The row template is a composite, so the item would be announced by its type name; name it by the debt instead. -->
+                        <Style Selector="ListBoxItem">
+                            <Setter Property="AutomationProperties.Name" Value="{ReflectionBinding Description}" />
+                        </Style>
+                    </ListBox.Styles>
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="domain:Debt">
                             <Grid ColumnDefinitions="*,Auto,Auto" Margin="12,10">
