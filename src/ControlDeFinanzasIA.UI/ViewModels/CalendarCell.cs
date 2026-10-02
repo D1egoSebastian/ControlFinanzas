@@ -17,6 +17,9 @@ namespace ControlDeFinanzasIA.UI.ViewModels;
 /// navigated month; <see langword="false"/> for adjacent-month filler days
 /// (R-3), which are shown visually dimmed and do not drill down to Gastos.
 /// </param>
+/// <param name="HasSpend">
+/// <see langword="false"/> when nothing was spent that day: the cell then shows only the day number.
+/// </param>
 /// <param name="IsToday">
 /// <see langword="true"/> when <see cref="Date"/> is the current date.
 /// </param>
@@ -25,14 +28,15 @@ public sealed record CalendarCell(
     string DayNumber,
     string TotalDisplay,
     bool IsCurrentMonth,
-    bool IsToday)
+    bool IsToday,
+    bool HasSpend = true)
 {
-    /// <summary>
-    /// Gets the accessible name of the day button: the full date in the current culture, followed by the day total when
-    /// the day belongs to the navigated month (the visible content is only a day number and an amount) (F-021 S8).
-    /// </summary>
+    /// <summary>Gets a value indicating whether the day total is shown: only for a day of the navigated month with something spent.</summary>
+    public bool ShowTotal => IsCurrentMonth && HasSpend && TotalDisplay.Length > 0;
+
+    /// <summary>Gets the accessible name of the day button: the full date in the app language, followed by the day total when it is shown (F-021 S8).</summary>
     public string AutomationName =>
-        IsCurrentMonth && TotalDisplay.Length > 0
+        ShowTotal
             ? $"{ControlDeFinanzasIA.UI.Formatting.UiCulture.LongDate(Date)}, {TotalDisplay}"
             : ControlDeFinanzasIA.UI.Formatting.UiCulture.LongDate(Date);
 }

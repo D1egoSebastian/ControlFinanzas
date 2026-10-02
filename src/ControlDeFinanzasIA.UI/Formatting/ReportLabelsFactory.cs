@@ -56,17 +56,5 @@ internal static class ReportLabelsFactory
     /// The regional format for numbers (separators, grouping) with the app language's calendar names, so a Spanish
     /// report never prints "October" because the operating system's region is English.
     /// </summary>
-    private static CultureInfo ReportCulture()
-    {
-        CultureInfo regional = CultureInfo.CurrentCulture;
-        CultureInfo ui = CultureInfo.CurrentUICulture;
-        if (regional.DateTimeFormat.Equals(ui.DateTimeFormat) || string.Equals(regional.Name, ui.Name, StringComparison.Ordinal))
-        {
-            return regional;
-        }
-
-        var merged = (CultureInfo)regional.Clone();
-        merged.DateTimeFormat = (DateTimeFormatInfo)ui.DateTimeFormat.Clone();
-        return merged;
-    }
+    private static CultureInfo ReportCulture() => UiCulture.WithUiCalendarNames(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture);
 }

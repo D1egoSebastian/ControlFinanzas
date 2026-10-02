@@ -183,6 +183,11 @@ public partial class App : Avalonia.Application
         CultureInfo culture = ResolveUiCulture(settings, logger);
         CultureInfo.DefaultThreadCurrentUICulture = culture;
         CultureInfo.CurrentUICulture = culture;
+        // Numbers keep following the operating system's region; month and day names follow the app language, so the date pickers
+        // and every plain date agree with the UI (a Spanish UI never shows "October").
+        CultureInfo regional = Formatting.UiCulture.WithUiCalendarNames(CultureInfo.CurrentCulture, culture);
+        CultureInfo.DefaultThreadCurrentCulture = regional;
+        CultureInfo.CurrentCulture = regional;
     }
 
     /// <summary>

@@ -176,7 +176,8 @@ public sealed partial class CalendarViewModel : ViewModelBase
                     day.Date.Day.ToString(UiCulture.Current),
                     day.TotalDop is decimal total ? MoneyFormat.ApproximateDop(total) : string.Empty,
                     day.IsCurrentMonth,
-                    day.IsToday));
+                    day.IsToday,
+                    day.TotalDop is > 0));
             }
         }
         catch (Exception ex)

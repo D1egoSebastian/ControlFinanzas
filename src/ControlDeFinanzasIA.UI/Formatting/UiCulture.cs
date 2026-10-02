@@ -28,4 +28,23 @@ internal static class UiCulture
 
     /// <summary>The long date with the weekday ("miércoles, 14 de octubre de 2026").</summary>
     internal static string LongDate(DateOnly date) => date.ToString("D", Current);
+
+    /// <summary>
+    /// The operating system's regional culture (number and currency format) with the calendar names of the app language, so a
+    /// date picker or a plain date never spells "October" in a Spanish UI. The same culture is returned when the two already
+    /// agree. Numbers are untouched: typing and showing amounts keeps following the region.
+    /// </summary>
+    /// <param name="regional">The regional culture (<see cref="CultureInfo.CurrentCulture"/>).</param>
+    /// <param name="ui">The app language (<see cref="CultureInfo.CurrentUICulture"/>).</param>
+    internal static CultureInfo WithUiCalendarNames(CultureInfo regional, CultureInfo ui)
+    {
+        if (string.Equals(regional.Name, ui.Name, StringComparison.Ordinal))
+        {
+            return regional;
+        }
+
+        var merged = (CultureInfo)regional.Clone();
+        merged.DateTimeFormat = (DateTimeFormatInfo)ui.DateTimeFormat.Clone();
+        return merged;
+    }
 }

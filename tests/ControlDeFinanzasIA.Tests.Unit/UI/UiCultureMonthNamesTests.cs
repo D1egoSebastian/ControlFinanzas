@@ -74,6 +74,25 @@ public sealed class UiCultureMonthNamesTests
         Assert.Equal(CultureInfo.GetCultureInfo("es-DO").DateTimeFormat.FirstDayOfWeek, FirstWeekday(vm, spanish));
     }
 
+    [Fact]
+    public void WithUiCalendarNames_KeepsTheRegionalNumbers_AndSpellsDatesInTheUiLanguage()
+    {
+        CultureInfo merged = ControlDeFinanzasIA.UI.Formatting.UiCulture.WithUiCalendarNames(
+            CultureInfo.GetCultureInfo("de-DE"), CultureInfo.GetCultureInfo("es-DO"));
+
+        Assert.Equal("1.234,50", 1234.5m.ToString("N2", merged));
+        Assert.Equal("octubre 2026", new DateOnly(2026, 10, 1).ToString("MMMM yyyy", merged));
+        Assert.Equal("de-DE", merged.Name);
+    }
+
+    [Fact]
+    public void WithUiCalendarNames_ReturnsTheRegionalCultureItself_WhenBothAreTheSameLanguage()
+    {
+        var regional = CultureInfo.GetCultureInfo("es-DO");
+
+        Assert.Same(regional, ControlDeFinanzasIA.UI.Formatting.UiCulture.WithUiCalendarNames(regional, CultureInfo.GetCultureInfo("es-DO")));
+    }
+
     private static DayOfWeek FirstWeekday(CalendarViewModel vm, string[] names) => (DayOfWeek)Array.IndexOf(names, vm.WeekdayHeaders[0]);
 
     private sealed class CultureScope : IDisposable
