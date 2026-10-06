@@ -351,7 +351,7 @@
                                                 Padding="10,2"
                                                 VerticalAlignment="Center"
                                                 Margin="0,0,12,0">
-                                            <TextBlock Text="{Binding SeverityLabel}" Foreground="{DynamicResource OnAccentBrush}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding SeverityLabel}" Foreground="{Binding Severity, Converter={x:Static converters:AnomalySeverityBrushConverter.Instance}, ConverterParameter=text}" FontWeight="SemiBold" />
                                         </Border>
                                         <StackPanel Grid.Column="1" Spacing="2">
                                             <TextBlock Text="{Binding CategoryName}" Classes="strong" />

@@ -308,6 +308,20 @@ public sealed class ContrastTests
     }
 
     [Fact]
+    public void TheAnomalySeverityChip_DrawsItsLabelWithTheTextTokenOfItsOwnWash()
+    {
+        // The chip fill is the Soft wash of the severity; its label must be the matching text token (Accent / Warning /
+        // Expense on its wash, measured above in both variants), never OnAccent (which is only for a solid accent fill).
+        var document = XDocument.Load(Path.Combine(_uiRoot, "Views", "DashboardView.axaml"));
+        XElement label = document.Descendants()
+            .First(e => e.Name.LocalName == "TextBlock" && (string?)e.Attribute("Text") == "{Binding SeverityLabel}");
+        string foreground = (string?)label.Attribute("Foreground") ?? string.Empty;
+
+        Assert.Contains("AnomalySeverityBrushConverter", foreground, StringComparison.Ordinal);
+        Assert.Contains("ConverterParameter=text", foreground, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void TheChatAndAnomalyConverters_OnlyReturnAssertedTokens()
     {
         string chat = File.ReadAllText(Path.Combine(_uiRoot, "Converters", "ChatMessageStateBrushConverter.cs"));
