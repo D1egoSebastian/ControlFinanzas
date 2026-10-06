@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Dark mode. The theme selector in Settings now works: choosing "Dark" or "Light" re-skins the whole app at once (no
+  restart) and saves the choice, and the saved theme is applied before the window opens at the next start. The dark
+  palette is the same "Sand and Cobalt" language on a deep warm-ink canvas (slightly lighter cards separated by a hairline
+  instead of a heavy shadow, a softened cobalt accent, income green, expense rose and warning amber retuned for dark).
+  The stock controls (combo boxes and their popups, date pickers, check boxes, scroll bars, the notifications popup) and
+  the dashboard charts follow the theme; the charts are repainted from the data already loaded. Every contrast pair and
+  the focus ring are measured for BOTH variants with the same thresholds (4.5:1 text, 3:1 graphics). An install with no
+  saved preference stays on the light look. No schema change, no migration, no new package.
+
 ### Changed
 
 - Full visual redesign, "Sand and Cobalt": a warm sand canvas, white rounded cards with soft shadows, near-ink text and
@@ -20,11 +31,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   shortcuts, accessibility names, live regions and the 4.5:1 / 3:1 contrast checks are unchanged in behavior; the
   resting border of an input now reaches 3:1 (the earlier documented gap is closed). No schema change, no migration,
   no new package.
-- Settings: the theme selector now says the truth: the app has a single light look in this version and the choice is
-  saved for a future release (the old note claimed only a dark theme rendered).
+- Settings: the theme note ("the app has a single light look, the choice is saved for a future release") is gone with the
+  limitation it described. The note now says the theme changes as soon as it is picked and is saved automatically, and the
+  card has no Save button. The first-run default theme is Light (it used to be Dark in the stored defaults while the app
+  only rendered light); a value saved earlier is still read as it was written.
 
 ### Fixed
 
+- Dashboard "Unusual expenses": the severity label ("Warning", "Critical", "Info") was drawn in the label-on-accent colour
+  on the soft wash of its severity, which is nearly invisible in light and unreadable in dark. It is now drawn with the
+  text token that is measured against that wash.
 - The Windows executable is a GUI-subsystem app (`WinExe`): no console window opens next to the UI and closing a console
   no longer kills the app. A start-up failure still writes `startup-error-*.log` and exits non-zero; with no console
   there is no stderr line for a double-clicked exe (run `dotnet ControlDeFinanzasIA.UI.dll` to see it on a terminal).

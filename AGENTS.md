@@ -303,6 +303,18 @@ the project state changes, update this file.
   truth: one light look, the choice is saved for later. Contrast figures are in `docs/accessibility.md` (the input border
   reaches 3.41:1, which closes the old 1.46:1 gap). 4014/4014 tests green (3158 unit + 856 integration), build 0/0, format exit
   0, no migration, no new package. Not captured live: the notification popup (PrintWindow does not draw popups).
+- **Dark mode (pre-1.0, supersedes the "one light look" wording above):** the Settings theme selector is real. `Tokens.axaml` now
+  holds only the non-colour tokens and wires `Tokens.Light.axaml` / `Tokens.Dark.axaml` in as theme dictionaries (same keys;
+  colours, brushes, shadows and the Fluent control overrides); views and styles reference every colour token with
+  `DynamicResource` (a `StaticResource` would keep the first variant). `IThemeService` (UI, `AvaloniaThemeService`) sets
+  `Application.RequestedThemeVariant`; `App.OnFrameworkInitializationCompleted` applies the persisted `AppTheme` before the window
+  exists, and `SettingsViewModel.OnThemeChanged` applies and saves on every choice (no Save button in that card; loading the stored
+  value does neither). `AppTheme` keeps `Dark`/`Light` (no migration; there is no "System" option) and the first-run default is
+  now `Light`. The brush converters read `Application.ActualThemeVariant`; `ChartPalette.For(AppTheme)` gives the Skia colours and
+  `DashboardViewModel` rebuilds the charts from its last results when the theme changes (weak subscription). `ContrastTests` runs
+  every pair for both variants (the dark figures are in `docs/accessibility.md`). 4092/4092 tests green (3236 unit + 856
+  integration), build 0/0, format exit 0, no migration, no new package. Not done by hand: macOS/Linux, a screen reader, the LiveCharts
+  hover tooltip in dark (the library's own light tooltip, not themed) and any "follow the system theme" behaviour.
 - **Roadmap / architecture / vision:** `docs/roadmap.md`,
   `docs/architecture.md`, `docs/vision.md`.
 - **Mission / stack constitution:** `spec/constitution/mission.md`,

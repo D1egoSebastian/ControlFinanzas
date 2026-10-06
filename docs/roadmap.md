@@ -824,7 +824,8 @@ no se le debería pedir otra al activar las features.
 - **Sin tema claro funcional ni detección del sistema.** Decisión confirmada: `Theme` se persiste
   (incluyendo `Light`) pero solo `Dark` se aplica de verdad a `RequestedThemeVariant` en v1;
   seleccionar `Light` muestra una nota localizada "aún no funcional", nunca un no-op silencioso. Sin
-  `ThemeDictionaries` ni detección de tema del SO.
+  `ThemeDictionaries` ni detección de tema del SO. (Superado antes de 1.0: el modo oscuro real aplica
+  `Dark` y `Light` en vivo con `ThemeDictionaries`; sigue sin haber detección del tema del SO.)
 - **Sin traducción en vivo.** Decisión confirmada: guardar el idioma requiere reiniciar la app para que
   aplique — cada vista bindea su copy vía `{x:Static resources:Strings.X}`, que resuelve una sola vez
   al cargar el XAML y no puede re-bindearse en caliente. La UI muestra un aviso de "reinicio requerido"

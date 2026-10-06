@@ -319,9 +319,10 @@ Agrupados por carpeta según la feature. Todos devuelven `Result<T>` (o `Task<Re
 
 ### Sistema de diseño ("Sand and Cobalt", pre-1.0)
 
-- **Un solo tema claro**: lienzo arena cálido, tarjetas blancas con sombra suave, texto casi negro y un único acento cobalto; ingresos (verde), gastos (rosa) y advertencias (ámbar) tienen su propio color. No hay tema oscuro: el selector de Settings guarda la preferencia para una versión futura y lo dice.
-- **`Styles/Tokens.axaml`** concentra colores (`*Color` + `*Brush`), tipografía de sistema (sin fuentes empaquetadas), escala de espaciado de 4 px, radios y sombras, además de los overrides de recursos de Fluent. **`Styles/LedgerStyles.axaml`** define los estilos de controles; conserva los nombres históricos de clase (`ledger-btn`, `ledger-input`, `ledger-row`, `sidebar-item`) y añade `card`, `row-card`, `notice`, `chip`, `icon-chip`, `page-title`/`page-subtitle`, `field-label`. `Styles/Icons.axaml` trae los iconos vectoriales (control `Icon`).
-- **Contraste**: cada par texto/fondo y el anillo de foco se miden en `ContrastTests` (4.5:1 texto, 3:1 gráficos); la tabla está en `docs/accessibility.md`. Un solo anillo de foco (2 px) por `:focus-visible`.
+- **Dos variantes de tema, un mismo lenguaje**: *claro* (lienzo arena cálido, tarjetas blancas con sombra suave, texto casi negro, acento cobalto) y *oscuro* (lienzo de tinta cálida `#14130F`, tarjetas ligeramente más claras separadas por un filete en vez de una sombra pesada, cobalto suavizado, verde/rosa/ámbar re-afinados). Ingresos (verde), gastos (rosa) y advertencias (ámbar) tienen su propio color en ambas. El selector de Settings aplica la variante en vivo y la guarda; al arrancar se aplica la guardada antes de abrir la ventana.
+- **Cómo se resuelve**: `Styles/Tokens.axaml` guarda lo que no cambia con la variante (tipografía, espaciado, movimiento, radios) y mete `Tokens.Light.axaml` y `Tokens.Dark.axaml` como `ThemeDictionaries` (mismas claves: colores, pinceles, sombras y overrides de Fluent). Vistas y estilos referencian cada token de color/pincel/sombra con `DynamicResource` (un `StaticResource` se resuelve una vez y no seguiría el cambio). `IThemeService` (`AvaloniaThemeService`, en UI) fija `Application.RequestedThemeVariant` desde `AppTheme` y avisa con `Changed`; los conversores de pincel leen `ActualThemeVariant` (`ThemeBrushLookup`) y los gráficos de LiveCharts, que pintan con colores Skia, toman `ChartPalette.For(AppTheme)` y se reconstruyen desde los últimos datos al cambiar el tema.
+- **`Styles/Tokens*.axaml`** concentran colores (`*Color` + `*Brush`, por variante), tipografía de sistema (sin fuentes empaquetadas), escala de espaciado de 4 px, radios y sombras, además de los overrides de recursos de Fluent. **`Styles/LedgerStyles.axaml`** define los estilos de controles; conserva los nombres históricos de clase (`ledger-btn`, `ledger-input`, `ledger-row`, `sidebar-item`) y añade `card`, `row-card`, `notice`, `chip`, `icon-chip`, `page-title`/`page-subtitle`, `field-label`. `Styles/Icons.axaml` trae los iconos vectoriales (control `Icon`).
+- **Contraste**: cada par texto/fondo y el anillo de foco se miden en `ContrastTests` para AMBAS variantes con los mismos umbrales (4.5:1 texto, 3:1 gráficos); las tablas están en `docs/accessibility.md`. Un solo anillo de foco (2 px) por `:focus-visible`.
 - **Shell**: sidebar claro de 216 px (`NavigationSections`), cabecera delgada con la campana y el contenido. Cada pantalla abre con título + subtítulo y tarjetas; los estados vacíos usan `EmptyState`.
 - `Controls/LocalizedDatePicker` es el `DatePicker` de Avalonia con los textos "día / mes / año" tomados de resx.
 
@@ -993,7 +994,7 @@ Detalle completo en §11g. Resumen de la persistencia:
 
 ### Settings tipados
 
-- `AppSettings` (record, 8 campos): `Theme` (`AppTheme`: `Dark`/`Light`), `Locale`, `AiProvider`
+- `AppSettings` (record, 8 campos): `Theme` (`AppTheme`: `Dark`/`Light`; por defecto `Light`; se aplica de verdad desde el modo oscuro), `Locale`, `AiProvider`
   (`OpenAI`/`Anthropic`/`OpenRouter`/`Custom`), `AiApiKey`, `AiModel`, `AiBaseUrl`, `AiTemperature`
   (0.0–2.0), `AiMaxTokensPerRequest` (1–128000). `Defaults` estático documenta los valores por
   defecto de cada campo.
