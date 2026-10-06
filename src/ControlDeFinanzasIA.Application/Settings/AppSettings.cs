@@ -1,9 +1,12 @@
 namespace ControlDeFinanzasIA.Application.Settings;
 
 /// <summary>
-/// Preferencia de tema visual. Solo <see cref="Dark"/> se aplica
-/// realmente en v1 (F-012 D-8); <see cref="Light"/> se persiste pero
-/// no renderiza.
+/// Preferencia de tema visual. Ambos valores se aplican de verdad
+/// (modo oscuro, pre-1.0): la UI los traduce a una variante de tema de
+/// Avalonia al arrancar y en vivo al cambiar el selector de Ajustes. Los
+/// valores persistidos por versiones anteriores (que guardaban la
+/// preferencia sin aplicarla) siguen siendo validos: el nombre del
+/// miembro es lo que se guarda.
 /// </summary>
 public enum AppTheme
 {
@@ -41,8 +44,12 @@ public sealed record AppSettings(
     double AiTemperature,
     int AiMaxTokensPerRequest)
 {
-    /// <summary>Tema por defecto de primer arranque.</summary>
-    public const AppTheme DefaultTheme = AppTheme.Dark;
+    /// <summary>
+    /// Tema por defecto de primer arranque. Es <see cref="AppTheme.Light"/>: es el unico aspecto que
+    /// tenian las versiones anteriores, asi que una instalacion sin preferencia guardada no cambia de
+    /// aspecto al aparecer el modo oscuro.
+    /// </summary>
+    public const AppTheme DefaultTheme = AppTheme.Light;
 
     /// <summary>Proveedor de IA por defecto de primer arranque.</summary>
     public const AiProvider DefaultAiProvider = AiProvider.OpenAI;

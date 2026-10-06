@@ -12,7 +12,7 @@
              x:Class="ControlDeFinanzasIA.UI.Views.ExpensesView"
              x:DataType="vm:ExpensesViewModel"
              x:Name="Root"
-             Background="{StaticResource CanvasBrush}">
+             Background="{DynamicResource CanvasBrush}">
     <UserControl.Resources>
         <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
     </UserControl.Resources>
@@ -29,7 +29,7 @@
                 <StackPanel Spacing="14">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="icon-chip expense" AutomationProperties.AccessibilityView="Raw">
-                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconExpenses}" Foreground="{StaticResource ExpenseBrush}" />
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconExpenses}" Foreground="{DynamicResource ExpenseBrush}" />
                         </Border>
                         <TextBlock Text="{x:Static resources:Strings.ExpensesFormTitle}" Classes="card-title" VerticalAlignment="Center" />
                     </StackPanel>
@@ -43,10 +43,10 @@
                                 <Button Command="{Binding AcceptSuggestionCommand}"
                                         Content="{Binding SuggestedCategoryChipLabel}"
                                         ToolTip.Tip="{Binding SuggestedCategoryAcceptHint}"
-                                        Background="{StaticResource AccentSoftBrush}" Foreground="{StaticResource AccentBrush}" Padding="10,2" CornerRadius="{StaticResource RadiusPill}" FontSize="12" />
+                                        Background="{DynamicResource AccentSoftBrush}" Foreground="{DynamicResource AccentBrush}" Padding="10,2" CornerRadius="{StaticResource RadiusPill}" FontSize="12" />
                                 <Button AutomationProperties.Name="{x:Static resources:Strings.A11yDismissSuggestion}" Command="{Binding DismissSuggestionCommand}" Content="✕"
                                         ToolTip.Tip="{Binding SuggestedCategoryDismissHint}"
-                                        Background="Transparent" Foreground="{StaticResource TextSecondaryBrush}" Padding="4,2" FontSize="12" />
+                                        Background="Transparent" Foreground="{DynamicResource TextSecondaryBrush}" Padding="4,2" FontSize="12" />
                             </StackPanel>
                             <TextBlock Text="{Binding SuggestionLoadingLabel}" Classes="caption" IsVisible="{Binding IsSuggestionLoading}" />
                             <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding AiStatusMessage}" Classes="caption"
@@ -56,7 +56,7 @@
                         <ComboBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesCurrencyPlaceholder}" Grid.Row="1" Grid.Column="2" Margin="0,0,0,12" VerticalAlignment="Top" HorizontalAlignment="Stretch" ItemsSource="{x:Static converters:EnumValues.Currencies}" SelectedItem="{Binding Currency}" PlaceholderText="{x:Static resources:Strings.ExpensesCurrencyPlaceholder}" />
                         <controls:LocalizedDatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yDate}" Grid.Row="2" Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" SelectedDate="{Binding Date, Converter={StaticResource DateOnlyConverter}}" />
                         <TextBox AutomationProperties.Name="{x:Static resources:Strings.ExpensesNotePlaceholder}" Grid.Row="2" Grid.Column="1" Margin="0,0,0,0" Grid.ColumnSpan="2" VerticalAlignment="Top" Text="{Binding Note}" Watermark="{x:Static resources:Strings.ExpensesNotePlaceholder}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="40" MaxHeight="96" />
-                        <TextBlock AutomationProperties.LiveSetting="Polite" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+                        <TextBlock AutomationProperties.LiveSetting="Polite" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding FormError}" Foreground="{DynamicResource ExpenseBrush}" TextWrapping="Wrap" />
                         <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="10" Margin="0,16,0,0">
                             <!-- Default (Enter) only in register mode and never while the import panel replaces the list (F-021 S8). -->
                             <Button Content="{x:Static resources:Strings.ExpensesRegisterButton}" Command="{Binding RegisterExpenseCommand}" Classes="ledger-btn-primary">
@@ -80,7 +80,7 @@
                     </Grid>
                 </StackPanel>
             </Border>
-            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{DynamicResource IncomeBrush}" TextWrapping="Wrap" />
 
             <!-- List header: the title and the quiet report export (F-018) / import (F-020) buttons; the outcome shows via StatusMessage/FormError. -->
             <Grid ColumnDefinitions="*,Auto">
@@ -126,7 +126,7 @@
             <!-- A filter that is applied while the panel is closed stays visible: what is narrowing the list, and how to undo it. -->
             <Border Classes="notice info" IsVisible="{Binding IsFilterSummaryVisible}">
                 <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.FiltersActiveSummary}" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.FiltersActiveSummary}" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
                     <Button Grid.Column="1" Content="{x:Static resources:Strings.ClearFilterButton}" Command="{Binding ClearFilterCommand}" Classes="ledger-btn ghost" />
                 </Grid>
             </Border>
@@ -157,7 +157,7 @@
                             <controls:LocalizedDatePicker AutomationProperties.Name="{x:Static resources:Strings.FilterDateToLabel}" Classes="ledger-input" HorizontalAlignment="Stretch" SelectedDate="{Binding FilterDateTo, Converter={StaticResource DateOnlyConverter}}" />
                         </StackPanel>
                     </WrapPanel>
-                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FilterError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" IsVisible="{Binding FilterError, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FilterError}" Foreground="{DynamicResource ExpenseBrush}" TextWrapping="Wrap" IsVisible="{Binding FilterError, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Button Content="{x:Static resources:Strings.ApplyFilterButton}" Command="{Binding ApplyFilterCommand}" Classes="ledger-btn-primary" />
                         <Button Content="{x:Static resources:Strings.ClearFilterButton}" Command="{Binding ClearFilterCommand}" Classes="ledger-btn" />

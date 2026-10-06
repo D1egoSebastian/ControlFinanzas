@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ControlDeFinanzasIA.Application.Abstractions;
 using ControlDeFinanzasIA.Application.Common;
+using ControlDeFinanzasIA.Application.Settings;
 using ControlDeFinanzasIA.Application.UseCases.Budgets.GetBudgetVsActual;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.Common;
 using ControlDeFinanzasIA.Application.UseCases.Dashboard.DetectAnomalies;
@@ -24,6 +25,7 @@ using ControlDeFinanzasIA.Domain.ValueObjects;
 using ControlDeFinanzasIA.UI.Formatting;
 using ControlDeFinanzasIA.UI.Navigation;
 using ControlDeFinanzasIA.UI.Resources;
+using ControlDeFinanzasIA.UI.Services;
 using ControlDeFinanzasIA.UI.Views.Charts;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
@@ -53,6 +55,13 @@ public sealed partial class DashboardViewModel : ViewModelBase
     private readonly IFileSaveDialog _fileSaveDialog;
     private readonly GetMonthExpensesQuery _getMonthExpensesQuery;
     private readonly INavigationService _navigation;
+    private readonly IThemeService? _themeService;
+
+    // The chart colours are Skia colours (not resources), so they are chosen from the active theme when the series are
+    // built; the last results are kept so a live theme switch can rebuild the charts without querying again.
+    private ChartColors _chart = ChartPalette.For(AppTheme.Light);
+    private CategoryBreakdownResult? _lastBreakdown;
+    private MonthlyEvolutionResult? _lastEvolution;
 
     private int _loadGeneration;
     private CancellationTokenSource? _narrationCts;
@@ -78,7 +87,8 @@ public sealed partial class DashboardViewModel : ViewModelBase
         ExportMonthSummaryReportUseCase exportMonthSummary,
         IFileSaveDialog fileSaveDialog,
         GetMonthExpensesQuery getMonthExpensesQuery,
-        INavigationService navigation)
+        INavigationService navigation,
+        IThemeService? themeService = null)
     {
         ArgumentNullException.ThrowIfNull(getMonthSummaryQuery);
         ArgumentNullException.ThrowIfNull(getCategoryBreakdownQuery);
@@ -95,6 +105,13 @@ public sealed partial class DashboardViewModel : ViewModelBase
 
         _getMonthExpensesQuery = getMonthExpensesQuery;
         _navigation = navigation;
+        _themeService = themeService;
+        if (themeService is not null)
+        {
+            _chart = ChartPalette.For(themeService.Current);
+            WeakThemeSubscription.Create(themeService, this, static vm => vm.OnThemeChanged());
+        }
+
         _exportMonthSummary = exportMonthSummary;
         _fileSaveDialog = fileSaveDialog;
         _getMonthSummaryQuery = getMonthSummaryQuery;
@@ -850,6 +867,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
         if (!result.IsSuccess)
         {
             LoadError = result.Error?.Message ?? "No se pudo cargar el gráfico de categorías.";
+            _lastBreakdown = null;
             CategorySeries = [];
             return;
         }
@@ -861,7 +879,14 @@ public sealed partial class DashboardViewModel : ViewModelBase
         }
 
         HasMissingRates |= breakdown.HasMissingRates;
+        _lastBreakdown = breakdown;
+        BuildCategoryChart(breakdown);
+    }
 
+    /// <summary>Builds the legend and the donut series of <paramref name="breakdown"/> with the colours of the active theme.</summary>
+    private void BuildCategoryChart(CategoryBreakdownResult breakdown)
+    {
+        CategoryLegend.Clear();
         decimal total = breakdown.Slices.Sum(slice => slice.AmountDop);
         for (int i = 0; i < breakdown.Slices.Count; i++)
         {
@@ -869,7 +894,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
             decimal share = total > 0m ? slice.AmountDop / total * 100m : 0m;
             CategoryLegend.Add(new CategoryLegendItem(
                 slice.Label,
-                ChartPalette.SliceHexes[i % ChartPalette.SliceHexes.Count],
+                _chart.SliceHex(i),
                 FormatDop(slice.AmountDop),
                 share.ToString("0", CultureInfo.CurrentCulture) + "%"));
         }
@@ -879,12 +904,34 @@ public sealed partial class DashboardViewModel : ViewModelBase
             {
                 Values = [(double)slice.AmountDop],
                 Name = slice.Label,
-                Fill = new SolidColorPaint(ChartPalette.Slice(index)),
-                Stroke = new SolidColorPaint(SKColors.White, 2),
+                Fill = new SolidColorPaint(_chart.Slice(index)),
+                Stroke = new SolidColorPaint(_chart.Surface, 2),
                 InnerRadius = 54,
                 MaxRadialColumnWidth = 40,
             })
             .ToArray();
+    }
+
+    /// <summary>
+    /// A live theme switch: the charts are repainted from the last loaded data with the new palette, no query is run.
+    /// </summary>
+    private void OnThemeChanged()
+    {
+        if (_themeService is null)
+        {
+            return;
+        }
+
+        _chart = ChartPalette.For(_themeService.Current);
+        if (_lastBreakdown is not null)
+        {
+            BuildCategoryChart(_lastBreakdown);
+        }
+
+        if (_lastEvolution is not null)
+        {
+            BuildEvolutionChart(_lastEvolution);
+        }
     }
 
     private void ApplyMonthlyEvolution(Result result)
@@ -894,6 +941,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
         if (!result.IsSuccess)
         {
             LoadError = result.Error?.Message ?? "No se pudo cargar el gráfico de evolución.";
+            _lastEvolution = null;
             EvolutionSeries = [];
             EvolutionXAxes = [];
             EvolutionYAxes = [];
@@ -907,11 +955,17 @@ public sealed partial class DashboardViewModel : ViewModelBase
         }
 
         HasMissingRates |= evolution.HasMissingRates;
+        _lastEvolution = evolution;
+        BuildEvolutionChart(evolution);
+    }
 
+    /// <summary>Builds the lines and the axes of <paramref name="evolution"/> with the colours of the active theme.</summary>
+    private void BuildEvolutionChart(MonthlyEvolutionResult evolution)
+    {
         EvolutionSeries =
         [
-            BuildLine("Gastos", evolution.Points.Select(p => (double)p.ExpensesDop).ToArray(), ChartPalette.Expense, filled: false),
-            BuildLine("Ingresos", evolution.Points.Select(p => (double)p.IncomesDop).ToArray(), ChartPalette.Income, filled: true),
+            BuildLine("Gastos", evolution.Points.Select(p => (double)p.ExpensesDop).ToArray(), _chart.Expense, filled: false),
+            BuildLine("Ingresos", evolution.Points.Select(p => (double)p.IncomesDop).ToArray(), _chart.Income, filled: true),
         ];
 
         EvolutionXAxes =
@@ -921,7 +975,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
                 Labels = evolution.Points
                     .Select(p => UiCulture.MonthAbbreviated(new DateOnly(p.Year, p.Month, 1)))
                     .ToArray(),
-                LabelsPaint = new SolidColorPaint(ChartPalette.AxisText),
+                LabelsPaint = new SolidColorPaint(_chart.AxisText),
                 TextSize = 12,
                 ShowSeparatorLines = false,
             },
@@ -931,8 +985,8 @@ public sealed partial class DashboardViewModel : ViewModelBase
         [
             new Axis
             {
-                LabelsPaint = new SolidColorPaint(ChartPalette.AxisText),
-                SeparatorsPaint = new SolidColorPaint(ChartPalette.Grid, 1),
+                LabelsPaint = new SolidColorPaint(_chart.AxisText),
+                SeparatorsPaint = new SolidColorPaint(_chart.Grid, 1),
                 TextSize = 12,
                 MinLimit = 0,
                 Labeler = CompactAmount,
@@ -1056,7 +1110,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// </summary>
     private static string FormatDop(decimal amount) => MoneyFormat.ApproximateDop(amount);
 
-    private static LineSeries<double> BuildLine(string name, double[] values, SKColor color, bool filled) => new()
+    private LineSeries<double> BuildLine(string name, double[] values, SKColor color, bool filled) => new()
     {
         Values = values,
         Name = name,
@@ -1064,7 +1118,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
         Fill = filled ? new SolidColorPaint(color.WithAlpha(24)) : null,
         GeometrySize = 8,
         GeometryStroke = new SolidColorPaint(color, 3),
-        GeometryFill = new SolidColorPaint(SKColors.White),
+        GeometryFill = new SolidColorPaint(_chart.Surface),
         LineSmoothness = 0.6,
     };
 

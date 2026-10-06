@@ -12,7 +12,7 @@
              x:Class="ControlDeFinanzasIA.UI.Views.IncomeView"
              x:DataType="vm:IncomeViewModel"
              x:Name="Root"
-             Background="{StaticResource CanvasBrush}">
+             Background="{DynamicResource CanvasBrush}">
     <UserControl.Resources>
         <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
     </UserControl.Resources>
@@ -29,7 +29,7 @@
                 <StackPanel Spacing="14">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="icon-chip income" AutomationProperties.AccessibilityView="Raw">
-                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconIncomes}" Foreground="{StaticResource IncomeBrush}" />
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconIncomes}" Foreground="{DynamicResource IncomeBrush}" />
                         </Border>
                         <TextBlock Text="{x:Static resources:Strings.IncomeFormTitle}" Classes="card-title" VerticalAlignment="Center" />
                     </StackPanel>
@@ -41,7 +41,7 @@
                         <ComboBox AutomationProperties.Name="{x:Static resources:Strings.IncomeCurrencyPlaceholder}" Grid.Row="1" Grid.Column="2" Margin="0,0,0,12" VerticalAlignment="Top" HorizontalAlignment="Stretch" ItemsSource="{x:Static converters:EnumValues.Currencies}" SelectedItem="{Binding Currency}" PlaceholderText="{x:Static resources:Strings.IncomeCurrencyPlaceholder}" />
                         <controls:LocalizedDatePicker AutomationProperties.Name="{x:Static resources:Strings.A11yDate}" Grid.Row="2" Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" SelectedDate="{Binding Date, Converter={StaticResource DateOnlyConverter}}" />
                         <TextBox AutomationProperties.Name="{x:Static resources:Strings.IncomeNotePlaceholder}" Grid.Row="2" Grid.Column="1" Margin="0,0,0,0" Grid.ColumnSpan="2" VerticalAlignment="Top" Text="{Binding Note}" Watermark="{x:Static resources:Strings.IncomeNotePlaceholder}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="40" MaxHeight="96" />
-                        <TextBlock AutomationProperties.LiveSetting="Polite" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+                        <TextBlock AutomationProperties.LiveSetting="Polite" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding FormError}" Foreground="{DynamicResource ExpenseBrush}" TextWrapping="Wrap" />
                         <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="10" Margin="0,16,0,0">
                             <Button Content="{x:Static resources:Strings.IncomeRegisterButton}" Command="{Binding RegisterIncomeCommand}" IsDefault="{Binding !IsEditMode}" Classes="ledger-btn-primary" />
                             <Button Content="{x:Static resources:Strings.IncomeUpdateButton}" Command="{Binding UpdateIncomeCommand}" IsDefault="{Binding IsEditMode}" IsVisible="{Binding IsEditMode}" Classes="ledger-btn-primary" />
@@ -50,7 +50,7 @@
                     </Grid>
                 </StackPanel>
             </Border>
-            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{DynamicResource IncomeBrush}" TextWrapping="Wrap" />
 
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.IncomeListTitle}" Classes="card-title" FontSize="20" VerticalAlignment="Center" />
@@ -67,7 +67,7 @@
             <!-- A filter that is applied while the panel is closed stays visible: what is narrowing the list, and how to undo it. -->
             <Border Classes="notice info" IsVisible="{Binding IsFilterSummaryVisible}">
                 <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.FiltersActiveSummary}" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="0" Text="{x:Static resources:Strings.FiltersActiveSummary}" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
                     <Button Grid.Column="1" Content="{x:Static resources:Strings.ClearFilterButton}" Command="{Binding ClearFilterCommand}" Classes="ledger-btn ghost" />
                 </Grid>
             </Border>
@@ -99,7 +99,7 @@
                             <controls:LocalizedDatePicker AutomationProperties.Name="{x:Static resources:Strings.FilterDateToLabel}" Classes="ledger-input" HorizontalAlignment="Stretch" SelectedDate="{Binding FilterDateTo, Converter={StaticResource DateOnlyConverter}}" />
                         </StackPanel>
                     </WrapPanel>
-                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FilterError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" IsVisible="{Binding FilterError, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FilterError}" Foreground="{DynamicResource ExpenseBrush}" TextWrapping="Wrap" IsVisible="{Binding FilterError, Converter={x:Static avaloniaConverters:ObjectConverters.IsNotNull}}" />
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Button Content="{x:Static resources:Strings.ApplyFilterButton}" Command="{Binding ApplyFilterCommand}" Classes="ledger-btn-primary" />
                         <Button Content="{x:Static resources:Strings.ClearFilterButton}" Command="{Binding ClearFilterCommand}" Classes="ledger-btn" />

@@ -783,7 +783,8 @@ public sealed class DashboardViewModelTests
         FakeAnomalyAlertRepository? alertRepo = null,
         FakeLlmClientFactory? llmFactory = null,
         ExportFixtures? export = null,
-        FakeNavigationService? navigation = null)
+        FakeNavigationService? navigation = null,
+        ControlDeFinanzasIA.UI.Services.IThemeService? themeService = null)
     {
         converter ??= new FakeCurrencyConverter();
         export ??= ExportFixtures.Create(expenseRepo, incomeRepo, converter);
@@ -823,7 +824,8 @@ public sealed class DashboardViewModelTests
             export.UseCase,
             export.Dialog,
             new GetMonthExpensesQuery(expenseRepo, categoryRepo, converter),
-            navigation ?? new FakeNavigationService());
+            navigation ?? new FakeNavigationService(),
+            themeService);
     }
 
     private static Expense CreateExpense(DateOnly date, decimal amount, Currency currency = Currency.DOP)

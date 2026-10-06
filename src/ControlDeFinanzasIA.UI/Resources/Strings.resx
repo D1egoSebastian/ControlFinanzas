@@ -547,8 +547,8 @@ Showing approximate conversions only.
   <data name="SettingsThemeLight" xml:space="preserve">
     <value>Light</value>
   </data>
-  <data name="SettingsThemeLightNotice" xml:space="preserve">
-    <value>The app has a single light look in this version. Your choice is saved for a future release.</value>
+  <data name="SettingsThemeNotice" xml:space="preserve">
+    <value>The theme changes as soon as you pick it and is saved automatically. No restart needed.</value>
   </data>
   <data name="SettingsLanguageTitle" xml:space="preserve">
     <value>Language</value>

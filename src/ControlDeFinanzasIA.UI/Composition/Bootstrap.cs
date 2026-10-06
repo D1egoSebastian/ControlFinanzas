@@ -268,6 +268,9 @@ public static class Bootstrap
         // Fase 15: navegación + portapapeles (F-015, slice S4).
         services.AddSingleton<IClipboardService, AvaloniaClipboardService>();
 
+        // Modo oscuro: aplica el tema guardado al arrancar y en vivo desde Ajustes.
+        services.AddSingleton<IThemeService, AvaloniaThemeService>();
+
         // Fase 16: plan de ahorro con IA para metas (F-016, slice S2).
         services.AddTransient<GenerateSavingsPlanUseCase>();
 

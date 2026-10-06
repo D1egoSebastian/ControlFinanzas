@@ -84,7 +84,10 @@ public partial class App : Avalonia.Application
         // never crashes startup; a restore itself never goes through ApplyMigrations.
         Bootstrap.ApplyMigrationsAndCompletePendingRestore(Services, logger);
 
-        ApplyPersistedUiCulture(Services, logger);
+        AppSettings persisted = ApplyPersistedUiCulture(Services, logger);
+
+        // Dark mode: the persisted theme is applied BEFORE the window exists, so it never opens in the wrong variant.
+        ApplyStartupTheme(Services.GetRequiredService<IThemeService>(), persisted, logger);
 
         ShellViewModel shellViewModel = Services.GetRequiredService<ShellViewModel>();
         INavigationService navigationService = Services.GetRequiredService<INavigationService>();
@@ -155,7 +158,7 @@ public partial class App : Avalonia.Application
     /// escaping that synchronization context before the blocking wait.
     /// </para>
     /// </remarks>
-    private static void ApplyPersistedUiCulture(IServiceProvider services, ILogger logger)
+    private static AppSettings ApplyPersistedUiCulture(IServiceProvider services, ILogger logger)
     {
         AppSettings settings = AppSettings.Defaults;
 
@@ -188,6 +191,29 @@ public partial class App : Avalonia.Application
         CultureInfo regional = Formatting.UiCulture.WithUiCalendarNames(CultureInfo.CurrentCulture, culture);
         CultureInfo.DefaultThreadCurrentCulture = regional;
         CultureInfo.CurrentCulture = regional;
+        return settings;
+    }
+
+    /// <summary>
+    /// Applies the persisted theme preference through <see cref="IThemeService"/>. Extracted so it is testable without a
+    /// desktop lifetime; it never throws (a failing theme service must not stop the app from starting).
+    /// </summary>
+    /// <param name="themeService">The theme service.</param>
+    /// <param name="settings">The persisted settings (or the defaults when they could not be read).</param>
+    /// <param name="logger">Optional logger for the failure case.</param>
+    internal static void ApplyStartupTheme(IThemeService themeService, AppSettings settings, ILogger? logger = null)
+    {
+        ArgumentNullException.ThrowIfNull(themeService);
+        ArgumentNullException.ThrowIfNull(settings);
+
+        try
+        {
+            themeService.Apply(settings.Theme);
+        }
+        catch (Exception ex)
+        {
+            logger?.LogWarning(ex, "The persisted theme could not be applied; the default look stays.");
+        }
     }
 
     /// <summary>

@@ -8,7 +8,7 @@
              x:Class="ControlDeFinanzasIA.UI.Views.DebtsView"
              x:DataType="vm:DebtsViewModel"
              x:Name="Root"
-             Background="{StaticResource CanvasBrush}">
+             Background="{DynamicResource CanvasBrush}">
     <UserControl.Resources>
         <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
     </UserControl.Resources>
@@ -25,7 +25,7 @@
                 <StackPanel Spacing="14">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="icon-chip expense" AutomationProperties.AccessibilityView="Raw">
-                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconDebts}" Foreground="{StaticResource ExpenseBrush}" />
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconDebts}" Foreground="{DynamicResource ExpenseBrush}" />
                         </Border>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="{x:Static resources:Strings.DebtsNewTitle}" Classes="card-title" />
@@ -76,13 +76,13 @@
                             <TextBox AutomationProperties.Name="{x:Static resources:Strings.DebtsNotePlaceholder}" Text="{Binding Note}" Watermark="{x:Static resources:Strings.DebtsNotePlaceholder}" Classes="ledger-input" />
                         </StackPanel>
                     </WrapPanel>
-                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{DynamicResource ExpenseBrush}" TextWrapping="Wrap" />
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Button Content="{x:Static resources:Strings.DebtsCreateButton}" Command="{Binding CreateCommand}" IsDefault="True" Classes="ledger-btn-primary" />
                     </StackPanel>
                 </StackPanel>
             </Border>
-            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{DynamicResource IncomeBrush}" TextWrapping="Wrap" />
 
             <!-- Debts: picking one shows its installment schedule right below. -->
             <TextBlock Text="{x:Static resources:Strings.DebtsListTitle}" Classes="card-title" FontSize="20" />
@@ -132,10 +132,10 @@
                     <Grid ColumnDefinitions="*,Auto">
                         <TextBlock Text="{x:Static resources:Strings.DebtsScheduleTitle}" Classes="card-title" VerticalAlignment="Center" />
                         <Border Grid.Column="1" Classes="chip" IsVisible="{Binding !!Schedule.Count}">
-                            <TextBlock Text="{Binding PendingBalance, StringFormat={x:Static resources:Strings.DebtsPendingBalanceFormat}}" Classes="chip-text" Foreground="{StaticResource AccentBrush}" />
+                            <TextBlock Text="{Binding PendingBalance, StringFormat={x:Static resources:Strings.DebtsPendingBalanceFormat}}" Classes="chip-text" Foreground="{DynamicResource AccentBrush}" />
                         </Border>
                     </Grid>
-                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding ScheduleError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding ScheduleError}" Foreground="{DynamicResource ExpenseBrush}" TextWrapping="Wrap" />
                     <ItemsControl ItemsSource="{Binding Schedule}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="domain:DebtPayment">

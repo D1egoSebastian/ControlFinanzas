@@ -1,7 +1,6 @@
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
-using Avalonia.Styling;
 using ControlDeFinanzasIA.Domain.Budgets;
 
 namespace ControlDeFinanzasIA.UI.Converters;
@@ -29,14 +28,7 @@ public sealed class BudgetStatusBrushConverter : IValueConverter
             _ => "IncomeBrush",
         };
 
-        if (Avalonia.Application.Current is { } app
-            && app.TryGetResource(resourceKey, ThemeVariant.Default, out object? resource)
-            && resource is IBrush brush)
-        {
-            return brush;
-        }
-
-        return Brushes.Transparent;
+        return ThemeBrushLookup.Find(resourceKey) ?? Brushes.Transparent;
     }
 
     /// <inheritdoc />

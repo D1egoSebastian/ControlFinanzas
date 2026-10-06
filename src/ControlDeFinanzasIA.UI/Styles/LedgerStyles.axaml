@@ -23,8 +23,8 @@
 
     <!-- ===== Buttons ===== -->
     <Style Selector="Button.ledger-btn">
-        <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="2" />
         <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
@@ -37,49 +37,49 @@
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Cursor" Value="Hand" />
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="CornerRadius" Value="{StaticResource RadiusPill}" />
         </Style>
         <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource DividerBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         </Style>
         <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource PressedWashBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource PressedWashBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         </Style>
         <Style Selector="^:disabled">
             <Setter Property="Opacity" Value="0.5" />
         </Style>
         <Style Selector="^:disabled /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         </Style>
     </Style>
 
     <!-- Ghost: no fill at rest, a soft wash on hover. Used for row actions and secondary navigation. -->
     <Style Selector="Button.ledger-btn.ghost">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         <Setter Property="Padding" Value="10,4" />
         <Setter Property="MinHeight" Value="32" />
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         </Style>
         <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         </Style>
         <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource DividerBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         </Style>
         <Style Selector="^:disabled /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         </Style>
     </Style>
 
@@ -93,8 +93,8 @@
 
     <!-- Primary: the one confident action. -->
     <Style Selector="Button.ledger-btn-primary">
-        <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="2" />
         <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
@@ -107,32 +107,32 @@
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Cursor" Value="Hand" />
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="CornerRadius" Value="{StaticResource RadiusPill}" />
         </Style>
         <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentHoverBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
         </Style>
         <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentPressedBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentPressedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
         </Style>
         <Style Selector="^:disabled">
             <Setter Property="Opacity" Value="0.5" />
         </Style>
         <Style Selector="^:disabled /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
         </Style>
     </Style>
 
     <!-- Danger / delete: rose text, rose wash on hover. -->
     <Style Selector="Button.ledger-btn-danger">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ExpenseBrush}" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="2" />
         <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
@@ -146,21 +146,21 @@
         <Setter Property="Cursor" Value="Hand" />
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource ExpenseBrush}" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="CornerRadius" Value="{StaticResource RadiusPill}" />
         </Style>
         <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource ExpenseSoftBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
+            <Setter Property="Background" Value="{DynamicResource ExpenseSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource ExpenseBrush}" />
         </Style>
         <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource ExpenseSoftBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
+            <Setter Property="Background" Value="{DynamicResource ExpenseSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource ExpenseBrush}" />
         </Style>
         <Style Selector="^:disabled /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource ExpenseBrush}" />
         </Style>
     </Style>
 
@@ -171,9 +171,9 @@
         <Setter Property="FontSize" Value="14" />
         <Setter Property="MinHeight" Value="40" />
         <Setter Property="Padding" Value="12,8" />
-        <Setter Property="CaretBrush" Value="{StaticResource AccentBrush}" />
-        <Setter Property="SelectionBrush" Value="{StaticResource AccentSoftBrush}" />
-        <Setter Property="SelectionForegroundBrush" Value="{StaticResource TextBrush}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource AccentSoftBrush}" />
+        <Setter Property="SelectionForegroundBrush" Value="{DynamicResource TextBrush}" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
     <Style Selector="TextBox:focus">
@@ -181,7 +181,7 @@
     </Style>
     <!-- Text inputs show the cobalt border on any focus (the caret needs it for mouse users too); the part Fluent paints. -->
     <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
-        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         <Setter Property="BorderThickness" Value="2" />
     </Style>
 
@@ -194,7 +194,7 @@
         <Setter Property="HorizontalAlignment" Value="Stretch" />
     </Style>
     <Style Selector="ComboBox:focus-visible /template/ Border#Background">
-        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         <Setter Property="BorderThickness" Value="2" />
     </Style>
     <Style Selector="ComboBoxItem">
@@ -216,7 +216,7 @@
     </Style>
     <Style Selector="DatePicker /template/ TextBlock#PART_MonthTextBlock, DatePicker /template/ TextBlock#PART_DayTextBlock, DatePicker /template/ TextBlock#PART_YearTextBlock">
         <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
     <Style Selector="NumericUpDown">
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}" />
@@ -228,21 +228,21 @@
         <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="FontWeight" Value="Medium" />
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
     </Style>
 
     <!-- ===== Cards and surfaces ===== -->
     <Style Selector="Border.card">
-        <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{StaticResource RadiusLarge}" />
         <Setter Property="Padding" Value="24" />
-        <Setter Property="BoxShadow" Value="{StaticResource ShadowCard}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource ShadowCard}" />
     </Style>
     <!-- A card with no elevation, for panels nested in a card or in a list. -->
     <Style Selector="Border.card-flat">
-        <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}" />
         <Setter Property="Padding" Value="16" />
     </Style>
@@ -250,40 +250,40 @@
     <!-- A list row inside a card: a hairline below, a soft wash on hover. -->
     <Style Selector="Border.ledger-row">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
         <Setter Property="BorderThickness" Value="0,0,0,1" />
         <Setter Property="CornerRadius" Value="0" />
         <Setter Property="MinHeight" Value="52" />
     </Style>
     <Style Selector="Border.ledger-row:pointerover">
-        <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
     </Style>
 
     <!-- A list row that is its own rounded card (expense / income / debt lists). -->
     <Style Selector="Border.row-card">
-        <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}" />
         <Setter Property="Padding" Value="16,12" />
         <Setter Property="Margin" Value="0,0,0,8" />
     </Style>
     <Style Selector="Border.row-card:pointerover">
-        <Setter Property="BoxShadow" Value="{StaticResource ShadowCard}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource ShadowCard}" />
     </Style>
 
     <Style Selector="ListBoxItem.ledger-row">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
         <Setter Property="BorderThickness" Value="0,0,0,1" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="MinHeight" Value="48" />
     </Style>
     <Style Selector="ListBoxItem.ledger-row:pointerover">
-        <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
     </Style>
     <Style Selector="ListBoxItem.ledger-row:selected">
-        <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
     </Style>
 
     <!-- A round-cornered tile that holds a decorative icon (summary cards, section headers). -->
@@ -291,16 +291,16 @@
         <Setter Property="Width" Value="40" />
         <Setter Property="Height" Value="40" />
         <Setter Property="CornerRadius" Value="12" />
-        <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
     </Style>
     <Style Selector="Border.icon-chip.income">
-        <Setter Property="Background" Value="{StaticResource IncomeSoftBrush}" />
+        <Setter Property="Background" Value="{DynamicResource IncomeSoftBrush}" />
     </Style>
     <Style Selector="Border.icon-chip.expense">
-        <Setter Property="Background" Value="{StaticResource ExpenseSoftBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ExpenseSoftBrush}" />
     </Style>
     <Style Selector="Border.icon-chip.neutral">
-        <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
     </Style>
 
     <!-- The coloured dot of a chart legend entry. -->
@@ -312,7 +312,7 @@
 
     <!-- A quiet pill that carries a short fact (a delta, a count). -->
     <Style Selector="Border.stat-pill">
-        <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
         <Setter Property="CornerRadius" Value="{StaticResource RadiusPill}" />
         <Setter Property="Padding" Value="10,2" />
         <Setter Property="HorizontalAlignment" Value="Left" />
@@ -320,31 +320,31 @@
 
     <!-- Pills / chips -->
     <Style Selector="Border.chip">
-        <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
         <Setter Property="CornerRadius" Value="{StaticResource RadiusPill}" />
         <Setter Property="Padding" Value="10,3" />
     </Style>
     <Style Selector="Border.chip.income">
-        <Setter Property="Background" Value="{StaticResource IncomeSoftBrush}" />
+        <Setter Property="Background" Value="{DynamicResource IncomeSoftBrush}" />
     </Style>
     <Style Selector="Border.chip.expense">
-        <Setter Property="Background" Value="{StaticResource ExpenseSoftBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ExpenseSoftBrush}" />
     </Style>
     <Style Selector="Border.chip.warning">
-        <Setter Property="Background" Value="{StaticResource WarningSoftBrush}" />
+        <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}" />
     </Style>
 
     <!-- Inline notices (a rounded wash with a short message). -->
     <Style Selector="Border.notice">
-        <Setter Property="Background" Value="{StaticResource WarningSoftBrush}" />
+        <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}" />
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}" />
         <Setter Property="Padding" Value="14,10" />
     </Style>
     <Style Selector="Border.notice.info">
-        <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
     </Style>
     <Style Selector="Border.notice.error">
-        <Setter Property="Background" Value="{StaticResource ExpenseSoftBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ExpenseSoftBrush}" />
     </Style>
 
     <!-- ===== Typography ===== -->
@@ -352,44 +352,44 @@
         <Setter Property="FontFamily" Value="{StaticResource FontDisplay}" />
         <Setter Property="FontSize" Value="28" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
     <Style Selector="TextBlock.page-subtitle">
         <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
         <Setter Property="FontSize" Value="14" />
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
     <Style Selector="TextBlock.card-title">
         <Setter Property="FontFamily" Value="{StaticResource FontDisplay}" />
         <Setter Property="FontSize" Value="17" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
     <Style Selector="TextBlock.caption">
         <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
         <Setter Property="FontSize" Value="12" />
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
     <Style Selector="TextBlock.muted">
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
     </Style>
     <Style Selector="TextBlock.secondary">
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
     </Style>
     <Style Selector="TextBlock.strong">
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
     <Style Selector="TextBlock.positive">
-        <Setter Property="Foreground" Value="{StaticResource IncomeBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource IncomeBrush}" />
     </Style>
     <Style Selector="TextBlock.negative">
-        <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ExpenseBrush}" />
     </Style>
     <Style Selector="TextBlock.caution">
-        <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
     </Style>
     <!-- Big figure on a summary card. -->
     <Style Selector="TextBlock.metric">
@@ -397,13 +397,13 @@
         <Setter Property="FontSize" Value="30" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="FontFeatures" Value="+tnum" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
     <Style Selector="TextBlock.metric.income">
-        <Setter Property="Foreground" Value="{StaticResource IncomeBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource IncomeBrush}" />
     </Style>
     <Style Selector="TextBlock.metric.expense">
-        <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ExpenseBrush}" />
     </Style>
 
     <!-- Quiet label above a figure or at the top of a block (the old "section header in the rail"). -->
@@ -411,7 +411,7 @@
         <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
     </Style>
 
     <!-- Tabular amounts, right-aligned, semantic colour. -->
@@ -421,13 +421,13 @@
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="FontFeatures" Value="+tnum" />
         <Setter Property="HorizontalAlignment" Value="Right" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
     <Style Selector="TextBlock.ledger-amount.income">
-        <Setter Property="Foreground" Value="{StaticResource IncomeBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource IncomeBrush}" />
     </Style>
     <Style Selector="TextBlock.ledger-amount.expense">
-        <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ExpenseBrush}" />
     </Style>
 
     <!-- Page title (kept under its historical name). -->
@@ -435,32 +435,32 @@
         <Setter Property="FontFamily" Value="{StaticResource FontDisplay}" />
         <Setter Property="FontSize" Value="28" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
 
     <!-- Status message -->
     <Style Selector="TextBlock.ledger-status">
         <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
         <Setter Property="FontSize" Value="13" />
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
     <!-- Failed-operation variant of the status message (F-018 export errors) -->
     <Style Selector="TextBlock.ledger-status.export-error">
-        <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ExpenseBrush}" />
     </Style>
 
     <!-- A thin rule inside a card. -->
     <Style Selector="Border.divider">
-        <Setter Property="Background" Value="{StaticResource DividerBrush}" />
+        <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
         <Setter Property="Height" Value="1" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
     </Style>
 
     <!-- ===== Budget progress bars: slim rounded tracks, colour-coded by BudgetStatus ===== -->
     <Style Selector="ProgressBar.budget-progress">
-        <Setter Property="Foreground" Value="{StaticResource IncomeBrush}" />
-        <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource IncomeBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
         <Setter Property="MinHeight" Value="8" />
         <Setter Property="Height" Value="8" />
         <Setter Property="CornerRadius" Value="4" />
@@ -469,10 +469,10 @@
         </Style>
     </Style>
     <Style Selector="ProgressBar.budget-progress.near">
-        <Setter Property="Foreground" Value="{StaticResource WarningFillBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource WarningFillBrush}" />
     </Style>
     <Style Selector="ProgressBar.budget-progress.exceeded">
-        <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ExpenseBrush}" />
     </Style>
 
     <!-- A selectable list inside a card (the debt picker): rounded rows, no outer frame, 2 px focus ring. -->
@@ -488,22 +488,22 @@
         <Setter Property="BorderThickness" Value="0" />
     </Style>
     <Style Selector="ListBox.pick-list ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
     <Style Selector="ListBox.pick-list ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
     <Style Selector="ListBox.pick-list ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
 
     <!-- Goal progress: cobalt while saving, income green once the target is met. Same slim rounded track as the budgets. -->
     <Style Selector="ProgressBar.goal-progress">
-        <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
-        <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
         <Setter Property="MinHeight" Value="10" />
         <Setter Property="Height" Value="10" />
         <Setter Property="CornerRadius" Value="5" />
@@ -512,7 +512,7 @@
         </Style>
     </Style>
     <Style Selector="ProgressBar.goal-progress.met">
-        <Setter Property="Foreground" Value="{StaticResource IncomeBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource IncomeBrush}" />
     </Style>
 
     <!-- The text of a status chip (Border.chip carries the fill; the colour is set by the view from the status). -->
@@ -532,54 +532,54 @@
         <Setter Property="FontSize" Value="11" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="FontFeatures" Value="+tnum" />
-        <Setter Property="Foreground" Value="{StaticResource ExpenseBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ExpenseBrush}" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     </Style>
     <Style Selector="TextBlock.calendar-weekday">
         <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         <Setter Property="HorizontalAlignment" Value="Center" />
     </Style>
 
     <!-- ===== Calendar day cell (a Button per grid cell), dimmed for adjacent-month filler ===== -->
     <Style Selector="Button.calendar-day">
-        <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}" />
         <Setter Property="MinHeight" Value="64" />
         <Setter Property="Cursor" Value="Hand" />
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
             <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         </Style>
         <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         </Style>
         <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         </Style>
     </Style>
     <Style Selector="Button.calendar-day.adjacent">
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource CanvasBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+            <Setter Property="Background" Value="{DynamicResource CanvasBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
         </Style>
     </Style>
     <Style Selector="Button.calendar-day.today">
-        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         <Setter Property="BorderThickness" Value="2" />
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
         </Style>
     </Style>
 
@@ -589,24 +589,24 @@
         Cobalt on neutral controls; near-ink on the cobalt primary fill, where a cobalt ring would vanish.
     -->
     <Style Selector="Button.ledger-btn:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
     </Style>
     <Style Selector="Button.ledger-btn-primary:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="BorderBrush" Value="{StaticResource FocusRingBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource FocusRingBrush}" />
     </Style>
     <Style Selector="Button.ledger-btn-danger:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
     </Style>
     <Style Selector="Button.calendar-day:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         <Setter Property="BorderThickness" Value="2" />
     </Style>
     <Style Selector="ListBoxItem:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         <Setter Property="BorderThickness" Value="2" />
     </Style>
     <Style Selector="CheckBox:focus-visible /template/ Border#NormalRectangle">
-        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         <Setter Property="BorderThickness" Value="2" />
     </Style>
 
@@ -615,8 +615,8 @@
         while a filter is applied (class "active"), so a collapsed panel with a live filter never looks idle.
     -->
     <Style Selector="ToggleButton.filter-toggle">
-        <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="2" />
         <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
@@ -629,29 +629,29 @@
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Cursor" Value="Hand" />
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="CornerRadius" Value="{StaticResource RadiusPill}" />
         </Style>
         <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource DividerBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         </Style>
         <Style Selector="^:checked /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
         </Style>
         <Style Selector="^.active /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
         </Style>
         <Style Selector="^:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
         </Style>
         <Style Selector="^:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         </Style>
     </Style>
 
@@ -661,30 +661,30 @@
         <Setter Property="Height" Value="40" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="BorderThickness" Value="2" />
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
             <Setter Property="CornerRadius" Value="{StaticResource RadiusPill}" />
         </Style>
         <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         </Style>
         <Style Selector="^:checked /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
         </Style>
         <Style Selector="^:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
         </Style>
         <Style Selector="^:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         </Style>
     </Style>
 
@@ -701,7 +701,7 @@
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="Medium" />
@@ -712,37 +712,37 @@
             <Setter Property="BorderThickness" Value="2" />
             <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}" />
             <Setter Property="Padding" Value="10,0,12,0" />
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         </Style>
         <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource SurfaceMutedBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         </Style>
         <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource DividerBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         </Style>
         <Style Selector="^.current">
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
         <Style Selector="^.current /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
         </Style>
         <Style Selector="^:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         </Style>
     </Style>
     <Style Selector="TextBlock.sidebar-hint">
         <Setter Property="FontFamily" Value="{StaticResource FontBody}" />
         <Setter Property="FontSize" Value="11" />
         <Setter Property="FontWeight" Value="Normal" />
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Margin" Value="8,0,0,0" />
     </Style>
     <Style Selector="Button.sidebar-item.current TextBlock.sidebar-hint">
-        <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
     </Style>
 
     <!--

@@ -29,11 +29,12 @@ namespace ControlDeFinanzasIA.UI.ViewModels;
 /// Acerca de has no save command; it only displays <see cref="AppVersion"/>.
 /// </summary>
 /// <remarks>
-/// Deliberately free of any Avalonia-specific type (D-8): the theme
-/// picker only persists a preference via <see cref="UpdateThemeUseCase"/>
-/// and never touches <c>Avalonia.Application.Current.RequestedThemeVariant</c>.
-/// This keeps the view-model constructible and testable outside an
-/// Avalonia headless harness.
+/// Deliberately free of any Avalonia-specific type (D-8): choosing a theme
+/// in the picker applies it through <see cref="IThemeService"/> (the UI
+/// service that owns <c>RequestedThemeVariant</c>) and persists it via
+/// <see cref="UpdateThemeUseCase"/>; the view-model never touches the
+/// Avalonia application itself, so it stays constructible and testable
+/// outside an Avalonia headless harness.
 /// </remarks>
 public sealed partial class SettingsViewModel : ViewModelBase, IBusyAware
 {
@@ -46,6 +47,8 @@ public sealed partial class SettingsViewModel : ViewModelBase, IBusyAware
     private readonly UpdateNotificationSettingsUseCase _updateNotificationSettingsUseCase;
     private readonly INotificationCenter _notificationCenter;
     private readonly ILogger<SettingsViewModel> _logger;
+    private readonly IThemeService? _themeService;
+    private bool _isHydratingTheme;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SettingsViewModel"/>
@@ -63,7 +66,8 @@ public sealed partial class SettingsViewModel : ViewModelBase, IBusyAware
         UpdateNotificationSettingsUseCase updateNotificationSettingsUseCase,
         INotificationCenter notificationCenter,
         ILogger<SettingsViewModel> logger,
-        BackupSettingsViewModel? backup = null)
+        BackupSettingsViewModel? backup = null,
+        IThemeService? themeService = null)
     {
         ArgumentNullException.ThrowIfNull(getAppSettingsQuery);
         ArgumentNullException.ThrowIfNull(updateThemeUseCase);
@@ -85,6 +89,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IBusyAware
         _notificationCenter = notificationCenter;
         _logger = logger;
         Backup = backup;
+        _themeService = themeService;
 
         Themes = Enum.GetValues<AppTheme>();
         AiProviders = Enum.GetValues<AiProvider>();
@@ -114,6 +119,21 @@ public sealed partial class SettingsViewModel : ViewModelBase, IBusyAware
     /// <summary>Gets or sets the theme preference selected in the picker.</summary>
     [ObservableProperty]
     private AppTheme _theme = AppSettings.DefaultTheme;
+
+    /// <summary>
+    /// A user's choice in the picker takes effect AT ONCE: the theme is applied to the running application and then saved.
+    /// Loading the stored value into the picker (<see cref="LoadAsync"/>) goes through the same setter but does neither.
+    /// </summary>
+    /// <param name="value">The newly selected theme.</param>
+    partial void OnThemeChanged(AppTheme value)
+    {
+        if (_isHydratingTheme)
+        {
+            return;
+        }
+
+        _ = ApplyAndSaveThemeAsync(value);
+    }
 
     // --- Idioma ---
 
@@ -324,8 +344,8 @@ public sealed partial class SettingsViewModel : ViewModelBase, IBusyAware
 
     /// <summary>
     /// Persists <see cref="Theme"/> via <see cref="UpdateThemeUseCase"/>
-    /// (R-3). Never touches <see cref="IsRestartRequired"/> or any
-    /// Avalonia theme-application API (D-8).
+    /// (R-3). Never touches <see cref="IsRestartRequired"/>: a theme change
+    /// needs no restart (<see cref="OnThemeChanged"/> applies it live).
     /// </summary>
     [RelayCommand]
     private async Task SaveThemeAsync()
@@ -341,6 +361,24 @@ public sealed partial class SettingsViewModel : ViewModelBase, IBusyAware
         }
 
         StatusMessage = Strings.SettingsSavedMessage;
+    }
+
+    /// <summary>
+    /// Applies <paramref name="theme"/> to the running application first (so the switch is instant), then saves it. A failed
+    /// save leaves the choice applied for this session and shows the error, like every other Settings section.
+    /// </summary>
+    private async Task ApplyAndSaveThemeAsync(AppTheme theme)
+    {
+        try
+        {
+            _themeService?.Apply(theme);
+            await SaveThemeAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unable to apply or save the theme {Theme}.", theme);
+            FormError = Strings.SettingsErrorMessage;
+        }
     }
 
     /// <summary>
@@ -501,7 +539,16 @@ public sealed partial class SettingsViewModel : ViewModelBase, IBusyAware
             }
 
             var settings = (AppSettings)result.Value!;
-            Theme = settings.Theme;
+            _isHydratingTheme = true;
+            try
+            {
+                Theme = settings.Theme;
+            }
+            finally
+            {
+                _isHydratingTheme = false;
+            }
+
             Locale = settings.Locale;
             AiProvider = settings.AiProvider;
             AiApiKey = settings.AiApiKey;

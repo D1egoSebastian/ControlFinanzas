@@ -1,7 +1,6 @@
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
-using Avalonia.Styling;
 using ControlDeFinanzasIA.Domain.Debts;
 
 namespace ControlDeFinanzasIA.UI.Converters;
@@ -9,7 +8,7 @@ namespace ControlDeFinanzasIA.UI.Converters;
 /// <summary>
 /// Maps a debt or installment status to the colours of its status chip: paid and closed read as income green, skipped
 /// as amber, an active debt as cobalt and a pending installment as a quiet neutral. The converter parameter picks the
-/// fill (<c>bg</c>) or the text (<c>fg</c>). Every colour is a token that ContrastTests already measure as a pair.
+/// fill (<c>bg</c>) or the text (<c>fg</c>). Every colour is a token (looked up in the active theme variant) that ContrastTests already measure as a pair, in both variants.
 /// </summary>
 public sealed class StatusToneConverter : IValueConverter
 {
@@ -33,14 +32,7 @@ public sealed class StatusToneConverter : IValueConverter
         (string background, string foreground) = ToneKeys(value);
         string key = string.Equals(parameter as string, "bg", StringComparison.Ordinal) ? background : foreground;
 
-        if (Avalonia.Application.Current is { } app
-            && app.TryGetResource(key, ThemeVariant.Default, out object? resource)
-            && resource is IBrush brush)
-        {
-            return brush;
-        }
-
-        return Brushes.Transparent;
+        return ThemeBrushLookup.Find(key) ?? Brushes.Transparent;
     }
 
     /// <inheritdoc />

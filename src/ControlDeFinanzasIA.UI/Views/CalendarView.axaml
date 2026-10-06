@@ -5,7 +5,7 @@
              xmlns:resources="using:ControlDeFinanzasIA.UI.Resources"
              x:Class="ControlDeFinanzasIA.UI.Views.CalendarView"
              x:DataType="vm:CalendarViewModel"
-             Background="{StaticResource CanvasBrush}">
+             Background="{DynamicResource CanvasBrush}">
     <ScrollViewer>
         <StackPanel Margin="32,4,32,32" Spacing="20">
             <!-- Page header -->
@@ -14,12 +14,12 @@
                 <TextBlock Text="{x:Static resources:Strings.CalendarSubtitle}" Classes="page-subtitle" />
             </StackPanel>
 
-            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding LoadError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding LoadError}" Foreground="{DynamicResource ExpenseBrush}" TextWrapping="Wrap" />
 
             <!-- "Tasa no disponible" notice, same pattern as Dashboard (R-7) -->
             <Border Classes="notice info" IsVisible="{Binding HasMissingRates}">
                 <TextBlock Text="{x:Static resources:Strings.DashboardMissingRatesNotice}"
-                           Foreground="{StaticResource AccentBrush}"
+                           Foreground="{DynamicResource AccentBrush}"
                            TextWrapping="Wrap" />
             </Border>
 

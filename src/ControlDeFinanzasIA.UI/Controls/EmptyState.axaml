@@ -8,7 +8,7 @@
         headline, a quiet hint and a single primary action that teaches its shortcut. Tokens only. The glyph is
         decorative and hidden from assistive technology.
     -->
-    <Border Background="{StaticResource SurfaceMutedBrush}"
+    <Border Background="{DynamicResource SurfaceMutedBrush}"
             CornerRadius="{StaticResource RadiusLarge}"
             Padding="24,32">
         <StackPanel MaxWidth="440"
@@ -18,9 +18,9 @@
                     Height="56"
                     CornerRadius="28"
                     HorizontalAlignment="Center"
-                    Background="{StaticResource AccentSoftBrush}"
+                    Background="{DynamicResource AccentSoftBrush}"
                     AutomationProperties.AccessibilityView="Raw">
-                <local:Icon Size="26" Thickness="2" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBrand}" Foreground="{StaticResource AccentBrush}" />
+                <local:Icon Size="26" Thickness="2" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBrand}" Foreground="{DynamicResource AccentBrush}" />
             </Border>
 
             <TextBlock Text="{Binding #Root.Title}"
@@ -46,13 +46,13 @@
                     IsVisible="{Binding #Root.ActionText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <TextBlock Text="{Binding #Root.ActionText}" VerticalAlignment="Center" />
-                    <Border Background="{StaticResource OnAccentWashBrush}"
+                    <Border Background="{DynamicResource OnAccentWashBrush}"
                             CornerRadius="{StaticResource RadiusSmall}"
                             Padding="6,1"
                             IsVisible="{Binding #Root.ShortcutText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                         <TextBlock Text="{Binding #Root.ShortcutText}"
                                    FontSize="11"
-                                   Foreground="{StaticResource OnAccentBrush}"
+                                   Foreground="{DynamicResource OnAccentBrush}"
                                    VerticalAlignment="Center" />
                     </Border>
                 </StackPanel>

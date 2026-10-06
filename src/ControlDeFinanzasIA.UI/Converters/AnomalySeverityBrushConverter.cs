@@ -2,7 +2,6 @@ using System.Globalization;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
-using Avalonia.Styling;
 using ControlDeFinanzasIA.Domain.Alerts;
 
 namespace ControlDeFinanzasIA.UI.Converters;
@@ -31,10 +30,7 @@ public sealed class AnomalySeverityBrushConverter : IValueConverter
             _ => null!,
         };
 
-        if (resourceKey is not null
-            && Avalonia.Application.Current is { } app
-            && app.TryGetResource(resourceKey, ThemeVariant.Default, out object? resource)
-            && resource is IBrush brush)
+        if (resourceKey is not null && ThemeBrushLookup.Find(resourceKey) is { } brush)
         {
             return brush;
         }

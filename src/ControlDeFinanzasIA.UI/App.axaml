@@ -4,7 +4,7 @@
              xmlns:views="using:ControlDeFinanzasIA.UI.Views"
              x:Class="ControlDeFinanzasIA.UI.App"
              RequestedThemeVariant="Light">
-             <!-- Light is the single supported theme of the "Sand and Cobalt" design (pre-1.0 slice E); the Settings picker is honest about it. -->
+             <!-- Light is only the starting variant: the startup code applies the persisted preference (Light or Dark) before the window opens, and the Settings picker changes it live through IThemeService. -->
 
     <Application.Resources>
         <ResourceDictionary>

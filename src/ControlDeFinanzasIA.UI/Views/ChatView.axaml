@@ -7,20 +7,20 @@
              x:Class="ControlDeFinanzasIA.UI.Views.ChatView"
              x:DataType="vm:ChatViewModel"
              x:Name="Root"
-             Background="{StaticResource CanvasBrush}">
+             Background="{DynamicResource CanvasBrush}">
     <UserControl.Styles>
         <!-- Message bubbles: the assistant's sit on a white card, the user's on the accent wash. -->
         <Style Selector="Border.bubble">
-            <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="16,16,16,4" />
             <Setter Property="Padding" Value="14,10" />
             <Setter Property="MaxWidth" Value="520" />
         </Style>
         <Style Selector="Border.bubble.user">
-            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AccentSoftBrush}" />
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentSoftBrush}" />
             <Setter Property="CornerRadius" Value="16,16,4,16" />
         </Style>
     </UserControl.Styles>
@@ -49,7 +49,7 @@
                     IsVisible="{Binding ShowNotConfiguredBanner}"
                     Margin="0,0,0,12">
                 <TextBlock Text="{x:Static resources:Strings.ChatAiNotConfiguredBanner}"
-                           Foreground="{StaticResource AccentBrush}"
+                           Foreground="{DynamicResource AccentBrush}"
                            TextWrapping="Wrap" />
             </Border>
 
@@ -63,7 +63,7 @@
                                    TextAlignment="Center"
                                    TextWrapping="Wrap"
                                    Margin="0,40"
-                                   Foreground="{StaticResource TextSecondaryBrush}" />
+                                   Foreground="{DynamicResource TextSecondaryBrush}" />
 
                         <ItemsControl ItemsSource="{Binding Messages}">
                             <ItemsControl.ItemTemplate>
@@ -172,7 +172,7 @@
                                 <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,6">
                                     <TextBlock Grid.Column="0"
                                                Text="{Binding Name}"
-                                               Foreground="{StaticResource TextBrush}"
+                                               Foreground="{DynamicResource TextBrush}"
                                                TextWrapping="Wrap" />
                                     <TextBlock Grid.Column="1" Text="{Binding AmountDisplay}" Classes="ledger-amount" />
                                 </Grid>
@@ -182,7 +182,7 @@
 
                     <Border Classes="notice error" IsVisible="{Binding FiguresHaveMissingRates}">
                         <TextBlock Text="{x:Static resources:Strings.ChatFiguresMissingRates}"
-                                   Foreground="{StaticResource ExpenseBrush}"
+                                   Foreground="{DynamicResource ExpenseBrush}"
                                    TextWrapping="Wrap" />
                     </Border>
                 </StackPanel>

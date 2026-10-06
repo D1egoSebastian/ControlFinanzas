@@ -8,7 +8,7 @@
              x:Class="ControlDeFinanzasIA.UI.Views.RecurringRulesView"
              x:DataType="vm:RecurringRulesViewModel"
              x:Name="Root"
-             Background="{StaticResource CanvasBrush}">
+             Background="{DynamicResource CanvasBrush}">
     <ScrollViewer>
         <StackPanel Margin="32,4,32,32" Spacing="20">
             <!-- Page header -->
@@ -22,7 +22,7 @@
                 <StackPanel Spacing="14">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="icon-chip" AutomationProperties.AccessibilityView="Raw">
-                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconRecurring}" Foreground="{StaticResource AccentBrush}" />
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconRecurring}" Foreground="{DynamicResource AccentBrush}" />
                         </Border>
                         <TextBlock Text="{x:Static resources:Strings.RecurringFormTitle}" Classes="card-title" VerticalAlignment="Center" />
                     </StackPanel>
@@ -104,10 +104,10 @@
 
                     <!-- The read-only "Next charge" line, announced when it changes. -->
                     <Border Classes="notice info">
-                        <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding NextChargeText}" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding NextChargeText}" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" TextWrapping="Wrap" />
                     </Border>
 
-                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{DynamicResource ExpenseBrush}" TextWrapping="Wrap" />
                     <WrapPanel Orientation="Horizontal">
                         <WrapPanel.Styles>
                             <Style Selector="Button">
@@ -121,7 +121,7 @@
                     </WrapPanel>
                 </StackPanel>
             </Border>
-            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{DynamicResource IncomeBrush}" TextWrapping="Wrap" />
 
             <!-- Active rules: one card, hairline rows with a hover wash, right-aligned amounts in the expense colour. -->
             <TextBlock Text="{x:Static resources:Strings.RecurringActiveTitle}" Classes="card-title" FontSize="20" />
@@ -170,7 +170,7 @@
                         <Button Content="{x:Static resources:Strings.RecurringPreviewButton}" Command="{Binding PreviewGenerationCommand}" Classes="ledger-btn" />
                         <Button Content="{x:Static resources:Strings.RecurringConfirmButton}" Command="{Binding ConfirmGenerationCommand}" Classes="ledger-btn" />
                     </StackPanel>
-                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding GenerationError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding GenerationError}" Foreground="{DynamicResource ExpenseBrush}" TextWrapping="Wrap" />
                     <ItemsControl ItemsSource="{Binding PreviewItems}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>

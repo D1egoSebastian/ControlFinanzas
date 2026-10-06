@@ -8,7 +8,7 @@
              x:Class="ControlDeFinanzasIA.UI.Views.GoalsView"
              x:DataType="vm:GoalsViewModel"
              x:Name="Root"
-             Background="{StaticResource CanvasBrush}">
+             Background="{DynamicResource CanvasBrush}">
     <UserControl.Resources>
         <converters:DateOnlyConverter x:Key="DateOnlyConverter" />
     </UserControl.Resources>
@@ -25,7 +25,7 @@
                 <StackPanel Spacing="14">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="icon-chip income" AutomationProperties.AccessibilityView="Raw">
-                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconGoals}" Foreground="{StaticResource IncomeBrush}" />
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconGoals}" Foreground="{DynamicResource IncomeBrush}" />
                         </Border>
                         <TextBlock Text="{x:Static resources:Strings.GoalsFormTitle}" Classes="card-title" VerticalAlignment="Center" />
                     </StackPanel>
@@ -62,7 +62,7 @@
                                      Classes="ledger-input" />
                         </StackPanel>
                     </WrapPanel>
-                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{DynamicResource ExpenseBrush}" TextWrapping="Wrap" />
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Button Content="{x:Static resources:Strings.GoalsCreateButton}"
                                 Command="{Binding CreateCommand}"
@@ -70,7 +70,7 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
-            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{DynamicResource IncomeBrush}" TextWrapping="Wrap" />
 
             <!-- Contribution sub-flow: inline card revealed when a goal row is selected (D-10). -->
             <Border Classes="card"
@@ -79,7 +79,7 @@
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <TextBlock Text="{x:Static resources:Strings.GoalsContributeFormTitle}" Classes="card-title" VerticalAlignment="Center" />
                         <Border Classes="chip status">
-                            <TextBlock Text="{Binding SelectedGoal.Name}" Classes="chip-text" Foreground="{StaticResource AccentBrush}" />
+                            <TextBlock Text="{Binding SelectedGoal.Name}" Classes="chip-text" Foreground="{DynamicResource AccentBrush}" />
                         </Border>
                     </StackPanel>
                     <WrapPanel Orientation="Horizontal">
@@ -117,7 +117,7 @@
                                                Classes="card-title"
                                                VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Classes="chip income status" Margin="0,0,12,0" IsVisible="{Binding ShowAlreadyMetMessage}">
-                                        <TextBlock Text="{x:Static resources:Strings.GoalsCompletedBadge}" Classes="chip-text" Foreground="{StaticResource IncomeBrush}" />
+                                        <TextBlock Text="{x:Static resources:Strings.GoalsCompletedBadge}" Classes="chip-text" Foreground="{DynamicResource IncomeBrush}" />
                                     </Border>
                                     <TextBlock Grid.Column="2"
                                                Text="{Binding PercentComplete, StringFormat={}{0:N2}%}"
@@ -144,10 +144,10 @@
 
                                 <TextBlock Text="{x:Static resources:Strings.GoalsAlreadyMetMessage}"
                                            IsVisible="{Binding ShowAlreadyMetMessage}"
-                                           Foreground="{StaticResource IncomeBrush}" />
+                                           Foreground="{DynamicResource IncomeBrush}" />
                                 <Border Classes="notice error" IsVisible="{Binding ShowPastDateWarning}">
                                     <TextBlock Text="{x:Static resources:Strings.GoalsPastDateWarning}"
-                                               Foreground="{StaticResource ExpenseBrush}"
+                                               Foreground="{DynamicResource ExpenseBrush}"
                                                TextWrapping="Wrap" />
                                 </Border>
                                 <TextBlock IsVisible="{Binding ShowPlan}"
@@ -166,12 +166,12 @@
                                         IsVisible="{Binding PlanNarration, Converter={x:Static avaloniaConverters:StringConverters.IsNotNullOrEmpty}}">
                                     <TextBlock Text="{Binding PlanNarration}"
                                                TextWrapping="Wrap"
-                                               Foreground="{StaticResource TextBrush}" />
+                                               Foreground="{DynamicResource TextBrush}" />
                                 </Border>
                                 <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding PlanNarrationStatusText}"
                                            TextWrapping="Wrap"
                                            FontStyle="Italic"
-                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
                                            IsVisible="{Binding PlanNarrationStatusText, Converter={x:Static avaloniaConverters:StringConverters.IsNotNullOrEmpty}}" />
 
                                 <!-- Actions: the AI plan and Select are the working pair; Delete is quiet and rose. -->

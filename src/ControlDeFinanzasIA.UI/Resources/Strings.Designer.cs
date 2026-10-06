@@ -853,10 +853,10 @@ public class Strings
     public static string SettingsThemeLight => ResourceManager.GetString("SettingsThemeLight", Culture)!;
 
     /// <summary>
-    /// Gets the localized, always-visible notice stating that only Dark
-    /// renders in v1 (R-3, S-1 — must never be a silent no-op).
+    /// Gets the localized, always-visible note under the theme picker: the
+    /// choice is applied at once and saved automatically (R-3, S-1).
     /// </summary>
-    public static string SettingsThemeLightNotice => ResourceManager.GetString("SettingsThemeLightNotice", Culture)!;
+    public static string SettingsThemeNotice => ResourceManager.GetString("SettingsThemeNotice", Culture)!;
 
     /// <summary>
     /// Gets the localized title for the Idioma (language) section of the settings screen.

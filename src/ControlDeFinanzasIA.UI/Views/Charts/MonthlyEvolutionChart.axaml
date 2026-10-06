@@ -18,7 +18,7 @@
                    IsVisible="{Binding #Root.IsEmpty}"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
-                   Foreground="{StaticResource TextSecondaryBrush}"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
                    TextWrapping="Wrap" />
     </Grid>
 </UserControl>

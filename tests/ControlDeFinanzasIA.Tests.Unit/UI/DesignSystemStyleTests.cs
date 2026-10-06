@@ -12,7 +12,7 @@ namespace ControlDeFinanzasIA.Tests.Unit.UI;
 /// <summary>
 /// Pre-1.0 slice E (E1): the design system resolves on REAL controls carrying the REAL application styles in the
 /// headless session. Buttons are pills, inputs and cards use the radius scale of the tokens, the sidebar's current item
-/// is a cobalt-tinted pill, every sidebar route has a vector icon, and the app renders the light theme.
+/// is a cobalt-tinted pill, every sidebar route has a vector icon, and the app starts on the light variant (dark mode switches it live).
 /// </summary>
 [Collection(HeadlessUi.CollectionName)]
 public sealed class DesignSystemStyleTests
@@ -33,7 +33,7 @@ public sealed class DesignSystemStyleTests
         control.GetVisualDescendants().OfType<ContentPresenter>().First(p => p.Name == "PART_ContentPresenter");
 
     [Fact]
-    public async Task TheApplication_RendersTheLightTheme()
+    public async Task TheApplication_StartsOnTheLightVariant_BeforeThePersistedThemeIsApplied()
     {
         ThemeVariant variant = await HeadlessUi.OnUiThread(() => Task.FromResult(Avalonia.Application.Current!.RequestedThemeVariant!));
 

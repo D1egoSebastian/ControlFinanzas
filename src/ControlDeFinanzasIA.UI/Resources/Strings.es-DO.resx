@@ -547,8 +547,8 @@ Mostrando conversiones aproximadas.
   <data name="SettingsThemeLight" xml:space="preserve">
     <value>Claro</value>
   </data>
-  <data name="SettingsThemeLightNotice" xml:space="preserve">
-    <value>La app tiene un único aspecto claro en esta versión. Tu selección se guarda para una futura versión.</value>
+  <data name="SettingsThemeNotice" xml:space="preserve">
+    <value>El tema cambia en cuanto lo eliges y se guarda automáticamente. No hace falta reiniciar.</value>
   </data>
   <data name="SettingsLanguageTitle" xml:space="preserve">
     <value>Idioma</value>

@@ -10,7 +10,7 @@
              x:Class="ControlDeFinanzasIA.UI.Views.DashboardView"
              x:DataType="vm:DashboardViewModel"
              x:Name="Root"
-             Background="{StaticResource CanvasBrush}">
+             Background="{DynamicResource CanvasBrush}">
     <ScrollViewer>
         <StackPanel Margin="32,4,32,32">
 
@@ -49,7 +49,7 @@
                 </StackPanel>
             </Grid>
 
-            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding LoadError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding LoadError}" Foreground="{DynamicResource ExpenseBrush}" TextWrapping="Wrap" />
 
             <!-- Export outcome (F-018): empty after a cancel, file name on success, rose on error. -->
             <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding ExportStatusMessage}"
@@ -60,7 +60,7 @@
             <!-- "Tasa no disponible" notice (R-7, S-6) -->
             <Border Classes="notice info" Margin="0,0,0,20" IsVisible="{Binding HasMissingRates}">
                 <TextBlock Text="{x:Static resources:Strings.DashboardMissingRatesNotice}"
-                           Foreground="{StaticResource AccentBrush}"
+                           Foreground="{DynamicResource AccentBrush}"
                            TextWrapping="Wrap" />
             </Border>
 
@@ -70,7 +70,7 @@
                     <StackPanel Spacing="10">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <Border Classes="icon-chip expense" AutomationProperties.AccessibilityView="Raw">
-                                <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconExpenses}" Foreground="{StaticResource ExpenseBrush}" />
+                                <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconExpenses}" Foreground="{DynamicResource ExpenseBrush}" />
                             </Border>
                             <TextBlock Text="{x:Static resources:Strings.DashboardExpensesLabel}" Classes="ledger-section" VerticalAlignment="Center" />
                         </StackPanel>
@@ -86,7 +86,7 @@
                     <StackPanel Spacing="10">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <Border Classes="icon-chip income" AutomationProperties.AccessibilityView="Raw">
-                                <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconIncomes}" Foreground="{StaticResource IncomeBrush}" />
+                                <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconIncomes}" Foreground="{DynamicResource IncomeBrush}" />
                             </Border>
                             <TextBlock Text="{x:Static resources:Strings.DashboardIncomesLabel}" Classes="ledger-section" VerticalAlignment="Center" />
                         </StackPanel>
@@ -99,7 +99,7 @@
                     <StackPanel Spacing="10">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <Border Classes="icon-chip" AutomationProperties.AccessibilityView="Raw">
-                                <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBudgets}" Foreground="{StaticResource AccentBrush}" />
+                                <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBudgets}" Foreground="{DynamicResource AccentBrush}" />
                             </Border>
                             <TextBlock Text="{x:Static resources:Strings.DashboardNetBalanceLabel}" Classes="ledger-section" VerticalAlignment="Center" />
                         </StackPanel>
@@ -202,11 +202,11 @@
                         <!-- Two-entry legend: the lines are told apart by color AND by this key. -->
                         <StackPanel Orientation="Horizontal" Spacing="18" HorizontalAlignment="Center">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Ellipse Classes="legend-dot" Fill="{StaticResource ExpenseBrush}" />
+                                <Ellipse Classes="legend-dot" Fill="{DynamicResource ExpenseBrush}" />
                                 <TextBlock Text="{x:Static resources:Strings.DashboardExpensesLabel}" Classes="ledger-status" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Ellipse Classes="legend-dot" Fill="{StaticResource IncomeBrush}" />
+                                <Ellipse Classes="legend-dot" Fill="{DynamicResource IncomeBrush}" />
                                 <TextBlock Text="{x:Static resources:Strings.DashboardIncomesLabel}" Classes="ledger-status" />
                             </StackPanel>
                         </StackPanel>
@@ -327,7 +327,7 @@
                                    TextWrapping="Wrap" />
                         <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding InsightsStatusText}"
                                    IsVisible="{Binding !IsInsightsLoading}"
-                                   Foreground="{StaticResource AccentBrush}"
+                                   Foreground="{DynamicResource AccentBrush}"
                                    TextWrapping="Wrap" />
                     </StackPanel>
                 </Border>
@@ -351,7 +351,7 @@
                                                 Padding="10,2"
                                                 VerticalAlignment="Center"
                                                 Margin="0,0,12,0">
-                                            <TextBlock Text="{Binding SeverityLabel}" Foreground="{StaticResource OnAccentBrush}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding SeverityLabel}" Foreground="{DynamicResource OnAccentBrush}" FontWeight="SemiBold" />
                                         </Border>
                                         <StackPanel Grid.Column="1" Spacing="2">
                                             <TextBlock Text="{Binding CategoryName}" Classes="strong" />
@@ -379,7 +379,7 @@
                                IsVisible="{Binding !Anomalies.Count}"
                                Classes="ledger-status" />
                     <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding AnomalyNarrationStatusText}"
-                               Foreground="{StaticResource AccentBrush}"
+                               Foreground="{DynamicResource AccentBrush}"
                                TextWrapping="Wrap" />
                 </StackPanel>
             </Border>

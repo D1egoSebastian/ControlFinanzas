@@ -13,6 +13,7 @@ using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateLocale;
 using ControlDeFinanzasIA.Application.UseCases.Settings.UpdateTheme;
 using ControlDeFinanzasIA.Domain.Notifications;
 using ControlDeFinanzasIA.Tests.Unit.TestDoubles;
+using ControlDeFinanzasIA.UI.Services;
 using ControlDeFinanzasIA.UI.ViewModels;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -424,7 +425,8 @@ public sealed class SettingsViewModelTests
     internal static SettingsViewModel CreateViewModel(
         ISettingsStore store,
         FakeNotificationCenter? center = null,
-        BackupSettingsViewModel? backup = null)
+        BackupSettingsViewModel? backup = null,
+        IThemeService? themeService = null)
     {
         var getAppSettingsQuery = new GetAppSettingsQuery(store);
         var updateThemeUseCase = new UpdateThemeUseCase(store, NullLogger<UpdateThemeUseCase>.Instance);
@@ -444,6 +446,7 @@ public sealed class SettingsViewModelTests
             new UpdateNotificationSettingsUseCase(store),
             center ?? new FakeNotificationCenter(),
             NullLogger<SettingsViewModel>.Instance,
-            backup);
+            backup,
+            themeService);
     }
 }

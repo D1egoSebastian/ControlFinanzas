@@ -11,7 +11,7 @@ public sealed class AppSettingsTests
     {
         AppSettings defaults = AppSettings.Defaults;
 
-        Assert.Equal(AppTheme.Dark, defaults.Theme);
+        Assert.Equal(AppTheme.Light, defaults.Theme);
         Assert.Equal("es-DO", defaults.Locale);
         Assert.Equal(AiProvider.OpenAI, defaults.AiProvider);
         Assert.Equal(string.Empty, defaults.AiApiKey);

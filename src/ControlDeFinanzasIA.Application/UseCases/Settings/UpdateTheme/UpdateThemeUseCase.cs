@@ -7,8 +7,9 @@ namespace ControlDeFinanzasIA.Application.UseCases.Settings.UpdateTheme;
 
 /// <summary>
 /// Use case que persiste la preferencia de tema (F-012, R-3, D-9).
-/// Solo persiste — la aplicación real de <see cref="AppTheme.Dark"/> a
-/// <c>RequestedThemeVariant</c> no ocurre en esta capa (D-8).
+/// Solo persiste — la aplicación real del tema a
+/// <c>RequestedThemeVariant</c> no ocurre en esta capa: la hace la UI mediante
+/// <c>IThemeService</c> (D-8).
 /// </summary>
 public sealed class UpdateThemeUseCase
 {

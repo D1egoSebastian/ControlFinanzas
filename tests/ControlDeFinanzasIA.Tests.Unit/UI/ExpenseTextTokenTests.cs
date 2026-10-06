@@ -36,16 +36,19 @@ public sealed class ExpenseTextTokenTests
     [InlineData("Warning")]
     [InlineData("WarningFill")]
     [InlineData("WarningSoft")]
-    public void TheTokenFile_DefinesEachSemanticColor_AndItsBrush(string name)
+    public void TheTokenFiles_DefineEachSemanticColor_AndItsBrush_InBothVariants(string name)
     {
-        XElement root = XDocument.Load(RepoRoot.Combine("src", "ControlDeFinanzasIA.UI", "Styles", "Tokens.axaml")).Root!;
+        foreach (string variant in new[] { "Light", "Dark" })
+        {
+            XElement root = XDocument.Load(RepoRoot.Combine("src", "ControlDeFinanzasIA.UI", "Styles", $"Tokens.{variant}.axaml")).Root!;
 
-        XElement? color = root.Elements().SingleOrDefault(e => (string?)e.Attribute(_x + "Key") == name + "Color");
-        XElement? brush = root.Elements().SingleOrDefault(e => (string?)e.Attribute(_x + "Key") == name + "Brush");
+            XElement? color = root.Elements().SingleOrDefault(e => (string?)e.Attribute(_x + "Key") == name + "Color");
+            XElement? brush = root.Elements().SingleOrDefault(e => (string?)e.Attribute(_x + "Key") == name + "Brush");
 
-        Assert.NotNull(color);
-        Assert.NotNull(brush);
-        Assert.Contains(name + "Color", (string?)brush!.Attribute("Color"), StringComparison.Ordinal);
+            Assert.NotNull(color);
+            Assert.NotNull(brush);
+            Assert.Contains(name + "Color", (string?)brush!.Attribute("Color"), StringComparison.Ordinal);
+        }
     }
 
     [Theory]
@@ -57,9 +60,12 @@ public sealed class ExpenseTextTokenTests
     [InlineData("HairlineColor")]
     public void TheLegacyLibroMayorPalette_IsGone(string legacyKey)
     {
-        XElement root = XDocument.Load(RepoRoot.Combine("src", "ControlDeFinanzasIA.UI", "Styles", "Tokens.axaml")).Root!;
+        foreach (string file in new[] { "Tokens.axaml", "Tokens.Light.axaml", "Tokens.Dark.axaml" })
+        {
+            XElement root = XDocument.Load(RepoRoot.Combine("src", "ControlDeFinanzasIA.UI", "Styles", file)).Root!;
 
-        Assert.DoesNotContain(root.Elements(), e => (string?)e.Attribute(_x + "Key") == legacyKey);
+            Assert.DoesNotContain(root.Elements(), e => (string?)e.Attribute(_x + "Key") == legacyKey);
+        }
     }
 
     [Fact]

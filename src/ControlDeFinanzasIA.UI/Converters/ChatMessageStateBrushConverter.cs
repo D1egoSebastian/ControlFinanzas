@@ -1,7 +1,6 @@
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
-using Avalonia.Styling;
 using ControlDeFinanzasIA.UI.ViewModels;
 
 namespace ControlDeFinanzasIA.UI.Converters;
@@ -31,14 +30,7 @@ public sealed class ChatMessageStateBrushConverter : IValueConverter
             _ => "TextBrush",
         };
 
-        if (Avalonia.Application.Current is { } app
-            && app.TryGetResource(resourceKey, ThemeVariant.Default, out object? resource)
-            && resource is IBrush brush)
-        {
-            return brush;
-        }
-
-        return Brushes.Transparent;
+        return ThemeBrushLookup.Find(resourceKey) ?? Brushes.Transparent;
     }
 
     /// <inheritdoc />

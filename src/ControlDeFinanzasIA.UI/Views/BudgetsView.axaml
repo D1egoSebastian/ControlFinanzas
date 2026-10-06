@@ -6,7 +6,7 @@
              x:Class="ControlDeFinanzasIA.UI.Views.BudgetsView"
              x:DataType="vm:BudgetsViewModel"
              x:Name="Root"
-             Background="{StaticResource CanvasBrush}">
+             Background="{DynamicResource CanvasBrush}">
     <ScrollViewer>
         <StackPanel Margin="32,4,32,32" Spacing="20">
             <!-- Page header: title on the left, the month navigation on the right (R-1, R-9). -->
@@ -31,7 +31,7 @@
                 <StackPanel Spacing="14">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="icon-chip" AutomationProperties.AccessibilityView="Raw">
-                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBudgets}" Foreground="{StaticResource AccentBrush}" />
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBudgets}" Foreground="{DynamicResource AccentBrush}" />
                         </Border>
                         <TextBlock Text="{x:Static resources:Strings.BudgetsFormTitle}" Classes="card-title" VerticalAlignment="Center" />
                     </StackPanel>
@@ -61,7 +61,7 @@
                                       HorizontalAlignment="Stretch" />
                         </StackPanel>
                     </WrapPanel>
-                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
+                    <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{DynamicResource ExpenseBrush}" TextWrapping="Wrap" />
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Button Content="{x:Static resources:Strings.BudgetsSaveButton}"
                                 Command="{Binding SaveCommand}"
@@ -69,7 +69,7 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
-            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{DynamicResource IncomeBrush}" TextWrapping="Wrap" />
 
             <TextBlock Text="{x:Static resources:Strings.BudgetsListTitle}" Classes="card-title" FontSize="20" />
             <Border Classes="card" Padding="12,8" IsVisible="{Binding !!Budgets.Count}">

@@ -31,7 +31,7 @@
         </Style>
         <Style Selector="TextBlock.error-mono">
             <Setter Property="FontFamily" Value="{StaticResource FontMono}" />
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
             <Setter Property="FontSize" Value="12" />
         </Style>
     </UserControl.Styles>
@@ -40,7 +40,7 @@
         <!-- Scrim: the canvas at 80 %; opaque to hit testing so nothing behind it is clickable. -->
         <Border Classes="error-scrim"
                 Classes.open="{Binding IsOpen}"
-                Background="{StaticResource CanvasBrush}"
+                Background="{DynamicResource CanvasBrush}"
                 Opacity="0.8" />
 
         <Border Classes="error-card"
@@ -48,18 +48,18 @@
                 Width="440"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource DividerBrush}"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource DividerBrush}"
                 BorderThickness="1"
                 CornerRadius="{StaticResource RadiusLarge}"
-                BoxShadow="{StaticResource ShadowPopup}"
+                BoxShadow="{DynamicResource ShadowPopup}"
                 KeyboardNavigation.TabNavigation="Cycle"
                 AutomationProperties.Name="{x:Static resources:Strings.ErrorOverlayTitle}">
             <StackPanel>
                 <StackPanel Margin="28,24,28,24" Spacing="16">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="icon-chip expense" AutomationProperties.AccessibilityView="Raw">
-                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconClose}" Foreground="{StaticResource ExpenseBrush}" />
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconClose}" Foreground="{DynamicResource ExpenseBrush}" />
                         </Border>
                         <TextBlock Text="{x:Static resources:Strings.ErrorOverlayTitle}"
                                    Classes="card-title"
@@ -72,7 +72,7 @@
                                AutomationProperties.LiveSetting="Polite"
                                FontFamily="{StaticResource FontBody}"
                                FontSize="14"
-                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
                                TextWrapping="Wrap" />
 
                     <!-- Reference line on a soft panel: the short id in mono. -->
@@ -87,7 +87,7 @@
                                            FontFamily="{StaticResource FontMono}"
                                            FontSize="20"
                                            LetterSpacing="2"
-                                           Foreground="{StaticResource TextBrush}"
+                                           Foreground="{DynamicResource TextBrush}"
                                            VerticalAlignment="Center"
                                            IsTabStop="False" />
                             </StackPanel>
@@ -100,7 +100,7 @@
                     <TextBlock Text="{x:Static resources:Strings.ErrorOverlayRestartHint}"
                                FontFamily="{StaticResource FontBody}"
                                FontSize="13"
-                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
                                TextWrapping="Wrap" />
 
                     <DockPanel LastChildFill="False">
@@ -117,7 +117,7 @@
                                    Classes="error-mono"
                                    Text="{x:Static resources:Strings.ErrorOverlayCopied}"
                                    IsVisible="{Binding IsCopied}"
-                                   Foreground="{StaticResource IncomeBrush}"
+                                   Foreground="{DynamicResource IncomeBrush}"
                                    VerticalAlignment="Center"
                                    AutomationProperties.LiveSetting="Polite" />
                     </DockPanel>

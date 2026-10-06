@@ -6,7 +6,7 @@
              xmlns:controls="using:ControlDeFinanzasIA.UI.Controls"
              x:Class="ControlDeFinanzasIA.UI.Views.SettingsView"
              x:DataType="vm:SettingsViewModel"
-             Background="{StaticResource CanvasBrush}">
+             Background="{DynamicResource CanvasBrush}">
     <ScrollViewer>
         <StackPanel Spacing="20" Margin="32,4,32,32" MaxWidth="760" HorizontalAlignment="Left">
 
@@ -21,7 +21,7 @@
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="icon-chip neutral" AutomationProperties.AccessibilityView="Raw">
-                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconSettings}" Foreground="{StaticResource TextSecondaryBrush}" />
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconSettings}" Foreground="{DynamicResource TextSecondaryBrush}" />
                         </Border>
                         <TextBlock Text="{x:Static resources:Strings.SettingsAppearanceTitle}" Classes="card-title" VerticalAlignment="Center" />
                     </StackPanel>
@@ -37,20 +37,15 @@
 
                     <!--
                         Always visible, never conditional on the current
-                        selection (R-3, S-1, D-10): the app ships ONE look
-                        (light), so the selector says so instead of
-                        implying a switch that does nothing.
+                        selection (R-3, S-1, D-10): choosing a theme applies
+                        it to the whole app at once and saves it, so there is
+                        no Save button in this card; the note says so.
                     -->
                     <Border Classes="notice info">
-                        <TextBlock Text="{x:Static resources:Strings.SettingsThemeLightNotice}"
-                                   Foreground="{StaticResource AccentBrush}"
+                        <TextBlock Text="{x:Static resources:Strings.SettingsThemeNotice}"
+                                   Foreground="{DynamicResource AccentBrush}"
                                    TextWrapping="Wrap" />
                     </Border>
-
-                    <Button Content="{x:Static resources:Strings.SettingsSaveButton}"
-                            Command="{Binding SaveThemeCommand}"
-                            HorizontalAlignment="Left"
-                            Classes="ledger-btn-primary" />
                 </StackPanel>
             </Border>
 
@@ -59,7 +54,7 @@
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="icon-chip neutral" AutomationProperties.AccessibilityView="Raw">
-                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconChat}" Foreground="{StaticResource TextSecondaryBrush}" />
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconChat}" Foreground="{DynamicResource TextSecondaryBrush}" />
                         </Border>
                         <TextBlock Text="{x:Static resources:Strings.SettingsLanguageTitle}" Classes="card-title" VerticalAlignment="Center" />
                     </StackPanel>
@@ -80,7 +75,7 @@
 
                     <Border Classes="notice info" IsVisible="{Binding IsRestartRequired}">
                         <TextBlock Text="{x:Static resources:Strings.SettingsRestartRequiredNotice}"
-                                   Foreground="{StaticResource AccentBrush}"
+                                   Foreground="{DynamicResource AccentBrush}"
                                    TextWrapping="Wrap" />
                     </Border>
                 </StackPanel>
@@ -91,7 +86,7 @@
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="icon-chip" AutomationProperties.AccessibilityView="Raw">
-                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBrand}" Foreground="{StaticResource AccentBrush}" />
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBrand}" Foreground="{DynamicResource AccentBrush}" />
                         </Border>
                         <TextBlock Text="{x:Static resources:Strings.SettingsAiTitle}" Classes="card-title" VerticalAlignment="Center" />
                     </StackPanel>
@@ -103,7 +98,7 @@
                     -->
                     <Border Classes="notice">
                         <TextBlock Text="{x:Static resources:Strings.SettingsAiApiKeyWarning}"
-                                   Foreground="{StaticResource WarningBrush}"
+                                   Foreground="{DynamicResource WarningBrush}"
                                    TextWrapping="Wrap" />
                     </Border>
 
@@ -160,7 +155,7 @@
                     <Border Classes="notice info"
                             IsVisible="{Binding AiTestConnectionMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                         <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding AiTestConnectionMessage}"
-                                   Foreground="{StaticResource AccentBrush}"
+                                   Foreground="{DynamicResource AccentBrush}"
                                    TextWrapping="Wrap" />
                     </Border>
                 </StackPanel>
@@ -171,7 +166,7 @@
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="icon-chip" AutomationProperties.AccessibilityView="Raw">
-                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBell}" Foreground="{StaticResource AccentBrush}" />
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBell}" Foreground="{DynamicResource AccentBrush}" />
                         </Border>
                         <TextBlock Text="{x:Static resources:Strings.SettingsNotificationsTitle}" Classes="card-title" VerticalAlignment="Center" />
                     </StackPanel>
@@ -213,7 +208,7 @@
                             Spacing="12">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="icon-chip income" AutomationProperties.AccessibilityView="Raw">
-                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconDownload}" Foreground="{StaticResource IncomeBrush}" />
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconDownload}" Foreground="{DynamicResource IncomeBrush}" />
                         </Border>
                         <TextBlock Text="{x:Static resources:Strings.BackupSectionTitle}" Classes="card-title" VerticalAlignment="Center" />
                     </StackPanel>
@@ -237,8 +232,8 @@
                         <ProgressBar IsIndeterminate="True"
                                      Height="4"
                                      CornerRadius="2"
-                                     Foreground="{StaticResource AccentBrush}"
-                                     Background="{StaticResource SurfaceMutedBrush}" />
+                                     Foreground="{DynamicResource AccentBrush}"
+                                     Background="{DynamicResource SurfaceMutedBrush}" />
                         <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding WorkingMessage}" Classes="ledger-status" />
                     </StackPanel>
 
@@ -255,11 +250,11 @@
                             <TextBlock Text="{x:Static resources:Strings.BackupConfirmTitle}"
                                        Classes="ledger-section" />
                             <TextBlock Text="{Binding PendingSummary}"
-                                       Foreground="{StaticResource TextBrush}"
+                                       Foreground="{DynamicResource TextBrush}"
                                        TextWrapping="Wrap" />
                             <Border Classes="notice error">
                                 <TextBlock Text="{x:Static resources:Strings.BackupConfirmWarning}"
-                                           Foreground="{StaticResource ExpenseBrush}"
+                                           Foreground="{DynamicResource ExpenseBrush}"
                                            FontWeight="SemiBold"
                                            TextWrapping="Wrap" />
                             </Border>
@@ -279,7 +274,7 @@
                             Classes="card-flat">
                         <StackPanel Spacing="10">
                             <TextBlock Text="{x:Static resources:Strings.BackupRestartRequiredNotice}"
-                                       Foreground="{StaticResource TextBrush}"
+                                       Foreground="{DynamicResource TextBrush}"
                                        TextWrapping="Wrap" />
                             <Button Content="{x:Static resources:Strings.BackupRestartNowButton}"
                                     Command="{Binding RestartNowCommand}"
@@ -287,7 +282,7 @@
                                     Classes="ledger-btn-primary" />
                             <Border Classes="notice error" IsVisible="{Binding RestartFailed}">
                                 <TextBlock Text="{x:Static resources:Strings.BackupRestartFallback}"
-                                           Foreground="{StaticResource ExpenseBrush}"
+                                           Foreground="{DynamicResource ExpenseBrush}"
                                            TextWrapping="Wrap" />
                             </Border>
                         </StackPanel>
@@ -303,7 +298,7 @@
                 <StackPanel Spacing="8">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="icon-chip neutral" AutomationProperties.AccessibilityView="Raw">
-                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconDashboard}" Foreground="{StaticResource TextSecondaryBrush}" />
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconDashboard}" Foreground="{DynamicResource TextSecondaryBrush}" />
                         </Border>
                         <TextBlock Text="{x:Static resources:Strings.ShortcutsSectionTitle}" Classes="card-title" VerticalAlignment="Center" />
                     </StackPanel>
@@ -312,13 +307,13 @@
                                   AutomationProperties.AccessibilityView="Content">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:ShortcutListItem">
-                                <Border BorderBrush="{StaticResource DividerBrush}"
+                                <Border BorderBrush="{DynamicResource DividerBrush}"
                                         BorderThickness="0,0,0,1"
                                         Padding="0,8">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBlock Text="{Binding ActionName}"
                                                    FontFamily="{StaticResource FontBody}"
-                                                   Foreground="{StaticResource TextBrush}"
+                                                   Foreground="{DynamicResource TextBrush}"
                                                    TextWrapping="Wrap"
                                                    VerticalAlignment="Center" />
                                         <Border Grid.Column="1"
@@ -329,7 +324,7 @@
                                                        FontFamily="{StaticResource FontMono}"
                                                        FontSize="13"
                                                        FontWeight="SemiBold"
-                                                       Foreground="{StaticResource TextBrush}" />
+                                                       Foreground="{DynamicResource TextBrush}" />
                                         </Border>
                                     </Grid>
                                 </Border>
@@ -344,7 +339,7 @@
                 <StackPanel Spacing="8">
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Classes="icon-chip" AutomationProperties.AccessibilityView="Raw">
-                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBrand}" Foreground="{StaticResource AccentBrush}" />
+                            <controls:Icon Size="20" HorizontalAlignment="Center" VerticalAlignment="Center" Data="{StaticResource IconBrand}" Foreground="{DynamicResource AccentBrush}" />
                         </Border>
                         <TextBlock Text="{x:Static resources:Strings.SettingsAboutTitle}" Classes="card-title" VerticalAlignment="Center" />
                     </StackPanel>
@@ -354,8 +349,8 @@
                 </StackPanel>
             </Border>
 
-            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{StaticResource ExpenseBrush}" TextWrapping="Wrap" />
-            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{StaticResource IncomeBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding FormError}" Foreground="{DynamicResource ExpenseBrush}" TextWrapping="Wrap" />
+            <TextBlock AutomationProperties.LiveSetting="Polite" Text="{Binding StatusMessage}" Foreground="{DynamicResource IncomeBrush}" TextWrapping="Wrap" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>
