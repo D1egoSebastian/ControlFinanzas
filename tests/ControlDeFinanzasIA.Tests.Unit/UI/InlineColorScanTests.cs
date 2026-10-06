@@ -4,7 +4,8 @@ using ControlDeFinanzasIA.Tests.Unit.Packaging;
 namespace ControlDeFinanzasIA.Tests.Unit.UI;
 
 /// <summary>
-/// F-021 verify W3 (R-19): no view or control hardcodes a hex color; colors come from <c>Styles/Tokens.axaml</c>. The
+/// F-021 verify W3 (R-19): no view, control or control style hardcodes a hex color; colors come from the token dictionaries
+/// (<c>Styles/Tokens.Light.axaml</c> and <c>Styles/Tokens.Dark.axaml</c>, the only files allowed to hold hex values). The
 /// only exceptions are listed, with the reason, in <see cref="_allowlist"/>.
 /// </summary>
 public sealed class InlineColorScanTests
@@ -23,6 +24,8 @@ public sealed class InlineColorScanTests
         Assert.Contains(Path.Combine("Views", "MainWindow.axaml"), files);
         Assert.Contains(Path.Combine("Views", "SettingsView.axaml"), files);
         Assert.Contains(Path.Combine("Controls", "EmptyState.axaml"), files);
+        Assert.Contains(Path.Combine("Styles", "LedgerStyles.axaml"), files);
+        Assert.DoesNotContain(files, f => Path.GetFileName(f).StartsWith("Tokens.", StringComparison.Ordinal));
         Assert.True(files.Length >= 16, $"Only {files.Length} view files found.");
     }
 
@@ -45,7 +48,7 @@ public sealed class InlineColorScanTests
             }
         }
 
-        Assert.True(hits.Count == 0, "Inline hex colors (use a token from Styles/Tokens.axaml):" + Environment.NewLine + string.Join(Environment.NewLine, hits));
+        Assert.True(hits.Count == 0, "Inline hex colors (use a token from Styles/Tokens.Light.axaml and Tokens.Dark.axaml):" + Environment.NewLine + string.Join(Environment.NewLine, hits));
     }
 
     [Fact]
@@ -64,8 +67,9 @@ public sealed class InlineColorScanTests
         string root = RepoRoot.Combine("src", "ControlDeFinanzasIA.UI");
         return
         [
-            .. new[] { "Views", "Controls" }
+            .. new[] { "Views", "Controls", "Styles" }
                 .SelectMany(d => Directory.EnumerateFiles(Path.Combine(root, d), "*.axaml", SearchOption.AllDirectories))
+                .Where(f => !Path.GetFileName(f).StartsWith("Tokens.", StringComparison.Ordinal))
                 .Select(f => Path.GetRelativePath(root, f))
                 .Order(StringComparer.Ordinal),
         ];
