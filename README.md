@@ -1,16 +1,15 @@
 # ControlDeFinanzasIA
 
-## What it is
+## Que es?
 
-ControlDeFinanzasIA is a cross-platform desktop application (Windows, macOS, Linux) for personal finance control,
-assisted by AI. Your data lives in a single local SQLite file on your machine and there is no telemetry; the app never uploads your data on its own. The AI features are optional and off until you add your own provider key (stored only in the local data file): when you use them, a summary of the relevant finance data (amounts, categories, descriptions) is sent to the provider you chose, and nothing is sent to anyone else.
+ControlDeFinanzasIA es una aplicacion de escritorio hecho compatibles para los 3 ecosistemas (Windows, macOS, Linux) para el control de las finanzas del usuario, con la funcionalidad extra de que puede usarse con la ayuda de la inteligencia artificial mediante una api key, para pedir "asesoria financiera" con la ayuda de la IA, por lo que por supuesto, se puede usar sin ella.
 
-It covers expenses and income, categories, budgets, savings goals, debts with installment plans, recurring charges,
-a calendar, a dashboard, notifications, PDF/Excel export, backup and restore, and CSV/Excel import. The interface is
-available in Spanish (es-DO) and English.
+Todos tus datos viven en un archivo local en tu maquina de SQLite, esta aplicacion no usa datos por cuenta propia, no cuenta con un sistema de autenticacion todo lo que se genere esta almacenado en su propia maquina.
 
-> Project documentation: [docs/vision.md](docs/vision.md) - [docs/architecture.md](docs/architecture.md) -
-> [docs/roadmap.md](docs/roadmap.md) - [CHANGELOG.md](CHANGELOG.md)
+Esta aplicacion cubre las diferentes categorias como de, gastos, gastos por categorias, ahorros, metas de ahorro, presupuestos, deudas, cobros de suscripciones, calendario de pagos, un dashboard intuitivo con la informacion de los gastos, notificaciones sobre tu estado financiero, cubre exportaciones e importaciones a pdf, excel, csv, archivos backup.
+
+Cuenta con 2 idiomas español e ingles 
+Cuenta con modo oscuro y modo claro
 
 ## Download and run
 
@@ -50,42 +49,7 @@ The binaries are not code-signed, so Windows SmartScreen may show "Windows prote
 The app is not signed or notarized, so macOS may say it cannot be opened. Control-click (or right-click) the app,
 choose **Open**, then confirm **Open**. Alternatively run `xattr -dr com.apple.quarantine ControlDeFinanzasIA.app`.
 
-## Build from source
 
-Requires the .NET 8 SDK (`winget install Microsoft.DotNet.SDK.8` on Windows).
-
-```bash
-dotnet build -c Release
-dotnet run --project src/ControlDeFinanzasIA.UI
-dotnet test -c Release --no-build
-dotnet format style --verify-no-changes
-```
-
-## Data directory
-
-The database, backups and logs live in the per-user data directory:
-
-- Windows: `%APPDATA%\ControlDeFinanzasIA`
-- macOS: `~/Library/Application Support/ControlDeFinanzasIA`
-- Linux: `$XDG_CONFIG_HOME/ControlDeFinanzasIA` or `~/.config/ControlDeFinanzasIA`
-
-Set the environment variable `CONTROLDEFINANZASIA_DATA_DIR` to an absolute path to run against a different (for
-example throwaway) data directory.
-
-## Keyboard shortcuts
-
-On macOS use Cmd instead of Ctrl.
-
-| Shortcut | Action |
-|---|---|
-| Ctrl+N | New expense |
-| Ctrl+Shift+N | New income |
-| Ctrl+1 ... Ctrl+9, Ctrl+0 | Go to the 1st ... 9th and 10th sidebar section |
-| Ctrl+, | Open Settings |
-| Ctrl+Shift+B | Open or close the notification bell |
-| Esc | Close the topmost overlay |
-
-Enter submits the focused form.
 
 ## Stack
 
